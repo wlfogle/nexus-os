@@ -1,0 +1,56 @@
+# Build artifacts
+*.o
+*.a
+*.so
+*.elf
+*.bin
+*.img
+*.iso
+
+# Kernel images
+kernel
+kernel.bin
+boot.img
+nexus-os.iso
+
+# Build directories
+build/
+obj/
+bin/
+
+# Generated files
+*.d
+*.dep
+*.map
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Debug files
+*.log
+*.dump
+gdb.txt
+
+# Cross-compiler toolchain
+toolchain/
+
+# QEMU files
+*.qcow2
+*.vdi
+*.vmdk
+
+# Documentation build
+docs/build/
+docs/_build/
+
+# Test artifacts
+test_results/
+coverage/
