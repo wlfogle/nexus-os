@@ -38,9 +38,10 @@ $(BUILD_DIR)/boot.o: $(BOOT_DIR)/boot.s | $(BUILD_DIR)
 $(BUILD_DIR)/%.o: $(KERNEL_DIR)/%.c | $(BUILD_DIR)
 	$(CC) -c $< -o $@ $(CFLAGS)
 
+
 # Link kernel
 $(KERNEL_BIN): $(BOOT_OBJECTS) $(KERNEL_OBJECTS) linker.ld | $(BUILD_DIR)
-	$(CC) -T linker.ld $(LDFLAGS) -o $@ $(BOOT_OBJECTS) $(KERNEL_OBJECTS) -lgcc
+	$(LD) $(LDFLAGS) -T linker.ld -o $@ $(BOOT_OBJECTS) $(KERNEL_OBJECTS)
 
 # Build kernel
 kernel: $(KERNEL_BIN)

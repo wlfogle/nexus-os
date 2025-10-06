@@ -11,13 +11,23 @@ CROSS_COMPILE = $(ARCH)-elf-
 TOOLCHAIN_PREFIX ?= /usr
 TOOLCHAIN_BIN = $(TOOLCHAIN_PREFIX)/bin
 
-# Use system GCC if cross-compiler not available (common on Arch)
-ifeq ($(shell which $(ARCH)-elf-gcc 2>/dev/null),)
-    CC = gcc
-    AS = as
-    LD = ld
-    OBJCOPY = objcopy
-    OBJDUMP = objdump
+# Use toolchains from main system
+MAIN_SYSTEM_BIN = $(MAIN_SYSTEM_ROOT)/usr/bin
+
+# Check for cross-compiler on main system first, then fallback to system GCC
+ifeq ($(shell test -f $(MAIN_SYSTEM_BIN)/$(ARCH)-elf-gcc && echo yes),yes)
+    CC = $(MAIN_SYSTEM_BIN)/$(ARCH)-elf-gcc
+    AS = $(MAIN_SYSTEM_BIN)/$(ARCH)-elf-as
+    LD = $(MAIN_SYSTEM_BIN)/$(ARCH)-elf-ld
+    OBJCOPY = $(MAIN_SYSTEM_BIN)/$(ARCH)-elf-objcopy
+    OBJDUMP = $(MAIN_SYSTEM_BIN)/$(ARCH)-elf-objdump
+else ifeq ($(shell which $(ARCH)-elf-gcc 2>/dev/null),)
+    # Use main system GCC with enhanced paths
+    CC = $(MAIN_SYSTEM_BIN)/gcc
+    AS = $(MAIN_SYSTEM_BIN)/as
+    LD = $(MAIN_SYSTEM_BIN)/ld
+    OBJCOPY = $(MAIN_SYSTEM_BIN)/objcopy
+    OBJDUMP = $(MAIN_SYSTEM_BIN)/objdump
 else
     CC = $(CROSS_COMPILE)gcc
     AS = $(CROSS_COMPILE)as
@@ -27,7 +37,7 @@ else
 endif
 
 # Build flags optimized for Alderlake architecture
-CFLAGS = -std=gnu99 -ffreestanding -Wall -Wextra
+CFLAGS = -std=gnu99 -ffreestanding -Wall -Wextra -fno-stack-protector
 CPPFLAGS = -I include/kernel -I include/libc
 
 # Architecture-specific flags
@@ -77,10 +87,15 @@ endif
 CUDA_SUPPORT ?= 1
 AI_NATIVE ?= 1
 
-# CUDA paths (Arch Linux)
-CUDA_PATH ?= /opt/cuda
+# CUDA paths (from main system)
+MAIN_SYSTEM_ROOT = /run/media/garuda/34c008f3-1990-471c-bd80-c72985c7dc5c/@
+CUDA_PATH = $(MAIN_SYSTEM_ROOT)/opt/cuda
 CUDA_INCLUDE = $(CUDA_PATH)/include
 CUDA_LIB = $(CUDA_PATH)/lib64
+
+# Intel OneAPI paths (from main system)
+INTEL_PATH = $(MAIN_SYSTEM_ROOT)/opt/intel
+INTEL_ONEAPI = $(INTEL_PATH)/oneapi
 
 # AI/ML specific flags
 ifeq ($(AI_NATIVE), 1)
