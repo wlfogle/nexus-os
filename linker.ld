@@ -6,9 +6,8 @@ ENTRY(_start)
    kernel image. */
 SECTIONS
 {
-    /* Begin putting sections at 1 MiB, a conventional place for kernels to be
-       loaded at by the bootloader. */
-    . = 1M;
+    /* Begin putting sections at 2 MiB for x86_64, aligned for 2MB pages */
+    . = 2M;
 
     /* First put the multiboot header, as it is required to be put very early
        early in the image or the bootloader won't recognize the file format.

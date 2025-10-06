@@ -1,3 +1,4 @@
+# Multiboot header for x86_64 compatibility
 .set ALIGN,    1<<0             # align loaded modules on page boundaries
 .set MEMINFO,  1<<1             # provide memory map
 .set FLAGS,    ALIGN | MEMINFO  # this is the Multiboot 'flag' field
@@ -11,11 +12,11 @@
 .long FLAGS
 .long CHECKSUM
 
-# Reserve a stack for the initial thread
+# Reserve a stack for the initial thread (increased size for x86_64)
 .section .bss
 .align 16
 stack_bottom:
-.skip 16384 # 16 KiB
+.skip 32768 # 32 KiB (larger stack for x86_64)
 stack_top:
 
 # The kernel entry point
