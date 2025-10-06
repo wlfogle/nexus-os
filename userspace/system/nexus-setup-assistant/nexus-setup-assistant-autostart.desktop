@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=NexusOS Setup Assistant
+GenericName=System Setup Assistant
+Comment=NexusOS Setup Assistant system tray service
+Icon=nexusos-logo
+Exec=nexus-setup-assistant --tray-only
+Terminal=false
+Type=Application
+Categories=System;Settings;
+StartupNotify=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-KDE-autostart-condition=nexusos-setup-assistant
+X-GNOME-AutoRestart=true
+X-KDE-StartupNotify=false

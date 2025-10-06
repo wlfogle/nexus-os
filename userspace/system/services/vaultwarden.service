@@ -1,0 +1,53 @@
+[Unit]
+Description=Vaultwarden - Self-hosted Bitwarden Server
+Documentation=https://github.com/dani-garcia/vaultwarden
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=vaultwarden
+Group=vaultwarden
+WorkingDirectory=/opt/vaultwarden
+ExecStart=/opt/vaultwarden/vaultwarden
+Environment=ROCKET_ADDRESS=127.0.0.1
+Environment=ROCKET_PORT=8080
+Environment=DATA_FOLDER=/var/lib/vaultwarden
+Environment=WEB_VAULT_FOLDER=/opt/vaultwarden/web-vault
+Environment=WEB_VAULT_ENABLED=true
+Environment=SIGNUPS_ALLOWED=true
+Environment=INVITATIONS_ALLOWED=true
+Environment=SHOW_PASSWORD_HINT=false
+Environment=DOMAIN=http://localhost:8080
+Environment=LOG_FILE=/var/log/vaultwarden/vaultwarden.log
+Environment=LOG_LEVEL=info
+Environment=EXTENDED_LOGGING=true
+TimeoutStartSec=60
+TimeoutStopSec=30
+Restart=always
+RestartSec=5
+
+# Security settings
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+NoNewPrivileges=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/vaultwarden /var/log/vaultwarden
+
+# Capabilities (minimal required)
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+# Directories
+RuntimeDirectory=vaultwarden
+StateDirectory=vaultwarden
+LogsDirectory=vaultwarden
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=vaultwarden
+
+[Install]
+WantedBy=multi-user.target

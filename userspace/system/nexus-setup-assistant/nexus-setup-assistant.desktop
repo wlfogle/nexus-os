@@ -1,0 +1,38 @@
+[Desktop Entry]
+Name=NexusOS Setup Assistant
+GenericName=System Setup Assistant
+Comment=Configure and manage your NexusOS system with universal package support
+Icon=nexusos-logo
+Exec=nexus-setup-assistant
+Terminal=false
+Type=Application
+Categories=System;Settings;PackageManager;
+Keywords=setup;packages;media;security;awesome-stack;nexuspkg;
+StartupNotify=true
+StartupWMClass=NexusSetupAssistant
+
+# Additional metadata
+X-GNOME-UsesNotifications=true
+X-KDE-SubstituteUID=false
+X-KDE-HasTempFileOption=false
+
+# Mimetypes (if needed for file associations)
+MimeType=application/x-deb;application/x-rpm;application/x-xz;
+
+# Actions for right-click menu
+Actions=DigitalFortress;Vaultwarden;PackageInstall;
+
+[Desktop Action DigitalFortress]
+Name=Toggle Digital Fortress
+Icon=security-high
+Exec=nexus-setup-assistant --toggle-fortress
+
+[Desktop Action Vaultwarden]
+Name=Open Vaultwarden
+Icon=dialog-password
+Exec=nexus-setup-assistant --open-vault
+
+[Desktop Action PackageInstall]
+Name=Install Package
+Icon=system-software-install
+Exec=nexus-setup-assistant --install-tab

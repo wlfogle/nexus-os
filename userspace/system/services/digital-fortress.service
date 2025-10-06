@@ -1,0 +1,42 @@
+[Unit]
+Description=Digital Fortress - Ultimate Online Invisibility Suite
+Documentation=https://github.com/wlfogle/awesome-stack/tree/main/ghost-mode
+After=network-online.target
+Wants=network-online.target
+Requires=network.target
+
+[Service]
+Type=forking
+User=root
+Group=root
+Environment=AWESOME_STACK_PATH=/run/media/garuda/34c008f3-1990-471c-bd80-c72985c7dc5c/@home/lou/Repos/github/awesome-stack
+ExecStartPre=/bin/bash -c 'test -d $AWESOME_STACK_PATH/ghost-mode'
+ExecStart=/bin/bash -c 'cd $AWESOME_STACK_PATH/ghost-mode && ./install-ghost-mode.sh --service-mode'
+ExecStop=/bin/bash -c 'cd $AWESOME_STACK_PATH/ghost-mode && ./scripts/ghost-toggle --disable'
+ExecReload=/bin/bash -c 'cd $AWESOME_STACK_PATH/ghost-mode && ./scripts/ghost-toggle --reload'
+PIDFile=/var/run/digital-fortress.pid
+TimeoutStartSec=120
+TimeoutStopSec=60
+Restart=on-failure
+RestartSec=10
+
+# Security settings
+PrivateDevices=false
+ProtectSystem=false
+ProtectHome=false
+NoNewPrivileges=false
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW CAP_SYS_ADMIN
+
+# Environment variables
+Environment=GHOST_MODE_AUTO=1
+Environment=GHOST_MODE_TRAY=1
+Environment=GHOST_MODE_LEVEL=maximum
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=digital-fortress
+
+[Install]
+WantedBy=multi-user.target
+Also=digital-fortress-monitor.timer
