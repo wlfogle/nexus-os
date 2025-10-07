@@ -7,10 +7,10 @@ I would like to submit NexusOS for inclusion in the DistroWatch database once we
 Distribution Details:
 - Name: NexusOS
 - Version: 1.0.0 (planned first stable release)
-- Base: Built from scratch with universal package compatibility layer
+- Base: Garuda Dr460nized Gaming Edition with universal package compatibility layer
 - Architecture: x86_64 (ARM64 support planned)
-- Desktop: Custom AI-integrated desktop environment (Qt-based)
-- Package Manager: NexusPkg (universal package manager supporting all Linux package formats)
+- Desktop: NexusDE (hybrid X11/Wayland) with AI-integrated features
+- Package Manager: nexuspkg (universal package manager) + pacman/yay (base)
 
 Official Website: https://nexusos.org (under development)
 GitHub Repository: https://github.com/nexusos/nexusos
@@ -20,18 +20,19 @@ Support: https://discord.gg/nexusos (community)
 
 Brief Description:
 
-NexusOS is the world's first truly universal Linux distribution that can natively install packages from ANY Linux distribution. Unlike traditional Linux distributions that lock users into their specific package ecosystem, NexusOS breaks down barriers by supporting DEB, RPM, ZST, Flatpak, Snap, AppImage, Python, NPM, Cargo, and Docker packages through a single unified interface.
+NexusOS is the world's first truly universal Linux distribution that can natively install packages from ANY Linux distribution. Built on the solid foundation of Garuda Dr460nized Gaming Edition, NexusOS breaks down barriers by supporting DEB, RPM, ZST, Flatpak, Snap, AppImage, Python, NPM, Cargo, and Docker packages through a single unified interface while maintaining all the gaming optimizations and performance benefits of Garuda Linux.
 
-The distribution features an AI-native architecture with "Nexus-Rani," an intelligent system companion that provides AI-powered package recommendations, system optimization, and intelligent dependency resolution across all package formats. This makes NexusOS uniquely positioned as the first Linux distribution designed from the ground up for the AI era.
+The distribution features an AI-native architecture with two specialized AI assistants: "Stella" (Golden Retriever mascot) for security monitoring and package management, and "Max Jr." (Cat mascot) for performance optimization and system monitoring. These AI companions provide intelligent system management, automatic optimization, and seamless integration across all system functions.
 
 NexusOS includes a complete self-hosting infrastructure stack with 100+ ready-to-deploy services including media servers (Plex, Jellyfin, Sonarr, Radarr), home automation (Home Assistant), development tools (GitLab, Jenkins), and monitoring solutions (Grafana, Prometheus). The "Digital Fortress" security suite provides ultimate online privacy with browser fingerprinting protection, hardware fingerprinting spoofing, and network anonymization capabilities.
 
 Target Audience:
-- Power users seeking ultimate package compatibility
-- Self-hosting enthusiasts who want turnkey infrastructure
-- Privacy-conscious users requiring advanced anonymization
-- AI enthusiasts interested in AI-native operating systems
-- Developers working across multiple Linux ecosystems
+- Gamers seeking the best Linux gaming experience with universal software access
+- Power users wanting ultimate package compatibility across all Linux distributions
+- Self-hosting enthusiasts who want turnkey media center infrastructure (65+ services)
+- Privacy-conscious users requiring advanced anonymization and security
+- AI enthusiasts interested in AI-native operating systems with mascot companions
+- Developers working across multiple Linux ecosystems and gaming platforms
 
 Key Differentiators:
 1. Universal Package Compatibility - Install packages from Ubuntu, Fedora, Arch, Alpine, and more simultaneously
