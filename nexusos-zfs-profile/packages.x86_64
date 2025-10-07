@@ -1,0 +1,55 @@
+# Core system
+base
+linux
+linux-firmware
+systemd
+systemd-sysvcompat
+
+# ZFS essentials
+zfs-dkms
+zfs-utils
+
+# Boot system
+efibootmgr
+dosfstools
+mtools
+
+# archiso requirements
+arch-install-scripts
+mkinitcpio
+mkinitcpio-archiso
+squashfs-tools
+
+# Basic tools
+networkmanager
+openssh
+nano
+git
+curl
+wget
+
+# Minimal desktop (faster build)
+plasma-desktop
+sddm
+konsole
+kate
+dolphin
+
+# Graphics
+mesa
+xorg-server
+pipewire
+pipewire-pulse
+
+# Essential development
+python
+python-pip
+gcc
+make
+
+# ZFS tools
+smartmontools
+hdparm
+
+# Build essentials
+memtest86+-efi

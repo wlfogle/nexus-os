@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Install NexusOS with ZFS
+Comment=Install NexusOS to disk with ZFS root filesystem
+Exec=konsole -e sudo nexus-zfs-setup.sh
+Icon=system-software-install
+Terminal=false
+Categories=System;

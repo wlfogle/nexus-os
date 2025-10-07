@@ -1,0 +1,30 @@
+NAME="NexusOS"
+PRETTY_NAME="NexusOS 1.0.0-alpha (Universal Foundation)"
+VERSION="1.0.0-alpha"
+VERSION_ID="1.0.0-alpha"
+VERSION_CODENAME="universal-foundation"
+ID=nexusos
+ID_LIKE="garuda arch"
+BUILD_ID="2025.01.07"
+ANSI_COLOR="0;36"
+HOME_URL="https://nexusos.org/"
+DOCUMENTATION_URL="https://docs.nexusos.org/"
+SUPPORT_URL="https://github.com/nexusos/nexus-os/issues"
+BUG_REPORT_URL="https://github.com/nexusos/nexus-os/issues"
+PRIVACY_POLICY_URL="https://nexusos.org/privacy"
+LOGO="nexusos"
+CPE_NAME="cpe:/o:nexusos:nexusos:1.0.0-alpha"
+
+# NexusOS Specific
+NEXUS_AI_MASCOTS="stella maxjr"
+NEXUS_PACKAGE_MANAGER="nexuspkg"
+NEXUS_UNIVERSAL_SUPPORT="true"
+NEXUS_SUPPORTED_FORMATS="pkg,aur,deb,rpm,flatpak,snap,appimage,apk,xbps,nix,emerge,pip,npm,cargo,gem"
+NEXUS_MEDIA_STACK="enabled"
+NEXUS_GAMING_MODE="enabled"
+
+# Base Information
+BASE_DISTRO="Garuda Dr460nized Gaming Edition"
+BASE_DISTRO_VERSION="2024.12.29"
+KERNEL="linux-zen"
+DESKTOP_ENVIRONMENT="NexusDE (KDE Plasma 6)"
