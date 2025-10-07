@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <!-- Photo pattern -->
+    <pattern id="stellaMaxPhoto" x="0" y="0" width="300" height="300" patternUnits="userSpaceOnUse">
+      <image xlink:href="../photos/stella-maxjr-square.jpg" x="0" y="0" width="300" height="300"/>
+    </pattern>
+    
+    <!-- AI Tech gradient -->
+    <radialGradient id="techOverlay" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:rgba(0,204,102,0.1);stop-opacity:1" />
+      <stop offset="70%" style="stop-color:rgba(0,204,102,0.3);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:rgba(0,102,204,0.4);stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Neural network glow -->
+    <filter id="neuralGlow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Holographic effect -->
+    <linearGradient id="holographic" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00cc66;stop-opacity:0.6" />
+      <stop offset="33%" style="stop-color:#0066cc;stop-opacity:0.4" />
+      <stop offset="66%" style="stop-color:#cc6600;stop-opacity:0.4" />
+      <stop offset="100%" style="stop-color:#00cc66;stop-opacity:0.6" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Dark background with subtle pattern -->
+  <rect x="0" y="0" width="400" height="400" fill="#1a1a1a"/>
+  
+  <!-- Outer glow ring -->
+  <circle cx="200" cy="200" r="180" fill="none" stroke="#00cc66" stroke-width="2" opacity="0.5" filter="url(#neuralGlow)">
+    <animate attributeName="stroke-dasharray" values="0 1130; 565 565; 0 1130" dur="4s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Photo circle container -->
+  <circle cx="200" cy="200" r="140" fill="url(#stellaMaxPhoto)" stroke="#00cc66" stroke-width="4"/>
+  
+  <!-- Tech overlay -->
+  <circle cx="200" cy="200" r="140" fill="url(#techOverlay)" opacity="0.7"/>
+  
+  <!-- Neural network nodes around the photo -->
+  <g filter="url(#neuralGlow)">
+    <g>
+      <animateTransform attributeName="transform" type="rotate" 
+                       values="0 200 200; 360 200 200" dur="20s" repeatCount="indefinite"/>
+      
+      <!-- Top node -->
+      <circle cx="200" cy="40" r="4" fill="#00cc66" opacity="0.9">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <text x="200" y="25" text-anchor="middle" font-size="12" fill="#00cc66" opacity="0.8">🛡️</text>
+      
+      <!-- Top-right node -->
+      <circle cx="320" cy="80" r="4" fill="#0066cc" opacity="0.8">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="3s" begin="0.5s" repeatCount="indefinite"/>
+      </circle>
+      <text x="335" y="85" text-anchor="middle" font-size="12" fill="#0066cc" opacity="0.8">📊</text>
+      
+      <!-- Right node -->
+      <circle cx="360" cy="200" r="4" fill="#cc6600" opacity="0.7">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="3s" begin="1s" repeatCount="indefinite"/>
+      </circle>
+      <text x="375" y="205" text-anchor="middle" font-size="12" fill="#cc6600" opacity="0.8">⚡</text>
+      
+      <!-- Bottom-right node -->
+      <circle cx="320" cy="320" r="4" fill="#00cc66" opacity="0.8">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="3s" begin="1.5s" repeatCount="indefinite"/>
+      </circle>
+      <text x="335" y="335" text-anchor="middle" font-size="12" fill="#00cc66" opacity="0.8">📦</text>
+      
+      <!-- Bottom node -->
+      <circle cx="200" cy="360" r="4" fill="#0066cc" opacity="0.9">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="3s" begin="2s" repeatCount="indefinite"/>
+      </circle>
+      <text x="200" y="380" text-anchor="middle" font-size="12" fill="#0066cc" opacity="0.8">🤖</text>
+      
+      <!-- Bottom-left node -->
+      <circle cx="80" cy="320" r="4" fill="#cc6600" opacity="0.8">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="3s" begin="2.5s" repeatCount="indefinite"/>
+      </circle>
+      <text x="65" y="335" text-anchor="middle" font-size="12" fill="#cc6600" opacity="0.8">🔐</text>
+      
+      <!-- Left node -->
+      <circle cx="40" cy="200" r="4" fill="#00cc66" opacity="0.7">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="3s" begin="3s" repeatCount="indefinite"/>
+      </circle>
+      <text x="25" y="205" text-anchor="middle" font-size="12" fill="#00cc66" opacity="0.8">🌐</text>
+      
+      <!-- Top-left node -->
+      <circle cx="80" cy="80" r="4" fill="#0066cc" opacity="0.8">
+        <animate attributeName="opacity" values="0.4;1;0.4" dur="3s" begin="3.5s" repeatCount="indefinite"/>
+      </circle>
+      <text x="65" y="75" text-anchor="middle" font-size="12" fill="#0066cc" opacity="0.8">🚀</text>
+    </g>
+  </g>
+  
+  <!-- Connection lines between nodes -->
+  <g stroke="url(#holographic)" stroke-width="1" fill="none" opacity="0.4">
+    <animateTransform attributeName="transform" type="rotate" 
+                     values="0 200 200; 360 200 200" dur="25s" repeatCount="indefinite"/>
+    
+    <!-- Octagon connections -->
+    <path d="M 200,40 L 320,80 L 360,200 L 320,320 L 200,360 L 80,320 L 40,200 L 80,80 Z" stroke-dasharray="5,5">
+      <animate attributeName="stroke-dashoffset" values="0; 20" dur="2s" repeatCount="indefinite"/>
+    </path>
+  </g>
+  
+  <!-- Center identification -->
+  <circle cx="200" cy="200" r="20" fill="rgba(0,204,102,0.2)" stroke="#00cc66" stroke-width="2">
+    <animate attributeName="r" values="18;22;18" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Stella identifier (left side of center) -->
+  <text x="185" y="200" text-anchor="middle" font-size="16" fill="#FFD700" opacity="0.9">🐕</text>
+  
+  <!-- Max Jr. identifier (right side of center) -->
+  <text x="215" y="200" text-anchor="middle" font-size="16" fill="#E6E6FA" opacity="0.9">🐱</text>
+  
+  <!-- Branding text with background -->
+  <rect x="50" y="350" width="300" height="40" rx="20" fill="rgba(26,26,26,0.9)" stroke="#00cc66" stroke-width="1"/>
+  
+  <!-- NexusOS title -->
+  <text x="200" y="370" text-anchor="middle" font-size="24" font-weight="bold" fill="#ffffff">NexusOS</text>
+  <text x="200" y="385" text-anchor="middle" font-size="14" fill="#00cc66" opacity="0.9">Stella &amp; Max Jr. - AI Companions</text>
+  
+  <!-- Real photo credit -->
+  <text x="200" y="25" text-anchor="middle" font-size="10" fill="#cccccc" opacity="0.6">📸 Real Photo Integrated</text>
+  
+  <!-- Holographic scan line effect -->
+  <rect x="60" y="100" width="280" height="2" fill="url(#holographic)" opacity="0.8">
+    <animateTransform attributeName="transform" type="translate" 
+                     values="0 -100; 0 200; 0 -100" dur="6s" repeatCount="indefinite"/>
+  </rect>
+</svg>

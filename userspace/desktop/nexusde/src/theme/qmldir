@@ -1,0 +1,26 @@
+# NexusDE Theme System QML Module
+# This file registers all theme components as a unified QML module
+
+module NexusDE.Theme
+
+# Singleton theme instances
+singleton NexusTheme 1.0 NexusTheme.qml
+singleton NexusBranding 1.0 NexusBranding.qml
+
+# Animation and effect components
+GlowEffect 1.0 GlowEffect.qml
+RippleEffect 1.0 RippleEffect.qml
+
+# Optional components (to be created as needed)
+# NexusLogo 1.0 NexusLogo.qml
+# MascotDuo 1.0 MascotDuo.qml 
+# NexusButton 1.0 NexusButton.qml
+# TypewriterText 1.0 TypewriterText.qml
+
+# Theme variant files
+# DarkTheme 1.0 DarkTheme.qml
+# LightTheme 1.0 LightTheme.qml
+# HighContrastTheme 1.0 HighContrastTheme.qml
+
+# Export version information
+typeinfo NexusTheme.qmltypes

@@ -1,0 +1,543 @@
+# NexusOS Package Management System
+# Comprehensive package definitions for gaming, media stack, and system integration
+# Version: 2024.1 Stellar Edition
+
+nexus_os:
+  version: "2024.1-stellar"
+  codename: "Stellar"
+  base_system: "Arch Linux"
+  kernel: "linux-zen"  # Gaming-optimized kernel
+  
+  # Core system identity
+  branding:
+    name: "NexusOS"
+    tagline: "The Ultimate Gaming & Media Experience"
+    mascots: ["Stella", "Max Jr."]
+    
+# ============================================================================
+# GAMING PACKAGE CATEGORIES (Garuda Integration)
+# ============================================================================
+
+gaming_packages:
+  category: "Gaming & Performance"
+  description: "Complete Garuda gaming package integration with performance optimizations"
+  
+  # Core Gaming Runtime
+  core_gaming:
+    - linux-zen                    # Gaming kernel
+    - linux-zen-headers
+    - dkms                        # Dynamic kernel modules
+    - base-devel                  # Build tools
+    - git
+    - wget
+    - curl
+    
+  # GPU Drivers & Graphics
+  gpu_drivers:
+    # NVIDIA
+    - nvidia-dkms                 # NVIDIA drivers
+    - nvidia-utils
+    - nvidia-settings
+    - nvidia-prime               # Optimus support
+    - libva-nvidia-driver        # VAAPI support
+    
+    # AMD
+    - mesa                       # AMD open-source drivers
+    - lib32-mesa
+    - vulkan-radeon
+    - lib32-vulkan-radeon
+    - libva-mesa-driver
+    - mesa-vdpau
+    - lib32-mesa-vdpau
+    
+    # Intel
+    - mesa                       # Intel graphics
+    - vulkan-intel
+    - lib32-vulkan-intel
+    - intel-media-driver
+    
+  # Gaming Platforms & Launchers
+  gaming_platforms:
+    - steam                      # Steam client
+    - lib32-systemd              # Steam dependencies
+    - ttf-liberation
+    - lutris                     # Universal gaming platform
+    - bottles                    # Windows app runner
+    - heroic-games-launcher-bin  # Epic/GOG launcher
+    - legendary                  # Epic Games CLI
+    - gamescope                  # Gaming compositor
+    - mangohud                   # Performance overlay
+    - goverlay                   # MangoHud configurator
+    
+  # Wine & Compatibility
+  wine_compatibility:
+    - wine                       # Windows compatibility layer
+    - wine-gecko
+    - wine-mono
+    - winetricks
+    - lib32-gnutls              # Wine dependencies
+    - lib32-libxml2
+    - lib32-mpg123
+    - lib32-lcms2
+    - lib32-giflib
+    - lib32-libpng
+    - lib32-gst-plugins-base-libs
+    - dxvk-bin                  # DirectX to Vulkan
+    - vkd3d                     # Direct3D 12 to Vulkan
+    
+  # Performance & Optimization
+  performance_tools:
+    - gamemode                   # Gaming performance daemon
+    - lib32-gamemode
+    - irqbalance                # IRQ optimization
+    - ananicy-cpp               # Process priority optimization
+    - preload                   # Application preloader
+    - zram-generator           # Compressed RAM
+    - thermald                 # Thermal management
+    - tlp                      # Power management
+    - cpupower                 # CPU frequency scaling
+    - msr-tools               # MSR access
+    - x86_energy_perf_policy  # Intel energy policy
+    
+  # Audio & Multimedia
+  gaming_audio:
+    - pipewire                  # Modern audio system
+    - lib32-pipewire
+    - wireplumber
+    - pipewire-alsa
+    - pipewire-pulse
+    - pipewire-jack
+    - lib32-pipewire-jack
+    - helvum                   # Pipewire patchbay
+    - easyeffects             # Audio effects
+    - carla                   # Audio plugin host
+    
+  # Input & Controllers
+  input_devices:
+    - xf86-input-libinput     # Input handling
+    - libinput-gestures       # Gesture support
+    - antimicrox              # Controller mapping
+    - sc-controller           # Steam Controller
+    - ds4drv                  # DualShock 4
+    - xpadneo-dkms           # Xbox controller
+    - game-devices-udev      # Gaming device rules
+    
+  # Garuda Gaming Specific
+  garuda_gaming:
+    - garuda-gamer            # Garuda gaming meta-package
+    - garuda-gaming-tweaks    # Gaming optimizations
+    - garuda-performance-tweaks # Performance tweaks
+    - garuda-kernel-manager   # Kernel management
+    - garuda-hooks           # System hooks
+    - garuda-hotfixes       # Critical fixes
+    
+# ============================================================================
+# MEDIA STACK INTEGRATION (Awesome Stack)
+# ============================================================================
+
+media_stack:
+  category: "Media & Entertainment"
+  description: "Complete awesome-stack media services integration"
+  
+  # Core Infrastructure Services
+  core_infrastructure:
+    docker_stack:
+      - docker                  # Container runtime
+      - docker-compose         # Container orchestration
+      - docker-buildx         # Multi-platform builds
+      - ctop                  # Container monitoring
+      - lazydocker           # Docker TUI
+      
+    database_services:
+      - postgresql            # Primary database
+      - redis                # Cache & sessions
+      - mariadb              # Alternative database
+      
+    networking:
+      - nginx                # Web server
+      - traefik              # Reverse proxy
+      - wireguard-tools      # VPN
+      - tailscale           # Mesh VPN
+      
+  # Essential Media Services (Phase 2: 8100-8199)
+  media_automation:
+    indexers:
+      - prowlarr-service     # Indexer management
+      - jackett-service      # Torrent indexers
+      - flaresolverr-service # Cloudflare solver
+      
+    download_clients:
+      - qbittorrent-service  # Primary torrent client
+      - deluge-service       # Alternative torrent
+      - sabnzbd-service      # Usenet client
+      
+    arr_services:
+      - sonarr-service       # TV series management
+      - radarr-service       # Movie management  
+      - lidarr-service       # Music management
+      - readarr-service      # Book management
+      - mylar3-service       # Comic management
+      - whisparr-service     # Adult content
+      
+    enhanced_arr:
+      - sonarr-extended-service    # Enhanced TV
+      - radarr-extended-service    # Enhanced movies
+      - lidarr-extended-service    # Enhanced music
+      
+  # Media Servers (Phase 3: 8200-8299)
+  media_servers:
+    streaming:
+      - jellyfin-service     # Primary media server
+      - plex-service         # Alternative server
+      - emby-service         # Secondary server
+      - kodi                 # Media center client
+      
+    specialized_media:
+      - audiobookshelf-service   # Audiobooks
+      - calibre-web-service      # Books
+      - navidrome-service        # Music streaming
+      - photoprism-service       # Photo management
+      
+    live_tv:
+      - tvheadend-service    # TV backend
+      - iptv-proxy-service   # IPTV management
+      - channelsdvr-service  # DVR system
+      
+  # Enhancement Services (Phase 4: 8300-8399)
+  enhancement_services:
+    content_management:
+      - overseerr-service    # Request management
+      - jellyseerr-service   # Jellyfin requests
+      - bazarr-service       # Subtitle management
+      - tautulli-service     # Plex analytics
+      
+    automation:
+      - autobrr-service      # Real-time automation
+      - flexget-service      # Content automation
+      - kometa-service       # Collection management
+      - gaps-service         # Collection gaps
+      
+    maintenance:
+      - janitorr-service     # Smart cleanup
+      - decluttarr-service   # Duplicate removal
+      - recyclarr-service    # Config sync
+      - unpackerr-service    # Archive extraction
+      
+  # Monitoring & Analytics (Phase 5: 8400-8499)
+  monitoring_services:
+    metrics:
+      - prometheus-service   # Metrics collection
+      - grafana-service      # Visualization
+      - exportarr-service    # Arr metrics
+      - checkrr-service      # Health monitoring
+      
+    logging:
+      - loki-service         # Log aggregation
+      - promtail-service     # Log shipping
+      - elasticsearch-service # Search & analytics
+      
+  # Management & Utilities (Phase 6: 8500-8599)
+  management_services:
+    container_management:
+      - portainer-service    # Container GUI
+      - yacht-service        # Alternative GUI
+      - dockge-service       # Stack management
+      
+    dashboards:
+      - organizr-service     # Primary dashboard
+      - homarr-service       # Modern dashboard
+      - homepage-service     # Customizable dashboard
+      - heimdall-service     # App dashboard
+      
+    security:
+      - vaultwarden-service  # Password manager
+      - authentik-service    # SSO & auth
+      - crowdsec-service     # Security engine
+      
+# ============================================================================
+# NEXUSDE DESKTOP ENVIRONMENT
+# ============================================================================
+
+nexusde_components:
+  category: "Desktop Environment"
+  description: "Complete NexusDE desktop environment with AI integration"
+  
+  # Core Desktop Components
+  desktop_core:
+    - nexusde-compositor    # Hybrid X11/Wayland compositor
+    - nexusde-window-manager # AI-powered window management
+    - nexusde-shell         # Desktop shell & panels
+    - nexusde-session-manager # Session & power management
+    - nexusde-theme-engine  # Theming system
+    - nexusde-branding     # Visual identity
+    
+  # AI Mascot Integration  
+  ai_assistants:
+    - stella-security-ai    # Security & package guardian
+    - maxjr-system-ai      # Performance & monitoring
+    - nexus-ai-coordinator # AI orchestration
+    
+  # System Integration
+  system_services:
+    - nexus-system-services # Unified service manager
+    - nexus-media-integration # Media stack integration
+    - nexus-gaming-integration # Gaming optimization
+    - nexus-biometric-auth  # Garuda Hello integration
+    - nexus-backup-system   # Ultimate restore integration
+    
+  # Development Tools
+  development:
+    - nexus-kvm-manager    # Virtualization management
+    - nexus-ai-assistant   # Development AI
+    - nexus-coding-tools   # Development utilities
+    
+# ============================================================================
+# SYSTEM INTEGRATION & SERVICES
+# ============================================================================
+
+system_integration:
+  category: "System Services"
+  description: "Core system integration and service management"
+  
+  # Core System Services
+  core_services:
+    init_system:
+      - systemd              # Service manager
+      - systemd-sysvcompat   # SysV compatibility
+      - systemd-swap         # Swap management
+      
+    networking:
+      - networkmanager       # Network management
+      - nm-connection-editor # Network GUI
+      - network-manager-applet # System tray
+      - networkmanager-openvpn # VPN support
+      
+    bluetooth:
+      - bluez                # Bluetooth stack
+      - bluez-utils          # Bluetooth utilities
+      - blueman              # Bluetooth manager
+      
+    printing:
+      - cups                 # Printing system
+      - cups-pdf            # PDF printer
+      - system-config-printer # Printer config
+      
+  # Security & Authentication
+  security_services:
+    authentication:
+      - polkit               # Privilege management
+      - polkit-gnome        # GUI authentication
+      - garuda-hello        # Biometric authentication
+      - pam                 # Authentication modules
+      
+    security:
+      - ufw                 # Firewall
+      - fail2ban           # Intrusion prevention
+      - rkhunter           # Rootkit detection
+      - clamav             # Antivirus
+      
+  # File Systems & Storage
+  filesystem_services:
+    core_fs:
+      - btrfs-progs         # BTRFS utilities
+      - snapper             # Snapshot management
+      - timeshift           # System snapshots
+      - grub-btrfs         # GRUB BTRFS integration
+      
+    additional_fs:
+      - ntfs-3g            # NTFS support
+      - exfatprogs         # exFAT support
+      - dosfstools         # FAT support
+      - f2fs-tools         # F2FS support
+      
+# ============================================================================
+# APPLICATION ECOSYSTEM
+# ============================================================================
+
+applications:
+  category: "Applications"
+  description: "Essential applications for gaming, media, and productivity"
+  
+  # Gaming Applications
+  gaming_apps:
+    - discord               # Gaming communication
+    - teamspeak3           # Voice chat
+    - obs-studio           # Streaming/recording
+    - streamlabs-obs       # Enhanced streaming
+    - kdenlive             # Video editing
+    - blender              # 3D creation
+    - gimp                 # Image editing
+    - krita                # Digital painting
+    
+  # Media Applications
+  media_apps:
+    - vlc                  # Media player
+    - mpv                  # Lightweight player
+    - audacity             # Audio editing
+    - handbrake            # Video transcoding
+    - makemkv              # Blu-ray ripping
+    - mediainfo-gui        # Media analysis
+    - mkvtoolnix-gui       # MKV editing
+    
+  # Productivity Applications
+  productivity_apps:
+    - firefox              # Web browser
+    - chromium             # Alternative browser
+    - thunderbird          # Email client
+    - libreoffice-fresh    # Office suite
+    - kate                 # Text editor
+    - visual-studio-code-bin # Code editor
+    - virtual-machine-manager # VM management
+    
+  # System Utilities
+  system_utilities:
+    - htop                 # Process monitor
+    - btop                 # Modern system monitor
+    - neofetch            # System info
+    - fastfetch           # Fast system info
+    - tree                 # Directory tree
+    - ncdu                # Disk usage
+    - lsof                # Open files
+    - strace              # System call tracer
+    - gparted             # Partition manager
+    - filelight           # Disk usage visualizer
+
+# ============================================================================
+# PACKAGE GROUPS & METAPACKAGES  
+# ============================================================================
+
+package_groups:
+  # Essential base system
+  nexus-base:
+    description: "Core NexusOS base system"
+    packages:
+      - linux-zen
+      - base-devel
+      - networkmanager
+      - systemd
+      - nexusde-core
+      
+  # Complete gaming setup
+  nexus-gaming:
+    description: "Complete gaming package collection"
+    includes: 
+      - gaming_packages.core_gaming
+      - gaming_packages.gpu_drivers
+      - gaming_packages.gaming_platforms
+      - gaming_packages.wine_compatibility
+      - gaming_packages.performance_tools
+      - gaming_packages.garuda_gaming
+      
+  # Complete media stack
+  nexus-media:
+    description: "Full awesome-stack media services"
+    includes:
+      - media_stack.core_infrastructure
+      - media_stack.media_automation
+      - media_stack.media_servers
+      - media_stack.enhancement_services
+      - media_stack.monitoring_services
+      - media_stack.management_services
+      
+  # Desktop environment
+  nexus-desktop:
+    description: "Complete NexusDE desktop environment"
+    includes:
+      - nexusde_components.desktop_core
+      - nexusde_components.ai_assistants
+      - nexusde_components.system_services
+      
+  # Development tools
+  nexus-development:
+    description: "Development and content creation tools"
+    includes:
+      - nexusde_components.development
+      - applications.productivity_apps
+      
+  # Complete installation
+  nexus-complete:
+    description: "Full NexusOS installation with everything"
+    includes:
+      - nexus-base
+      - nexus-gaming
+      - nexus-media
+      - nexus-desktop
+      - nexus-development
+      - system_integration.core_services
+      - system_integration.security_services
+      - system_integration.filesystem_services
+      - applications.gaming_apps
+      - applications.media_apps
+      - applications.system_utilities
+
+# ============================================================================
+# SERVICE CONFIGURATION
+# ============================================================================
+
+service_configuration:
+  # Gaming optimizations
+  gaming_services:
+    enabled_by_default:
+      - gamemode
+      - irqbalance
+      - ananicy-cpp
+      - thermald
+      - stella-security-ai
+      - maxjr-system-ai
+      
+  # Media stack services
+  media_services:
+    docker_compose_stacks:
+      - awesome-stack-infrastructure
+      - awesome-stack-media-automation  
+      - awesome-stack-media-servers
+      - awesome-stack-enhancement
+      - awesome-stack-monitoring
+      - awesome-stack-management
+      
+  # Desktop services
+  desktop_services:
+    enabled_by_default:
+      - nexusde-compositor
+      - nexusde-session-manager
+      - nexus-system-services
+      - garuda-hello-daemon
+      
+# ============================================================================
+# SYSTEM PROFILES
+# ============================================================================
+
+system_profiles:
+  gaming_focused:
+    description: "Optimized for gaming performance"
+    priority_packages:
+      - nexus-gaming
+      - nexus-desktop
+      - nexus-base
+    optional_packages:
+      - nexus-media
+      
+  media_server:
+    description: "Optimized for media serving"
+    priority_packages:
+      - nexus-media
+      - nexus-base
+      - nexus-desktop
+    optional_packages:
+      - nexus-gaming
+      
+  complete_experience:
+    description: "Full NexusOS experience"
+    priority_packages:
+      - nexus-complete
+    optional_packages: []
+    
+  developer_workstation:
+    description: "Development-focused setup"
+    priority_packages:
+      - nexus-development
+      - nexus-desktop
+      - nexus-base
+    optional_packages:
+      - nexus-gaming
+      - nexus-media

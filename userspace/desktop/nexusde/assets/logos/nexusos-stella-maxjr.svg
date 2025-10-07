@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Stella's golden gradient -->
+    <linearGradient id="stellaGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#FFA500;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#CD853F;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#DEB887;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Max Jr.'s cream gradient -->
+    <linearGradient id="maxGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F5F5DC;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#FAEBD7;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#DDD;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E6E6FA;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- AI Connection gradient -->
+    <linearGradient id="connectionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00cc66;stop-opacity:0.8" />
+      <stop offset="50%" style="stop-color:#FFD700;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#0066cc;stop-opacity:0.8" />
+    </linearGradient>
+    
+    <!-- Glow filter -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- AI Halo animation -->
+    <animateTransform id="haloRotation" attributeName="transform" type="rotate" 
+                     values="0 100 100; 360 100 100" dur="8s" repeatCount="indefinite"/>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#1a1a1a" stroke="#00cc66" stroke-width="2" opacity="0.9"/>
+  
+  <!-- AI Halo around the duo -->
+  <g filter="url(#glow)">
+    <circle cx="100" cy="100" r="80" fill="none" stroke="#00cc66" stroke-width="1" opacity="0.3">
+      <animateTransform attributeName="transform" type="rotate" 
+                       values="0 100 100; 360 100 100" dur="12s" repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- AI nodes around the circle -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" 
+                       values="0 100 100; 360 100 100" dur="10s" repeatCount="indefinite"/>
+      <circle cx="100" cy="20" r="3" fill="#00cc66" opacity="0.8">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="156" cy="44" r="3" fill="#00cc66" opacity="0.6">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" begin="0.3s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="180" cy="100" r="3" fill="#00cc66" opacity="0.4">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" begin="0.6s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="156" cy="156" r="3" fill="#00cc66" opacity="0.7">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" begin="0.9s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="100" cy="180" r="3" fill="#00cc66" opacity="0.9">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" begin="1.2s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="44" cy="156" r="3" fill="#00cc66" opacity="0.5">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" begin="1.5s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="20" cy="100" r="3" fill="#00cc66" opacity="0.8">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" begin="1.8s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="44" cy="44" r="3" fill="#00cc66" opacity="0.6">
+        <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" begin="2.1s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+  </g>
+  
+  <!-- Stella (Golden Retriever) - Left side -->
+  <g transform="translate(40, 80)">
+    <!-- Stella's body -->
+    <path d="M 15,30 Q 10,25 20,20 Q 30,15 40,20 Q 45,25 42,32 Q 40,35 45,38 Q 50,42 45,48 Q 40,52 35,50 Q 30,48 18,40 Q 12,35 15,30 Z" 
+          fill="url(#stellaGradient)" stroke="#00cc66" stroke-width="1.2"/>
+    
+    <!-- Stella's tail (animated wag) -->
+    <path d="M 35,50 Q 38,45 32,48" fill="none" stroke="url(#stellaGradient)" stroke-width="3" stroke-linecap="round">
+      <animateTransform attributeName="transform" type="rotate" 
+                       values="-10 35 50; 10 35 50; -10 35 50" dur="0.8s" repeatCount="indefinite"/>
+    </path>
+    
+    <!-- Stella's eye -->
+    <circle cx="25" cy="27" r="2.5" fill="#2F4F2F"/>
+    <circle cx="26" cy="26" r="0.8" fill="#ffffff"/>
+    
+    <!-- Stella's nose -->
+    <circle cx="15" cy="30" r="1.5" fill="#000000"/>
+    
+    <!-- Breathing animation -->
+    <animateTransform attributeName="transform" type="scale" 
+                     values="1 1; 1.03 1.03; 1 1" dur="3s" repeatCount="indefinite"/>
+  </g>
+  
+  <!-- Max Jr. (Cat) - Right side -->
+  <g transform="translate(110, 85)">
+    <!-- Max Jr.'s body -->
+    <path d="M 12,25 Q 8,20 15,15 Q 18,12 22,15 L 20,20 Q 25,12 30,15 L 28,20 Q 35,18 38,22 Q 42,28 38,35 Q 35,38 30,36 Q 25,35 22,32 Q 18,30 15,32 Q 10,30 12,25 Z" 
+          fill="url(#maxGradient)" stroke="#0066cc" stroke-width="1.2"/>
+    
+    <!-- Max Jr.'s eyes -->
+    <circle cx="20" cy="22" r="2" fill="#4169E1"/>
+    <circle cx="28" cy="22" r="2" fill="#4169E1"/>
+    <circle cx="21" cy="21" r="0.6" fill="#ffffff"/>
+    <circle cx="29" cy="21" r="0.6" fill="#ffffff"/>
+    
+    <!-- Max Jr.'s nose -->
+    <circle cx="12" cy="25" r="1" fill="#FFB6C1"/>
+    
+    <!-- Subtle purring vibration -->
+    <animateTransform attributeName="transform" type="translate" 
+                     values="110 85; 110.5 85; 109.5 85; 110 85" dur="0.1s" repeatCount="indefinite"/>
+  </g>
+  
+  <!-- Connection line between Stella and Max Jr. -->
+  <path d="M 75,120 Q 100,100 125,120" fill="none" stroke="url(#connectionGradient)" stroke-width="2" opacity="0.6" stroke-dasharray="5,5">
+    <animate attributeName="stroke-dashoffset" values="0; 10" dur="1s" repeatCount="indefinite"/>
+  </path>
+  
+  <!-- Role indicators -->
+  <!-- Stella's security/package icons -->
+  <text x="75" y="150" text-anchor="middle" font-size="14" opacity="0.8">🛡️📦</text>
+  
+  <!-- Max Jr.'s monitoring/optimization icons -->
+  <text x="125" y="150" text-anchor="middle" font-size="14" opacity="0.8">📊⚡</text>
+  
+  <!-- Team status -->
+  <rect x="60" y="50" width="80" height="16" rx="8" fill="#00cc66" opacity="0.9">
+    <animate attributeName="opacity" values="0.6;0.9;0.6" dur="2s" repeatCount="indefinite"/>
+  </rect>
+  <text x="100" y="61" text-anchor="middle" font-size="8" fill="#ffffff" font-weight="bold">🤝 TEAM ACTIVE</text>
+  
+  <!-- NexusOS branding -->
+  <text x="100" y="185" text-anchor="middle" font-size="12" fill="#ffffff" font-weight="bold">NexusOS</text>
+  <text x="100" y="195" text-anchor="middle" font-size="8" fill="#cccccc">Stella &amp; Max Jr.</text>
+</svg>
