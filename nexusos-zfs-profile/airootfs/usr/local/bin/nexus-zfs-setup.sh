@@ -1,169 +1,262 @@
 #!/bin/bash
+set -euo pipefail
 
-# NexusOS ZFS Installation and Setup Script
-# This script sets up ZFS root installation with boot environments
+# NexusOS ZFS Installation Script with ZFSBootMenu
+# This script sets up a proper ZFS root system with boot environments
 
-set -e
+echo "=== NexusOS ZFS Installation with ZFSBootMenu ==="
 
-echo "🚀 NexusOS ZFS Setup"
-echo "━━━━━━━━━━━━━━━━━━━━━"
-
-# Check if running in live environment
-if [ ! -f /run/archiso/bootmnt/.arch/pkglist.x86_64.txt ]; then
-    echo "❌ This script must be run from the NexusOS live environment"
-    exit 1
+# Check if we're running as root
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root" 
+   exit 1
 fi
 
-# Prompt for target disk
-echo ""
-echo "📋 Available disks:"
-lsblk -d -o NAME,SIZE,MODEL | grep -E '^sd|^nvme|^vd'
+# Function to prompt for user input with default
+prompt_with_default() {
+    local prompt="$1"
+    local default="$2"
+    local result
+    
+    read -p "$prompt [$default]: " result
+    echo "${result:-$default}"
+}
 
-echo ""
-read -p "Enter target disk (e.g., /dev/nvme0n1): " TARGET_DISK
+# Get disk information
+echo "Available disks:"
+lsblk -d -o NAME,SIZE,MODEL
+echo
 
-if [ ! -b "$TARGET_DISK" ]; then
-    echo "❌ Invalid disk: $TARGET_DISK"
-    exit 1
-fi
+DISK=$(prompt_with_default "Enter disk to install to (e.g. /dev/sda)" "/dev/sda")
+HOSTNAME=$(prompt_with_default "Enter hostname" "nexusos")
+USERNAME=$(prompt_with_default "Enter username" "user")
 
-echo ""
-echo "⚠️  WARNING: This will DESTROY all data on $TARGET_DISK"
-read -p "Continue? (yes/no): " CONFIRM
-
-if [ "$CONFIRM" != "yes" ]; then
+# Confirm destructive operation
+echo
+echo "WARNING: This will DESTROY all data on $DISK"
+read -p "Are you sure? (type 'yes' to continue): " confirm
+if [[ "$confirm" != "yes" ]]; then
     echo "Installation cancelled."
     exit 1
 fi
 
+echo "Starting ZFS installation..."
+
+# Load ZFS module
+modprobe zfs
+
 # Partition the disk
-echo ""
-echo "🔧 Partitioning disk..."
-parted "$TARGET_DISK" --script -- \
-    mklabel gpt \
-    mkpart ESP fat32 1MiB 513MiB \
-    set 1 esp on \
-    mkpart primary 513MiB 100%
+echo "Partitioning disk..."
+sgdisk --zap-all "$DISK"
+sgdisk -n1:1M:+512M -t1:EF00 "$DISK"  # EFI boot
+sgdisk -n2:0:0 -t2:BF00 "$DISK"       # ZFS root
 
 # Get partition names
-if [[ "$TARGET_DISK" =~ nvme ]]; then
-    ESP_PARTITION="${TARGET_DISK}p1"
-    ZFS_PARTITION="${TARGET_DISK}p2"
+if [[ "$DISK" =~ nvme|loop|mmcblk ]]; then
+    EFI_PARTITION="${DISK}p1"
+    ZFS_PARTITION="${DISK}p2"
 else
-    ESP_PARTITION="${TARGET_DISK}1"
-    ZFS_PARTITION="${TARGET_DISK}2"
+    EFI_PARTITION="${DISK}1"
+    ZFS_PARTITION="${DISK}2"
 fi
 
-echo "✅ Created partitions: $ESP_PARTITION (ESP), $ZFS_PARTITION (ZFS)"
+# Format EFI partition
+echo "Formatting EFI partition..."
+mkfs.fat -F32 "$EFI_PARTITION"
 
-# Format ESP
-echo ""
-echo "🔧 Formatting ESP..."
-mkfs.fat -F 32 -n ESP "$ESP_PARTITION"
-
-# Create ZFS pool
-echo ""
-echo "🔧 Creating ZFS pool 'rpool'..."
-zpool create -f -o ashift=12 \
-    -O mountpoint=none \
+# Create ZFS pool with proper settings for root filesystem
+echo "Creating ZFS pool..."
+zpool create -o ashift=12 \
+    -o autotrim=on \
+    -O acltype=posixacl \
     -O canmount=off \
     -O compression=zstd \
-    -O acltype=posixacl \
-    -O xattr=sa \
+    -O dnodesize=auto \
+    -O normalization=formD \
     -O relatime=on \
-    rpool "$ZFS_PARTITION"
+    -O xattr=sa \
+    -O mountpoint=none \
+    zroot "$ZFS_PARTITION"
 
-# Create root filesystem datasets
-echo ""
-echo "🔧 Creating ZFS datasets..."
+# Create boot environment structure
+echo "Creating boot environments..."
 
-# Create ROOT container
-zfs create -o mountpoint=none -o canmount=off rpool/ROOT
+# Root dataset (container)
+zfs create -o canmount=off -o mountpoint=none zroot/ROOT
 
-# Create first boot environment
-CURRENT_BE="nexusos-$(date +%Y%m%d)"
-zfs create -o mountpoint=/ -o canmount=noauto rpool/ROOT/"$CURRENT_BE"
+# Default boot environment
+zfs create -o canmount=noauto -o mountpoint=/ zroot/ROOT/default
+zfs mount zroot/ROOT/default
+
+# Set bootfs property for ZFSBootMenu
+zpool set bootfs=zroot/ROOT/default zroot
 
 # Create other datasets
-zfs create -o mountpoint=/home rpool/home
-zfs create -o mountpoint=/var -o canmount=off rpool/var
-zfs create -o mountpoint=/var/log rpool/var/log
-zfs create -o mountpoint=/var/cache rpool/var/cache
-zfs create -o mountpoint=/opt rpool/opt
+echo "Creating additional datasets..."
+zfs create -o mountpoint=/home zroot/home
+zfs create -o mountpoint=/var zroot/var
+zfs create -o mountpoint=/var/log zroot/var/log
+zfs create -o mountpoint=/var/cache zroot/var/cache
+zfs create -o mountpoint=/tmp zroot/tmp
+chmod 1777 /mnt/tmp
 
-# Mount the root filesystem
-echo ""
-echo "🔧 Mounting filesystems..."
-zfs set canmount=on rpool/ROOT/"$CURRENT_BE"
-zpool export rpool
-zpool import -d /dev/disk/by-id -R /mnt rpool
-zfs mount rpool/ROOT/"$CURRENT_BE"
+# Create swap volume
+echo "Creating swap..."
+zfs create -V 4G -b $(getconf PAGESIZE) \
+    -o compression=zle \
+    -o logbias=throughput \
+    -o sync=always \
+    -o primarycache=metadata \
+    -o secondarycache=none \
+    -o com.sun:auto-snapshot=false \
+    zroot/swap
+mkswap -f /dev/zvol/zroot/swap
 
-# Create mount points and mount ESP
-mkdir -p /mnt/boot
-mount "$ESP_PARTITION" /mnt/boot
+# Mount EFI partition
+mkdir -p /mnt/boot/efi
+mount "$EFI_PARTITION" /mnt/boot/efi
 
-# Mount other ZFS datasets
-zfs mount -a
+# Install base system
+echo "Installing base system..."
+pacstrap /mnt base linux-zen linux-zen-headers linux-firmware \
+    base-devel git vim nano networkmanager openssh sudo \
+    zfs-dkms zfs-utils
 
-echo ""
-echo "🔧 Installing NexusOS base system..."
+# Generate fstab (without ZFS entries, they're handled by ZFS)
+genfstab -U /mnt | grep -v zroot > /mnt/etc/fstab
 
-# Copy the live system as base
-rsync -aHAXx --exclude={/dev/*,/proc/*,/sys/*,/tmp/*,/run/*,/mnt/*,/media/*,/lost+found} / /mnt/
+# Add EFI and swap entries
+echo "UUID=$(blkid -s UUID -o value $EFI_PARTITION) /boot/efi vfat defaults 0 2" >> /mnt/etc/fstab
+echo "/dev/zvol/zroot/swap none swap discard 0 0" >> /mnt/etc/fstab
 
-# Generate fstab for ESP only (ZFS handles its own mounting)
-echo "# ESP mount point" > /mnt/etc/fstab
-echo "$(blkid -s UUID -o value "$ESP_PARTITION") /boot vfat defaults,umask=0077 0 1" >> /mnt/etc/fstab
+# Configure system in chroot
+arch-chroot /mnt /bin/bash -c "
+    # Set hostname
+    echo '$HOSTNAME' > /etc/hostname
+    
+    # Configure hosts
+    cat > /etc/hosts << EOF
+127.0.0.1   localhost
+::1         localhost
+127.0.1.1   $HOSTNAME
+EOF
 
-# Configure ZFS for boot
-echo ""
-echo "🔧 Configuring ZFS boot environment..."
+    # Set timezone
+    ln -sf /usr/share/zoneinfo/UTC /etc/localtime
+    hwclock --systohc
+    
+    # Configure locale
+    echo 'en_US.UTF-8 UTF-8' >> /etc/locale.gen
+    locale-gen
+    echo 'LANG=en_US.UTF-8' > /etc/locale.conf
+    
+    # Enable services
+    systemctl enable NetworkManager
+    systemctl enable sshd
+    systemctl enable zfs.target
+    systemctl enable zfs-import-cache
+    systemctl enable zfs-mount
+    systemctl enable zfs-import.target
+    
+    # Create user
+    useradd -m -G wheel '$USERNAME'
+    echo '$USERNAME ALL=(ALL) ALL' >> /etc/sudoers
+    
+    # Set passwords
+    echo 'Set root password:'
+    passwd
+    echo 'Set user password for $USERNAME:'
+    passwd '$USERNAME'
+"
 
-# Set boot filesystem
-zpool set bootfs=rpool/ROOT/"$CURRENT_BE" rpool
+# Install and configure ZFSBootMenu
+echo "Installing ZFSBootMenu..."
 
-# Enable ZFS services
-arch-chroot /mnt systemctl enable zfs-import-cache.service
-arch-chroot /mnt systemctl enable zfs-mount.service
-arch-chroot /mnt systemctl enable zfs.target
+# Install ZFSBootMenu from AUR in chroot
+arch-chroot /mnt /bin/bash -c "
+    # Create temporary user for AUR builds
+    useradd -m -G wheel -s /bin/bash aurbuilder
+    echo 'aurbuilder ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+    
+    # Install ZFSBootMenu
+    sudo -u aurbuilder bash -c '
+        cd /tmp
+        git clone https://aur.archlinux.org/zfsbootmenu.git
+        cd zfsbootmenu
+        makepkg -si --noconfirm
+    '
+    
+    # Clean up
+    userdel -r aurbuilder
+    sed -i '/aurbuilder/d' /etc/sudoers
+"
 
 # Configure ZFSBootMenu
-echo ""
-echo "🔧 Configuring ZFSBootMenu..."
-
-# Create ZFSBootMenu config
-mkdir -p /mnt/etc/zfsbootmenu
-cat > /mnt/etc/zfsbootmenu/config.yaml << ZBMEOF
+arch-chroot /mnt /bin/bash -c "
+    # Create ZFSBootMenu config
+    mkdir -p /etc/zfsbootmenu
+    cat > /etc/zfsbootmenu/config.yaml << EOF
 Global:
   ManageImages: true
-  BootMountPoint: /boot
-  DracutConfDir: /etc/zfsbootmenu/dracut.conf.d
+  BootMountPoint: /boot/efi
+  ImageDir: /boot/efi/EFI/zbm
+  
 Components:
-  ImageDir: /boot/EFI/zbm
+  Enabled: true
   Versions: false
-  Enabled: false
+  
 EFI:
-  ImageDir: /boot/EFI/zbm
+  ImageDir: /boot/efi/EFI/zbm
   Versions: false
   Enabled: true
+  
 Kernel:
-  CommandLine: ro quiet loglevel=0
-ZBMEOF
+  CommandLine: ro quiet loglevel=4
+EOF
 
-# Generate ZFSBootMenu images
-arch-chroot /mnt generate-zbm --config /etc/zfsbootmenu/config.yaml
+    # Set ZFS properties for boot environment
+    zfs set org.zfsbootmenu:commandline='ro quiet loglevel=4' zroot/ROOT/default
+    
+    # Generate ZFSBootMenu
+    generate-zbm
+    
+    # Create EFI boot entries
+    efibootmgr --create --disk $DISK --part 1 --loader '\EFI\zbm\zfsbootmenu.efi' --label 'ZFSBootMenu'
+"
 
-echo ""
-echo "🎉 NexusOS ZFS installation completed!"
-echo ""
-echo "📋 Summary:"
-echo "   💾 ZFS Pool: rpool on $ZFS_PARTITION"
-echo "   🏠 Boot Environment: $CURRENT_BE"
-echo "   💽 ESP: $ESP_PARTITION mounted at /boot"
-echo "   🚀 Bootloader: ZFSBootMenu"
-echo ""
-echo "🔄 You can now reboot and boot directly from ZFS!"
-echo "📸 Take snapshots with: zfs snapshot rpool/ROOT/$CURRENT_BE@snapshot-name"
-echo "📋 Create new boot environments with: zfs clone rpool/ROOT/$CURRENT_BE@snapshot rpool/ROOT/new-be"
+# Configure mkinitcpio for ZFS
+arch-chroot /mnt /bin/bash -c "
+    # Update mkinitcpio.conf for ZFS
+    sed -i 's/^HOOKS=.*/HOOKS=(base udev autodetect keyboard keymap modconf block filesystems fsck)/' /etc/mkinitcpio.conf
+    sed -i 's/^MODULES=.*/MODULES=(zfs)/' /etc/mkinitcpio.conf
+    
+    # Rebuild initramfs
+    mkinitcpio -P
+"
 
+# Enable ZFS services and import cache
+arch-chroot /mnt /bin/bash -c "
+    # Generate hostid
+    zgenhostid
+    
+    # Create zpool cache
+    zpool set cachefile=/etc/zfs/zpool.cache zroot
+"
+
+echo "Installation complete!"
+echo
+echo "Boot environments created:"
+echo "- zroot/ROOT/default (current)"
+echo
+echo "To create a new boot environment:"
+echo "  zfs snapshot zroot/ROOT/default@backup"
+echo "  zfs clone zroot/ROOT/default@backup zroot/ROOT/new-version"
+echo "  zpool set bootfs=zroot/ROOT/new-version zroot"
+echo
+echo "System will boot using ZFSBootMenu."
+echo "Reboot to start using your new ZFS system!"
+
+# Unmount everything
+umount /mnt/boot/efi
+zfs umount -a
+zpool export zroot

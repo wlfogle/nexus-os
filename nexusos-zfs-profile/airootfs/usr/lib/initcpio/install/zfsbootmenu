@@ -1,0 +1,48 @@
+#!/bin/bash
+
+build() {
+    # Add ZFS modules and utilities
+    add_module zfs
+    add_binary zfsbootmenu
+    add_binary zpool
+    add_binary zfs
+    add_binary mount.zfs
+    add_binary zdb
+    add_binary zgenhostid
+    
+    # Add dependencies
+    add_binary fzf
+    add_binary kexec
+    add_binary sort
+    add_binary uniq
+    add_binary head
+    add_binary tail
+    add_binary awk
+    add_binary sed
+    add_binary grep
+    add_binary find
+    add_binary xargs
+    add_binary tput
+    add_binary stty
+    add_binary sleep
+    add_binary timeout
+    
+    # Add bash for ZFSBootMenu
+    add_binary bash
+    
+    # Add required libraries
+    add_binary /usr/lib/libzfs.so.4
+    add_binary /usr/lib/libzfs_core.so.3
+    add_binary /usr/lib/libnvpair.so.3
+    add_binary /usr/lib/libzpool.so.5
+    add_binary /usr/lib/libuutil.so.3
+    
+    # Make sure we have a proper init
+    add_runscript
+}
+
+help() {
+    cat <<HELPEOF
+This hook includes ZFSBootMenu support in the initramfs image.
+HELPEOF
+}

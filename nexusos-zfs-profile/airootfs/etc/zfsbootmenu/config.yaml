@@ -1,0 +1,27 @@
+Global:
+  ManageImages: true
+  BootMountPoint: /boot/efi
+  DracutConfDir: /etc/dracut.conf.d
+  PreHooksDir: /etc/zfsbootmenu/pre.d
+  PostHooksDir: /etc/zfsbootmenu/post.d
+  InitCPIOConfig: /etc/mkinitcpio-zfsbootmenu.conf
+
+Components:
+  Enabled: true
+  ImageDir: /boot/efi/EFI/zbm
+  Versions: false
+  syslinux:
+    Enabled: false
+    Config: /boot/syslinux/syslinux.cfg
+
+EFI:
+  ImageDir: /boot/efi/EFI/zbm  
+  Versions: false
+  Enabled: true
+
+Kernel:
+  CommandLine: ro quiet loglevel=0 zbm.skip
+
+syslinux:
+  Config: /boot/syslinux/syslinux.cfg
+  Enabled: false

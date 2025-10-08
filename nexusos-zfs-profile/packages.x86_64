@@ -1,11 +1,13 @@
-# Core system
+# Base System
 base
-linux
+linux-zen
+linux-zen-headers
 linux-firmware
 systemd
 systemd-sysvcompat
+base-devel
 
-# ZFS essentials
+# ZFS Support
 zfs-dkms
 zfs-utils
 
@@ -13,6 +15,7 @@ zfs-utils
 efibootmgr
 dosfstools
 mtools
+syslinux
 
 # archiso requirements
 arch-install-scripts
@@ -20,36 +23,131 @@ mkinitcpio
 mkinitcpio-archiso
 squashfs-tools
 
-# Basic tools
-networkmanager
-openssh
-nano
-git
-curl
-wget
+# ZFSBootMenu dependencies
+fzf
+kexec-tools
+perl
+perl-yaml-pp
+perl-boolean
+perl-sort-versions
 
-# Minimal desktop (faster build)
-plasma-desktop
+# Complete KDE Plasma Desktop
+plasma-meta
+kde-applications-meta
+# plasma-wayland - not available
+plasma-browser-integration
+bluedevil
+kde-gtk-config
+kdeplasma-addons
+kscreen
+kwallet-pam
+powerdevil
+sddm-kcm
 sddm
-konsole
-kate
-dolphin
+
+# Gaming Stack
+steam
+lutris
+wine
+gamemode
+mangohud
+lib32-gamemode
+lib32-mangohud
+
+# Universal Package Management
+flatpak
+docker
+containerd
+
+# Development Tools
+git
+cmake
+ninja
+python
+python-pip
+nodejs
+npm
+rust
+cargo
+ruby
+code
+
+# AI/ML Libraries
+python-tensorflow
+python-pytorch
+python-numpy
+python-pandas
+python-scikit-learn
+python-matplotlib
+
+# Intel OneAPI
+# intel-oneapi packages removed - not available in repos
 
 # Graphics
 mesa
+lib32-mesa
+nvidia-dkms
+lib32-nvidia-utils
+vulkan-icd-loader
+lib32-vulkan-icd-loader
 xorg-server
+xorg-xinit
+
+# Audio
 pipewire
+pipewire-alsa
 pipewire-pulse
+pipewire-jack
+lib32-pipewire
+wireplumber
 
-# Essential development
-python
-python-pip
-gcc
-make
+# Network
+networkmanager
+networkmanager-openconnect
+networkmanager-openvpn
+openssh
 
-# ZFS tools
+# Web Browser
+firefox
+
+# Media Services
+docker-compose
+
+# System Tools
+htop
+neofetch
+tree
+wget
+curl
+jq
+unzip
+zip
+rsync
 smartmontools
 hdparm
 
-# Build essentials
+# Fonts
+ttf-dejavu
+ttf-liberation
+noto-fonts
+noto-fonts-emoji
+ttf-hack
+
+# File System Support
+ntfs-3g
+exfat-utils
+f2fs-tools
+btrfs-progs
+dosfstools
+
+# System Tools
+nano
+kate
+konsole
+dolphin
+ark
+
+# Testing
 memtest86+-efi
+
+# We'll build zfsbootmenu from AUR in hooks

@@ -1,0 +1,9 @@
+[Trigger]
+Type = File
+Operation = Install
+Target = usr/lib/modules/*/vmlinuz
+
+[Action]
+Description = Installing ZFSBootMenu...
+When = PostTransaction
+Exec = /usr/local/bin/install-zfsbootmenu.sh

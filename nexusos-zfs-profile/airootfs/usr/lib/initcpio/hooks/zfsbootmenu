@@ -1,0 +1,18 @@
+#!/usr/bin/ash
+
+run_hook() {
+    # This hook sets up ZFSBootMenu as the primary boot mechanism
+    # Export ZFS utilities to PATH
+    export PATH="/usr/bin:/bin:/sbin:/usr/sbin:$PATH"
+    
+    # Wait for devices
+    udevadm settle
+    
+    # Import all pools
+    echo "Importing ZFS pools..."
+    zpool import -a -N 2>/dev/null || true
+    
+    # Start ZFSBootMenu
+    echo "Starting ZFSBootMenu..."
+    exec zfsbootmenu
+}
