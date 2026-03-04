@@ -1,4 +1,6 @@
-# Multiboot header for x86_64 compatibility
+# Multiboot bootloader - 32-bit entry point
+.code32
+
 .set ALIGN,    1<<0             # align loaded modules on page boundaries
 .set MEMINFO,  1<<1             # provide memory map
 .set FLAGS,    ALIGN | MEMINFO  # this is the Multiboot 'flag' field
@@ -12,11 +14,11 @@
 .long FLAGS
 .long CHECKSUM
 
-# Reserve a stack for the initial thread (increased size for x86_64)
+# Reserve a stack for the initial thread
 .section .bss
 .align 16
 stack_bottom:
-.skip 32768 # 32 KiB (larger stack for x86_64)
+.skip 32768  # 32 KiB stack
 stack_top:
 
 # The kernel entry point
@@ -25,7 +27,17 @@ stack_top:
 .type _start, @function
 _start:
     # Initialize the stack pointer
-    mov $stack_top, %esp
+    movl $stack_top, %esp
+    
+    # Preserve multiboot magic and info pointer for kernel_main
+    # The bootloader passes:
+    # - eax: multiboot magic number (0x2BADB002)
+    # - ebx: pointer to multiboot info structure
+    # We need to pass them as arguments to kernel_main(mbi, magic)
+    
+    # Push arguments in reverse order (C calling convention - cdecl)
+    pushl %eax       # magic number
+    pushl %ebx       # multiboot info pointer
     
     # Call the kernel main function
     call kernel_main

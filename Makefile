@@ -9,9 +9,9 @@ BOOT_DIR = boot
 BUILD_DIR = build
 ISO_DIR = $(BUILD_DIR)/isofiles
 
-# Source files
+# Source files - all C files in kernel directory and subdirectories
 BOOT_SOURCES = $(BOOT_DIR)/boot.s
-KERNEL_SOURCES = $(wildcard $(KERNEL_DIR)/*.c)
+KERNEL_SOURCES = $(wildcard $(KERNEL_DIR)/*.c) $(wildcard $(KERNEL_DIR)/*/*.c)
 
 # Object files
 BOOT_OBJECTS = $(BUILD_DIR)/boot.o
@@ -30,18 +30,18 @@ all: kernel
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-# Compile assembly files
+# Compile assembly files (bootloader uses 32-bit flags)
 $(BUILD_DIR)/boot.o: $(BOOT_DIR)/boot.s | $(BUILD_DIR)
-	$(AS) $(ASFLAGS) $< -o $@
+	$(AS) $(BOOT_ASFLAGS) $< -o $@
 
 # Compile C files
 $(BUILD_DIR)/%.o: $(KERNEL_DIR)/%.c | $(BUILD_DIR)
-	$(CC) -c $< -o $@ $(CFLAGS)
+	$(CC) -c $< -o $@ $(CPPFLAGS) $(CFLAGS)
 
 
-# Link kernel
+# Link kernel (use 32-bit elf format for multiboot compatibility)
 $(KERNEL_BIN): $(BOOT_OBJECTS) $(KERNEL_OBJECTS) linker.ld | $(BUILD_DIR)
-	$(LD) $(LDFLAGS) -T linker.ld -o $@ $(BOOT_OBJECTS) $(KERNEL_OBJECTS)
+	$(LD) -m elf_i386 -T linker.ld -o $@ $(BOOT_OBJECTS) $(KERNEL_OBJECTS)
 
 # Build kernel
 kernel: $(KERNEL_BIN)

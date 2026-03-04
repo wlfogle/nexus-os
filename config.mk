@@ -7,28 +7,20 @@ TARGET_ARCH = $(ARCH)
 # Cross-compiler toolchain - Use system toolchain on Arch
 CROSS_COMPILE = $(ARCH)-elf-
 
-# Toolchain paths - Arch Linux standard paths
+# Toolchain paths - System standard paths
 TOOLCHAIN_PREFIX ?= /usr
 TOOLCHAIN_BIN = $(TOOLCHAIN_PREFIX)/bin
 
-# Use toolchains from main system
-MAIN_SYSTEM_BIN = $(MAIN_SYSTEM_ROOT)/usr/bin
-
-# Check for cross-compiler on main system first, then fallback to system GCC
-ifeq ($(shell test -f $(MAIN_SYSTEM_BIN)/$(ARCH)-elf-gcc && echo yes),yes)
-    CC = $(MAIN_SYSTEM_BIN)/$(ARCH)-elf-gcc
-    AS = $(MAIN_SYSTEM_BIN)/$(ARCH)-elf-as
-    LD = $(MAIN_SYSTEM_BIN)/$(ARCH)-elf-ld
-    OBJCOPY = $(MAIN_SYSTEM_BIN)/$(ARCH)-elf-objcopy
-    OBJDUMP = $(MAIN_SYSTEM_BIN)/$(ARCH)-elf-objdump
-else ifeq ($(shell which $(ARCH)-elf-gcc 2>/dev/null),)
-    # Use main system GCC with enhanced paths
-    CC = $(MAIN_SYSTEM_BIN)/gcc
-    AS = $(MAIN_SYSTEM_BIN)/as
-    LD = $(MAIN_SYSTEM_BIN)/ld
-    OBJCOPY = $(MAIN_SYSTEM_BIN)/objcopy
-    OBJDUMP = $(MAIN_SYSTEM_BIN)/objdump
+# Check for cross-compiler first, then fallback to native GCC
+ifeq ($(shell which $(ARCH)-elf-gcc 2>/dev/null),)
+    # Use native system compiler
+    CC = gcc
+    AS = as
+    LD = ld
+    OBJCOPY = objcopy
+    OBJDUMP = objdump
 else
+    # Use cross-compiler if available
     CC = $(CROSS_COMPILE)gcc
     AS = $(CROSS_COMPILE)as
     LD = $(CROSS_COMPILE)ld
@@ -41,15 +33,12 @@ CFLAGS = -std=gnu99 -ffreestanding -Wall -Wextra -fno-stack-protector
 CPPFLAGS = -I include/kernel -I include/libc
 
 # Architecture-specific flags
-ifeq ($(ARCH), x86_64)
-    ASFLAGS = --64
-    ARCH_CFLAGS = -m64 -mcmodel=large -mno-red-zone -mno-mmx -mno-sse -mno-sse2
-    LDFLAGS = -nostdlib -m elf_x86_64
-else
-    ASFLAGS = --32
-    ARCH_CFLAGS = -m32
-    LDFLAGS = -nostdlib -m elf_i386
-endif
+# Note: We compile in 32-bit mode for Multiboot compatibility
+# Full x86_64 long mode support can be added later
+BOOT_ASFLAGS = --32
+ASFLAGS = --32
+ARCH_CFLAGS = -m32
+LDFLAGS = -nostdlib -m elf_i386
 
 CFLAGS += $(ARCH_CFLAGS)
 
@@ -83,46 +72,12 @@ ifeq ($(DEBUG), 1)
     CFLAGS += -O0
 endif
 
-# AI/ML Integration Settings
-CUDA_SUPPORT ?= 1
-AI_NATIVE ?= 1
-
-# CUDA paths (from main system)
-MAIN_SYSTEM_ROOT = /run/media/garuda/34c008f3-1990-471c-bd80-c72985c7dc5c/@
-CUDA_PATH = $(MAIN_SYSTEM_ROOT)/opt/cuda
-CUDA_INCLUDE = $(CUDA_PATH)/include
-CUDA_LIB = $(CUDA_PATH)/lib64
-
-# Intel OneAPI paths (from main system)
-INTEL_PATH = $(MAIN_SYSTEM_ROOT)/opt/intel
-INTEL_ONEAPI = $(INTEL_PATH)/oneapi
-
-# AI/ML specific flags
-ifeq ($(AI_NATIVE), 1)
-    CFLAGS += -DAI_NATIVE_KERNEL
-    CFLAGS += -DCUDA_ENABLED
-    CPPFLAGS += -I $(CUDA_INCLUDE)
-endif
-
-# RTX 4080 specific optimizations
-ifeq ($(CUDA_SUPPORT), 1)
-    CFLAGS += -DRTX_4080_OPTIMIZED
-    CFLAGS += -DTENSOR_CORES_ENABLED
-    CFLAGS += -DRT_CORES_ENABLED
-endif
-
 # Target settings
 # Use 2MB for x86_64 (better for large pages), 1MB for i386
 ifeq ($(ARCH), x86_64)
     KERNEL_LOAD_ADDR = 0x200000
     KERNEL_VIRTUAL_BASE = 0xFFFFFFFF80000000
-    # AI-optimized memory layout
-    AI_MODEL_CACHE_SIZE = 0xF00000000  # 60GB for AI models
-    GPU_MEMORY_SIZE = 0x400000000      # 16GB RTX 4080
 else
     KERNEL_LOAD_ADDR = 0x100000
     KERNEL_VIRTUAL_BASE = 0xC0000000
-    # Limited AI support on i386
-    AI_MODEL_CACHE_SIZE = 0x40000000   # 1GB
-    GPU_MEMORY_SIZE = 0x100000000      # 4GB max
 endif
