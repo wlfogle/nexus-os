@@ -30,7 +30,7 @@ all: kernel
 
 # Create build directory and subdirectories
 $(BUILD_DIR):
-	mkdir -p $(BUILD_DIR) $(BUILD_DIR)/arch $(BUILD_DIR)/irq $(BUILD_DIR)/mm
+	mkdir -p $(BUILD_DIR) $(BUILD_DIR)/arch $(BUILD_DIR)/irq $(BUILD_DIR)/mm $(BUILD_DIR)/proc $(BUILD_DIR)/syscall
 
 # Compile assembly files (bootloader uses 32-bit flags)
 $(BUILD_DIR)/boot.o: $(BOOT_DIR)/boot.s | $(BUILD_DIR)
@@ -50,8 +50,15 @@ $(BUILD_DIR)/irq/%.o: $(KERNEL_DIR)/irq/%.s | $(BUILD_DIR)
 $(BUILD_DIR)/mm/%.o: $(KERNEL_DIR)/mm/%.s | $(BUILD_DIR)
 	$(AS) $(ASFLAGS) $< -o $@
 
+$(BUILD_DIR)/proc/%.o: $(KERNEL_DIR)/proc/%.s | $(BUILD_DIR)
+	$(AS) $(ASFLAGS) $< -o $@
+
 # Collect all kernel assembly objects
 KERNEL_ASM_OBJECTS = $(KERNEL_ASM_SOURCES:$(KERNEL_DIR)/%.s=$(BUILD_DIR)/%.o)
+
+# Add syscall directory to build
+$(BUILD_DIR)/syscall/%.o: $(KERNEL_DIR)/syscall/%.s | $(BUILD_DIR)
+	$(AS) $(ASFLAGS) $< -o $@
 
 # Link kernel (use 32-bit elf format for multiboot compatibility)
 $(KERNEL_BIN): $(BOOT_OBJECTS) $(KERNEL_OBJECTS) $(KERNEL_ASM_OBJECTS) linker.ld | $(BUILD_DIR)
