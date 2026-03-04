@@ -1,4 +1,5 @@
 #include "../include/kernel/serial.h"
+#include <stdarg.h>
 
 /* Serial port base address */
 #define SERIAL_BASE COM1_PORT
@@ -85,7 +86,69 @@ void serial_puts(const char *str)
 /* Simple printf-like formatter */
 void serial_printf(const char *fmt, ...)
 {
-    /* TODO: Implement proper printf parsing */
-    /* For now, just output the format string */
-    serial_puts(fmt);
+    va_list args;
+    va_start(args, fmt);
+    
+    while (*fmt) {
+        if (*fmt == '%') {
+            fmt++;
+            if (*fmt == 'd' || *fmt == 'i') {
+                /* Print decimal integer */
+                int val = va_arg(args, int);
+                if (val < 0) {
+                    serial_putchar('-');
+                    val = -val;
+                }
+                char buf[11];
+                int len = 0;
+                if (val == 0) {
+                    buf[len++] = '0';
+                } else {
+                    int temp = val;
+                    while (temp > 0) {
+                        buf[len++] = '0' + (temp % 10);
+                        temp /= 10;
+                    }
+                    for (int i = len - 1; i >= 0; i--) {
+                        serial_putchar(buf[i]);
+                    }
+                    fmt++;
+                    continue;
+                }
+                for (int i = 0; i < len; i++) {
+                    serial_putchar(buf[i]);
+                }
+            } else if (*fmt == 'x' || *fmt == 'X') {
+                /* Print hex */
+                uint32_t val = va_arg(args, uint32_t);
+                const char *hex = (*fmt == 'x') ? "0123456789abcdef" : "0123456789ABCDEF";
+                serial_putchar('0');
+                serial_putchar('x');
+                for (int i = 28; i >= 0; i -= 4) {
+                    serial_putchar(hex[(val >> i) & 0xF]);
+                }
+            } else if (*fmt == 's') {
+                /* Print string */
+                const char *str = va_arg(args, const char *);
+                serial_puts(str);
+            } else if (*fmt == 'c') {
+                /* Print char */
+                serial_putchar((char)va_arg(args, int));
+            } else if (*fmt == '%') {
+                /* Print literal % */
+                serial_putchar('%');
+            }
+            fmt++;
+        } else if (*fmt == '\\' && *(fmt + 1) == 'n') {
+            /* Handle \n */
+            serial_putchar('\r');
+            serial_putchar('\n');
+            fmt += 2;
+        } else {
+            serial_putchar(*fmt);
+            fmt++;
+        }
+    }
+    
+    va_end(args);
 }
