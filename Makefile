@@ -9,9 +9,11 @@ BOOT_DIR = boot
 BUILD_DIR = build
 ISO_DIR = $(BUILD_DIR)/isofiles
 
-# Source files - all C files in kernel directory and subdirectories
+# Source files - all C and S files in kernel directory and subdirectories
 BOOT_SOURCES = $(BOOT_DIR)/boot.s
+BOOT_ASM_SOURCES = $(wildcard $(BOOT_DIR)/*.s)
 KERNEL_SOURCES = $(wildcard $(KERNEL_DIR)/*.c) $(wildcard $(KERNEL_DIR)/*/*.c)
+KERNEL_ASM_SOURCES = $(wildcard $(KERNEL_DIR)/*.s) $(wildcard $(KERNEL_DIR)/*/*.s)
 
 # Object files
 BOOT_OBJECTS = $(BUILD_DIR)/boot.o
@@ -26,9 +28,9 @@ ISO_FILE = $(BUILD_DIR)/nexus-os.iso
 # Default target
 all: kernel
 
-# Create build directory
+# Create build directory and subdirectories
 $(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+	mkdir -p $(BUILD_DIR) $(BUILD_DIR)/arch $(BUILD_DIR)/irq $(BUILD_DIR)/mm
 
 # Compile assembly files (bootloader uses 32-bit flags)
 $(BUILD_DIR)/boot.o: $(BOOT_DIR)/boot.s | $(BUILD_DIR)
@@ -38,10 +40,22 @@ $(BUILD_DIR)/boot.o: $(BOOT_DIR)/boot.s | $(BUILD_DIR)
 $(BUILD_DIR)/%.o: $(KERNEL_DIR)/%.c | $(BUILD_DIR)
 	$(CC) -c $< -o $@ $(CPPFLAGS) $(CFLAGS)
 
+# Compile assembly files in subdirectories
+$(BUILD_DIR)/arch/%.o: $(KERNEL_DIR)/arch/%.s | $(BUILD_DIR)
+	$(AS) $(ASFLAGS) $< -o $@
+
+$(BUILD_DIR)/irq/%.o: $(KERNEL_DIR)/irq/%.s | $(BUILD_DIR)
+	$(AS) $(ASFLAGS) $< -o $@
+
+$(BUILD_DIR)/mm/%.o: $(KERNEL_DIR)/mm/%.s | $(BUILD_DIR)
+	$(AS) $(ASFLAGS) $< -o $@
+
+# Collect all kernel assembly objects
+KERNEL_ASM_OBJECTS = $(KERNEL_ASM_SOURCES:$(KERNEL_DIR)/%.s=$(BUILD_DIR)/%.o)
 
 # Link kernel (use 32-bit elf format for multiboot compatibility)
-$(KERNEL_BIN): $(BOOT_OBJECTS) $(KERNEL_OBJECTS) linker.ld | $(BUILD_DIR)
-	$(LD) -m elf_i386 -T linker.ld -o $@ $(BOOT_OBJECTS) $(KERNEL_OBJECTS)
+$(KERNEL_BIN): $(BOOT_OBJECTS) $(KERNEL_OBJECTS) $(KERNEL_ASM_OBJECTS) linker.ld | $(BUILD_DIR)
+	$(LD) -m elf_i386 -T linker.ld -o $@ $(BOOT_OBJECTS) $(KERNEL_OBJECTS) $(KERNEL_ASM_OBJECTS)
 
 # Build kernel
 kernel: $(KERNEL_BIN)
