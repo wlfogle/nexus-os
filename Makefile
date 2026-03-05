@@ -46,7 +46,7 @@ all: kernel userland
 
 # Create build directory and subdirectories
 $(BUILD_DIR):
-	mkdir -p $(BUILD_DIR) $(BUILD_DIR)/arch $(BUILD_DIR)/irq $(BUILD_DIR)/mm $(BUILD_DIR)/proc $(BUILD_DIR)/syscall $(BUILD_DIR)/drivers $(BUILD_DIR)/fs $(BUILD_DIR)/exec $(BUILD_DIR)/lib $(BUILD_DIR)/net $(BUILD_DIR)/sync $(BUILD_DIR)/device $(BUILD_DIR)/gpu
+	mkdir -p $(BUILD_DIR) $(BUILD_DIR)/arch $(BUILD_DIR)/irq $(BUILD_DIR)/mm $(BUILD_DIR)/proc $(BUILD_DIR)/syscall $(BUILD_DIR)/drivers $(BUILD_DIR)/fs $(BUILD_DIR)/exec $(BUILD_DIR)/lib $(BUILD_DIR)/net $(BUILD_DIR)/sync $(BUILD_DIR)/device $(BUILD_DIR)/gpu $(BUILD_DIR)/security
 
 # Compile assembly files (bootloader uses 32-bit flags)
 $(BUILD_DIR)/boot.o: $(BOOT_DIR)/boot.s | $(BUILD_DIR)
@@ -106,6 +106,10 @@ $(BUILD_DIR)/device/%.o: $(KERNEL_DIR)/device/%.c | $(BUILD_DIR)
 
 # Add GPU directory
 $(BUILD_DIR)/gpu/%.o: $(KERNEL_DIR)/gpu/%.c | $(BUILD_DIR)
+	$(CC) -c $< -o $@ $(CPPFLAGS) $(CFLAGS)
+
+# Add security directory
+$(BUILD_DIR)/security/%.o: $(KERNEL_DIR)/security/%.c | $(BUILD_DIR)
 	$(CC) -c $< -o $@ $(CPPFLAGS) $(CFLAGS)
 
 # Userland build rules
