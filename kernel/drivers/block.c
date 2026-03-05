@@ -1,5 +1,6 @@
 #include "block.h"
 #include "../../include/kernel/serial.h"
+#include "../../include/kernel/device.h"
 #include <stddef.h>
 
 #define MAX_BLOCK_DEVICES 4
@@ -22,6 +23,13 @@ int block_device_register(const char *name, uint32_t sector_size,
             devices[i].device.read = read_fn;
             devices[i].device.write = write_fn;
             devices[i].in_use = 1;
+            
+            /* Register with unified device registry */
+            int device_id = device_register(name, DEVICE_CLASS_BLOCK, &devices[i].device);
+            if (device_id >= 0) {
+                device_set_state(device_id, DEVICE_ACTIVE);
+            }
+            
             return i;
         }
     }

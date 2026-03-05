@@ -3,6 +3,56 @@
 #include "../../include/kernel/serial.h"
 #include <string.h>
 
+/* Priority inheritance: track original priority when boosting */
+struct priority_entry {
+    uint32_t thread_id;
+    uint32_t original_priority;
+    uint32_t boosted_priority;
+};
+
+static struct priority_entry priority_table[256];
+static int priority_table_count = 0;
+
+static void priority_boost(uint32_t thread_id, uint32_t new_priority)
+{
+    /* Find or create priority entry */
+    for (int i = 0; i < priority_table_count; i++) {
+        if (priority_table[i].thread_id == thread_id) {
+            priority_table[i].boosted_priority = new_priority;
+            return;
+        }
+    }
+    
+    if (priority_table_count < 256) {
+        priority_table[priority_table_count].thread_id = thread_id;
+        priority_table[priority_table_count].original_priority = thread_id % 4;  /* Simplified */
+        priority_table[priority_table_count].boosted_priority = new_priority;
+        priority_table_count++;
+    }
+}
+
+static void priority_restore(uint32_t thread_id)
+{
+    /* Restore original priority */
+    for (int i = 0; i < priority_table_count; i++) {
+        if (priority_table[i].thread_id == thread_id) {
+            priority_table[i].boosted_priority = priority_table[i].original_priority;
+            return;
+        }
+    }
+}
+
+static uint32_t get_thread_priority(uint32_t thread_id)
+{
+    /* Get current priority (boosted or original) */
+    for (int i = 0; i < priority_table_count; i++) {
+        if (priority_table[i].thread_id == thread_id) {
+            return priority_table[i].boosted_priority;
+        }
+    }
+    return thread_id % 4;  /* Default based on ID */
+}
+
 /* Mutex operations */
 int mutex_init(mutex_t *mutex)
 {
@@ -21,6 +71,7 @@ int mutex_lock(mutex_t *mutex)
     if (!mutex) return -1;
     
     uint32_t thread_id = thread_self();
+    uint32_t owner_id = mutex->lock;
     
     /* Check if already locked by this thread (recursive mutex) */
     if (mutex->lock == thread_id) {
@@ -28,11 +79,21 @@ int mutex_lock(mutex_t *mutex)
         return 0;
     }
     
-    /* Wait for mutex to be unlocked */
+    /* Wait for mutex to be unlocked with priority inheritance */
     while (mutex->lock != 0) {
+        /* Boost owner's priority to match waiting thread's priority */
+        uint32_t waiting_priority = get_thread_priority(thread_id);
+        uint32_t owner_priority = get_thread_priority(owner_id);
+        
+        if (waiting_priority > owner_priority) {
+            priority_boost(owner_id, waiting_priority);
+        }
+        
         mutex->waiter_count++;
         thread_sleep_ms(1);  /* Simplified: busy wait */
         mutex->waiter_count--;
+        
+        owner_id = mutex->lock;
     }
     
     /* Acquire the lock */
@@ -74,6 +135,8 @@ int mutex_unlock(mutex_t *mutex)
     
     /* Only release if count reaches 0 (recursive mutex) */
     if (mutex->count == 0) {
+        /* Restore original priority before releasing */
+        priority_restore(thread_id);
         mutex->lock = 0;
     }
     

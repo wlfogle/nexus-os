@@ -33,6 +33,9 @@ struct sockaddr {
 #define SYSCALL_THREAD_JOIN 22
 #define SYSCALL_MUTEX_LOCK  23
 #define SYSCALL_MUTEX_UNLOCK 24
+#define SYSCALL_FUTEX_WAIT  25
+#define SYSCALL_FUTEX_WAKE  26
+#define SYSCALL_FUTEX_REQUEUE 27
 
 struct syscall_args {
     uint32_t eax, ebx, ecx, edx, esi, edi;

@@ -6,6 +6,8 @@
 #include "../../include/kernel/netdev.h"
 #include "../../include/kernel/thread.h"
 #include "../../include/kernel/sync.h"
+#include "../../include/kernel/futex.h"
+#include "../../include/kernel/paging.h"
 
 int32_t sys_exit(int code)
 {
@@ -417,6 +419,28 @@ int32_t sys_mutex_unlock(void *mutex_addr)
     return mutex_unlock(mutex);
 }
 
+/* Futex syscalls */
+int32_t sys_futex_wait(uint32_t *futex_addr, uint32_t expected_val, uint32_t timeout_ms)
+{
+    if (!futex_addr) return -1;
+    
+    return futex_wait(futex_addr, expected_val, timeout_ms);
+}
+
+int32_t sys_futex_wake(uint32_t *futex_addr, uint32_t num_waiters)
+{
+    if (!futex_addr) return -1;
+    
+    return futex_wake(futex_addr, num_waiters);
+}
+
+int32_t sys_futex_requeue(uint32_t *futex_addr1, uint32_t *futex_addr2, uint32_t num_wake, uint32_t num_requeue)
+{
+    if (!futex_addr1 || !futex_addr2) return -1;
+    
+    return futex_requeue(futex_addr1, futex_addr2, num_wake, num_requeue);
+}
+
 int32_t syscall_dispatch(uint32_t num, struct syscall_args *args)
 {
     switch (num) {
@@ -468,6 +492,12 @@ int32_t syscall_dispatch(uint32_t num, struct syscall_args *args)
             return sys_mutex_lock((void *)args->ebx);
         case SYSCALL_MUTEX_UNLOCK:
             return sys_mutex_unlock((void *)args->ebx);
+        case SYSCALL_FUTEX_WAIT:
+            return sys_futex_wait((uint32_t *)args->ebx, args->ecx, args->edx);
+        case SYSCALL_FUTEX_WAKE:
+            return sys_futex_wake((uint32_t *)args->ebx, args->ecx);
+        case SYSCALL_FUTEX_REQUEUE:
+            return sys_futex_requeue((uint32_t *)args->ebx, (uint32_t *)args->ecx, args->edx, args->esi);
         default:
             return -1;
     }

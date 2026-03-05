@@ -23,6 +23,7 @@
 #include "../include/kernel/icmp.h"
 #include "../include/kernel/udp.h"
 #include "../include/kernel/tcp.h"
+#include "../include/kernel/device.h"
 
 #define MULTIBOOT_MAGIC 0x2BADB002
 
@@ -115,6 +116,9 @@ void kernel_main(struct multiboot_info *mbi, uint32_t magic)
     task_init();
     scheduler_init();
     timer_init();
+    
+    device_init();
+    serial_puts("[OK] Device registry initialized\n");
     
     serial_puts("[OK] Task manager and scheduler\n");
     
