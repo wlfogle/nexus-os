@@ -30,23 +30,48 @@ _start:
     cli                          # Disable interrupts
     cld                          # Clear direction flag
     
+    # Early serial output - test if we're here
+    # Write 'B' to COM1 at 0x3F8 (data register)
+    mov $0x3F8, %dx
+    mov $0x42, %al               # 'B' = 0x42
+    out %al, (%dx)               # Send to serial
+    
     # Set up stack (EBP = 0 for initial frame)
     movl $stack_top, %esp
     xorl %ebp, %ebp
     
-    # QEMU/Multiboot2 passes:
-    # EAX = 0x36D76289 (magic)
-    # EBX = pointer to multiboot info
-    # Save them for kernel_main
-    movl %eax, %esi              # Save magic
-    movl %ebx, %edi              # Save mbi
+    # Write 'S' to serial
+    mov $0x3F8, %dx
+    mov $0x53, %al               # 'S'
+    out %al, (%dx)
     
-    # Push arguments in cdecl order (right-to-left)
-    pushl %esi                   # Magic
-    pushl %edi                   # Multiboot info
+    # QEMU/Multiboot passes:
+    # EAX = magic
+    # EBX = pointer to multiboot info
+    # kernel_main signature: void kernel_main(struct multiboot_info *mbi, uint32_t magic)
+    # In cdecl, we push right-to-left: magic first, then mbi
+    
+    # Write 'T' to serial
+    mov $0x3F8, %dx
+    mov $0x54, %al               # 'T'
+    out %al, (%dx)
+    
+    # Push arguments in cdecl order (right-to-left): magic, then mbi
+    pushl %eax                   # Magic (rightmost arg, pushed first)
+    pushl %ebx                   # Multiboot info (leftmost arg, pushed second)
+    
+    # Write 'C' to serial
+    mov $0x3F8, %dx
+    mov $0x43, %al               # 'C'
+    out %al, (%dx)
     
     # Call kernel_main
     call kernel_main
+    
+    # Write 'H' to serial (shouldn't reach)
+    mov $0x3F8, %dx
+    mov $0x48, %al               # 'H'
+    out %al, (%dx)
     
     # If kernel_main returns, halt indefinitely
     cli
