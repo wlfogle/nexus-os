@@ -18,10 +18,9 @@ void pmem_init(uint32_t total_memory_bytes)
         page_bitmap[i] = 0;
     }
     
-    serial_puts("Physical memory manager initialized\n");
-    serial_puts("Total pages: ");
-    serial_puts(__PRETTY_FUNCTION__);
-    serial_puts("\n");
+    serial_printf("[OK] Physical memory manager: %u pages (%u MB)\n",
+                  total_pages,
+                  (total_pages * PAGE_SIZE) / (1024 * 1024));
 }
 
 static void set_bit(uint32_t page_num)

@@ -1,13 +1,14 @@
-# Multiboot bootloader - 32-bit entry point
+# Multiboot 1 bootloader - 32-bit entry point
 .code32
 
-.set ALIGN,    1<<0             # align loaded modules on page boundaries
-.set MEMINFO,  1<<1             # provide memory map
-.set FLAGS,    ALIGN | MEMINFO  # this is the Multiboot 'flag' field
-.set MAGIC,    0x1BADB002       # 'magic number' lets bootloader find the header
-.set CHECKSUM, -(MAGIC + FLAGS) # checksum of above, to prove we are multiboot
+# Multiboot 1 header constants
+.set ALIGN, 1<<0
+.set MEMINFO, 1<<1
+.set FLAGS, ALIGN | MEMINFO
+.set MAGIC, 0x1BADB002
+.set CHECKSUM, -(MAGIC + FLAGS)
 
-# Declare a multiboot header that marks the program as a kernel
+# Multiboot 1 header
 .section .multiboot
 .align 4
 .long MAGIC
@@ -26,21 +27,30 @@ stack_top:
 .global _start
 .type _start, @function
 _start:
-    cli
-    cld
+    cli                          # Disable interrupts
+    cld                          # Clear direction flag
     
-    # Set up stack
+    # Set up stack (EBP = 0 for initial frame)
     movl $stack_top, %esp
+    xorl %ebp, %ebp
     
-    # Push multiboot arguments
-    pushl %eax              # Magic
-    pushl %ebx              # Multiboot info
+    # QEMU/Multiboot2 passes:
+    # EAX = 0x36D76289 (magic)
+    # EBX = pointer to multiboot info
+    # Save them for kernel_main
+    movl %eax, %esi              # Save magic
+    movl %ebx, %edi              # Save mbi
     
-    # Call kernel
+    # Push arguments in cdecl order (right-to-left)
+    pushl %esi                   # Magic
+    pushl %edi                   # Multiboot info
+    
+    # Call kernel_main
     call kernel_main
     
-    # Halt
+    # If kernel_main returns, halt indefinitely
     cli
     hlt
+    jmp _start
 
 .size _start, . - _start
