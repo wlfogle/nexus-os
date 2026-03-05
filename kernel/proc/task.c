@@ -39,6 +39,30 @@ struct task *task_create(uint32_t entry_point, int priority)
     task->regs.cs = 0x1B;
     task->regs.ss = 0x23;
     
+    /* Initialize file descriptors (0=stdin, 1=stdout, 2=stderr) */
+    for (int i = 0; i < MAX_FD_PER_TASK; i++) {
+        task->fd_table[i].in_use = 0;
+        task->fd_table[i].vfs_handle = -1;
+        task->fd_table[i].offset = 0;
+        task->fd_table[i].flags = 0;
+    }
+    
+    /* Reserve standard file descriptors */
+    task->fd_table[0].in_use = 1;  /* stdin */
+    task->fd_table[0].vfs_handle = 0;  /* keyboard */
+    task->fd_table[1].in_use = 1;  /* stdout */
+    task->fd_table[1].vfs_handle = 1;  /* serial */
+    task->fd_table[2].in_use = 1;  /* stderr */
+    task->fd_table[2].vfs_handle = 1;  /* serial */
+    
+    /* Initialize signal handlers and tracking */
+    for (int i = 0; i < 32; i++) {
+        task->signal_handlers[i] = NULL;
+    }
+    task->pending_signals = 0;
+    task->parent_id = 0;
+    task->exit_code = 0;
+    
     task_count++;
     return task;
 }

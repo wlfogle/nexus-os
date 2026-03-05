@@ -8,6 +8,8 @@ KERNEL_DIR = kernel
 BOOT_DIR = boot
 BUILD_DIR = build
 ISO_DIR = $(BUILD_DIR)/isofiles
+USERLAND_DIR = userland
+USERLAND_BUILD = $(BUILD_DIR)/userland
 
 # Source files - all C and S files in kernel directory and subdirectories
 BOOT_SOURCES = $(BOOT_DIR)/boot.s
@@ -16,23 +18,35 @@ KERNEL_SOURCES = $(wildcard $(KERNEL_DIR)/*.c) $(wildcard $(KERNEL_DIR)/*/*.c)
 KERNEL_ASM_SOURCES = $(wildcard $(KERNEL_DIR)/*.s) $(wildcard $(KERNEL_DIR)/*/*.s)
 LIB_SOURCES = $(wildcard lib/*.c)
 
+# Userland sources
+USERLAND_LIB_SOURCES = $(wildcard $(USERLAND_DIR)/lib/*.c)
+USERLAND_INIT_SOURCES = $(USERLAND_DIR)/init/init.c
+USERLAND_BIN_SOURCES = $(wildcard $(USERLAND_DIR)/bin/*.c)
+USERLAND_CRT0 = $(USERLAND_DIR)/crt0.s
+
 # Object files
 BOOT_OBJECTS = $(BUILD_DIR)/boot.o
 KERNEL_OBJECTS = $(KERNEL_SOURCES:$(KERNEL_DIR)/%.c=$(BUILD_DIR)/%.o)
 LIB_OBJECTS = $(LIB_SOURCES:lib/%.c=$(BUILD_DIR)/lib/%.o)
 
+# Userland object files
+USERLAND_LIB_OBJECTS = $(USERLAND_LIB_SOURCES:$(USERLAND_DIR)/%.c=$(USERLAND_BUILD)/%.o)
+USERLAND_CRT0_OBJ = $(USERLAND_BUILD)/crt0.o
+USERLAND_INIT_OBJ = $(USERLAND_BUILD)/init.o
+USERLAND_BIN_OBJS = $(USERLAND_BIN_SOURCES:$(USERLAND_DIR)/%.c=$(USERLAND_BUILD)/%.o)
+
 # Target files
 KERNEL_BIN = $(BUILD_DIR)/kernel.bin
 ISO_FILE = $(BUILD_DIR)/nexus-os.iso
 
-.PHONY: all clean run iso kernel
+.PHONY: all clean run iso kernel userland
 
 # Default target
-all: kernel
+all: kernel userland
 
 # Create build directory and subdirectories
 $(BUILD_DIR):
-	mkdir -p $(BUILD_DIR) $(BUILD_DIR)/arch $(BUILD_DIR)/irq $(BUILD_DIR)/mm $(BUILD_DIR)/proc $(BUILD_DIR)/syscall $(BUILD_DIR)/drivers $(BUILD_DIR)/fs $(BUILD_DIR)/exec $(BUILD_DIR)/lib
+	mkdir -p $(BUILD_DIR) $(BUILD_DIR)/arch $(BUILD_DIR)/irq $(BUILD_DIR)/mm $(BUILD_DIR)/proc $(BUILD_DIR)/syscall $(BUILD_DIR)/drivers $(BUILD_DIR)/fs $(BUILD_DIR)/exec $(BUILD_DIR)/lib $(BUILD_DIR)/net
 
 # Compile assembly files (bootloader uses 32-bit flags)
 $(BUILD_DIR)/boot.o: $(BOOT_DIR)/boot.s | $(BUILD_DIR)
@@ -77,6 +91,52 @@ $(BUILD_DIR)/exec/%.o: $(KERNEL_DIR)/exec/%.c | $(BUILD_DIR)
 # Add lib directory
 $(BUILD_DIR)/lib/%.o: lib/%.c | $(BUILD_DIR)
 	$(CC) -c $< -o $@ $(CPPFLAGS) $(CFLAGS)
+
+# Add net directory
+$(BUILD_DIR)/net/%.o: $(KERNEL_DIR)/net/%.c | $(BUILD_DIR)
+	$(CC) -c $< -o $@ $(CPPFLAGS) $(CFLAGS)
+
+# Userland build rules
+$(USERLAND_BUILD):
+	mkdir -p $(USERLAND_BUILD) $(USERLAND_BUILD)/lib $(USERLAND_BUILD)/init $(USERLAND_BUILD)/bin
+
+# Compile userland C files
+$(USERLAND_BUILD)/lib/%.o: $(USERLAND_DIR)/lib/%.c | $(USERLAND_BUILD)
+	$(CC) -c $< -o $@ -I$(USERLAND_DIR)/lib -I include/libc $(CPPFLAGS) $(CFLAGS) -ffreestanding
+
+$(USERLAND_BUILD)/init/%.o: $(USERLAND_DIR)/init/%.c | $(USERLAND_BUILD)
+	$(CC) -c $< -o $@ -I$(USERLAND_DIR)/lib -I include/libc $(CPPFLAGS) $(CFLAGS) -ffreestanding
+
+$(USERLAND_BUILD)/bin/%.o: $(USERLAND_DIR)/bin/%.c | $(USERLAND_BUILD)
+	$(CC) -c $< -o $@ -I$(USERLAND_DIR)/lib -I include/libc $(CPPFLAGS) $(CFLAGS) -ffreestanding
+
+# Compile userland assembly
+$(USERLAND_BUILD)/crt0.o: $(USERLAND_CRT0) | $(USERLAND_BUILD)
+	$(AS) $(ASFLAGS) $< -o $@
+
+# Build userland libc archive
+$(USERLAND_BUILD)/libc.a: $(USERLAND_LIB_OBJECTS) | $(USERLAND_BUILD)
+	$(AR) rcs $@ $^
+
+# Link userland binaries
+$(USERLAND_BUILD)/init.elf: $(USERLAND_BUILD)/crt0.o $(USERLAND_BUILD)/init/init.o $(USERLAND_BUILD)/libc.a
+	$(LD) -m elf_i386 -T userland/userland.ld -o $@ $^
+
+$(USERLAND_BUILD)/bin/echo.elf: $(USERLAND_BUILD)/crt0.o $(USERLAND_BUILD)/bin/echo.o $(USERLAND_BUILD)/libc.a
+	$(LD) -m elf_i386 -T userland/userland.ld -o $@ $^
+
+$(USERLAND_BUILD)/bin/cat.elf: $(USERLAND_BUILD)/crt0.o $(USERLAND_BUILD)/bin/cat.o $(USERLAND_BUILD)/libc.a
+	$(LD) -m elf_i386 -T userland/userland.ld -o $@ $^
+
+$(USERLAND_BUILD)/bin/ps.elf: $(USERLAND_BUILD)/crt0.o $(USERLAND_BUILD)/bin/ps.o $(USERLAND_BUILD)/libc.a
+	$(LD) -m elf_i386 -T userland/userland.ld -o $@ $^
+
+$(USERLAND_BUILD)/bin/shell.elf: $(USERLAND_BUILD)/crt0.o $(USERLAND_BUILD)/bin/shell.o $(USERLAND_BUILD)/libc.a
+	$(LD) -m elf_i386 -T userland/userland.ld -o $@ $^
+
+# Phony target to build all userland
+.PHONY: userland
+userland: $(USERLAND_BUILD)/libc.a $(USERLAND_BUILD)/init.elf $(USERLAND_BUILD)/bin/echo.elf $(USERLAND_BUILD)/bin/cat.elf $(USERLAND_BUILD)/bin/ps.elf $(USERLAND_BUILD)/bin/shell.elf
 
 # Link kernel (use 32-bit elf format for multiboot compatibility)
 $(KERNEL_BIN): $(BOOT_OBJECTS) $(KERNEL_OBJECTS) $(KERNEL_ASM_OBJECTS) $(LIB_OBJECTS) linker.ld | $(BUILD_DIR)

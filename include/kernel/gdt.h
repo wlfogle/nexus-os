@@ -32,8 +32,8 @@ struct gdt_ptr {
 #define GDT_PRESENT          0x80  /* Segment present */
 #define GDT_PRIVILEGE_KERNEL 0x00  /* Privilege level 0 (kernel) */
 #define GDT_PRIVILEGE_USER   0x60  /* Privilege level 3 (user) */
-#define GDT_CODE             0x0A  /* Code segment */
-#define GDT_DATA             0x02  /* Data segment */
+#define GDT_CODE             0x1A  /* Code segment (S=1, executable, readable) */
+#define GDT_DATA             0x12  /* Data segment (S=1, writable) */
 #define GDT_TSS              0x09  /* Task State Segment */
 
 /* Initialize GDT and load it into CPU */

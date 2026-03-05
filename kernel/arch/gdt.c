@@ -52,7 +52,7 @@ void gdt_init(void)
     gdt_ptr.base = (uint32_t)&gdt[0];
 
     /* Load the GDT into the CPU */
+    serial_printf("GDT ptr base=0x%x limit=0x%x\n", gdt_ptr.base, gdt_ptr.limit);
     gdt_load(&gdt_ptr);
-
-    serial_puts("GDT initialized and loaded\n");
+    serial_puts("GDT loaded successfully\n");
 }
