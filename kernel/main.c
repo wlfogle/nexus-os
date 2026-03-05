@@ -10,6 +10,12 @@
 #include "../include/kernel/scheduler.h"
 #include "../include/kernel/timer.h"
 #include "../include/kernel/syscall.h"
+#include "../include/kernel/ata.h"
+#include "../include/kernel/block.h"
+#include "drivers/ata.h"
+#include "fs/fat.h"
+#include "fs/vfs.h"
+#include "exec/elf.h"
 
 #define MULTIBOOT_MAGIC 0x2BADB002
 
@@ -65,6 +71,21 @@ void kernel_main(struct multiboot_info *mbi, uint32_t magic)
     
     serial_puts("[OK] Task manager and scheduler\n");
     
+    ata_init();
+    int ata_id = block_device_register("ata0", 512, ata_read_sectors, ata_write_sectors);
+    if (ata_id >= 0) {
+        serial_puts("[OK] ATA driver and block device\n");
+        
+        if (vfs_mount(ata_id, VFS_FAT12) == 0) {
+            serial_puts("[OK] FAT12 filesystem mounted\n");
+            
+            int files = vfs_list_directory("/");
+            if (files >= 0) {
+                serial_printf("[OK] Directory listing: %d files\n", files);
+            }
+        }
+    }
+    
     struct task *t1 = task_create((uint32_t)test_task_1, 1);
     struct task *t2 = task_create((uint32_t)test_task_2, 1);
     
@@ -73,8 +94,8 @@ void kernel_main(struct multiboot_info *mbi, uint32_t magic)
         serial_puts("[OK] Test tasks created and running\n");
     }
     
-    serial_puts("\n===== Phase 1 & 2 Ready =====");
-    serial_puts("Interrupts, Memory, Paging, Scheduler\n");
+    serial_puts("\n===== Phase 1, 2, & 3 Ready =====");
+    serial_puts("Interrupts, Memory, Paging, Scheduler, Filesystem\n");
 
 halt:
     while (1) {

@@ -14,10 +14,12 @@ BOOT_SOURCES = $(BOOT_DIR)/boot.s
 BOOT_ASM_SOURCES = $(wildcard $(BOOT_DIR)/*.s)
 KERNEL_SOURCES = $(wildcard $(KERNEL_DIR)/*.c) $(wildcard $(KERNEL_DIR)/*/*.c)
 KERNEL_ASM_SOURCES = $(wildcard $(KERNEL_DIR)/*.s) $(wildcard $(KERNEL_DIR)/*/*.s)
+LIB_SOURCES = $(wildcard lib/*.c)
 
 # Object files
 BOOT_OBJECTS = $(BUILD_DIR)/boot.o
 KERNEL_OBJECTS = $(KERNEL_SOURCES:$(KERNEL_DIR)/%.c=$(BUILD_DIR)/%.o)
+LIB_OBJECTS = $(LIB_SOURCES:lib/%.c=$(BUILD_DIR)/lib/%.o)
 
 # Target files
 KERNEL_BIN = $(BUILD_DIR)/kernel.bin
@@ -30,7 +32,7 @@ all: kernel
 
 # Create build directory and subdirectories
 $(BUILD_DIR):
-	mkdir -p $(BUILD_DIR) $(BUILD_DIR)/arch $(BUILD_DIR)/irq $(BUILD_DIR)/mm $(BUILD_DIR)/proc $(BUILD_DIR)/syscall
+	mkdir -p $(BUILD_DIR) $(BUILD_DIR)/arch $(BUILD_DIR)/irq $(BUILD_DIR)/mm $(BUILD_DIR)/proc $(BUILD_DIR)/syscall $(BUILD_DIR)/drivers $(BUILD_DIR)/fs $(BUILD_DIR)/exec $(BUILD_DIR)/lib
 
 # Compile assembly files (bootloader uses 32-bit flags)
 $(BUILD_DIR)/boot.o: $(BOOT_DIR)/boot.s | $(BUILD_DIR)
@@ -60,9 +62,25 @@ KERNEL_ASM_OBJECTS = $(KERNEL_ASM_SOURCES:$(KERNEL_DIR)/%.s=$(BUILD_DIR)/%.o)
 $(BUILD_DIR)/syscall/%.o: $(KERNEL_DIR)/syscall/%.s | $(BUILD_DIR)
 	$(AS) $(ASFLAGS) $< -o $@
 
+# Add drivers directory
+$(BUILD_DIR)/drivers/%.o: $(KERNEL_DIR)/drivers/%.c | $(BUILD_DIR)
+	$(CC) -c $< -o $@ $(CPPFLAGS) $(CFLAGS)
+
+# Add filesystem directory
+$(BUILD_DIR)/fs/%.o: $(KERNEL_DIR)/fs/%.c | $(BUILD_DIR)
+	$(CC) -c $< -o $@ $(CPPFLAGS) $(CFLAGS)
+
+# Add exec directory
+$(BUILD_DIR)/exec/%.o: $(KERNEL_DIR)/exec/%.c | $(BUILD_DIR)
+	$(CC) -c $< -o $@ $(CPPFLAGS) $(CFLAGS)
+
+# Add lib directory
+$(BUILD_DIR)/lib/%.o: lib/%.c | $(BUILD_DIR)
+	$(CC) -c $< -o $@ $(CPPFLAGS) $(CFLAGS)
+
 # Link kernel (use 32-bit elf format for multiboot compatibility)
-$(KERNEL_BIN): $(BOOT_OBJECTS) $(KERNEL_OBJECTS) $(KERNEL_ASM_OBJECTS) linker.ld | $(BUILD_DIR)
-	$(LD) -m elf_i386 -T linker.ld -o $@ $(BOOT_OBJECTS) $(KERNEL_OBJECTS) $(KERNEL_ASM_OBJECTS)
+$(KERNEL_BIN): $(BOOT_OBJECTS) $(KERNEL_OBJECTS) $(KERNEL_ASM_OBJECTS) $(LIB_OBJECTS) linker.ld | $(BUILD_DIR)
+	$(LD) -m elf_i386 -T linker.ld -o $@ $(BOOT_OBJECTS) $(KERNEL_OBJECTS) $(KERNEL_ASM_OBJECTS) $(LIB_OBJECTS)
 
 # Build kernel
 kernel: $(KERNEL_BIN)
