@@ -1,6 +1,7 @@
 #include "../../include/kernel/ipv4.h"
 #include "../../include/kernel/ethernet.h"
 #include "../../include/kernel/arp.h"
+#include "../../include/kernel/icmp.h"
 #include "../../include/kernel/serial.h"
 #include <stddef.h>
 
@@ -62,9 +63,7 @@ int ipv4_receive(struct netdev *dev, const uint8_t *data, uint32_t len)
     /* Route to protocol handler */
     switch (protocol) {
         case IPv4_PROTO_ICMP:
-            /* ICMP handler would go here (Phase 6.4) */
-            serial_puts("[IPv4] ICMP packet received (handler not implemented)\n");
-            return 0;
+            return icmp_receive(dev, &hdr->src_ip, payload, payload_len);
             
         case IPv4_PROTO_UDP:
             /* UDP handler would go here (Phase 6.5) */
