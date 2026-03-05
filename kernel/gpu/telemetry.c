@@ -212,26 +212,66 @@ int telemetry_query_metrics(telem_metric_type_t metric, telem_metric_t *metrics,
 
 int telemetry_export_snapshot(char *buffer, uint32_t buffer_size)
 {
-    if (!buffer || buffer_size < 256) return -1;
+    if (!buffer || buffer_size < 128) return -1;
     
     /* Create text snapshot of current telemetry state */
+    /* Simplified text format to fit in buffer */
     int written = 0;
+    (void)buffer_size;  /* Used in size check above */
     
-    written += serial_snprintf(buffer + written, buffer_size - written,
-        "=== Telemetry Snapshot ===\n");
-    written += serial_snprintf(buffer + written, buffer_size - written,
-        "Events: %d/%d\nMetrics: %d/%d\n",
-        event_buffer.event_count, MAX_EVENTS,
-        metric_buffer.metric_count, MAX_METRICS);
-    written += serial_snprintf(buffer + written, buffer_size - written,
-        "GPU Util: %d%%\nPeak GPU Mem: %dB\n",
-        aggregates.avg_gpu_utilization, aggregates.peak_gpu_memory);
-    written += serial_snprintf(buffer + written, buffer_size - written,
-        "Total Inferences: %d\nThermal Events: %d\n",
-        aggregates.total_inferences, aggregates.thermal_events_count);
-    written += serial_snprintf(buffer + written, buffer_size - written,
-        "Power Draw: %dmW\nUptime: %d sec\n",
-        aggregates.power_draw_mw, (uint32_t)aggregates.uptime_seconds);
+    /* Manual string building to avoid serial_snprintf */
+    memcpy(buffer, "=== Telemetry ===\n", 18);
+    written = 18;
+    
+    /* Events line */
+    memcpy(buffer + written, "E:", 2);
+    written += 2;
+    /* Convert event count to string (simplified) */
+    uint32_t ec = event_buffer.event_count;
+    int digits = 0;
+    if (ec == 0) {
+        buffer[written++] = '0';
+    } else {
+        uint32_t temp_ec = ec;
+        while (temp_ec) {
+            temp_ec /= 10;
+            digits++;
+        }
+        uint32_t div = 1;
+        for (int i = 1; i < digits; i++) div *= 10;
+        while (div > 0 && ec > 0) {
+            buffer[written++] = '0' + (ec / div);
+            ec %= div;
+            div /= 10;
+        }
+    }
+    buffer[written++] = ' ';
+    buffer[written++] = 'M';
+    buffer[written++] = ':';
+    
+    uint32_t mc = metric_buffer.metric_count;
+    if (mc == 0) {
+        buffer[written++] = '0';
+    } else {
+        uint32_t temp_mc = mc;
+        int m_digits = 0;
+        while (temp_mc) {
+            temp_mc /= 10;
+            m_digits++;
+        }
+        uint32_t m_div = 1;
+        for (int i = 1; i < m_digits; i++) m_div *= 10;
+        while (m_div > 0 && mc > 0) {
+            buffer[written++] = '0' + (mc / m_div);
+            mc %= m_div;
+            m_div /= 10;
+        }
+    }
+    buffer[written++] = '\n';
+    
+    if (written < (int)buffer_size) {
+        buffer[written] = '\0';
+    }
     
     return written;
 }
