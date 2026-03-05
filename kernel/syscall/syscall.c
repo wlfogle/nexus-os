@@ -1,6 +1,9 @@
 #include "../../include/kernel/syscall.h"
 #include "../../include/kernel/serial.h"
 #include "../../include/kernel/task.h"
+#include "../../include/kernel/tcp.h"
+#include "../../include/kernel/udp.h"
+#include "../../include/kernel/netdev.h"
 
 int32_t sys_exit(int code)
 {
@@ -203,6 +206,177 @@ int32_t sys_signal(int signum, uint32_t handler)
     return 0;
 }
 
+/* Socket syscalls */
+int32_t sys_socket(int domain, int type, int protocol)
+{
+    (void)domain;  /* AF_INET implied */
+    (void)protocol;  /* Determined by type */
+    
+    struct task *task = task_get_current();
+    if (!task) return -1;
+    
+    int socket_id = -1;
+    
+    if (type == 1) {  /* SOCK_STREAM = TCP */
+        socket_id = tcp_socket_create();
+    } else if (type == 2) {  /* SOCK_DGRAM = UDP */
+        socket_id = udp_socket_create(0);  /* Ephemeral port */
+    } else {
+        return -1;
+    }
+    
+    if (socket_id < 0) return -1;
+    
+    /* Find free fd and store socket_id */
+    int fd = -1;
+    for (int i = 3; i < MAX_FD_PER_TASK; i++) {
+        if (!task->fd_table[i].in_use) {
+            fd = i;
+            break;
+        }
+    }
+    
+    if (fd < 0) return -1;
+    
+    task->fd_table[fd].in_use = 1;
+    task->fd_table[fd].vfs_handle = socket_id;  /* Store socket ID in vfs_handle */
+    task->fd_table[fd].flags = type;  /* Store socket type */
+    
+    return fd;
+}
+
+int32_t sys_bind(int sockfd, const struct sockaddr *addr, int addrlen)
+{
+    struct task *task = task_get_current();
+    if (!task || sockfd < 0 || sockfd >= MAX_FD_PER_TASK) return -1;
+    if (!task->fd_table[sockfd].in_use) return -1;
+    
+    int socket_id = task->fd_table[sockfd].vfs_handle;
+    int socket_type = task->fd_table[sockfd].flags;
+    
+    if (addrlen < 8) return -1;  /* Need at least addr_family + port */
+    
+    uint16_t port = ((uint8_t *)addr)[2] << 8 | ((uint8_t *)addr)[3];
+    
+    if (socket_type == 1) {  /* TCP */
+        return tcp_socket_listen(socket_id, port);
+    } else if (socket_type == 2) {  /* UDP */
+        /* UDP binding handled at socket creation */
+        return 0;
+    }
+    
+    return -1;
+}
+
+int32_t sys_listen(int sockfd, int backlog)
+{
+    struct task *task = task_get_current();
+    if (!task || sockfd < 0 || sockfd >= MAX_FD_PER_TASK) return -1;
+    if (!task->fd_table[sockfd].in_use) return -1;
+    
+    (void)backlog;  /* Simplified: we accept any backlog */
+    
+    /* For TCP, listen is already called in bind */
+    return 0;
+}
+
+int32_t sys_connect(int sockfd, const struct sockaddr *addr, int addrlen)
+{
+    struct task *task = task_get_current();
+    if (!task || sockfd < 0 || sockfd >= MAX_FD_PER_TASK) return -1;
+    if (!task->fd_table[sockfd].in_use) return -1;
+    
+    int socket_id = task->fd_table[sockfd].vfs_handle;
+    int socket_type = task->fd_table[sockfd].flags;
+    
+    if (addrlen < 8) return -1;
+    
+    /* Extract IP and port from sockaddr_in */
+    ipv4_addr_t dest_ip;
+    dest_ip.addr[0] = ((uint8_t *)addr)[4];
+    dest_ip.addr[1] = ((uint8_t *)addr)[5];
+    dest_ip.addr[2] = ((uint8_t *)addr)[6];
+    dest_ip.addr[3] = ((uint8_t *)addr)[7];
+    uint16_t port = ((uint8_t *)addr)[2] << 8 | ((uint8_t *)addr)[3];
+    
+    if (socket_type == 1) {  /* TCP */
+        return tcp_socket_connect(socket_id, &dest_ip, port);
+    }
+    
+    return -1;
+}
+
+int32_t sys_accept(int sockfd, struct sockaddr *addr, int *addrlen)
+{
+    struct task *task = task_get_current();
+    if (!task || sockfd < 0 || sockfd >= MAX_FD_PER_TASK) return -1;
+    if (!task->fd_table[sockfd].in_use) return -1;
+    
+    int socket_id = task->fd_table[sockfd].vfs_handle;
+    int socket_type = task->fd_table[sockfd].flags;
+    
+    if (socket_type != 1) return -1;  /* Only TCP */
+    
+    int client_socket_id = tcp_socket_accept(socket_id);
+    if (client_socket_id < 0) return -1;  /* No pending connections */
+    
+    /* Find free fd for client */
+    int fd = -1;
+    for (int i = 3; i < MAX_FD_PER_TASK; i++) {
+        if (!task->fd_table[i].in_use) {
+            fd = i;
+            break;
+        }
+    }
+    
+    if (fd < 0) return -1;
+    
+    task->fd_table[fd].in_use = 1;
+    task->fd_table[fd].vfs_handle = client_socket_id;
+    task->fd_table[fd].flags = socket_type;
+    
+    (void)addr;  /* Simplified: don't fill addr */
+    (void)addrlen;
+    
+    return fd;
+}
+
+int32_t sys_send(int sockfd, const void *buf, int len, int flags)
+{
+    struct task *task = task_get_current();
+    if (!task || sockfd < 0 || sockfd >= MAX_FD_PER_TASK) return -1;
+    if (!task->fd_table[sockfd].in_use || !buf || len <= 0) return -1;
+    
+    int socket_id = task->fd_table[sockfd].vfs_handle;
+    int socket_type = task->fd_table[sockfd].flags;
+    
+    (void)flags;  /* Simplified: ignore flags for now */
+    
+    if (socket_type == 1) {  /* TCP */
+        return tcp_socket_send(socket_id, (const uint8_t *)buf, len);
+    }
+    
+    return -1;
+}
+
+int32_t sys_recv(int sockfd, void *buf, int len, int flags)
+{
+    struct task *task = task_get_current();
+    if (!task || sockfd < 0 || sockfd >= MAX_FD_PER_TASK) return -1;
+    if (!task->fd_table[sockfd].in_use || !buf || len <= 0) return -1;
+    
+    int socket_id = task->fd_table[sockfd].vfs_handle;
+    int socket_type = task->fd_table[sockfd].flags;
+    
+    (void)flags;  /* Simplified: ignore flags for now */
+    
+    if (socket_type == 1) {  /* TCP */
+        return tcp_socket_recv(socket_id, (uint8_t *)buf, len);
+    }
+    
+    return -1;
+}
+
 int32_t syscall_dispatch(uint32_t num, struct syscall_args *args)
 {
     switch (num) {
@@ -232,6 +406,20 @@ int32_t syscall_dispatch(uint32_t num, struct syscall_args *args)
             return sys_exec((const char *)args->ebx, (char *const *)args->ecx);
         case SYSCALL_SIGNAL:
             return sys_signal(args->ebx, args->ecx);
+        case SYSCALL_SOCKET:
+            return sys_socket(args->ebx, args->ecx, args->edx);
+        case SYSCALL_BIND:
+            return sys_bind(args->ebx, (struct sockaddr *)args->ecx, args->edx);
+        case SYSCALL_LISTEN:
+            return sys_listen(args->ebx, args->ecx);
+        case SYSCALL_CONNECT:
+            return sys_connect(args->ebx, (struct sockaddr *)args->ecx, args->edx);
+        case SYSCALL_ACCEPT:
+            return sys_accept(args->ebx, (struct sockaddr *)args->ecx, (int *)args->edx);
+        case SYSCALL_SEND:
+            return sys_send(args->ebx, (void *)args->ecx, args->edx, args->esi);
+        case SYSCALL_RECV:
+            return sys_recv(args->ebx, (void *)args->ecx, args->edx, args->esi);
         default:
             return -1;
     }

@@ -3,6 +3,12 @@
 
 #include "../libc/stdint.h"
 
+/* Basic sockaddr structure */
+struct sockaddr {
+    uint8_t sa_family;
+    uint8_t sa_data[14];
+};
+
 #define SYSCALL_EXIT   1
 #define SYSCALL_WRITE  2
 #define SYSCALL_READ   3
@@ -16,6 +22,13 @@
 #define SYSCALL_LSEEK  11
 #define SYSCALL_EXEC   12
 #define SYSCALL_SIGNAL 13
+#define SYSCALL_SOCKET   14
+#define SYSCALL_BIND     15
+#define SYSCALL_LISTEN   16
+#define SYSCALL_CONNECT  17
+#define SYSCALL_ACCEPT   18
+#define SYSCALL_SEND     19
+#define SYSCALL_RECV     20
 
 struct syscall_args {
     uint32_t eax, ebx, ecx, edx, esi, edi;
