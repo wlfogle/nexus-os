@@ -119,3 +119,91 @@ All build outputs go to `build/` directory:
 
 ### Empty Structure
 Many directories (`docs/`, `tests/`, `scripts/`, `include/kernel/`, `include/libc/`) exist but are currently empty, indicating this is an early-stage project with planned expansion.
+
+## Code Quality Standards
+
+### ABSOLUTE REQUIREMENT: Zero Stub Code
+
+**This is non-negotiable. Every piece of code committed to this repository must be 100% complete and functional.**
+
+- **NO TODO comments** - No TODO, FIXME, unimplemented, or similar markers
+- **NO incomplete functions** - Every function must have a complete, working implementation
+- **NO zombie code** - No dead code paths, incomplete logic, or placeholder implementations
+- **NO stubs** - Assembly stubs must be complete with proper error handling
+- **NO partial features** - Features are either fully working or not included
+
+### Verification Checklist Before Any Commit
+
+1. **No incomplete code patterns**:
+   - Search codebase for: `TODO`, `FIXME`, `XXX`, `HACK`, `stub`, `unimplemented`
+   - All must return ZERO matches
+
+2. **All functions fully implemented**:
+   - Every function body is complete
+   - All error paths handled
+   - All parameters validated
+   - All edge cases covered
+
+3. **Code tested and verified**:
+   - Code compiles without errors
+   - Code runs and produces correct output
+   - No infinite loops or hangs (unless intentional)
+   - No memory leaks or buffer overflows
+
+4. **Assembly stubs are production quality**:
+   - All exception/interrupt handlers complete
+   - Proper register saving/restoring
+   - Correct calling conventions
+   - No placeholder implementations
+
+### Enforcement
+
+- **Before merging**: All code is audited for stubs/TODOs
+- **During development**: Incomplete work stays in branches, never merged to master
+- **Commit messages**: Must clearly state what's implemented and verified
+
+### Example of Unacceptable Code
+
+```c
+// ❌ REJECTED - Incomplete
+int process_file(const char *path) {
+    // TODO: implement file reading
+    return -1;
+}
+
+// ❌ REJECTED - Stub
+void handle_interrupt() {
+    // stub
+}
+```
+
+### Example of Acceptable Code
+
+```c
+// ✅ ACCEPTED - Complete
+int process_file(const char *path) {
+    if (!path) return -EINVAL;
+    
+    int fd = open(path, O_RDONLY);
+    if (fd < 0) return fd;
+    
+    char buffer[4096];
+    int bytes = read(fd, buffer, sizeof(buffer));
+    if (bytes < 0) {
+        close(fd);
+        return bytes;
+    }
+    
+    // Process buffer...
+    close(fd);
+    return bytes;
+}
+
+// ✅ ACCEPTED - Production ISR
+.globl isr42
+isr42:
+    pushl $0              /* error code */
+    pushl $42             /* exception number */
+    jmp isr_common
+    /* Complete handler in common code */
+```
