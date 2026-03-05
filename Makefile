@@ -154,9 +154,18 @@ $(USERLAND_BUILD)/bin/nettest.elf: $(USERLAND_BUILD)/crt0.o $(USERLAND_BUILD)/bi
 $(USERLAND_BUILD)/bin/threadtest.elf: $(USERLAND_BUILD)/crt0.o $(USERLAND_BUILD)/bin/threadtest.o $(USERLAND_BUILD)/libc.a
 	$(LD) -m elf_i386 -T userland/userland.ld -o $@ $^
 
+$(USERLAND_BUILD)/bin/hwinfo.elf: $(USERLAND_BUILD)/crt0.o $(USERLAND_BUILD)/bin/hwinfo.o $(USERLAND_BUILD)/libc.a
+	$(LD) -m elf_i386 -T userland/userland.ld -o $@ $^
+
+$(USERLAND_BUILD)/bin/devmgr.elf: $(USERLAND_BUILD)/crt0.o $(USERLAND_BUILD)/bin/devmgr.o $(USERLAND_BUILD)/libc.a
+	$(LD) -m elf_i386 -T userland/userland.ld -o $@ $^
+
+$(USERLAND_BUILD)/bin/memstat.elf: $(USERLAND_BUILD)/crt0.o $(USERLAND_BUILD)/bin/memstat.o $(USERLAND_BUILD)/libc.a
+	$(LD) -m elf_i386 -T userland/userland.ld -o $@ $^
+
 # Phony target to build all userland
 .PHONY: userland
-userland: $(USERLAND_BUILD)/libc.a $(USERLAND_BUILD)/init.elf $(USERLAND_BUILD)/bin/echo.elf $(USERLAND_BUILD)/bin/cat.elf $(USERLAND_BUILD)/bin/ps.elf $(USERLAND_BUILD)/bin/shell.elf $(USERLAND_BUILD)/bin/netstat.elf $(USERLAND_BUILD)/bin/ifconfig.elf $(USERLAND_BUILD)/bin/nettest.elf $(USERLAND_BUILD)/bin/threadtest.elf
+userland: $(USERLAND_BUILD)/libc.a $(USERLAND_BUILD)/init.elf $(USERLAND_BUILD)/bin/echo.elf $(USERLAND_BUILD)/bin/cat.elf $(USERLAND_BUILD)/bin/ps.elf $(USERLAND_BUILD)/bin/shell.elf $(USERLAND_BUILD)/bin/netstat.elf $(USERLAND_BUILD)/bin/ifconfig.elf $(USERLAND_BUILD)/bin/nettest.elf $(USERLAND_BUILD)/bin/threadtest.elf $(USERLAND_BUILD)/bin/hwinfo.elf $(USERLAND_BUILD)/bin/devmgr.elf $(USERLAND_BUILD)/bin/memstat.elf
 
 # Link kernel (use 32-bit elf format for multiboot compatibility)
 $(KERNEL_BIN): $(BOOT_OBJECTS) $(KERNEL_OBJECTS) $(KERNEL_ASM_OBJECTS) $(LIB_OBJECTS) linker.ld | $(BUILD_DIR)
