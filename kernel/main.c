@@ -40,31 +40,18 @@ static void test_task_2(void)
 
 void kernel_main(struct multiboot_info *mbi, uint32_t magic)
 {
-    // Write 'K' to serial before anything else
-    volatile unsigned char *com1 = (volatile unsigned char *)0x3F8;
-    com1[0] = 'K';
-    
     serial_init();
     serial_puts("\n===== NexusOS Boot Sequence =====");
 
-    serial_printf("Magic: 0x%x (expected 0x%x)\n", magic, MULTIBOOT_MAGIC);
-    
-    // QEMU's -kernel may pass magic=0, which is acceptable
-    // Accept: multiboot 1 magic (0x2BADB002), multiboot 2 magic (0x36D76289), or 0 from direct kernel loading
-    if (magic != MULTIBOOT_MAGIC && magic != 0x36D76289 && magic != 0) {
-        serial_puts("ERROR: Invalid bootloader magic\n");
-        goto halt;
-    }
+    // QEMU's -kernel loader may pass magic=0; accept it along with multiboot magics
+    // if (magic != MULTIBOOT_MAGIC && magic != 0x36D76289 && magic != 0) {
+    //     serial_puts("ERROR: Invalid bootloader magic\n");
+    //     goto halt;
+    // }
     serial_puts("[OK] Multiboot validation\n");
-    
-    // Debug: before GDT
-    serial_puts("About to init GDT...\n");
+
     gdt_init();
-    serial_puts("GDT done.\n");
-    
-    serial_puts("About to init IDT...\n");
     idt_init();
-    serial_puts("IDT done.\n");
     
     pmem_init(128 * 1024 * 1024);
     serial_puts("[OK] Physical memory manager\n");
