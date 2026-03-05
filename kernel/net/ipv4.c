@@ -3,6 +3,7 @@
 #include "../../include/kernel/arp.h"
 #include "../../include/kernel/icmp.h"
 #include "../../include/kernel/udp.h"
+#include "../../include/kernel/tcp.h"
 #include "../../include/kernel/serial.h"
 #include <stddef.h>
 
@@ -70,9 +71,7 @@ int ipv4_receive(struct netdev *dev, const uint8_t *data, uint32_t len)
             return udp_receive(dev, &hdr->src_ip, payload, payload_len);
             
         case IPv4_PROTO_TCP:
-            /* TCP handler would go here (Phase 6.6) */
-            serial_puts("[IPv4] TCP packet received (handler not implemented)\n");
-            return 0;
+            return tcp_receive(dev, &hdr->src_ip, payload, payload_len);
             
         default:
             return -1;  /* Unknown protocol */
