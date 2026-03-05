@@ -26,28 +26,21 @@ stack_top:
 .global _start
 .type _start, @function
 _start:
-    cli                      # Disable interrupts immediately
+    cli
+    cld
     
-    # Initialize the stack pointer
+    # Set up stack
     movl $stack_top, %esp
     
-    # Preserve multiboot magic and info pointer for kernel_main
-    # The bootloader passes:
-    # - eax: multiboot magic number (0x2BADB002)
-    # - ebx: pointer to multiboot info structure
-    # We need to pass them as arguments to kernel_main(mbi, magic)
+    # Push multiboot arguments
+    pushl %eax              # Magic
+    pushl %ebx              # Multiboot info
     
-    # Push arguments in reverse order (C calling convention - cdecl)
-    pushl %eax       # magic number
-    pushl %ebx       # multiboot info pointer
-    
-    # Call the kernel main function
+    # Call kernel
     call kernel_main
     
-    # If kernel_main returns, put the computer into an infinite loop
+    # Halt
     cli
-1:  hlt
-    jmp 1b
+    hlt
 
-# Set the size of the _start symbol to the current location '.' minus its start
 .size _start, . - _start
