@@ -26,6 +26,8 @@ stack_top:
 .global _start
 .type _start, @function
 _start:
+    cli                      # Disable interrupts immediately
+    
     # Initialize the stack pointer
     movl $stack_top, %esp
     

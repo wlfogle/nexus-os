@@ -4,33 +4,33 @@
 .global gdt_load
 .type gdt_load, @function
 
-# void gdt_load(struct gdt_ptr *ptr)
-# Load GDT pointer from argument (on stack at [esp+4])
 gdt_load:
-    # Get pointer to gdt_ptr structure from stack
     mov 4(%esp), %eax
-
-    # Load GDT register with lgdt instruction
     lgdt (%eax)
-
-    # Update segment registers with kernel selectors
-    # Code segment selector = 0x08 (kernel code)
-    # Data segment selector = 0x10 (kernel data)
-
-    # Far jump to reload CS (code segment)
-    # This must be done as a far jump to actually update CS
-    ljmp $0x08, $1f
-
-1:
-    # Now we're in kernel code segment
-    # Update data segment registers
-    movl $0x10, %eax        # Kernel data selector
-    movl %eax, %ds          # Data segment
-    movl %eax, %es          # Extra segment
-    movl %eax, %fs          # FS segment
-    movl %eax, %gs          # GS segment
-    movl %eax, %ss          # Stack segment
-
+    
+    # Perform a far jump using ljmp
+    # In AT&T syntax: ljmp $code_sel, $address
+    # But address must be resolved at link time
+    # Use a trick: use absolute address form
+    jmp 1f  # Skip the ljmp target
+    
+    # Define the far jump target here (unreachable but defines label)
+.globl gdt_load_continue
+gdt_load_continue:
+    # Now in kernel code segment
+    mov $0x10, %eax
+    mov %eax, %ds
+    mov %eax, %es
+    mov %eax, %fs
+    mov %eax, %gs
+    mov %eax, %ss
     ret
+    
+1:  # Do the actual far jump
+    # Manual ljmp: push far return address then jump
+    lea gdt_load_continue, %eax
+    push $0x08              # Code segment selector
+    push %eax               # Offset
+    lret                    # Long return (far jump)
 
 .size gdt_load, . - gdt_load
