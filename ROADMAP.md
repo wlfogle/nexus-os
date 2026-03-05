@@ -145,7 +145,20 @@ Implement:
 
 **Acceptance**: Stable under load, secure by default, regressions caught by CI.
 
-### Phase 8: AI Capabilities on Stable OS Foundation (8-16+ weeks)
+### Phase 8: Device Infrastructure ✓ (COMPLETE)
+
+**Status**: COMPLETE - all 5 subsystems implemented and integrated.
+
+Implemented:
+- **8.1 Unified Device Registry**: 128 devices, 5 classes, registration/lookup/state APIs
+- **8.2 Advanced Interrupt Management**: 16 IRQs, up to 4 handlers/IRQ, priority routing
+- **8.3 DMA and Buffer Management**: 64 DMA buffers, coherency modes, scatter-gather support
+- **8.4 PCI Bus Enumeration**: Type-1 config space access, BAR parsing, 256-device support
+- **8.5 Device Utilities**: `hwinfo`, `devmgr`, `memstat` userland tools
+
+**Acceptance**: Reliable multi-class device framework with diagnostics and clean builds.
+
+### Phase 9: AI Capabilities on Stable OS Foundation (8-16+ weeks)
 
 **Target**: Practical AI workloads running as managed services
 
@@ -155,7 +168,7 @@ Implement:
 - **GPU abstraction layer**: QEMU fallback, hardware path later
 - **Model runtime service**: Inference daemon (userland service)
 - **Scheduler enhancements**: Resource-aware scheduling hints
-- **Memory management**: GPU memory management
+- **Memory management**: GPU memory and accelerator DMA management
 - **Observability**: Model latency, memory pressure, device utilization telemetry
 - **Container support**: Basic container runtime (optional)
 
@@ -168,7 +181,7 @@ Implement:
 - **M3**: Filesystem supports persistent file I/O and executable loading. (Phase 3)
 - **M4**: Shell + utilities available after boot. (Phase 4)
 - **M5**: Networking supports end-to-end TCP communication. (Phase 6)
-- **M6**: AI inference service runs with resource controls and telemetry. (Phase 8)
+- **M6**: AI inference service runs with resource controls and telemetry. (Phase 9)
 
 ## Recommended Immediate Next Sprint (Phase 1 Kickoff)
 
@@ -218,10 +231,12 @@ A fully functional OS should:
 - Phase 5: 6-10 weeks
 - Phase 6: 6-10 weeks
 - Phase 7: Ongoing (starts Phase 1)
-- Phase 8: 8-16+ weeks
+- Phase 8: ✓ Complete
+- Phase 9: 8-16+ weeks
 
 **Total estimated time to functional OS (M4)**: 16-24 weeks (~4-6 months)
 **Total estimated time to networked OS (M5)**: 22-34 weeks (~5-8 months)
+**Total estimated time to AI-ready OS (M6)**: 30-50 weeks (~7-12 months)
 
 ## References
 
@@ -233,6 +248,6 @@ A fully functional OS should:
 ---
 
 **Last Updated**: 2026-03-05
-**Phases Complete**: 0-7, 8.1-8.3
-**Current Phase**: 8.4 (PCI Bus Enumeration)
-**Next Checkpoint**: Phase 8.5 (Device Utilities), then Phase 9 (AI Capabilities)
+**Phases Complete**: 0-8
+**Current Phase**: 9.1 (GPU Abstraction Layer)
+**Next Checkpoint**: Phase 9.2 (Model Runtime Service)
