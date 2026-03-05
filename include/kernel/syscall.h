@@ -29,6 +29,10 @@ struct sockaddr {
 #define SYSCALL_ACCEPT   18
 #define SYSCALL_SEND     19
 #define SYSCALL_RECV     20
+#define SYSCALL_CLONE    21
+#define SYSCALL_THREAD_JOIN 22
+#define SYSCALL_MUTEX_LOCK  23
+#define SYSCALL_MUTEX_UNLOCK 24
 
 struct syscall_args {
     uint32_t eax, ebx, ecx, edx, esi, edi;

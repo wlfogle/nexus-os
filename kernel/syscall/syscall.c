@@ -4,6 +4,8 @@
 #include "../../include/kernel/tcp.h"
 #include "../../include/kernel/udp.h"
 #include "../../include/kernel/netdev.h"
+#include "../../include/kernel/thread.h"
+#include "../../include/kernel/sync.h"
 
 int32_t sys_exit(int code)
 {
@@ -377,6 +379,44 @@ int32_t sys_recv(int sockfd, void *buf, int len, int flags)
     return -1;
 }
 
+/* Thread syscalls */
+int32_t sys_clone(int flags, void *stack, int (*fn)(void *), void *arg, int *parent_tid)
+{
+    (void)flags;  /* CLONE_THREAD, CLONE_VM, etc - simplified for now */
+    (void)stack;  /* Child stack - using allocated stack */
+    (void)parent_tid;
+    
+    struct task *task = task_get_current();
+    if (!task || !fn) return -1;
+    
+    /* Create new thread in current task */
+    int thread_id = thread_create(task, (void (*)(void *))fn, arg);
+    return thread_id;
+}
+
+int32_t sys_thread_join(int thread_id, int *exit_code)
+{
+    if (thread_id <= 0) return -1;
+    
+    return thread_join(thread_id, exit_code);
+}
+
+int32_t sys_mutex_lock(void *mutex_addr)
+{
+    if (!mutex_addr) return -1;
+    
+    mutex_t *mutex = (mutex_t *)mutex_addr;
+    return mutex_lock(mutex);
+}
+
+int32_t sys_mutex_unlock(void *mutex_addr)
+{
+    if (!mutex_addr) return -1;
+    
+    mutex_t *mutex = (mutex_t *)mutex_addr;
+    return mutex_unlock(mutex);
+}
+
 int32_t syscall_dispatch(uint32_t num, struct syscall_args *args)
 {
     switch (num) {
@@ -420,6 +460,14 @@ int32_t syscall_dispatch(uint32_t num, struct syscall_args *args)
             return sys_send(args->ebx, (void *)args->ecx, args->edx, args->esi);
         case SYSCALL_RECV:
             return sys_recv(args->ebx, (void *)args->ecx, args->edx, args->esi);
+        case SYSCALL_CLONE:
+            return sys_clone(args->ebx, (void *)args->ecx, (int (*)(void *))args->edx, (void *)args->esi, (int *)args->edi);
+        case SYSCALL_THREAD_JOIN:
+            return sys_thread_join(args->ebx, (int *)args->ecx);
+        case SYSCALL_MUTEX_LOCK:
+            return sys_mutex_lock((void *)args->ebx);
+        case SYSCALL_MUTEX_UNLOCK:
+            return sys_mutex_unlock((void *)args->ebx);
         default:
             return -1;
     }
