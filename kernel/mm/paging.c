@@ -26,8 +26,11 @@ void paging_init(void)
         page_directory[i] = (uint32_t)&page_tables[i] | PAGE_PRESENT | PAGE_WRITABLE;
     }
     
-    for (int i = 0; i < 1024; i++) {
-        page_tables[0][i] = (i * PAGE_SIZE) | PAGE_PRESENT | PAGE_WRITABLE;
+    for (int t = 0; t < 4; t++) {
+        for (int i = 0; i < 1024; i++) {
+            uint32_t addr = (uint32_t)(t * 1024 + i) * PAGE_SIZE;
+            page_tables[t][i] = addr | PAGE_PRESENT | PAGE_WRITABLE;
+        }
     }
     
     serial_puts("Paging structures initialized\n");

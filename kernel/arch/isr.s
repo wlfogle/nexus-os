@@ -78,9 +78,9 @@ isr_common:
     movl %eax, %gs
     
     /* Call exception_handler(exception_num, error_code) */
-    /* Arguments on stack: [esp+36]=error_code, [esp+40]=exception_num */
-    movl 36(%esp), %eax    /* exception_num into eax */
-    movl 40(%esp), %edx    /* error_code into edx */
+    /* pushal=32 bytes + 4 seg regs=16 bytes = 48 byte offset */
+    movl 48(%esp), %eax    /* exception_num */
+    movl 52(%esp), %edx    /* error_code */
     pushl %edx             /* Push error_code (2nd arg) */
     pushl %eax             /* Push exception_num (1st arg) */
     call exception_handler

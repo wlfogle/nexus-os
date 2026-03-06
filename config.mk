@@ -53,11 +53,11 @@ ifeq ($(OPTIMIZE), 0)
 else ifeq ($(OPTIMIZE), 1)
     OPT_FLAGS = -O1
 else ifeq ($(OPTIMIZE), 2)
-    OPT_FLAGS = -O2 -march=alderlake -mtune=alderlake
+    OPT_FLAGS = -O2
 else ifeq ($(OPTIMIZE), 3)
-    OPT_FLAGS = -O3 -march=alderlake -mtune=alderlake -flto
+    OPT_FLAGS = -O3 -flto
 else ifeq ($(OPTIMIZE), s)
-    OPT_FLAGS = -Os -march=alderlake -mtune=alderlake
+    OPT_FLAGS = -Os
 else
     OPT_FLAGS = -O2
 endif
