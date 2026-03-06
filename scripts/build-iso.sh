@@ -214,6 +214,7 @@ install_base() {
             btrfs-progs xfsprogs \
             lvm2 cryptsetup \
             grub-efi-amd64-signed grub-pc-bin shim-signed \
+            isolinux syslinux syslinux-common syslinux-efi \
             initramfs-tools plymouth plymouth-themes \
             openssh-server \
             ufw fail2ban \
@@ -222,6 +223,53 @@ install_base() {
             pipewire pipewire-pulse wireplumber \
             flatpak \
             unattended-upgrades apt-transport-https
+
+        # Bluetooth
+        apt-get install -y -qq \
+            bluez bluez-tools rfkill
+
+        # Printing
+        apt-get install -y -qq \
+            cups cups-browsed cups-filters system-config-printer
+
+        # Media codecs
+        apt-get install -y -qq \
+            ffmpeg gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+            gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
+            gstreamer1.0-libav gstreamer1.0-vaapi \
+            libavcodec-extra \
+            2>/dev/null || echo '[warn] Some codec packages unavailable'
+
+        # Power management
+        apt-get install -y -qq \
+            power-profiles-daemon thermald \
+            2>/dev/null || echo '[warn] Power management packages partially unavailable'
+
+        # Firmware updates & Thunderbolt
+        apt-get install -y -qq \
+            fwupd udisks2 bolt
+
+        # Zram swap
+        apt-get install -y -qq \
+            zram-tools 2>/dev/null || true
+
+        # Office
+        apt-get install -y -qq \
+            libreoffice-calc libreoffice-writer libreoffice-impress \
+            libreoffice-gtk3 \
+            2>/dev/null || echo '[warn] LibreOffice install had issues'
+
+        # Accessibility
+        apt-get install -y -qq \
+            at-spi2-core orca speech-dispatcher \
+            2>/dev/null || true
+
+        # AMD/Intel GPU support (for non-NVIDIA hardware)
+        apt-get install -y -qq \
+            mesa-vulkan-drivers mesa-va-drivers mesa-vdpau-drivers \
+            libdrm-amdgpu1 libdrm-radeon1 \
+            xserver-xorg-video-amdgpu xserver-xorg-video-intel \
+            2>/dev/null || true
     "
 
     umount_chroot
@@ -256,9 +304,23 @@ install_kde() {
             xserver-xorg-video-all \
             xinit x11-xserver-utils
 
+        # KDE Bluetooth, printing, and software center
+        apt-get install -y -qq \
+            bluedevil \
+            print-manager \
+            plasma-discover plasma-discover-backend-flatpak \
+            kde-spectacle partitionmanager \
+            2>/dev/null || true
+
         echo 'sddm sddm/daemon select sddm' | debconf-set-selections
         dpkg-reconfigure -f noninteractive sddm 2>/dev/null || true
         systemctl enable sddm
+        systemctl enable bluetooth 2>/dev/null || true
+        systemctl enable cups 2>/dev/null || true
+
+        # Setup Flathub
+        flatpak remote-add --if-not-exists flathub \
+            https://dl.flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
     "
 
     umount_chroot
@@ -392,6 +454,10 @@ apply_overlay() {
         cp "${PROJECT_ROOT}/core/config/udev-gaming.rules" "${ROOT}/etc/udev/rules.d/99-nexus-gaming.rules"
     [[ -f "${PROJECT_ROOT}/core/config/limits-nexus.conf" ]] && \
         cp "${PROJECT_ROOT}/core/config/limits-nexus.conf" "${ROOT}/etc/security/limits.d/90-nexus.conf"
+    [[ -f "${PROJECT_ROOT}/core/config/zram-nexus.conf" ]] && {
+        mkdir -p "${ROOT}/etc/default"
+        cp "${PROJECT_ROOT}/core/config/zram-nexus.conf" "${ROOT}/etc/default/zramswap"
+    }
 
     # ── Branding ──────────────────────────────────────────────────────────
     [[ -f "${PROJECT_ROOT}/core/branding/motd" ]] && \
@@ -421,8 +487,14 @@ apply_overlay() {
 
     if [[ -d "${PROJECT_ROOT}/core/branding/wallpaper" ]]; then
         mkdir -p "${ROOT}/usr/share/wallpapers/NexusOS/contents/images"
-        cp -a "${PROJECT_ROOT}/core/branding/wallpaper/"* \
-              "${ROOT}/usr/share/wallpapers/NexusOS/contents/images/" 2>/dev/null || true
+        # Copy metadata to wallpaper root, images to images subdir
+        [[ -f "${PROJECT_ROOT}/core/branding/wallpaper/metadata.desktop" ]] && \
+            cp "${PROJECT_ROOT}/core/branding/wallpaper/metadata.desktop" \
+               "${ROOT}/usr/share/wallpapers/NexusOS/metadata.desktop"
+        if [[ -d "${PROJECT_ROOT}/core/branding/wallpaper/contents/images" ]]; then
+            cp -a "${PROJECT_ROOT}/core/branding/wallpaper/contents/images/"* \
+                  "${ROOT}/usr/share/wallpapers/NexusOS/contents/images/" 2>/dev/null || true
+        fi
     fi
 
     # ── Shell configs ─────────────────────────────────────────────────────
@@ -547,6 +619,11 @@ HOSTSEOF
         systemctl enable ssh               2>/dev/null || true
         systemctl enable nexus-update.timer  2>/dev/null || true
         systemctl enable nexus-health.timer  2>/dev/null || true
+        systemctl enable bluetooth         2>/dev/null || true
+        systemctl enable cups              2>/dev/null || true
+        systemctl enable fwupd             2>/dev/null || true
+        systemctl enable fstrim.timer      2>/dev/null || true
+        systemctl enable power-profiles-daemon 2>/dev/null || true
     "
 
     # Plymouth
@@ -587,7 +664,7 @@ SDDMEOF
 build_live_fs() {
     log "Building live filesystem..."
 
-    mkdir -p "${ISO_DIR}"/{casper,boot/grub,EFI/boot,.disk}
+    mkdir -p "${ISO_DIR}"/{casper,boot/grub,EFI/boot,isolinux,.disk}
 
     # Install casper for live boot support
     mount_chroot
@@ -650,6 +727,65 @@ menuentry "Check disc for defects" {
     initrd /casper/initrd
 }
 GRUBEOF
+
+    # Isolinux for BIOS boot
+    local isolinux_bin=""
+    for path in "${ROOT}/usr/lib/ISOLINUX/isolinux.bin" \
+                "${ROOT}/usr/lib/syslinux/isolinux.bin" \
+                /usr/lib/ISOLINUX/isolinux.bin; do
+        [[ -f "$path" ]] && { isolinux_bin="$path"; break; }
+    done
+    if [[ -n "$isolinux_bin" ]]; then
+        cp "$isolinux_bin" "${ISO_DIR}/isolinux/"
+        # Copy ldlinux.c32 and other required modules
+        for mod_dir in "${ROOT}/usr/lib/syslinux/modules/bios" /usr/lib/syslinux/modules/bios; do
+            if [[ -d "$mod_dir" ]]; then
+                cp "${mod_dir}/ldlinux.c32"    "${ISO_DIR}/isolinux/" 2>/dev/null || true
+                cp "${mod_dir}/libutil.c32"    "${ISO_DIR}/isolinux/" 2>/dev/null || true
+                cp "${mod_dir}/libcom32.c32"   "${ISO_DIR}/isolinux/" 2>/dev/null || true
+                cp "${mod_dir}/vesamenu.c32"   "${ISO_DIR}/isolinux/" 2>/dev/null || true
+                cp "${mod_dir}/menu.c32"       "${ISO_DIR}/isolinux/" 2>/dev/null || true
+                break
+            fi
+        done
+
+        cat > "${ISO_DIR}/isolinux/isolinux.cfg" << 'SYSEOF'
+DEFAULT nexusos
+TIMEOUT 100
+PROMPT 1
+
+UI vesamenu.c32
+MENU TITLE NexusOS 1.0 — Boot Menu
+MENU COLOR border   30;44 #40ffffff #a0000000 std
+MENU COLOR title    1;36;44 #9033ccff #a0000000 std
+MENU COLOR sel      7;37;40 #e0ffffff #20ffffff all
+MENU COLOR unsel    37;44 #50ffffff #a0000000 std
+
+LABEL nexusos
+    MENU LABEL NexusOS 1.0 — Live Session (KDE Plasma X11)
+    MENU DEFAULT
+    KERNEL /casper/vmlinuz
+    APPEND initrd=/casper/initrd boot=casper quiet splash ---
+
+LABEL safe
+    MENU LABEL NexusOS 1.0 — Safe Graphics
+    KERNEL /casper/vmlinuz
+    APPEND initrd=/casper/initrd boot=casper quiet splash nomodeset ---
+
+LABEL toram
+    MENU LABEL NexusOS 1.0 — Load to RAM
+    KERNEL /casper/vmlinuz
+    APPEND initrd=/casper/initrd boot=casper quiet splash toram ---
+
+LABEL check
+    MENU LABEL Check disc for defects
+    KERNEL /casper/vmlinuz
+    APPEND initrd=/casper/initrd boot=casper integrity-check quiet splash ---
+SYSEOF
+        log "BIOS boot (isolinux) configured"
+    else
+        warn "isolinux.bin not found — BIOS boot unavailable"
+    fi
 
     # .disk metadata
     echo "NexusOS 1.0 \"AI-Native\" - Release x86_64 (${BUILD_DATE})" > "${ISO_DIR}/.disk/info"
@@ -715,17 +851,34 @@ build_iso() {
 
     mkdir -p "$OUTPUT_DIR"
 
-    xorriso -as mkisofs \
-        -volid "$ISO_LABEL" \
-        -J -R -l \
-        -iso-level 3 \
-        -eltorito-boot boot/grub/efi.img \
-        -no-emul-boot \
-        -eltorito-catalog boot/grub/boot.cat \
-        -append_partition 2 0xEF "${ISO_DIR}/boot/grub/efi.img" \
-        -partition_cset_msb on \
-        -o "${OUTPUT_DIR}/${ISO_NAME}" \
-        "$ISO_DIR"
+    if [[ -f "${ISO_DIR}/isolinux/isolinux.bin" ]] && [[ -f "${ISO_DIR}/boot/grub/efi.img" ]]; then
+        # Hybrid BIOS + UEFI boot
+        xorriso -as mkisofs \
+            -volid "$ISO_LABEL" \
+            -J -R -l -iso-level 3 \
+            -b isolinux/isolinux.bin \
+            -c isolinux/boot.cat \
+            -no-emul-boot -boot-load-size 4 -boot-info-table \
+            -eltorito-alt-boot \
+            -e boot/grub/efi.img \
+            -no-emul-boot \
+            -append_partition 2 0xEF "${ISO_DIR}/boot/grub/efi.img" \
+            -o "${OUTPUT_DIR}/${ISO_NAME}" \
+            "$ISO_DIR"
+    elif [[ -f "${ISO_DIR}/boot/grub/efi.img" ]]; then
+        # UEFI only
+        xorriso -as mkisofs \
+            -volid "$ISO_LABEL" \
+            -J -R -l -iso-level 3 \
+            -eltorito-boot boot/grub/efi.img \
+            -no-emul-boot \
+            -eltorito-catalog boot/grub/boot.cat \
+            -append_partition 2 0xEF "${ISO_DIR}/boot/grub/efi.img" \
+            -o "${OUTPUT_DIR}/${ISO_NAME}" \
+            "$ISO_DIR"
+    else
+        die "No bootloader images found — cannot build ISO"
+    fi
 
     sha256sum "${OUTPUT_DIR}/${ISO_NAME}" > "${OUTPUT_DIR}/${ISO_NAME}.sha256"
 

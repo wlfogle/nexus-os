@@ -103,13 +103,14 @@ check_gpu() {
     fi
 
     while IFS=',' read -r name temp util mem_used mem_total fan power; do
-        name="$(echo "$name" | xargs)"
-        temp="$(echo "$temp" | xargs)"
-        util="$(echo "$util" | xargs)"
-        mem_used="$(echo "$mem_used" | xargs)"
-        mem_total="$(echo "$mem_total" | xargs)"
-        fan="$(echo "$fan" | xargs)"
-        power="$(echo "$power" | xargs)"
+        # Trim whitespace using bash parameter expansion (no xargs)
+        name="${name#"${name%%[![:space:]]*}"}" ; name="${name%"${name##*[![:space:]]}"}"
+        temp="${temp#"${temp%%[![:space:]]*}"}" ; temp="${temp%"${temp##*[![:space:]]}"}"
+        util="${util#"${util%%[![:space:]]*}"}" ; util="${util%"${util##*[![:space:]]}"}"
+        mem_used="${mem_used#"${mem_used%%[![:space:]]*}"}" ; mem_used="${mem_used%"${mem_used##*[![:space:]]}"}"
+        mem_total="${mem_total#"${mem_total%%[![:space:]]*}"}" ; mem_total="${mem_total%"${mem_total##*[![:space:]]}"}"
+        fan="${fan#"${fan%%[![:space:]]*}"}" ; fan="${fan%"${fan##*[![:space:]]}"}"
+        power="${power#"${power%%[![:space:]]*}"}" ; power="${power%"${power##*[![:space:]]}"}"
 
         if [[ "$temp" =~ ^[0-9]+$ ]]; then
             if (( temp >= GPU_TEMP_CRIT )); then

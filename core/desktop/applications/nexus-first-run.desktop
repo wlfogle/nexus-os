@@ -1,9 +1,11 @@
 [Desktop Entry]
 Name=NexusOS First Run Setup
 Comment=Configure NexusOS for your hardware on first login
-Exec=konsole --profile NexusOS -e nexus-first-run
+Exec=konsole -e nexus-first-run
 Icon=preferences-system
 Type=Application
+Terminal=false
 Categories=System;
 NoDisplay=true
-X-KDE-autostart-condition=Unless:~/.config/nexus-os/.first-run-complete
+X-KDE-autostart-after-phase=1
+OnlyShowIn=KDE;

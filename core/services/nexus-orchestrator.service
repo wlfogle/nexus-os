@@ -7,7 +7,7 @@ Requires=nexus-stella.service nexus-maxjr.service
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/bin/python3 /opt/nexus-os/services/orchestrator.py
+ExecStart=/usr/bin/python3 /opt/nexus-os/services/nexus-orchestrator.py
 WorkingDirectory=/opt/nexus-os/services
 Restart=on-failure
 RestartSec=5

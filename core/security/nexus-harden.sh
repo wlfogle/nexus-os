@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # =============================================================================
 # NexusOS Security Hardening Script
-# Hardens a Pop!_OS 22.04 LTS NVIDIA system with firewall, intrusion
-# prevention, SSH lockdown, and kernel security parameters.
+# Hardens a NexusOS system with firewall, intrusion prevention,
+# SSH lockdown, and kernel security parameters.
 # =============================================================================
 set -euo pipefail
 
