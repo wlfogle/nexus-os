@@ -1,11 +1,24 @@
 # Build artifacts
 build/
+obj/
+bin/
 *.o
 *.so
 *.a
 *.elf
+*.bin
 *.img
 *.iso
+
+# Kernel images (but not kernel source)
+kernel.bin
+boot.img
+nexus-os.iso
+
+# Generated files
+*.d
+*.dep
+*.map
 
 # Qt build files
 moc_*
@@ -24,19 +37,21 @@ __pycache__/
 .Python
 *.egg-info/
 
-# IDE files
+# IDE and editor files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS files
+# OS-specific
 .DS_Store
 Thumbs.db
 
-# Logs
+# Debug and log files
 *.log
+*.dump
+gdb.txt
 logs/
 
 # Package caches
@@ -63,15 +78,25 @@ CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 
+# Cross-compiler toolchain
+toolchain/
+
+# QEMU files
+*.qcow2
+*.vdi
+*.vmdk
+
+# Documentation build
+docs/build/
+docs/_build/
+
 # Backup files
 *.bak
 *.backup
-*~
 
-# Testing
+# Test artifacts
 test-results/
+test_results/
 coverage/
-
-# Installation directories for testing
 test-install/
 test-root/
