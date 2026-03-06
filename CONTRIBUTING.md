@@ -9,7 +9,7 @@ Thank you for your interest in contributing to NexusOS! We're building the world
 - **AI Development**: Stella 🐕 & Max Jr. 🐱 assistants
 - **Desktop Environment**: NexusDE components (QML/C++)
 - **Media Stack**: Service configurations and Docker containers
-- **Installation System**: Calamares customization and automation
+- **Installation System**: nexus-install.sh installer improvements
 
 ### 📚 Documentation
 - User guides and tutorials
@@ -32,7 +32,7 @@ Thank you for your interest in contributing to NexusOS! We're building the world
 ## 🛠️ Development Setup
 
 ### Prerequisites
-- Garuda Dr460nized Gaming Edition (recommended)
+- Pop!_OS 22.04 LTS NVIDIA (recommended)
 - 16GB+ RAM
 - 500GB+ storage
 - Git, Docker, Qt6 development tools
@@ -49,7 +49,7 @@ sudo mkdir -p /opt/nexusos
 sudo chown $USER:$USER /opt/nexusos
 
 # Install development dependencies
-sudo pacman -S base-devel cmake qt6-base qt6-declarative docker python pip
+sudo nala install build-essential cmake qtbase5-dev qtdeclarative5-dev docker.io python3 python3-pip
 
 # Build core components
 make -C userspace/system/nexuspkg
@@ -79,7 +79,7 @@ make -C userspace/system/nexus-setup-assistant
   ```
 
 ### Testing Requirements
-- Test changes on Garuda base system
+- Test changes on Pop!_OS base system
 - Verify package installations don't conflict
 - Ensure AI assistants function correctly
 - Test media stack deployment
@@ -102,7 +102,7 @@ make -C userspace/system/nexus-setup-assistant
 ## 🎮 Gaming Integration
 
 ### Requirements
-- Maintain gaming performance parity with base Garuda
+- Maintain gaming performance parity with base Pop!_OS
 - Test with popular games (Steam, Lutris)
 - Validate GPU switching functionality
 - Ensure gaming tools compatibility
@@ -119,7 +119,7 @@ make -C userspace/system/nexus-setup-assistant
 
 ### Before Submitting
 - Search existing issues
-- Test on clean Garuda installation
+- Test on clean Pop!_OS installation
 - Gather system information
 - Document reproduction steps
 
@@ -127,7 +127,7 @@ make -C userspace/system/nexus-setup-assistant
 ```markdown
 **System Information**
 - NexusOS Version: 
-- Base System: Garuda Dr460nized Gaming
+- Base System: Pop!_OS 22.04 NVIDIA
 - Kernel Version:
 - Hardware: CPU/GPU/RAM
 

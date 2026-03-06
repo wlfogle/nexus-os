@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Stella Security
+Comment=NexusOS Security Guardian — scan, harden, monitor
+Exec=konsole --profile NexusOS -e bash -c 'stella --status; echo ""; echo "Press any key to close..."; read -n1'
+Icon=security-high
+Type=Application
+Categories=System;Security;
+Keywords=security;firewall;scan;stella;

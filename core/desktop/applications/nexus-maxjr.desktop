@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Max Jr. Performance
+Comment=NexusOS Performance Optimizer — monitor, optimize, gaming mode
+Exec=konsole --profile NexusOS -e bash -c 'maxjr --monitor'
+Icon=utilities-system-monitor
+Type=Application
+Categories=System;Monitor;
+Keywords=performance;gpu;monitor;gaming;maxjr;

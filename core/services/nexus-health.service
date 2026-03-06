@@ -1,0 +1,18 @@
+[Unit]
+Description=NexusOS System Health Check
+Documentation=https://github.com/nexus-os/nexus-os
+
+[Service]
+Type=oneshot
+ExecStart=/opt/nexus-os/services/nexus-health.sh
+TimeoutStartSec=120
+Nice=19
+IOSchedulingClass=idle
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nexus-health
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,20 @@
+[Unit]
+Description=NexusOS Weekly Auto-Update
+Documentation=https://github.com/nexus-os/nexus-os
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/nexus-os/services/nexus-update.sh
+TimeoutStartSec=3600
+Nice=19
+IOSchedulingClass=idle
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nexus-update
+
+[Install]
+WantedBy=multi-user.target

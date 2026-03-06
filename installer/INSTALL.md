@@ -1,315 +1,147 @@
-# Installation Guide - Calamares ZFS Integration
+# NexusOS Installation Guide
 
-## Quick Start
+## Prerequisites
 
-### 1. Download and Extract Calamares
+### Base System
+- **Pop!_OS 22.04 LTS NVIDIA** (for overlay mode)
+- UEFI boot enabled
+- Internet connection
+- At least 100GB free storage
+
+### Install Dependencies
 ```bash
-# Download Calamares 3.3.14
-wget https://github.com/calamares/calamares/releases/download/v3.3.14/calamares-3.3.14.tar.gz
-tar -xzf calamares-3.3.14.tar.gz
-cd calamares-3.3.14
+sudo nala install zfsutils-linux debootstrap git curl wget
 ```
 
-### 2. Install Dependencies
-```bash
-# On Garuda Linux / Arch Linux
-sudo pacman -S --needed cmake qt6-base qt6-tools extra-cmake-modules yaml-cpp boost kpmcore polkit-qt6 python python-yaml base-devel
-```
+## Quick Start (Overlay Mode)
 
-### 3. Apply ZFS Integration
-```bash
-# Clone this repository
-git clone https://github.com/yourusername/calamares-zfs-integration.git
-
-# Copy the enhanced modules
-cp -r calamares-zfs-integration/modules/zfspostcfg src/modules/
-cp calamares-zfs-integration/modules/zfs.conf src/modules/zfs/
-```
-
-### 4. Build and Install
-```bash
-mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DWITH_QT6=ON
-make -j$(nproc)
-sudo make install
-```
-
-### 5. Configure Calamares
-```bash
-# Copy the ZFS-enabled settings
-sudo cp calamares-zfs-integration/settings/settings-zfs.conf /etc/calamares/settings.conf
-
-# Ensure ZFS kernel module is available
-sudo modprobe zfs
-```
-
-## Detailed Installation
-
-### Prerequisites Check
-
-Before installing, verify your system has the necessary components:
+The simplest path — install NexusOS on top of your existing Pop!_OS system:
 
 ```bash
-# Check ZFS availability
-modinfo zfs
-
-# Check required packages
-pacman -Q cmake qt6-base kpmcore python yaml-cpp
-
-# Check available disk space (minimum 10GB recommended)
-df -h
+cd /home/loufogle/nexus-os/installer
+sudo ./nexus-install.sh
 ```
 
-### Build Configuration Options
+The installer will:
+1. Detect your hardware (NVIDIA GPU, CPU features, memory)
+2. Run preflight checks (root, Pop!_OS detection, UEFI, internet, nala)
+3. Prompt for installation profile (Gaming, Media, Complete, Developer, Custom)
+4. Install selected components via nala and Docker
+5. Configure AI services (Stella, Max Jr., Orchestrator)
+6. Set up desktop environment (KDE Plasma + SDDM)
+7. Install nexuspkg universal package manager
 
-The cmake configuration supports various options:
+## Fresh Install (ZFS-on-Root)
+
+For a clean installation to a dedicated disk:
 
 ```bash
-# Release build (recommended for production)
-cmake .. -DCMAKE_BUILD_TYPE=Release -DWITH_QT6=ON
-
-# Debug build (for development)
-cmake .. -DCMAKE_BUILD_TYPE=Debug -DWITH_QT6=ON -DCMAKE_INSTALL_PREFIX=/usr/local
-
-# With additional features
-cmake .. -DCMAKE_BUILD_TYPE=Release -DWITH_QT6=ON -DWITH_PYTHONQT=OFF -DWITH_KF6=ON
+sudo INSTALL_MODE=fresh TARGET_DISK=/dev/sdX ./nexus-install.sh
 ```
 
-### Module Installation Verification
+**Warning**: This will erase all data on the target disk.
 
-After installation, verify the ZFS modules are properly installed:
+### What Fresh Install Does
+1. Partitions the target disk (EFI + bpool + rpool)
+2. Creates ZFS pools with ZSTD compression and autotrim
+3. Bootstraps Ubuntu 22.04 (jammy) via debootstrap
+4. Adds System76 PPA for hardware support
+5. Installs ZFSBootMenu as the UEFI bootloader
+6. Installs all NexusOS components in chroot
+7. Configures users, networking, and services
 
+### Fresh Install Environment Variables
 ```bash
-# Check module files
-ls -la /usr/lib/calamares/modules/zfs*
-ls -la /usr/lib/calamares/modules/zfspostcfg/
+# Required
+export INSTALL_MODE=fresh
+export TARGET_DISK=/dev/sdX
 
-# Verify Python module syntax
-python3 -m py_compile /usr/lib/calamares/modules/zfspostcfg/main.py
-
-# Check configuration files
-ls -la /usr/share/calamares/modules/zfs*/
+# Optional (prompted interactively if not set)
+export INSTALL_USERNAME=myuser
+export INSTALL_HOSTNAME=nexus
+export INSTALL_PASSWORD=mypassword
 ```
 
-### System Integration
+## Post-Installation
 
-#### 1. Systemd Service Files
-Ensure Calamares can be run as a service:
+### Verify Services
 ```bash
-# Copy service file if needed
-sudo systemctl enable calamares.service
+# Check AI services
+systemctl status nexus-orchestrator
+systemctl status nexus-stella
+systemctl status nexus-maxjr
+
+# Check media stack (if installed)
+docker compose -f /opt/nexus-os/media/docker-compose.yml ps
+
+# Test nexuspkg
+nexuspkg status
 ```
 
-#### 2. Polkit Rules
-Verify polkit permissions for ZFS operations:
+### Access Points
+- **AI Orchestrator**: http://localhost:8600
+- **Stella AI**: http://localhost:8601
+- **Max Jr. AI**: http://localhost:8602
+- **Organizr Dashboard**: http://localhost:8540 (if media stack installed)
+- **Jellyfin**: http://localhost:8200 (if media stack installed)
+
+### CLI Tools
 ```bash
-# Check polkit rules
-ls -la /usr/share/polkit-1/actions/com.github.calamares.calamares.policy
-```
-
-#### 3. Desktop Integration
-For GUI environments:
-```bash
-# Verify desktop file
-ls -la /usr/share/applications/calamares.desktop
-```
-
-## Configuration
-
-### ZFS Module Configuration
-
-Edit `/usr/share/calamares/modules/zfs/zfs.conf`:
-
-```yaml
-# Pool name for your installation
-poolName: rpool
-
-# Pool creation options
-poolOptions: "-f -o ashift=12 -O mountpoint=none -O acltype=posixacl -O relatime=on -O compression=zstd -O xattr=sa -O autotrim=on"
-
-# Dataset creation options  
-datasetOptions: "-o compression=zstd -o atime=off -o xattr=sa"
-
-# Dataset layout
-datasets:
-    - dsName: ROOT
-      mountpoint: none
-      canMount: off
-    - dsName: ROOT/garuda
-      mountpoint: none  
-      canMount: off
-    - dsName: ROOT/garuda/root
-      mountpoint: /
-      canMount: noauto
-    - dsName: home
-      mountpoint: /home
-      canMount: on
-    - dsName: var
-      mountpoint: /var
-      canMount: on
-    - dsName: var/log
-      mountpoint: /var/log
-      canMount: on
-    - dsName: var/cache
-      mountpoint: /var/cache
-      canMount: on
-```
-
-### Post-Configuration Module
-
-Edit `/usr/share/calamares/modules/zfspostcfg/zfspostcfg.conf`:
-
-```yaml
-# Default pool name (will be overridden by global storage values)
-poolName: "rpool"
-
-# ZFS services to enable
-services:
-    - "zfs-import-cache.service"
-    - "zfs-import.target"
-    - "zfs-mount.service"
-    - "zfs.target"
-```
-
-### Main Settings Configuration
-
-Update `/etc/calamares/settings.conf` to include ZFS modules:
-
-```yaml
-sequence:
-- show:
-  - welcome
-  - locale  
-  - keyboard
-  - partition
-  - users
-  - summary
-- exec:
-  - partition
-  - zfs           # ZFS pool and dataset creation
-  - mount         # Mount filesystems
-  - unpackfs      # Unpack the filesystem
-  - machineid     # Generate machine ID
-  - locale        # Set locale
-  - keyboard      # Set keyboard
-  - localecfg     # Configure locale
-  - fstab         # Generate fstab
-  - zfshostid     # Copy ZFS hostid
-  - zfspostcfg    # ZFS post-installation configuration (NEW)
-  - initcpiocfg   # Configure mkinitcpio
-  - initcpio      # Generate initcpio
-  - users         # Create users
-  - displaymanager # Configure display manager
-  - networkcfg    # Configure network
-  - hwclock       # Set hardware clock
-  - services-systemd # Enable systemd services
-  - initramfs     # Generate initramfs
-  - bootloader    # Install bootloader
-  - umount        # Unmount filesystems
-```
-
-## Testing
-
-### Pre-Installation Tests
-
-Before using in production:
-
-```bash
-# Test ZFS module loading
-sudo modprobe zfs
-lsmod | grep zfs
-
-# Test pool creation (on spare device)
-sudo zpool create test /dev/sdX
-sudo zpool destroy test
-
-# Validate configuration files
-python3 -c "import yaml; yaml.safe_load(open('/usr/share/calamares/modules/zfs/zfs.conf'))"
-```
-
-### Installation Testing
-
-Test the installation process:
-
-```bash
-# Run Calamares in debug mode
-sudo calamares -d
-
-# Check log files
-tail -f ~/.cache/calamares/session.log
-```
-
-### Post-Installation Verification
-
-After a successful installation:
-
-```bash
-# Check ZFS status
-zpool status
-zfs list
-
-# Verify services are enabled
-systemctl is-enabled zfs.target
-systemctl is-enabled zfs-import-cache.service
-
-# Check boot configuration
-cat /etc/mkinitcpio.conf | grep zfs
+nexus-control status    # System status overview
+nexus-control health    # Health check all services
+stella --status         # Security status
+maxjr --optimize        # Performance optimization
+nexuspkg search firefox # Universal package search
 ```
 
 ## Troubleshooting
 
-### Build Issues
+### Installer Won't Start
+- Must be run as root: `sudo ./nexus-install.sh`
+- Must be on Pop!_OS 22.04: `lsb_release -a`
+- Must have internet: `ping -c1 google.com`
 
-**CMake configuration fails**:
+### Package Installation Fails
 ```bash
-# Install missing dependencies
-sudo pacman -S cmake extra-cmake-modules
-
-# Clear build directory
-rm -rf build && mkdir build && cd build
+sudo nala update
+sudo nala install -f
+sudo nala clean
 ```
 
-**Missing Qt6 components**:
+### Docker Services Not Starting
 ```bash
-sudo pacman -S qt6-base qt6-tools qt6-declarative
+sudo systemctl start docker
+sudo systemctl enable docker
+docker compose -f /opt/nexus-os/media/docker-compose.yml up -d
 ```
 
-### Runtime Issues
+### Resume After Failure
+If the installer crashes during fresh install, re-run it — it will resume from the last successful step using the `.install_state` file.
 
-**ZFS module not found**:
 ```bash
-# Install ZFS
-sudo pacman -S zfs-dkms
-
-# Load module
-sudo modprobe zfs
-
-# Add to module loading
-echo "zfs" | sudo tee /etc/modules-load.d/zfs.conf
+# To force a clean restart instead
+rm -f .install_state
+sudo INSTALL_MODE=fresh TARGET_DISK=/dev/sdX ./nexus-install.sh
 ```
 
-**Permission errors**:
+## Uninstallation (Overlay Mode)
+
+The overlay installation can be reversed by removing installed packages:
+
 ```bash
-# Check polkit rules
-sudo systemctl status polkit
+# Remove NexusOS-specific packages
+sudo nala remove kde-plasma-desktop sddm
+sudo nala autoremove
+
+# Stop and remove Docker containers
+docker compose -f /opt/nexus-os/media/docker-compose.yml down -v
+
+# Remove NexusOS files
+sudo rm -rf /opt/nexus-os
 ```
 
-### Installation Issues
+## Syntax Validation
 
-**Pool creation fails**:
-- Verify disk is not in use
-- Check ZFS is loaded: `lsmod | grep zfs`
-- Ensure sufficient permissions
-
-**Service enablement fails**:
-- Check if services exist: `systemctl list-unit-files | grep zfs`
-- Verify chroot environment: `ls -la /mnt/etc/systemd/system/`
-
-## Support
-
-If you encounter issues:
-
-1. Check the main README.md for common solutions
-2. Review log files in `~/.cache/calamares/`
-3. Test individual components manually
-4. Open an issue with detailed logs and system information
+```bash
+bash -n nexus-install.sh
+```

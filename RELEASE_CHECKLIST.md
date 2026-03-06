@@ -20,7 +20,7 @@
 - [x] **ISO Builder** - `scripts/build-iso.sh` automated ISO creation
 - [x] **Repository Setup** - `scripts/setup-repo.sh` package repository infrastructure
 - [x] **Distribution Metadata** - `distro/os-release` system identification
-- [x] **Installation System** - Based on Calamares installer
+- [x] **Installation System** - nexus-install.sh (overlay + fresh ZFS-on-root)
 - [x] **Package Signing** - GPG key generation and package signing
 
 ### 🔄 Testing & Validation (In Progress)
@@ -76,7 +76,7 @@ ls -la ../build/nexusos-1.0.0-alpha-x86_64.iso*
 4. Submit download links from GitHub release
 
 ### Step 5: Community Announcement
-- [ ] Post on Reddit (r/linux, r/linuxdistros, r/archlinux)
+- [ ] Post on Reddit (r/linux, r/linuxdistros, r/pop_os)
 - [ ] Announce on Twitter/X (@NexusOS_Linux)
 - [ ] Create blog post announcement
 - [ ] Notify Linux news sites (Phoronix, OMG Ubuntu, etc.)
@@ -90,7 +90,7 @@ ls -la ../build/nexusos-1.0.0-alpha-x86_64.iso*
 - [x] **Version**: 1.0.0-alpha  
 - [x] **Release Date**: January 7, 2025
 - [x] **Architecture**: x86_64
-- [x] **Base Distribution**: Garuda Dr460nized Gaming (Arch-based)
+- [x] **Base Distribution**: Pop!_OS 22.04 NVIDIA (Ubuntu/Debian-based)
 - [x] **Desktop Environment**: NexusDE (KDE Plasma 6)
 - [x] **Package Manager**: nexuspkg (universal)
 - [x] **Category**: Desktop, Gaming, Media Center
@@ -107,7 +107,7 @@ ls -la ../build/nexusos-1.0.0-alpha-x86_64.iso*
 ### Submission Categories
 - **Primary**: Desktop
 - **Secondary**: Gaming, Live Medium, Media Center
-- **Keywords**: universal, packages, AI, gaming, arch-based, rolling-release
+- **Keywords**: universal, packages, AI, gaming, ubuntu-based, LTS-based
 
 ---
 
@@ -198,8 +198,8 @@ ls -la ../build/nexusos-1.0.0-alpha-x86_64.iso*
 - [ ] Audio system functions
 
 ### Package Management Tests  
-- [ ] Install from Arch repositories
-- [ ] Install from AUR
+- [ ] Install from nala/apt repositories
+- [ ] Install from Flatpak
 - [ ] Install Flatpak applications
 - [ ] Install Snap packages
 - [ ] Install pip packages

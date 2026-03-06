@@ -1,0 +1,11 @@
+[Unit]
+Description=NexusOS Hourly Health Check Timer
+Documentation=https://github.com/nexus-os/nexus-os
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=300
+Persistent=true
+
+[Install]
+WantedBy=timers.target

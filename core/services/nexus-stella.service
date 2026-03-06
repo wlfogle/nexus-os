@@ -1,0 +1,19 @@
+[Unit]
+Description=NexusOS Stella Security Guardian
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 /opt/nexus-os/services/stella.py
+WorkingDirectory=/opt/nexus-os/services
+Restart=on-failure
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nexus-stella
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,19 @@
+[Unit]
+Description=NexusOS Max Jr Performance Optimizer
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 /opt/nexus-os/services/maxjr.py
+WorkingDirectory=/opt/nexus-os/services
+Restart=on-failure
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nexus-maxjr
+
+[Install]
+WantedBy=multi-user.target

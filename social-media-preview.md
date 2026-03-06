@@ -17,7 +17,7 @@ The world's FIRST truly universal Linux distribution that breaks down package ba
 📦 **80,000+ Packages** - Access software from Arch, Debian, Fedora, Ubuntu, Alpine, etc.
 🐕 **Stella (AI Security Guardian)** - Package validation & system security
 🐱 **Max Jr. (AI Performance Optimizer)** - System optimization & monitoring
-🎮 **Garuda Gaming Foundation** - Built on acclaimed gaming optimizations
+🎮 **Pop!_OS NVIDIA Foundation** - Built on acclaimed gaming optimizations
 📺 **65+ Media Services** - Complete self-hosting infrastructure
 
 **What you can do RIGHT NOW:**
@@ -38,8 +38,8 @@ Development updates: [Discord/Twitter]
 What do you think? Would you try a Linux distro with friendly AI mascots? 🤔
 
 **Tech Stack:**
-- Base: Garuda Dr460nized Gaming  
-- Kernel: linux-zen
+- Base: Pop!_OS 22.04 NVIDIA  
+- Kernel: Pop!_OS kernel
 - AI: Python-based assistants
 - Desktop: NexusDE (hybrid X11/Wayland)
 - Media: Docker-based awesome-stack
@@ -52,14 +52,14 @@ What do you think? Would you try a Linux distro with friendly AI mascots? 🤔
 **Tweet 1/6:**
 🚀 Introducing NexusOS - the world's first universal Linux distribution with AI mascot companions!
 
-Built on @GarudaLinux Dr460nized Gaming + Universal packages + AI assistants
+Built on @system76 Pop!_OS NVIDIA + Universal packages + AI assistants
 
 Meet Stella 🐕 and Max Jr. 🐱 - your new Linux companions! 
 
 🧵Thread👇
 
 **Tweet 2/6:**
-🎮 Gaming Excellence: All the performance optimizations of Garuda Dr460nized Gaming Edition with linux-zen kernel
+🎮 Gaming Excellence: All the performance optimizations of Pop!_OS 22.04 LTS NVIDIA with Pop!_OS kernel
 
 📦 Universal Packages: Install software from Ubuntu, Fedora, Arch, Alpine - all through one package manager
 
@@ -89,7 +89,7 @@ One-click deployment of your entire homelab!
 
 **Tweet 5/6:**
 🛠️ Tech Details:
-• Base: Garuda Dr460nized Gaming
+• Base: Pop!_OS 22.04 NVIDIA
 • Desktop: NexusDE (hybrid X11/Wayland)
 • AI: Python assistants with FastAPI
 • Universal Package Manager: C implementation
@@ -118,13 +118,13 @@ Join the journey: [GitHub] [Discord]
 Hey everyone! I'm working on something exciting and wanted to share with this awesome community.
 
 **What is NexusOS?**
-A Linux distribution that combines the gaming excellence of Garuda Dr460nized Gaming with universal package compatibility and AI mascot assistants.
+A Linux distribution that combines the gaming excellence of Pop!_OS 22.04 NVIDIA with universal package compatibility and AI mascot assistants.
 
 **🐕 Stella (Golden Retriever)** - Security & Package Guardian  
 **🐱 Max Jr. (Cat)** - Performance & System Optimizer
 
 **Why it's different:**
-✅ Built on proven Garuda Gaming base  
+✅ Built on proven Pop!_OS NVIDIA base  
 ✅ Install packages from ANY Linux distro  
 ✅ Friendly AI that actually helps  
 ✅ Complete media center (65+ services)  
@@ -161,7 +161,7 @@ What do you think? Excited to have AI mascot companions managing your Linux syst
 0:30 - Introduction to NexusOS concept
 1:00 - Meet Stella and Max Jr. (show ASCII art)
 2:00 - Universal package compatibility demo (concept)
-3:00 - Garuda Gaming foundation benefits
+3:00 - Pop!_OS NVIDIA foundation benefits
 4:00 - Media center capabilities (65+ services)
 5:00 - Development roadmap and timeline
 6:00 - How to get involved/follow progress
@@ -176,7 +176,7 @@ What do you think? Excited to have AI mascot companions managing your Linux syst
 ```
 🚀 NexusOS - Universal AI-Native Linux Distribution
 
-The world's first Linux distribution with AI mascot companions. Built on Garuda Dr460nized Gaming Edition with universal package compatibility.
+The world's first Linux distribution with AI mascot companions. Built on Pop!_OS 22.04 LTS NVIDIA with universal package compatibility.
 
 🐕 Stella (Golden Retriever) - Security & Package Management
 🐱 Max Jr. (Cat) - Performance & System Optimization
@@ -184,7 +184,7 @@ The world's first Linux distribution with AI mascot companions. Built on Garuda 
 Features:
 • Universal package manager (DEB, RPM, Flatpak, Snap, etc.)
 • Complete media center (65+ services)
-• Gaming optimizations from Garuda base
+• Gaming optimizations from Pop!_OS base
 • NexusDE hybrid X11/Wayland desktop
 • AI-powered system management
 
@@ -195,7 +195,7 @@ License: GPL-3.0+
 **README.md badges:**
 ```markdown
 [![Development Status](https://img.shields.io/badge/Status-Phase%201%20Development-yellow)](https://github.com/nexusos/nexusos)
-[![Base](https://img.shields.io/badge/Base-Garuda%20Gaming-blue)](https://garudalinux.org)
+[![Base](https://img.shields.io/badge/Base-Pop!_OS%2022.04--blue)](https://pop.system76.com)
 [![AI Assistants](https://img.shields.io/badge/AI-Stella%20%26%20Max%20Jr.-purple)](https://github.com/nexusos/nexusos)
 [![Gaming](https://img.shields.io/badge/Gaming-linux--zen-green)](https://github.com/nexusos/nexusos)
 [![Media](https://img.shields.io/badge/Media-65%2B%20Services-orange)](https://github.com/nexusos/nexusos)

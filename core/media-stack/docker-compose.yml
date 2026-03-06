@@ -1,0 +1,345 @@
+###############################################################################
+# NexusOS Media Stack — Docker Compose
+# ~20 essential services from the 85-service awesome-stack reference
+# All services use ${PUID:-1000}/${PGID:-1000} for permissions, ${TZ:-America/New_York} for timezone
+# Paths are configurable via .env — copy .env.template to .env and edit
+###############################################################################
+
+services:
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # NETWORKING — VPN tunnel for download clients
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: nexus_gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "${QBIT_PORT:-8080}:8080"       # qBittorrent WebUI (routed through VPN)
+      - "6881:6881"                       # qBittorrent torrent traffic
+      - "6881:6881/udp"
+    environment:
+      - VPN_SERVICE_PROVIDER=${VPN_PROVIDER:-mullvad}
+      - VPN_TYPE=${VPN_TYPE:-wireguard}
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY:-changeme}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES:-10.66.212.1/32}
+      - SERVER_COUNTRIES=${VPN_COUNTRIES:-Switzerland}
+      - FIREWALL_VPN_INPUT_PORTS=${VPN_INPUT_PORTS:-6881}
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/gluetun:/gluetun
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DOWNLOAD CLIENTS
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: nexus_qbittorrent
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
+      - WEBUI_PORT=8080
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/qbittorrent:/config
+      - ${DOWNLOAD_PATH:-/mnt/downloads}:/downloads
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # INDEXERS
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: nexus_prowlarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/prowlarr:/config
+    ports:
+      - "${PROWLARR_PORT:-9696}:9696"
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # MEDIA MANAGEMENT — *arr suite
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: nexus_sonarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/sonarr:/config
+      - ${MEDIA_PATH:-/mnt/media}/tv:/tv
+      - ${DOWNLOAD_PATH:-/mnt/downloads}:/downloads
+    ports:
+      - "${SONARR_PORT:-8989}:8989"
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: nexus_radarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/radarr:/config
+      - ${MEDIA_PATH:-/mnt/media}/movies:/movies
+      - ${DOWNLOAD_PATH:-/mnt/downloads}:/downloads
+    ports:
+      - "${RADARR_PORT:-7878}:7878"
+    restart: unless-stopped
+
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: nexus_lidarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/lidarr:/config
+      - ${MEDIA_PATH:-/mnt/media}/music:/music
+      - ${DOWNLOAD_PATH:-/mnt/downloads}:/downloads
+    ports:
+      - "${LIDARR_PORT:-8686}:8686"
+    restart: unless-stopped
+
+  readarr:
+    image: lscr.io/linuxserver/readarr:develop
+    container_name: nexus_readarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/readarr:/config
+      - ${MEDIA_PATH:-/mnt/media}/books:/books
+      - ${DOWNLOAD_PATH:-/mnt/downloads}:/downloads
+    ports:
+      - "${READARR_PORT:-8787}:8787"
+    restart: unless-stopped
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: nexus_bazarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/bazarr:/config
+      - ${MEDIA_PATH:-/mnt/media}/movies:/movies
+      - ${MEDIA_PATH:-/mnt/media}/tv:/tv
+    ports:
+      - "${BAZARR_PORT:-6767}:6767"
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # MEDIA SERVERS
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: nexus_jellyfin
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/jellyfin:/config
+      - ${MEDIA_PATH:-/mnt/media}:/data/media
+    ports:
+      - "${JELLYFIN_PORT:-8096}:8096"
+    runtime: nvidia
+    restart: unless-stopped
+
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: nexus_plex
+    network_mode: host
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
+      - VERSION=docker
+      - PLEX_CLAIM=${PLEX_CLAIM:-}
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/plex:/config
+      - ${MEDIA_PATH:-/mnt/media}:/data/media
+    runtime: nvidia
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # REQUEST MANAGEMENT & MONITORING
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    container_name: nexus_overseerr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/overseerr:/config
+    ports:
+      - "${OVERSEERR_PORT:-5055}:5055"
+    restart: unless-stopped
+
+  tautulli:
+    image: lscr.io/linuxserver/tautulli:latest
+    container_name: nexus_tautulli
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/tautulli:/config
+    ports:
+      - "${TAUTULLI_PORT:-8181}:8181"
+    restart: unless-stopped
+
+  organizr:
+    image: organizr/organizr:latest
+    container_name: nexus_organizr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/organizr:/config
+    ports:
+      - "${ORGANIZR_PORT:-8500}:80"
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # BOOKS & AUDIOBOOKS
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  calibre-web:
+    image: lscr.io/linuxserver/calibre-web:latest
+    container_name: nexus_calibre_web
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
+      - DOCKER_MODS=linuxserver/mods:universal-calibre
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/calibre-web:/config
+      - ${MEDIA_PATH:-/mnt/media}/books:/books
+    ports:
+      - "${CALIBRE_WEB_PORT:-8084}:8083"
+    restart: unless-stopped
+
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: nexus_audiobookshelf
+    environment:
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/audiobookshelf:/config
+      - ${MEDIA_PATH:-/mnt/media}/audiobooks:/audiobooks
+      - ${MEDIA_PATH:-/mnt/media}/podcasts:/podcasts
+    ports:
+      - "${AUDIOBOOKSHELF_PORT:-13378}:80"
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # UTILITIES
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:latest
+    container_name: nexus_recyclarr
+    environment:
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/recyclarr:/config
+    restart: unless-stopped
+
+  unpackerr:
+    image: golift/unpackerr:latest
+    container_name: nexus_unpackerr
+    environment:
+      - TZ=${TZ:-America/New_York}
+      - UN_SONARR_0_URL=http://sonarr:8989
+      - UN_SONARR_0_API_KEY=${SONARR_API_KEY:-}
+      - UN_RADARR_0_URL=http://radarr:7878
+      - UN_RADARR_0_API_KEY=${RADARR_API_KEY:-}
+      - UN_LIDARR_0_URL=http://lidarr:8686
+      - UN_LIDARR_0_API_KEY=${LIDARR_API_KEY:-}
+      - UN_READARR_0_URL=http://readarr:8787
+      - UN_READARR_0_API_KEY=${READARR_API_KEY:-}
+    volumes:
+      - ${DOWNLOAD_PATH:-/mnt/downloads}:/downloads
+    restart: unless-stopped
+
+  autoscan:
+    image: cloudb0x/autoscan:latest
+    container_name: nexus_autoscan
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/New_York}
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/autoscan:/config
+      - ${MEDIA_PATH:-/mnt/media}:/data/media
+    ports:
+      - "${AUTOSCAN_PORT:-3030}:3030"
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # INFRASTRUCTURE — shared databases
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: nexus_postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-nexus}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
+      - POSTGRES_DB=${POSTGRES_DB:-nexus}
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/postgres:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nexus}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: nexus_redis
+    command: redis-server --appendonly yes
+    volumes:
+      - ${CONFIG_PATH:-/opt/nexus-os/media-stack/config}/redis:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

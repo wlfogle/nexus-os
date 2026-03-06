@@ -3,7 +3,7 @@
 
 > **Current Status**: Foundation Complete - Implementation Phase Beginning  
 > **Target**: Fully installable daily driver operating system  
-> **Base**: Garuda Dr460nized Gaming Edition  
+> **Base**: Pop!_OS 22.04 LTS NVIDIA  
 
 ---
 
@@ -15,7 +15,7 @@
 - **🚀 Installation Framework** - Comprehensive installer with multiple profiles
 - **🤖 AI Assistant Architecture** - Stella & Max Jr. system design complete
 - **📦 Package Management System** - Universal package support design (YAML definitions)
-- **🎮 Gaming Integration** - Complete Garuda gaming package integration plan
+- **🎮 Gaming Integration** - Complete Pop!_OS NVIDIA package integration plan
 - **📺 Media Stack Integration** - 65+ service awesome-stack docker configurations
 - **🛡️ Security & Tools** - Biometric auth, backup system, KVM manager integration
 - **🎯 Branding & Theming** - Complete visual identity and mascot integration
@@ -33,25 +33,25 @@
 ## 🎯 **Production Roadmap: 4-Phase Approach**
 
 ### **Phase 1: Core System Foundation (2-4 weeks)** 
-**Base**: Garuda Dr460nized Gaming Edition
+**Base**: Pop!_OS 22.04 LTS NVIDIA
 
 #### Week 1-2: Base System Preparation
 - [x] Document roadmap and current status
-- [ ] Set up Garuda Dr460nized Gaming as development base
+- [ ] Set up Pop!_OS 22.04 NVIDIA as development base
 - [ ] Create NexusOS customization overlay system
 - [ ] Implement package manager (nexuspkg) compilation
 - [ ] Create custom repository structure
-- [ ] Test universal package installation on Garuda base
+- [ ] Test universal package installation on Pop!_OS base
 
 #### Week 3-4: Core Integration
-- [ ] Integrate NexusOS branding on Garuda base
+- [ ] Integrate NexusOS branding on Pop!_OS base
 - [ ] Deploy media stack (awesome-stack) integration
 - [ ] Configure gaming optimizations enhancements
 - [ ] Implement AI service orchestrator
 - [ ] Test hybrid GPU switching
 - [ ] Create base system validation tests
 
-**Deliverables**: Working NexusOS prototype on Garuda base with package manager
+**Deliverables**: Working NexusOS prototype on Pop!_OS base with package manager
 
 ---
 
@@ -76,17 +76,17 @@
 - [ ] Fix integration issues
 - [ ] Implement advanced theming
 - [ ] Test on multiple hardware configurations
-- [ ] Performance benchmarking vs stock Garuda
+- [ ] Performance benchmarking vs stock Pop!_OS
 
-**Deliverables**: Fully functional NexusDE desktop environment on Garuda base
+**Deliverables**: Fully functional NexusDE desktop environment on Pop!_OS base
 
 ---
 
 ### **Phase 3: Installation System & Distribution (2-3 weeks)**
 
 #### Week 1: Live ISO Creation
-- [ ] Create custom Garuda-based live ISO with NexusOS
-- [ ] Implement Calamares installer customization
+- [ ] Create custom Pop!_OS-based live ISO with NexusOS
+- [ ] Finalize nexus-install.sh overlay and fresh-install modes
 - [ ] Add installation profiles (Gaming, Media, Complete, etc.)
 - [ ] Test live environment boot process
 - [ ] Validate hardware detection
@@ -126,7 +126,7 @@
 - [ ] Create user documentation
 
 #### Week 5-6: System Integration
-- [ ] Integrate Garuda Hello biometric authentication
+- [ ] Integrate Pop!_OS Setup biometric authentication
 - [ ] Deploy Ultimate Restore backup system
 - [ ] Integrate KVM Manager for virtualization
 - [ ] Test AI coding assistant functionality
@@ -150,7 +150,7 @@
 
 1. **Set Up Development Environment**
    ```bash
-   # Use current Garuda Dr460nized Gaming system
+   # Use current Pop!_OS 22.04 NVIDIA system
    # Create NexusOS overlay structure
    # Set up build environment
    ```
@@ -172,7 +172,7 @@
 ### **Success Metrics for Phase 1:**
 - [ ] nexuspkg can install packages from Ubuntu, Arch, Fedora repos
 - [ ] Media stack (Plex, Jellyfin, Sonarr, etc.) running and accessible
-- [ ] Gaming performance equal or better than base Garuda
+- [ ] Gaming performance equal or better than base Pop!_OS
 - [ ] AI service orchestrator monitoring system
 - [ ] All 65+ media services deployable and functional
 
@@ -180,12 +180,12 @@
 
 ## 🏗️ **Technical Architecture Stack**
 
-### **Base System**: Garuda Dr460nized Gaming
-- **Kernel**: linux-zen (gaming optimized)
+### **Base System**: Pop!_OS 22.04 NVIDIA
+- **Kernel**: Pop!_OS kernel (NVIDIA-optimized)
 - **Init**: systemd
 - **Display Server**: X11 with Wayland compatibility
 - **Desktop**: KDE Plasma (base) + NexusDE (overlay)
-- **Package Manager**: pacman + yay (base) + nexuspkg (universal)
+- **Package Manager**: nala (native) + nexuspkg (universal)
 
 ### **NexusOS Additions**:
 - **Universal Package Manager**: nexuspkg
@@ -213,7 +213,7 @@
 - **GPU**: Hybrid setup preferred (for testing GPU switching)
 
 ### **Software Requirements**:
-- **Base**: Garuda Dr460nized Gaming (current system)
+- **Base**: Pop!_OS 22.04 NVIDIA (current system)
 - **Build Tools**: gcc, cmake, make, docker, qemu
 - **Development**: Qt Creator, VS Code, git
 - **Testing**: VirtualBox/QEMU for ISO testing
@@ -224,7 +224,7 @@
 
 ### **Functional Requirements**:
 - [ ] Boots reliably on common hardware
-- [ ] Gaming performance equal to Garuda Gaming edition
+- [ ] Gaming performance equal to Pop!_OS NVIDIA edition
 - [ ] Media stack deploys and functions correctly
 - [ ] AI assistants provide meaningful optimization
 - [ ] Universal package manager works across formats
@@ -232,7 +232,7 @@
 
 ### **Performance Requirements**:
 - [ ] Boot time < 30 seconds
-- [ ] Gaming performance within 5% of base Garuda
+- [ ] Gaming performance within 5% of base Pop!_OS
 - [ ] Media transcoding performance optimized
 - [ ] Memory usage reasonable (< 4GB idle)
 - [ ] Package installation time competitive
@@ -248,11 +248,11 @@
 
 ## 🚀 **Let's Begin Phase 1!**
 
-Starting immediately with Garuda Dr460nized Gaming as our base, we'll create the first working NexusOS prototype that can be used as a daily driver while we refine and optimize the complete system.
+Starting immediately with Pop!_OS 22.04 NVIDIA as our base, we'll create the first working NexusOS prototype that can be used as a daily driver while we refine and optimize the complete system.
 
 **Next Steps**:
 1. Document this roadmap to git ✅
-2. Set up development environment on Garuda base
+2. Set up development environment on Pop!_OS base
 3. Begin nexuspkg compilation and testing
 4. Deploy media stack integration
 5. Create AI service orchestration

@@ -94,6 +94,9 @@ docs/_build/
 *.bak
 *.backup
 
+# Reference repos (embedded git repos)
+reference/
+
 # Test artifacts
 test-results/
 test_results/

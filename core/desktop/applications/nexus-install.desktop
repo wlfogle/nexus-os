@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Install NexusOS
+Comment=Install NexusOS to your hard drive
+Exec=sudo calamares
+Icon=calamares
+Type=Application
+Categories=System;
+Keywords=install;setup;calamares;
+OnlyShowIn=KDE;

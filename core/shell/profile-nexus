@@ -1,0 +1,32 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# NexusOS Login Profile — sourced from ~/.profile or /etc/profile.d/nexus.sh
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ── XDG Base Directories ─────────────────────────────────────────────────
+export XDG_CONFIG_HOME="${HOME}/.config"
+export XDG_DATA_HOME="${HOME}/.local/share"
+export XDG_CACHE_HOME="${HOME}/.cache"
+export XDG_STATE_HOME="${HOME}/.local/state"
+
+# ── Editor ───────────────────────────────────────────────────────────────
+if command -v nano &>/dev/null; then
+    export EDITOR="nano"
+    export VISUAL="nano"
+fi
+
+# ── NVIDIA / Vulkan ──────────────────────────────────────────────────────
+export VK_ICD_FILENAMES="/usr/share/vulkan/icd.d/nvidia_icd.json"
+export __GLX_VENDOR_LIBRARY_NAME="nvidia"
+export GBM_BACKEND="nvidia-drm"
+export WLR_NO_HARDWARE_CURSORS=1
+
+# ── Python ───────────────────────────────────────────────────────────────
+export PYTHONDONTWRITEBYTECODE=1
+
+# ── NexusOS Identity ─────────────────────────────────────────────────────
+export NEXUS_VERSION="2025.1"
+export NEXUS_BASE_DIR="/opt/nexus-os"
+
+# ── Docker ───────────────────────────────────────────────────────────────
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1

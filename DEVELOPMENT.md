@@ -4,8 +4,8 @@
 
 ### Prerequisites (Pop!_OS 22.04)
 ```bash
-sudo apt update
-sudo apt install -y build-essential gcc binutils nasm qemu-system-x86 gdb make git
+sudo nala update
+sudo nala install -y build-essential gcc binutils nasm qemu-system-x86 gdb make git
 ```
 
 ### Build

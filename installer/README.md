@@ -1,208 +1,150 @@
-# Calamares ZFS Integration for Garuda Linux
+# NexusOS Installer
 
-This repository contains enhanced ZFS support for Calamares 3.3.14, specifically optimized for Garuda Linux. The integration provides comprehensive ZFS pool creation, dataset management, and post-installation system configuration.
+The NexusOS installer (`nexus-install.sh`) transforms a Pop!_OS 22.04 LTS NVIDIA system into a full NexusOS environment, or performs a fresh ZFS-on-root installation via debootstrap with ZFSBootMenu.
 
-## Overview
+## Installation Modes
 
-Calamares 3.3.14 already includes basic ZFS support, but this project enhances it with:
+### Mode 1: Overlay Install (Default)
 
-- **Enhanced ZFS Configuration**: Optimized for Garuda Linux with better dataset layouts
-- **Post-Installation Module**: Comprehensive system configuration for ZFS
-- **Service Management**: Automatic enablement of ZFS systemd services
-- **Initramfs Integration**: Proper mkinitcpio configuration for ZFS support
-- **System Optimization**: ZFS module parameters and cache configuration
+Installs NexusOS components on top of an existing Pop!_OS system:
 
-## Architecture
-
-### Existing Calamares ZFS Modules
-- `zfs` (C++ module): Creates ZFS pools and datasets
-- `zfshostid` (Python module): Copies ZFS hostid file
-
-### New Enhanced Modules
-- `zfspostcfg` (Python module): Comprehensive post-installation configuration
-
-## Features
-
-### ZFS Pool Configuration
-- **Pool Name**: `rpool` (configurable)
-- **Compression**: zstd compression by default
-- **Properties**: ashift=12, autotrim=on, acltype=posixacl
-- **Dataset Layout**: Optimized for Garuda Linux
-
-### Dataset Structure
-```
-rpool/
-├── ROOT/
-│   └── garuda/
-│       └── root (mountpoint: /)
-├── home (mountpoint: /home)
-├── var (mountpoint: /var)
-│   ├── log (mountpoint: /var/log)
-│   └── cache (mountpoint: /var/cache)
-```
-
-### Post-Installation Configuration
-- **Systemd Services**: Enables zfs.target, zfs-import-cache, zfs-mount, zfs-import.target
-- **Initramfs**: Configures mkinitcpio with ZFS hooks and modules
-- **System Configuration**: Sets up ZFS module parameters and cache files
-- **Hostid Management**: Ensures proper ZFS hostid configuration
-
-## Installation
-
-### Prerequisites
-- Calamares 3.3.14 or later
-- ZFS kernel modules
-- Garuda Linux (or Arch-based system)
-- CMake, Qt6, and development tools
-
-### Building Calamares with ZFS Support
-
-1. **Extract Calamares source**:
-   ```bash
-   tar -xzf calamares-3.3.14.tar.gz
-   cd calamares-3.3.14
-   ```
-
-2. **Copy the enhanced ZFS modules**:
-   ```bash
-   # Copy the zfspostcfg module
-   cp -r /path/to/this/repo/modules/zfspostcfg src/modules/
-   
-   # Replace the ZFS configuration
-   cp /path/to/this/repo/modules/zfs.conf src/modules/zfs/
-   ```
-
-3. **Build Calamares**:
-   ```bash
-   mkdir build && cd build
-   cmake .. -DCMAKE_BUILD_TYPE=Debug -DWITH_QT6=ON
-   make -j$(nproc)
-   ```
-
-4. **Install**:
-   ```bash
-   sudo make install
-   ```
-
-### Configuration
-
-Use the provided `settings-zfs.conf` as your Calamares settings file to enable ZFS support:
+- KDE Plasma Desktop with SDDM (X11)
+- Gaming stack (Steam, Lutris, Wine, GameMode, MangoHUD)
+- Media stack (Docker + 65+ services)
+- AI services (Ollama, Stella, Max Jr., Orchestrator)
+- Development tools (Rust, Node.js, build tools)
+- Optional ZFS data pool for media/docker/AI storage
+- nexuspkg universal package manager
 
 ```bash
-sudo cp /path/to/this/repo/settings/settings-zfs.conf /etc/calamares/settings.conf
+sudo ./nexus-install.sh
 ```
 
-## Module Configuration
+### Mode 2: Fresh Install with ZFS-on-Root (Advanced)
 
-### zfs.conf (Enhanced)
-```yaml
-poolName: rpool
-poolOptions: "-f -o ashift=12 -O mountpoint=none -O acltype=posixacl -O relatime=on -O compression=zstd -O xattr=sa -O autotrim=on"
-datasetOptions: "-o compression=zstd -o atime=off -o xattr=sa"
+Full installation to a target disk:
+
+- Partitions: EFI (512MB) + bpool (2GB) + rpool (rest)
+- debootstrap Ubuntu 22.04 (jammy) base
+- System76 PPA for system76-power
+- ZFSBootMenu as UEFI bootloader
+- All NexusOS components installed in chroot
+- Resume support via state file on failure
+
+```bash
+sudo INSTALL_MODE=fresh TARGET_DISK=/dev/sdX ./nexus-install.sh
 ```
 
-### zfspostcfg.conf
-```yaml
-poolName: "rpool"
-services:
-    - "zfs-import-cache.service"
-    - "zfs-import.target"
-    - "zfs-mount.service"
-    - "zfs.target"
-```
+## Installation Profiles
 
-## Installation Sequence
+The installer offers multiple profiles during setup:
 
-The ZFS-enabled installation follows this sequence:
-
-1. **partition**: Creates ZFS partitions
-2. **zfs**: Creates ZFS pools and datasets
-3. **mount**: Mounts filesystems
-4. **unpackfs**: Unpacks the root filesystem
-5. **fstab**: Generates fstab (minimal for ZFS)
-6. **zfshostid**: Copies ZFS hostid
-7. **zfspostcfg**: **NEW** - Configures ZFS system services and settings
-8. **initramfs**: Generates initramfs with ZFS support
-9. **bootloader**: Installs bootloader with ZFS awareness
+| Profile | Description |
+|---------|-------------|
+| **Gaming** | Steam, Lutris, Wine, GameMode, MangoHUD, performance tweaks |
+| **Media Server** | Docker + 65+ media services (Jellyfin, Sonarr, Radarr, etc.) |
+| **Complete** | Everything — gaming, media, AI, development tools |
+| **Developer** | Build tools, Rust, Node.js, Python, Docker |
+| **Custom** | Pick individual components |
 
 ## System Requirements
 
-- **Memory**: At least 2GB RAM (ZFS requirement)
-- **Storage**: ZFS-compatible storage device
-- **Kernel**: Linux kernel with ZFS support
-- **Bootloader**: GRUB with ZFS support
+### Minimum
+- Pop!_OS 22.04 LTS NVIDIA (for overlay mode)
+- 8GB RAM (16GB recommended for media stack)
+- 100GB free storage (500GB recommended)
+- Internet connection
+
+### Recommended (Target Hardware)
+- Intel i9-13900HX + NVIDIA RTX 4080
+- 64GB DDR5 RAM
+- NVMe SSD with ZFS support
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `INSTALL_MODE` | `overlay` | `overlay` or `fresh` |
+| `TARGET_DISK` | — | Device path for fresh install (e.g., `/dev/sda`) |
+| `INSTALL_USERNAME` | `$SUDO_USER` | User account name |
+| `INSTALL_HOSTNAME` | `nexus` | Hostname for fresh install |
+| `INSTALL_PASSWORD` | — | User password for fresh install |
+
+## ZFS Dataset Layouts
+
+### Fresh Install
+```
+rpool/
+├── ROOT/
+│   └── nexusos/       (mountpoint: /)
+├── home/              (mountpoint: /home)
+├── var-log/           (mountpoint: /var/log)
+├── var-cache/         (mountpoint: /var/cache)
+├── tmp/               (mountpoint: /tmp)
+└── opt-nexus/         (mountpoint: /opt/nexus-os)
+
+bpool/
+└── BOOT/
+    └── default/       (mountpoint: /boot)
+```
+
+### Overlay Mode (Optional Data Pool)
+```
+nexus-data/
+├── media/             (mountpoint: ~/nexus-media/media)
+├── downloads/         (mountpoint: ~/nexus-media/downloads)
+├── docker/            (mountpoint: /var/lib/docker)
+└── ai-models/         (mountpoint: /opt/nexus-os/models)
+```
+
+## Dependencies
+
+All packages installed via nala (Pop!_OS/Ubuntu):
+
+- `zfsutils-linux` — ZFS tools
+- `kde-plasma-desktop sddm` — KDE desktop
+- `docker-ce` — Docker (from official Docker repo)
+- `steam-installer lutris gamemode mangohud wine64` — Gaming
+- `python3-pip fastapi uvicorn` — AI service runtime
+- `debootstrap` — Fresh install only
 
 ## Troubleshooting
 
-### Common Issues
+### Overlay Install Issues
 
-1. **ZFS modules not loading**:
-   ```bash
-   sudo modprobe zfs
-   ```
+**Installer fails preflight checks:**
+- Ensure running on Pop!_OS 22.04 with NVIDIA drivers
+- Run as root: `sudo ./nexus-install.sh`
+- Check internet connectivity
 
-2. **Pool import failures**:
-   - Check ZFS hostid: `cat /etc/hostid`
-   - Verify pool status: `zpool status`
-
-3. **Boot issues**:
-   - Ensure mkinitcpio includes ZFS hooks
-   - Check bootloader configuration for ZFS support
-
-### Debug Information
-
-Enable debug mode in Calamares to see detailed ZFS operation logs:
+**Package installation failures:**
 ```bash
-calamares -d
+# Update package lists
+sudo nala update
+
+# Fix broken packages
+sudo nala install -f
 ```
 
-## Development
+### Fresh Install Issues
 
-### Testing
+**ZFS pool creation fails:**
+- Verify target disk is not mounted: `lsblk`
+- Check ZFS modules loaded: `lsmod | grep zfs`
+- Install ZFS if needed: `sudo nala install zfsutils-linux`
 
-The modules include Python syntax validation and YAML configuration validation:
+**Resume after failure:**
+The installer saves state to `.install_state`. Re-running will resume from the last successful step.
+
+### Testing in QEMU
 
 ```bash
-# Validate Python syntax
-python3 -m py_compile modules/zfspostcfg/main.py
+# Create virtual disk
+qemu-img create -f qcow2 test-disk.qcow2 64G
 
-# Test configuration loading
-python3 -c "import yaml; print(yaml.safe_load(open('modules/zfspostcfg/zfspostcfg.conf')))"
+# Boot a live Pop!_OS ISO, then run installer targeting the virtual disk
 ```
-
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
 
 ## License
 
-This project maintains the same licensing as Calamares:
-- **Code**: GPL-3.0+
-- **Configuration**: CC0-1.0
-
-## Compatibility
-
-- **Calamares**: 3.3.14+
-- **ZFS**: OpenZFS 2.0+
-- **Garuda Linux**: All versions
-- **Arch Linux**: Compatible
-- **Other distributions**: May require configuration adjustments
-
-## Credits
-
-- **Calamares Team**: For the excellent installer framework
-- **OpenZFS Project**: For ZFS filesystem implementation  
-- **Garuda Linux Team**: For the distribution and testing environment
-- **Original ZFS Integration**: Evan James (@dalto8798)
-
-## Support
-
-For issues and questions:
-- Check the troubleshooting section
-- Review Calamares documentation
-- Open an issue in this repository
-- Consult the Garuda Linux community forums
+GPL-3.0+ — Same as the NexusOS project.

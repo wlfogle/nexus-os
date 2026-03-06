@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=NexusOS Packages
+Comment=Universal package manager — install from 20+ sources
+Exec=konsole --profile NexusOS -e bash -c 'nexuspkg status; echo ""; nexuspkg repos; echo ""; echo "Type nexuspkg commands or exit:"; bash'
+Icon=system-software-install
+Type=Application
+Categories=System;PackageManager;
+Keywords=package;install;software;nexuspkg;

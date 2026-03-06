@@ -1,14 +1,14 @@
 # 🚀 NexusOS - Universal AI-Native Operating System
 
 [![Development Status](https://img.shields.io/badge/Status-Phase%201%20Development-yellow)](https://github.com/nexusos/nexusos)
-[![Base](https://img.shields.io/badge/Base-Garuda%20Gaming-blue)](https://garudalinux.org)
+[![Base](https://img.shields.io/badge/Base-Pop!_OS%2022.04--blue)](https://pop.system76.com)
 [![AI Assistants](https://img.shields.io/badge/AI-Stella%20%26%20Max%20Jr.-purple)](https://github.com/nexusos/nexusos)
 [![Gaming](https://img.shields.io/badge/Gaming-linux--zen-green)](https://github.com/nexusos/nexusos)
 [![Media](https://img.shields.io/badge/Media-65%2B%20Services-orange)](https://github.com/nexusos/nexusos)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 > **The world's first truly universal Linux distribution with AI mascot companions**  
-> Built on Garuda Dr460nized Gaming Edition • Universal Package Compatibility • Complete Media Center
+> Built on Pop!_OS 22.04 LTS NVIDIA • Universal Package Compatibility • Complete Media Center
 
 ---
 
@@ -52,13 +52,13 @@
 ## 🎯 **What Makes NexusOS Revolutionary?**
 
 ### 🎮 **Gaming Excellence**
-Built on the acclaimed **Garuda Dr460nized Gaming Edition** with linux-zen kernel - all gaming optimizations included plus universal package access.
+Built on the acclaimed **Pop!_OS 22.04 LTS NVIDIA** with the Pop!_OS kernel — all gaming optimizations included plus universal package access.
 
 ### 📦 **Universal Package Compatibility**
 **Install from ANY Linux distribution:**
 - **Ubuntu/Debian** → `nexuspkg deb install firefox.deb`
 - **Fedora/RedHat** → `nexuspkg rpm install package.rpm`  
-- **Arch Linux** → `nexuspkg aur install discord`
+- **Flatpak** → `nexuspkg install discord --format=flatpak`
 - **Flatpak** → `nexuspkg flatpak com.spotify.Client`
 - **Snap** → `nexuspkg snap install code`
 - **Python** → `nexuspkg pip numpy`
@@ -91,8 +91,8 @@ Hybrid X11/Wayland desktop with AI-integrated features, built on KDE Plasma foun
 ├─────────────────────────────────────────────────────────────────┤
 │                     Package Compatibility                      │
 │  ┌──────────┐┌──────────┐┌──────────┐┌──────────┐┌──────────┐  │
-│  │   DEB    ││   RPM    ││   ZST    ││ Flatpak  ││   Snap   │  │
-│  │ (dpkg)   ││ (rpm)    ││(pacman)  ││(flatpak) ││ (snapd)  │  │
+│  │   DEB    ││   RPM    ││ Flatpak  ││   Snap   ││ AppImage │  │
+│  │ (dpkg)   ││ (rpm)    ││(flatpak) ││ (snapd)  ││ (FUSE)   │  │
 │  └──────────┘└──────────┘└──────────┘└──────────┘└──────────┘  │
 │  ┌──────────┐┌──────────┐┌──────────┐┌──────────┐┌──────────┐  │
 │  │AppImage  ││ Python   ││  Node.js ││   Rust   ││  Docker  │  │
@@ -113,8 +113,8 @@ Hybrid X11/Wayland desktop with AI-integrated features, built on KDE Plasma foun
 │                      │  (AI Assistants)│                       │
 │                      └─────────────────┘                       │
 ├─────────────────────────────────────────────────────────────────┤
-│                   Garuda Dr460nized Gaming                     │
-│      🗃️ ZFS Root  💾 linux-zen  🎮 Gaming Optimized          │
+│                   Pop!_OS 22.04 NVIDIA                     │
+│      🗃️ ZFS Root  💾 Pop!_OS kernel  🎮 Gaming Optimized          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -126,7 +126,7 @@ Hybrid X11/Wayland desktop with AI-integrated features, built on KDE Plasma foun
 
 | Component | Status | Description |
 |-----------|--------|-------------|
-| **Garuda Base** | ✅ 100% | Garuda Dr460nized Gaming foundation |
+| **Pop!_OS Base** | ✅ 100% | Pop!_OS 22.04 NVIDIA foundation |
 | **nexuspkg** | 🔄 85% | Universal package manager (C implementation) |
 | **Stella AI** | 🔄 70% | Security & package management assistant |
 | **Max Jr. AI** | 🔄 70% | Performance optimization assistant |
@@ -147,7 +147,7 @@ Hybrid X11/Wayland desktop with AI-integrated features, built on KDE Plasma foun
 ## 🛠️ **Quick Start Guide**
 
 ### **Prerequisites**
-- Garuda Dr460nized Gaming Edition (recommended base)
+- Pop!_OS 22.04 LTS NVIDIA (recommended base)
 - 16GB+ RAM (for full media stack)
 - 500GB+ storage (for gaming + media)
 
@@ -182,8 +182,8 @@ nexuspkg deb install ./package.deb         # Install local DEB package
 
 ```bash
 # Deploy complete 65+ service media stack
-cd installer
-./deploy-media-stack.sh
+cd media
+docker compose up -d
 
 # Access services
 # Primary Dashboard: http://localhost:8540 (Organizr)
@@ -244,10 +244,10 @@ curl -X POST http://localhost:8600/api/maxjr/toggle
 
 | Specification | Details |
 |---------------|---------|
-| **Base System** | Garuda Dr460nized Gaming Edition |
-| **Kernel** | linux-zen (gaming optimized) |
+| **Base System** | Pop!_OS 22.04 LTS NVIDIA |
+| **Kernel** | Pop!_OS kernel (NVIDIA-optimized) |
 | **Desktop** | NexusDE (hybrid X11/Wayland) on KDE Plasma |
-| **Package Managers** | nexuspkg (universal) + pacman/yay (Garuda base) |
+| **Package Managers** | nexuspkg (universal) + nala/flatpak (Pop!_OS base) |
 | **AI Framework** | Python with FastAPI coordination |
 | **Media Stack** | Docker containers with 65+ services |
 | **Init System** | systemd with AI service orchestration |
@@ -256,7 +256,7 @@ curl -X POST http://localhost:8600/api/maxjr/toggle
 ### **Supported Package Formats**
 - **DEB** (Ubuntu/Debian) via dpkg
 - **RPM** (Fedora/RedHat) via rpm/dnf  
-- **ZST** (Arch Linux) via pacman + AUR
+- **DEB** (Pop!_OS/Ubuntu) via nala/apt + PPAs
 - **APK** (Alpine Linux) via apk
 - **Flatpak** (Universal apps) via flatpak
 - **Snap** (Ubuntu universal) via snapd
@@ -347,17 +347,17 @@ We welcome contributions from the community! NexusOS is built with:
 NexusOS is released under the **GNU General Public License v3.0**. See [LICENSE](LICENSE) for details.
 
 ### **Built With Love & Thanks To**
-- 🎮 **[Garuda Linux](https://garudalinux.org)** - Excellent gaming foundation
-- 🐧 **[Linux Zen Kernel](https://github.com/zen-kernel/zen-kernel)** - Gaming optimizations
+- 🎮 **[Pop!_OS](https://pop.system76.com)** - Excellent gaming foundation
+- 🐧 **Pop!_OS Kernel** - NVIDIA-optimized gaming performance
 - 🎨 **[Qt Framework](https://qt.io)** - Beautiful desktop environment  
 - 📺 **[Awesome Stack](https://github.com/awesome-selfhosted/awesome-selfhosted)** - Media center inspiration
 - 🐳 **[Docker](https://docker.com)** - Container orchestration
 - 🔒 **[Vaultwarden](https://github.com/dani-garcia/vaultwarden)** - Security integration
-- 🛠️ **[Calamares](https://calamares.io)** - Installation framework
+- 🛠️ **[ZFSBootMenu](https://zfsbootmenu.org)** - ZFS-on-root bootloader
 
 ### **Special Recognition**
 - The Linux community for endless innovation
-- Garuda Linux team for gaming excellence  
+- Pop!_OS team for gaming excellence  
 - All package maintainers across distributions
 - Open source contributors worldwide
 

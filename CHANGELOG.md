@@ -15,7 +15,7 @@ This is the first public alpha release of NexusOS, introducing the world's first
 
 #### 🌍 Universal Package Management
 - **nexuspkg**: Revolutionary universal package manager supporting all major Linux distributions
-- **Cross-Distribution Compatibility**: Install packages from Arch, Debian, Red Hat, SUSE, Alpine, Void, NixOS, Gentoo
+- **Cross-Distribution Compatibility**: Install packages from Debian, Ubuntu, Red Hat, SUSE, Alpine, Void, NixOS, Gentoo
 - **Universal Formats**: Full support for Flatpak, Snap, AppImage packages
 - **Source-Based Integration**: Direct pip, npm, cargo, gem, GitHub releases support
 - **OmnioSearch**: Search across 25+ repositories simultaneously with single command
@@ -30,8 +30,8 @@ This is the first public alpha release of NexusOS, introducing the world's first
 - **Real-time Monitoring**: Performance and security status updates
 
 #### 🎮 Gaming Excellence
-- **Garuda Base**: Built on acclaimed Garuda Dr460nized Gaming Edition
-- **linux-zen Kernel**: Gaming-optimized kernel with latest performance patches
+- **Pop!_OS Base**: Built on acclaimed Pop!_OS 22.04 NVIDIA
+- **Pop!_OS Kernel**: Gaming-optimized kernel with latest performance patches
 - **Gaming Optimizations**: Pre-configured for maximum gaming performance
 - **GPU Management**: Hybrid GPU switching and optimization
 - **Steam Integration**: Ready-to-use gaming environment
@@ -71,9 +71,8 @@ This is the first public alpha release of NexusOS, introducing the world's first
 ### 🏗️ Technical Infrastructure
 
 #### Package Format Support
-- **PKG** (Arch Linux) - Native pacman integration
-- **AUR** (Arch User Repository) - Full AUR support via yay
-- **DEB** (Debian/Ubuntu) - dpkg and apt compatibility
+- **DEB** (Debian/Ubuntu) - Native nala/apt integration
+- **PPA** (Ubuntu PPAs) - PPA and Flatpak support
 - **RPM** (Red Hat/Fedora) - rpm and dnf integration
 - **APK** (Alpine Linux) - apk package manager support
 - **XBPS** (Void Linux) - xbps-query and xbps-install integration
@@ -92,11 +91,11 @@ This is the first public alpha release of NexusOS, introducing the world's first
 - **Go** (go get) - Go module system
 
 #### Core System
-- **Base**: Garuda Dr460nized Gaming Edition
-- **Kernel**: linux-zen (latest gaming-optimized)
+- **Base**: Pop!_OS 22.04 NVIDIA
+- **Kernel**: Pop!_OS kernel (NVIDIA-optimized)
 - **Init**: systemd with AI service orchestration
 - **Display**: KDE Plasma 6 with NexusDE enhancements
-- **Package Manager**: nexuspkg (universal) + pacman (native)
+- **Package Manager**: nexuspkg (universal) + nala (native)
 - **Container Runtime**: Docker with service orchestration
 
 ### 🎯 Target Audience Features
@@ -114,7 +113,7 @@ This is the first public alpha release of NexusOS, introducing the world's first
 - AI-assisted development workflow
 
 #### For Gamers
-- Garuda Gaming optimizations included
+- Pop!_OS NVIDIA optimizations included
 - Latest drivers and gaming tools
 - Performance monitoring with Max Jr.
 - Gaming-focused desktop modes

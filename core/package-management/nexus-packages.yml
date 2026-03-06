@@ -15,12 +15,12 @@ nexus_os:
     mascots: ["Stella", "Max Jr."]
     
 # ============================================================================
-# GAMING PACKAGE CATEGORIES (Garuda Integration)
+# GAMING PACKAGE CATEGORIES (Pop!_OS Integration)
 # ============================================================================
 
 gaming_packages:
   category: "Gaming & Performance"
-  description: "Complete Garuda gaming package integration with performance optimizations"
+  description: "Complete Pop!_OS gaming package integration with performance optimizations"
   
   # Core Gaming Runtime
   core_gaming:
@@ -122,14 +122,14 @@ gaming_packages:
     - xpadneo-dkms           # Xbox controller
     - game-devices-udev      # Gaming device rules
     
-  # Garuda Gaming Specific
-  garuda_gaming:
-    - garuda-gamer            # Garuda gaming meta-package
-    - garuda-gaming-tweaks    # Gaming optimizations
-    - garuda-performance-tweaks # Performance tweaks
-    - garuda-kernel-manager   # Kernel management
-    - garuda-hooks           # System hooks
-    - garuda-hotfixes       # Critical fixes
+  # Pop!_OS Gaming Specific
+  popos_gaming:
+    - steam                   # Steam gaming platform
+    - gamemode                # Linux GameMode daemon
+    - mangohud                # Performance overlay
+    - system76-power          # GPU and power management
+    - lutris                  # Gaming platform
+    - wine                    # Windows compatibility
     
 # ============================================================================
 # MEDIA STACK INTEGRATION (Awesome Stack)
@@ -282,7 +282,7 @@ nexusde_components:
     - nexus-system-services # Unified service manager
     - nexus-media-integration # Media stack integration
     - nexus-gaming-integration # Gaming optimization
-    - nexus-biometric-auth  # Garuda Hello integration
+    - nexus-biometric-auth  # Pop!_OS fingerprint integration
     - nexus-backup-system   # Ultimate restore integration
     
   # Development Tools
@@ -327,7 +327,7 @@ system_integration:
     authentication:
       - polkit               # Privilege management
       - polkit-gnome        # GUI authentication
-      - garuda-hello        # Biometric authentication
+      - system76-power      # GPU switching and power management
       - pam                 # Authentication modules
       
     security:
@@ -426,7 +426,7 @@ package_groups:
       - gaming_packages.gaming_platforms
       - gaming_packages.wine_compatibility
       - gaming_packages.performance_tools
-      - gaming_packages.garuda_gaming
+      - gaming_packages.popos_gaming
       
   # Complete media stack
   nexus-media:
@@ -501,7 +501,7 @@ service_configuration:
       - nexusde-compositor
       - nexusde-session-manager
       - nexus-system-services
-      - garuda-hello-daemon
+      - system76-power
       
 # ============================================================================
 # SYSTEM PROFILES

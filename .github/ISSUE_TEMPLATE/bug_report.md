@@ -26,7 +26,7 @@ A clear and concise description of what actually happened.
 ## 💻 System Information
 **NexusOS Environment:**
 - NexusOS Version: [e.g. Phase 1 Development]
-- Base System: [e.g. Garuda Dr460nized Gaming Edition]
+- Base System: [e.g. Pop!_OS 22.04 NVIDIA]
 - Kernel Version: [e.g. 6.1.1-zen1-1-zen]
 - Desktop Environment: [e.g. NexusDE/KDE Plasma]
 

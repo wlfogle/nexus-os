@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=NexusOS Control Center
+Comment=System status, services, GPU, and health monitoring
+Exec=konsole --profile NexusOS -e bash -c 'nexus-control status; echo ""; nexus-control services; echo ""; echo "Press any key to close..."; read -n1'
+Icon=preferences-system
+Type=Application
+Categories=System;Settings;
+Keywords=nexus;control;status;services;

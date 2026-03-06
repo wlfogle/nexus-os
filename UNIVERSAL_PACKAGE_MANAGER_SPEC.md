@@ -6,17 +6,17 @@
 
 ## 📦 **Supported Package Formats & Repositories**
 
-### **1. Arch Linux Family**
-- ✅ **pacman** (.pkg.tar.xz, .pkg.tar.zst) - Arch, Manjaro, EndeavourOS, Garuda
-- ✅ **AUR** (Arch User Repository) - via yay, paru, aurman
-- ✅ **pacman-git** (Git packages) - Development versions
-
-### **2. Debian Family** 
-- ✅ **apt/dpkg** (.deb) - Debian, Ubuntu, Linux Mint, Pop!_OS, Elementary OS
+### **1. Pop!_OS / Debian Family (Native)**
+- ✅ **nala/apt/dpkg** (.deb) - Pop!_OS, Ubuntu, Debian, Linux Mint, Elementary OS
 - ✅ **PPA** (Personal Package Archives) - Ubuntu PPAs
 - ✅ **Debian Backports** - Testing/unstable packages
 - ✅ **Ubuntu Universe/Multiverse** - Additional repositories
 - ✅ **Debian Experimental** - Experimental packages
+
+### **2. Arch Linux Family**
+- ✅ **pacman** (.pkg.tar.xz, .pkg.tar.zst) - Arch, Manjaro, EndeavourOS
+- ✅ **AUR** (Arch User Repository) - via yay, paru
+- ✅ **pacman-git** (Git packages) - Development versions
 
 ### **3. Red Hat Family**
 - ✅ **dnf/yum** (.rpm) - Fedora, RHEL, CentOS, Rocky Linux, AlmaLinux
@@ -81,23 +81,23 @@
 ### **Package Detection Priority Algorithm**
 ```c
 package_format_t detect_optimal_package_source(const char* package_name) {
-    // 1. Check local/native repositories first (highest priority)
-    if (check_arch_repos(package_name)) return FORMAT_ARCH_PKG;
-    if (check_aur(package_name)) return FORMAT_AUR;
+    // 1. Check native Pop!_OS/Ubuntu repositories first (highest priority)
+    if (check_nala_apt_repos(package_name)) return FORMAT_DEB;
+    if (check_ppa_repos(package_name)) return FORMAT_PPA;
     
     // 2. Check universal formats (cross-platform)
     if (check_flatpak(package_name)) return FORMAT_FLATPAK;
     if (check_snap(package_name)) return FORMAT_SNAP;
     if (check_appimage(package_name)) return FORMAT_APPIMAGE;
     
-    // 3. Check major distribution repositories
-    if (check_ubuntu_repos(package_name)) return FORMAT_DEB;
+    // 3. Check other distribution repositories
     if (check_fedora_repos(package_name)) return FORMAT_RPM;
     if (check_opensuse_repos(package_name)) return FORMAT_ZYPPER_RPM;
     if (check_debian_repos(package_name)) return FORMAT_DEBIAN_DEB;
+    if (check_arch_repos(package_name)) return FORMAT_ARCH_PKG;
     
     // 4. Check community repositories
-    if (check_ppa_repos(package_name)) return FORMAT_PPA;
+    if (check_aur(package_name)) return FORMAT_AUR;
     if (check_copr_repos(package_name)) return FORMAT_COPR_RPM;
     if (check_rpm_fusion(package_name)) return FORMAT_RPM_FUSION;
     
@@ -121,17 +121,17 @@ package_format_t detect_optimal_package_source(const char* package_name) {
 ```c
 int install_package_universal(const char* package_name, package_format_t format) {
     switch (format) {
+        // Pop!_OS / Debian family (native)
+        case FORMAT_DEB:
+            return install_nala_apt(package_name);
+        case FORMAT_PPA:
+            return install_ubuntu_ppa(package_name);
+            
         // Arch Linux family
         case FORMAT_ARCH_PKG:
             return install_arch_pacman(package_name);
         case FORMAT_AUR:
             return install_arch_aur(package_name);
-            
-        // Debian family  
-        case FORMAT_DEB:
-            return install_debian_apt(package_name);
-        case FORMAT_PPA:
-            return install_ubuntu_ppa(package_name);
             
         // Red Hat family
         case FORMAT_RPM:
@@ -187,17 +187,17 @@ int install_package_universal(const char* package_name, package_format_t format)
 ```ini
 # /opt/nexusos/etc/repositories.conf
 
-[arch]
-name = "Arch Linux Core"
-type = pacman
-url = https://archlinux.org/packages/
+[pop-os]
+name = "Pop!_OS / Ubuntu Main"
+type = nala
+url = http://archive.ubuntu.com/ubuntu/
 priority = 1
 enabled = true
 
-[aur] 
-name = "Arch User Repository"
-type = aur
-url = https://aur.archlinux.org/
+[pop-os-ppa]
+name = "Pop!_OS System76 PPA"
+type = nala
+url = http://ppa.launchpadcontent.net/system76/pop/ubuntu/
 priority = 2
 enabled = true
 
@@ -205,7 +205,7 @@ enabled = true
 name = "Ubuntu Main"
 type = apt
 url = http://archive.ubuntu.com/ubuntu/
-priority = 10
+priority = 3
 enabled = true
 
 [ubuntu-universe]
@@ -396,16 +396,16 @@ int cmd_search_universal(const char* query) {
     
     int found_packages = 0;
     
+    // Search native Pop!_OS/Ubuntu repositories first
+    printf("🏠 POP!_OS / UBUNTU (NATIVE):\n");
+    found_packages += search_nala_apt_repos(query);
+    found_packages += search_ppa_repos(query);
+    found_packages += search_debian_repos(query);
+    
     // Search Arch repositories
-    printf("🏛️  ARCH LINUX FAMILY:\n");
+    printf("\n🏛️  ARCH LINUX FAMILY:\n");
     found_packages += search_arch_repos(query);
     found_packages += search_aur(query);
-    
-    // Search Debian family
-    printf("\n🌀 DEBIAN FAMILY:\n");
-    found_packages += search_ubuntu_repos(query);
-    found_packages += search_debian_repos(query);
-    found_packages += search_ppa_repos(query);
     
     // Search Red Hat family
     printf("\n🎩 RED HAT FAMILY:\n");
@@ -468,13 +468,13 @@ int install_arch_aur(const char* package) {
 }
 ```
 
-### **Debian Family**
+### **Pop!_OS / Debian Family (Native)**
 ```c
-int install_debian_apt(const char* package) {
+int install_nala_apt(const char* package) {
     char cmd[512];
-    printf("🌀 Installing %s via apt...\n", package);
-    system("sudo apt update");
-    snprintf(cmd, sizeof(cmd), "sudo apt install -y %s", package);
+    printf("🏠 Installing %s via nala...\n", package);
+    system("sudo nala update");
+    snprintf(cmd, sizeof(cmd), "sudo nala install -y %s", package);
     return system(cmd);
 }
 
@@ -489,8 +489,8 @@ int install_ubuntu_ppa(const char* ppa_package) {
     
     snprintf(cmd, sizeof(cmd), "sudo add-apt-repository -y %s", ppa_part);
     system(cmd);
-    system("sudo apt update");
-    snprintf(cmd, sizeof(cmd), "sudo apt install -y %s", package_name);
+    system("sudo nala update");
+    snprintf(cmd, sizeof(cmd), "sudo nala install -y %s", package_name);
     return system(cmd);
 }
 ```

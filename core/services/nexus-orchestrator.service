@@ -1,0 +1,20 @@
+[Unit]
+Description=NexusOS Orchestrator
+After=network-online.target nexus-stella.service nexus-maxjr.service docker.service
+Wants=network-online.target
+Requires=nexus-stella.service nexus-maxjr.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 /opt/nexus-os/services/orchestrator.py
+WorkingDirectory=/opt/nexus-os/services
+Restart=on-failure
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nexus-orchestrator
+
+[Install]
+WantedBy=multi-user.target

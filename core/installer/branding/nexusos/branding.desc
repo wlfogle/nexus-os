@@ -1,0 +1,28 @@
+---
+componentName: nexusos
+
+strings:
+    productName:         NexusOS
+    shortProductName:    NexusOS
+    version:             1.0
+    shortVersion:        1.0
+    versionedName:       NexusOS 1.0
+    shortVersionedName:  NexusOS 1.0
+    bootloaderEntryName: NexusOS
+    productUrl:          https://github.com/wlfogle/nexus-os
+    supportUrl:          https://github.com/wlfogle/nexus-os/issues
+    knownIssuesUrl:      https://github.com/wlfogle/nexus-os/issues
+    releaseNotesUrl:     https://github.com/wlfogle/nexus-os/releases
+
+images:
+    productLogo:         "nexusos-logo.png"
+    productIcon:         "nexusos-logo.png"
+    productWelcome:      "nexusos-welcome.png"
+
+slideshow:               "show.qml"
+
+style:
+    sidebarBackground:   "#0d1117"
+    sidebarText:         "#e6edf3"
+    sidebarTextSelect:   "#4a9eff"
+    sidebarTextHighlight: "#4a9eff"

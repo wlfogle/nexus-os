@@ -8,14 +8,14 @@ NexusOS is the world's first **AI-Native Operating System** - built from scratch
 
 **AI-Powerhouse Architecture**: Based on the comprehensive AI development environment, NexusOS brings AI/ML capabilities, GPU acceleration, container orchestration, and self-hosting services to the kernel level.
 
-**Arch-Linux Optimized**: This build is specifically tuned for Arch-based systems (Garuda Linux) running on Intel i9-13900HX + RTX 4080 with native CUDA acceleration and 64GB DDR5 optimization.
+**Pop!_OS Optimized**: This build is specifically tuned for Pop!_OS 22.04 LTS NVIDIA running on Intel i9-13900HX + RTX 4080 with native CUDA acceleration and 64GB DDR5 optimization. Uses `nala` (not `apt`) as the preferred package manager.
 
 ## Common Commands
 
-### Dependencies (Arch/Garuda Linux)
+### Dependencies (Pop!_OS/Ubuntu)
 ```bash
 make install-deps      # Show manual installation commands
-make install-deps-auto # Auto-install via pacman (requires sudo)
+make install-deps-auto # Auto-install via nala (requires sudo)
 ```
 
 ### Building (x86_64 default, Alderlake-optimized)
@@ -58,14 +58,14 @@ make ARCH=x86_64 all   # Build for x86_64 [DEFAULT]
 - **Kernel**: Lives in `kernel/` - currently minimal with just `main.c` containing the kernel entry point
 - **Bootloader**: `boot/boot.s` contains multiboot-compliant assembly bootloader with 32KB stack
 - **Memory Layout**: Defined in `linker.ld` - architecture-aware load addresses
-- **Configuration**: Build settings in `config.mk` (Arch-optimized) and main `Makefile`
+- **Configuration**: Build settings in `config.mk` (Pop!_OS-optimized) and main `Makefile`
 
-### Build System (Arch-Linux Optimized)
+### Build System (Pop!_OS Optimized)
 - **Native Toolchain**: Uses system GCC/binutils, falls back to cross-compiler if available
 - **Intel Optimization**: Alderlake-specific tuning (-march=alderlake -mtune=alderlake)
 - **Smart Architecture Detection**: Automatically detects and configures for x86_64 vs i386
 - **KVM Integration**: QEMU runs with KVM acceleration and host CPU passthrough
-- **Pacman Integration**: Native Arch package management for dependencies
+- **Nala Integration**: Native nala/apt package management for dependencies
 
 ### Memory Management (Architecture-Aware)
 **x86_64 Mode (Default)**:
@@ -91,17 +91,19 @@ The codebase follows a traditional monolithic kernel architecture:
    - Device drivers (`drivers/`)
    - User space programs (`userland/`)
 
-### Cross-Compilation Requirements (Arch/Garuda)
-**Required Packages** (install via `make install-deps-auto`):
+### Build Requirements (Pop!_OS/Ubuntu)
+**Required Packages** (install via nala):
 - `gcc` and `binutils` (native toolchain)
 - `nasm` (assembler)
-- `qemu-desktop` (emulation with KVM support)
-- `grub` and `xorriso` (bootloader tools)
+- `qemu-system-x86` (emulation with KVM support)
+- `grub-common`, `grub-pc-bin` and `xorriso` (bootloader tools)
 - `mtools` (disk utilities)
 - `gdb` and `make` (development tools)
 
-**Optional AUR Packages** (for pure cross-compilation):
-- `x86_64-elf-gcc` and `x86_64-elf-binutils` (via AUR helper like `paru`)
+**Install all at once**:
+```bash
+sudo nala install gcc binutils nasm qemu-system-x86 grub-common grub-pc-bin xorriso mtools gdb make
+```
 
 ## File Organization
 

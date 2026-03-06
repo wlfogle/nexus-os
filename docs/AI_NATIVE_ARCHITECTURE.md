@@ -139,7 +139,7 @@ kernel/
 - **API Server**: Built-in REST/gRPC APIs
 
 ## 🎮 Gaming Performance Preservation
-- **Garuda Gaming Compatibility**: Maintains gaming performance
+- **Pop!_OS NVIDIA Compatibility**: Maintains gaming performance
 - **GPU Sharing**: AI/Gaming workload coexistence
 - **Real-time Scheduling**: Low-latency gaming support
 

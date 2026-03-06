@@ -1,0 +1,84 @@
+// NexusOS Plymouth Boot Splash Script
+// Dark background with centered branding text and spinner animation
+
+// Screen setup
+Window.SetBackgroundTopColor(0.05, 0.05, 0.10);
+Window.SetBackgroundBottomColor(0.02, 0.02, 0.06);
+
+// Logo text (rendered as sprite)
+logo.image = Image.Text("N E X U S O S", 0.4, 0.7, 1.0, "Sans 32");
+logo.sprite = Sprite(logo.image);
+logo.sprite.SetX(Window.GetX() + Window.GetWidth() / 2 - logo.image.GetWidth() / 2);
+logo.sprite.SetY(Window.GetY() + Window.GetHeight() / 2 - 60);
+logo.sprite.SetZ(10);
+
+// Subtitle
+subtitle.image = Image.Text("AI-Native Operating System", 0.5, 0.5, 0.7, "Sans 14");
+subtitle.sprite = Sprite(subtitle.image);
+subtitle.sprite.SetX(Window.GetX() + Window.GetWidth() / 2 - subtitle.image.GetWidth() / 2);
+subtitle.sprite.SetY(Window.GetY() + Window.GetHeight() / 2);
+subtitle.sprite.SetZ(10);
+
+// Spinner animation
+spinner_count = 12;
+spinner_radius = 30;
+spinner_dot_size = 4;
+
+fun refresh_callback() {
+    time = Plymouth.GetTime();
+
+    // Animate spinner dots in a circle
+    for (i = 0; i < spinner_count; i++) {
+        angle = i * (2 * 3.14159) / spinner_count - time * 3;
+        x = Window.GetWidth() / 2 + Math.Int(spinner_radius * Math.Cos(angle)) - spinner_dot_size / 2;
+        y = Window.GetHeight() / 2 + 60 + Math.Int(spinner_radius * Math.Sin(angle)) - spinner_dot_size / 2;
+
+        // Fade based on position in rotation
+        alpha = 0.2 + 0.8 * ((i + Math.Int(time * 8)) % spinner_count) / spinner_count;
+
+        if (!global.dots[i]) {
+            global.dots[i] = {};
+            global.dots[i].image = Image.Text("●", alpha * 0.4, alpha * 0.7, alpha * 1.0, "Sans 10");
+            global.dots[i].sprite = Sprite(global.dots[i].image);
+            global.dots[i].sprite.SetZ(10);
+        }
+
+        global.dots[i].sprite.SetX(x);
+        global.dots[i].sprite.SetY(y);
+        global.dots[i].sprite.SetOpacity(alpha);
+    }
+}
+
+Plymouth.SetRefreshFunction(refresh_callback);
+
+// Message handling
+fun message_callback(text) {
+    msg.image = Image.Text(text, 0.6, 0.6, 0.6, "Sans 11");
+    msg.sprite = Sprite(msg.image);
+    msg.sprite.SetX(Window.GetX() + Window.GetWidth() / 2 - msg.image.GetWidth() / 2);
+    msg.sprite.SetY(Window.GetY() + Window.GetHeight() - 50);
+    msg.sprite.SetZ(10);
+}
+
+Plymouth.SetMessageFunction(message_callback);
+
+// Password prompt
+fun password_callback(prompt, bullets) {
+    pwd_label.image = Image.Text(prompt, 0.6, 0.6, 0.8, "Sans 12");
+    pwd_label.sprite = Sprite(pwd_label.image);
+    pwd_label.sprite.SetX(Window.GetX() + Window.GetWidth() / 2 - pwd_label.image.GetWidth() / 2);
+    pwd_label.sprite.SetY(Window.GetY() + Window.GetHeight() / 2 + 120);
+    pwd_label.sprite.SetZ(10);
+
+    bullet_str = "";
+    for (i = 0; i < bullets; i++) {
+        bullet_str += "● ";
+    }
+    pwd_dots.image = Image.Text(bullet_str, 0.4, 0.7, 1.0, "Sans 14");
+    pwd_dots.sprite = Sprite(pwd_dots.image);
+    pwd_dots.sprite.SetX(Window.GetX() + Window.GetWidth() / 2 - pwd_dots.image.GetWidth() / 2);
+    pwd_dots.sprite.SetY(Window.GetY() + Window.GetHeight() / 2 + 150);
+    pwd_dots.sprite.SetZ(10);
+}
+
+Plymouth.SetDisplayPasswordFunction(password_callback);

@@ -1,0 +1,21 @@
+
+ ███╗   ██╗███████╗██╗  ██╗██╗   ██╗███████╗ ██████╗ ███████╗
+ ████╗  ██║██╔════╝╚██╗██╔╝██║   ██║██╔════╝██╔═══██╗██╔════╝
+ ██╔██╗ ██║█████╗   ╚███╔╝ ██║   ██║███████╗██║   ██║███████╗
+ ██║╚██╗██║██╔══╝   ██╔██╗ ██║   ██║╚════██║██║   ██║╚════██║
+ ██║ ╚████║███████╗██╔╝ ╚██╗╚██████╔╝███████║╚██████╔╝███████║
+ ╚═╝  ╚═══╝╚══════╝╚═╝   ╚═╝ ╚═════╝ ╚══════╝ ╚═════╝ ╚══════╝
+                    The AI-Native Operating System
+
+ Quick Start:
+   nexus-control status      System overview
+   nexus-control gpu          GPU & CUDA status
+   nexus-control ai           AI service health
+   stella scan               Security scan
+   maxjr optimize            Performance tune
+   ollama run llama3.2       Chat with AI
+
+ Docs:   /opt/nexus-os/docs/
+ Logs:   /var/log/nexus-os/
+ Config: /etc/nexus-os/
+

@@ -1,0 +1,10 @@
+[SddmGreeterTheme]
+Name=NexusOS
+Description=NexusOS AI-Native login theme
+Author=NexusOS Team
+Type=sddm-theme
+Version=1.0
+Website=https://github.com/wlfogle/nexus-os
+Screenshot=
+MainScript=Main.qml
+TranslationsDirectory=translations

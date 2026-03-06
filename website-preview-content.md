@@ -5,7 +5,7 @@
 
 *The world's first universal Linux distribution with AI mascot companions*
 
-Built on Garuda Dr460nized Gaming • Universal Package Compatibility • AI-Powered • Complete Media Center
+Built on Pop!_OS 22.04 NVIDIA • Universal Package Compatibility • AI-Powered • Complete Media Center
 
 [Join the Journey] [View Development] [Meet Stella & Max Jr.]
 
@@ -14,7 +14,7 @@ Built on Garuda Dr460nized Gaming • Universal Package Compatibility • AI-Pow
 ## What Makes NexusOS Special
 
 ### 🎮 **Gaming Excellence**
-Built on the acclaimed Garuda Dr460nized Gaming Edition with linux-zen kernel, maintaining all gaming optimizations while adding revolutionary universal package access.
+Built on the acclaimed Pop!_OS 22.04 LTS NVIDIA with Pop!_OS kernel, maintaining all gaming optimizations while adding revolutionary universal package access.
 
 ### 🐕🐱 **AI Mascot Companions** 
 Meet Stella (Golden Retriever) and Max Jr. (Cat) - your intelligent system assistants for security monitoring and performance optimization.
@@ -48,7 +48,7 @@ Install software from ANY Linux distribution - Ubuntu, Fedora, Arch, Alpine - al
 ## Development Progress
 
 🟢 **Phase 1: Core Foundation** (In Progress)
-- Garuda base system integration
+- Pop!_OS base system integration
 - Universal package manager development
 - AI assistant implementation
 
@@ -99,8 +99,8 @@ NexusOS is open source and welcomes contributors:
 [View Repository] [Development Guide] [Join Contributors]
 
 **📋 Technical Details**
-- Base: Garuda Dr460nized Gaming Edition
-- Kernel: linux-zen (gaming optimized)  
+- Base: Pop!_OS 22.04 LTS NVIDIA
+- Kernel: Pop!_OS kernel (NVIDIA-optimized)  
 - Desktop: NexusDE (hybrid X11/Wayland)
 - AI: Stella & Max Jr. assistants
 - Media: 65+ service awesome-stack

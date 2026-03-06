@@ -202,7 +202,7 @@ class NexusOrchestrator:
         ]
         
         security_services = [
-            'garuda-hello-daemon', 'ufw', 'fail2ban', 'clamav-daemon'
+            'system76-power', 'ufw', 'fail2ban', 'clamav-daemon'
         ]
         
         for service_name in gaming_services:
@@ -402,7 +402,7 @@ class NexusOrchestrator:
                 source="stella",
                 type="security",
                 title="Scheduled Backup Check",
-                description="Ensuring Garuda Ultimate Restore System backups are current",
+                description="Ensuring Timeshift backups are current",
                 confidence=1.0,
                 action={"type": "backup", "service": "restore_system"},
                 priority=1

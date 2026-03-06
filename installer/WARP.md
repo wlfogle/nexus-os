@@ -1,247 +1,136 @@
 # WARP.md
 
-This file provides guidance to WARP (warp.dev) when working with code in this repository.
+This file provides guidance to WARP (warp.dev) when working with code in the installer directory.
 
 ## Project Overview
 
-This is a Calamares ZFS Integration project that enhances the default ZFS support in Calamares 3.3.14 for Garuda Linux installations. The project adds a comprehensive post-installation configuration module (`zfspostcfg`) that handles ZFS system service setup, initramfs configuration, and other ZFS-specific system optimizations.
+The NexusOS Installer (`nexus-install.sh`) transforms a Pop!_OS 22.04 LTS NVIDIA system into a full NexusOS environment, or performs a fresh ZFS-on-root install via debootstrap with ZFSBootMenu.
+
+## Installation Modes
+
+### Mode 1: Overlay Install (default)
+Installs NexusOS components on top of an existing Pop!_OS system:
+- KDE Plasma Desktop with SDDM (X11)
+- Gaming stack (Steam, Lutris, Wine, GameMode, MangoHUD)
+- Media stack (Docker + 65+ services)
+- AI services (Ollama, Stella, Max Jr., Orchestrator)
+- Development tools (Rust, Node.js, build tools)
+- Optional ZFS data pool for media/docker/AI storage
+- nexuspkg universal package manager
+
+### Mode 2: Fresh Install with ZFS-on-root (advanced)
+Full installation to a target disk:
+- Partitions: EFI (512MB) + bpool (2GB) + rpool (rest)
+- debootstrap Ubuntu 22.04 (jammy) base
+- System76 PPA for system76-power
+- ZFSBootMenu as UEFI bootloader (downloaded from get.zfsbootmenu.org/efi)
+- All NexusOS components installed in chroot
+- Resume support via state file on failure
 
 ## Quick Start
 
-### Complete Automated Build
-For the complete workflow from source download to package creation:
-
 ```bash
-# Run the complete build script
-./build-complete.sh
-```
+# Overlay install (on existing Pop!_OS)
+sudo ./nexus-install.sh
 
-This script will:
-1. Install all required dependencies for Garuda Linux
-2. Download Calamares 3.3.14 source code
-3. Integrate ZFS enhancements into the source
-4. Build Calamares with ZFS support
-5. Create the Garuda Linux package
-6. Validate the entire build process
+# Fresh install with ZFS root
+sudo INSTALL_MODE=fresh TARGET_DISK=/dev/sdX ./nexus-install.sh
+```
 
 ## Development Commands
 
-### Complete Build Process
-
-#### 1. Download and Prepare Calamares Source
+### Syntax Check
 ```bash
-# Download Calamares 3.3.14 source
-wget https://github.com/calamares/calamares/releases/download/v3.3.14/calamares-3.3.14.tar.gz
-tar -xzf calamares-3.3.14.tar.gz
-cd calamares-3.3.14
-
-# Install build dependencies for Garuda Linux
-sudo pacman -S --needed cmake qt6-base qt6-tools extra-cmake-modules yaml-cpp boost kpmcore polkit-qt6 python python-yaml base-devel
+bash -n nexus-install.sh
 ```
 
-#### 2. Integrate ZFS Enhancements
-```bash
-# Copy the new zfspostcfg module
-cp -r ../modules/zfspostcfg src/modules/
-
-# Replace the ZFS configuration with enhanced version
-cp ../modules/zfs.conf src/modules/zfs/
-
-# Verify integration
-ls -la src/modules/zfs*
-python3 -m py_compile src/modules/zfspostcfg/main.py
-```
-
-#### 3. Build Calamares with ZFS Integration
-```bash
-# Create build directory
-mkdir build && cd build
-
-# Configure build (Debug for development, Release for production)
-cmake .. -DCMAKE_BUILD_TYPE=Release -DWITH_QT6=ON -DCMAKE_INSTALL_PREFIX=/usr
-
-# Build (use all CPU cores)
-make -j$(nproc)
-
-# Install to system (optional, for testing)
-sudo make install
-```
-
-#### 4. Create Garuda Package
-```bash
-# Return to project root
-cd ../../
-
-# Build the integration package
-cd garuda-package/garuda-calamares-zfs
-makepkg -si
-
-# Generate package metadata
-makepkg --printsrcinfo > .SRCINFO
-```
-
-### Automated Build Script
-
-The repository includes a complete build script (`build-complete.sh`) that automates the entire process. Use it for quick builds:
-
-```bash
-# Make executable and run
-chmod +x build-complete.sh
-./build-complete.sh
-```
-
-The script includes error handling, logging, validation, and produces both the Calamares binary and Garuda package.
-
-### Development Testing Commands
-
-#### Module Validation
-```bash
-# Validate Python module syntax
-python3 -m py_compile modules/zfspostcfg/main.py
-
-# Test YAML configuration loading  
-python3 -c "import yaml; print(yaml.safe_load(open('modules/zfspostcfg/zfspostcfg.conf')))"
-
-# Test all Python modules in the project
-find . -name "*.py" -exec python3 -m py_compile {} \;
-
-# Validate all YAML configurations
-find . -name "*.conf" -o -name "*.yaml" | grep -v ".git" | while read f; do echo "Testing $f:"; python3 -c "import yaml; yaml.safe_load(open('$f'))" && echo "✓ Valid" || echo "✗ Invalid"; done
-```
-
-#### ZFS System Testing
-```bash
-# Check ZFS kernel module availability
-modinfo zfs
-
-# Load ZFS module (requires root)
-sudo modprobe zfs
-
-# Check ZFS tools
-which zpool zfs
-
-# Test ZFS functionality (on test system only)
-sudo zpool list
-sudo zfs list
-```
-
-#### Installation Testing
-```bash
-# Test Calamares in debug mode (after build/install)
-sudo calamares -d
-
-# Check module installation
-ls -la /usr/lib/calamares/modules/zfs*
-
-# Verify configuration deployment
-sudo cp settings/settings-zfs.conf /etc/calamares/settings.conf
-```
+### Testing in QEMU
+Use mobalivecd-linux from `reference/mobalivecd-linux/` to test ISOs built from fresh installs.
 
 ## Code Architecture
 
-### Core Components
+### Script Structure
+- **Configuration** (lines 1-65): Variables, defaults, environment overrides
+- **Logging & Error Handling** (lines 89-145): log(), warn(), die(), state management, cleanup trap
+- **UI Functions** (lines 147-181): print helpers, confirm_prompt()
+- **Hardware Detection** (lines 183-219): NVIDIA, AVX2, i9-13900HX, memory, storage
+- **Preflight Checks** (lines 221-305): root, Pop!_OS detection, UEFI, internet, nala
+- **User Interaction** (lines 307-514): mode, profile, component, disk selection
+- **ZFS Functions** (lines 516-601): shared ZFS package install, data pool creation
+- **Overlay Mode** (lines 603-957): prepare, KDE, gaming, media, AI, dev
+- **Fresh Mode** (lines 959-1482): disk prep, ZFS pools, debootstrap, chroot script generation
+- **Desktop Integration** (lines 1484-1562): nexuspkg, desktop entries, NexusOS config
+- **Summary & Main** (lines 1564-1717): summary display, main flow with resume support
 
-**Existing Calamares Modules** (C++):
-- `zfs` - Creates ZFS pools and datasets during installation
-- `zfshostid` - Copies ZFS hostid file to installed system
+### Key Patterns
+- All package management uses `nala` (apt frontend), never raw `apt` or `pacman`
+- Conditional installation based on profile/component selection flags
+- Fresh install generates a self-contained chroot script via heredoc appending
+- Resume support in fresh mode via state file (`.install_state`)
+- Hardware-adaptive: ZSTD compression if AVX2, i9-13900HX sysctl tuning
+- Error handling: `die()` triggers cleanup trap, `warn()` for non-fatal issues
 
-**New Python Module** (`modules/zfspostcfg/`):
-- `main.py` - Post-installation configuration logic
-- `zfspostcfg.conf` - Module configuration
-- `module.desc` - Calamares module descriptor
-- `zfspostcfg.schema.yaml` - Configuration schema validation
+### Environment Variables
+- `INSTALL_MODE`: "overlay" or "fresh"
+- `TARGET_DISK`: Device path for fresh install (e.g., /dev/sda)
+- `INSTALL_USERNAME`: User account name (defaults to SUDO_USER)
+- `INSTALL_HOSTNAME`: Hostname for fresh install
+- `INSTALL_PASSWORD`: User password for fresh install
 
-### Installation Flow Architecture
-
-The ZFS installation follows this critical sequence:
-1. `partition` → 2. `zfs` → 3. `mount` → 4. `unpackfs` → 5. `fstab` → 6. `zfshostid` → 7. **`zfspostcfg`** → 8. `initramfs` → 9. `bootloader`
-
-The `zfspostcfg` module is inserted after basic ZFS setup but before initramfs generation, ensuring proper system service configuration.
-
-### ZFS Dataset Architecture
-
-Default dataset structure optimized for Garuda Linux:
+### ZFS Dataset Layout (Fresh Install)
 ```
 rpool/
 ├── ROOT/
-│   └── garuda/
-│       └── root (mountpoint: /)
-├── home (mountpoint: /home)
-├── var (mountpoint: /var)
-│   ├── log (mountpoint: /var/log)
-│   └── cache (mountpoint: /var/cache)
+│   └── nexusos/       (mountpoint: /)
+├── home/              (mountpoint: /home)
+├── var-log/           (mountpoint: /var/log)
+├── var-cache/         (mountpoint: /var/cache)
+├── tmp/               (mountpoint: /tmp)
+└── opt-nexus/         (mountpoint: /opt/nexus-os)
+
+bpool/
+└── BOOT/
+    └── default/       (mountpoint: /boot)
 ```
 
-### Configuration System
+### ZFS Data Pool Layout (Overlay Mode, Optional)
+```
+nexus-data/
+├── media/             (mountpoint: ~/nexus-media/media)
+├── downloads/         (mountpoint: ~/nexus-media/downloads)
+├── docker/            (mountpoint: /var/lib/docker)
+└── ai-models/         (mountpoint: /opt/nexus-os/models)
+```
 
-**Global Storage Integration**: The `zfspostcfg` module reads ZFS configuration from Calamares global storage (`zfsPoolInfo`, `zfsDatasets`, `useZfs`) set by the C++ ZFS module, ensuring consistency across installation phases.
+## Dependencies
 
-**Service Management**: Automatically enables critical ZFS systemd services:
-- `zfs-import-cache.service` - Fast pool import using cache file
-- `zfs-import.target` - Fallback pool import
-- `zfs-mount.service` - Dataset mounting
-- `zfs.target` - ZFS service coordination
-
-### Key Python Functions
-
-**`copy_zfs_hostid()`**: Ensures ZFS hostid consistency between live and installed systems
-**`enable_zfs_services()`**: Chroot-based systemd service enablement  
-**`configure_initramfs()`**: Modifies mkinitcpio.conf to add ZFS hooks and modules
-**`reset_zfs_mountpoints()`**: Sets final mountpoints after installation
-**`setup_zfs_cache()`**: Configures zpool.cache for faster boot times
-
-## Configuration Files
-
-### Primary Configurations
-- `modules/zfs.conf` - Enhanced ZFS module config with zstd compression, autotrim
-- `modules/zfspostcfg/zfspostcfg.conf` - Post-installation service list
-- `settings/settings-zfs.conf` - Complete Calamares settings with ZFS sequence
-
-### Key Configuration Concepts
-- **Pool Options**: `-f -o ashift=12 -O mountpoint=none -O acltype=posixacl -O relatime=on -O compression=zstd -O xattr=sa -O autotrim=on`
-- **Dataset Options**: `-o compression=zstd -o atime=off -o xattr=sa`
-- **Pool Name**: `rpool` (configurable but should match across all configs)
-
-## Development Patterns
-
-### Error Handling Pattern
-All functions in `main.py` return `None` on success or error string on failure. The main `run()` function catches exceptions and returns formatted error messages to Calamares.
-
-### Configuration Override Pattern  
-The module checks multiple sources for ZFS configuration in priority order:
-1. Calamares global storage (from C++ modules)
-2. Module configuration file
-3. Hardcoded defaults
-
-### Chroot Operations Pattern
-System modifications use `["chroot", root_mount_point, "command"]` pattern for proper environment isolation during installation.
+**Pop!_OS/Ubuntu packages** (installed via nala):
+- `zfsutils-linux` — ZFS tools
+- `kde-plasma-desktop sddm` — KDE desktop
+- `docker-ce` — Docker (from official Docker repo)
+- `steam-installer lutris gamemode mangohud wine64` — Gaming
+- `python3-pip fastapi uvicorn` — AI service runtime
+- `debootstrap` — Fresh install only
 
 ## Testing Strategy
 
-### Unit Testing
-- Python syntax validation with `py_compile`
-- YAML configuration parsing tests
-- Import testing for all modules
+### Syntax Validation
+```bash
+bash -n nexus-install.sh
+```
 
-### Integration Testing  
-- Build system integration (makepkg)
-- Calamares module detection
-- Service file installation verification
+### Overlay Mode Testing
+Run on a Pop!_OS 22.04 VM or test system. The overlay install is reversible — packages can be removed.
 
-### Manual Testing Requirements
-- Test on ZFS-capable system with spare disk
-- Verify in Calamares debug mode (`calamares -d`)
-- Check post-installation boot success
+### Fresh Mode Testing
+Use QEMU with a virtual disk:
+```bash
+qemu-img create -f qcow2 test-disk.qcow2 64G
+# Boot a live Pop!_OS ISO in QEMU, then run the installer targeting the virtual disk
+```
 
-## Dependencies and Requirements
-
-**Required**: calamares >= 3.3.14, zfs-utils, python >= 3.6, python-yaml
-**Runtime**: ZFS kernel modules must be loaded during installation
-**Architecture**: Works with Garuda Linux, Arch Linux, and compatible distributions
-
-## Common Issues and Solutions
-
-**ZFS modules not loading**: Ensure `zfs-dkms` or `zfs-linux` packages installed and `modprobe zfs` successful
-**Service enablement failures**: Verify systemd services exist in chroot environment
-**Initramfs generation issues**: Check mkinitcpio.conf modifications and ZFS hook availability
-**Pool import failures**: Verify hostid consistency and zpool.cache file setup
+### ISO Testing with MobaLiveCD
+```bash
+cd ../reference/mobalivecd-linux
+python3 main.py /path/to/nexus-os.iso
+```

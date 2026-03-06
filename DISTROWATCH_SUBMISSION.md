@@ -13,13 +13,13 @@
 
 ## Distribution Description
 
-**NexusOS** is the world's first truly universal Linux distribution featuring revolutionary cross-distribution package compatibility and AI mascot companions. Built on the solid foundation of Garuda Dr460nized Gaming Edition, NexusOS introduces the groundbreaking `nexuspkg` universal package manager that can install software from ANY Linux distribution - Arch, Debian, Red Hat, SUSE, Alpine, Void, NixOS, Gentoo, and more.
+**NexusOS** is the world's first truly universal Linux distribution featuring revolutionary cross-distribution package compatibility and AI mascot companions. Built on the solid foundation of Pop!_OS 22.04 LTS NVIDIA, NexusOS introduces the groundbreaking `nexuspkg` universal package manager that can install software from ANY Linux distribution - Arch, Debian, Red Hat, SUSE, Alpine, Void, NixOS, Gentoo, and more.
 
 ### Key Innovation: Universal Package Management
 
 NexusOS breaks down the barriers between Linux distributions with its revolutionary package management system:
 
-- **Cross-Distribution Compatibility**: Install .deb packages on an Arch-based system, use RPMs, access the AUR, install Flatpaks, Snaps, and even source-based packages (pip, npm, cargo) - all with a single package manager
+- **Cross-Distribution Compatibility**: Install .deb packages on an Ubuntu/Debian-based system, use RPMs, use PPAs, install Flatpaks, Snaps, and even source-based packages (pip, npm, cargo) - all with a single package manager
 - **OmnioSearch**: Search across 25+ repositories simultaneously with one command
 - **Intelligent Detection**: Automatically detects the best package source for any software
 - **Format Conversion**: Convert between different package formats seamlessly
@@ -39,16 +39,16 @@ These AI companions provide interactive system management, security monitoring, 
 
 | Specification | Details |
 |---------------|---------|
-| **Base Distribution** | Garuda Dr460nized Gaming Edition (Arch-based) |
-| **Kernel** | linux-zen (gaming-optimized, rolling release) |
+| **Base Distribution** | Pop!_OS 22.04 LTS NVIDIA (Ubuntu/Debian-based) |
+| **Kernel** | Pop!_OS kernel (NVIDIA-optimized, HWE) |
 | **Architecture** | x86_64 |
-| **Desktop Environment** | NexusDE (based on KDE Plasma 6) |
+| **Desktop Environment** | NexusDE (based on KDE Plasma (X11)) |
 | **Display Server** | X11/Wayland hybrid |
 | **Init System** | systemd |
-| **Package Manager** | nexuspkg (universal) + pacman (native) |
+| **Package Manager** | nexuspkg (universal) + nala (native) |
 | **Default Shell** | zsh with custom NexusOS configuration |
 | **Bootloader** | GRUB with NexusOS theming |
-| **Installation** | Calamares-based graphical installer |
+| **Installation** | nexus-install.sh (overlay + fresh ZFS-on-root) |
 
 ---
 
@@ -58,8 +58,8 @@ These AI companions provide interactive system management, security monitoring, 
 
 | Format | Source | Integration Level | Example Command |
 |--------|--------|------------------|-----------------|
-| **PKG** | Arch Linux | Native | `nexuspkg install firefox` |
-| **AUR** | Arch User Repository | Full | `nexuspkg install --format aur yay` |
+| **PKG** | Pop!_OS (native) | Native | `nexuspkg install firefox` |
+| **PPA** | Ubuntu PPAs | Full | `nexuspkg install --format=nala firefox` |
 | **DEB** | Debian/Ubuntu | Full | `nexuspkg install --format deb spotify` |
 | **RPM** | Red Hat/Fedora/SUSE | Full | `nexuspkg install --format rpm discord` |
 | **Flatpak** | Flathub | Full | `nexuspkg install --format flatpak org.gimp.GIMP` |
@@ -87,13 +87,13 @@ These AI companions provide interactive system management, security monitoring, 
 ### Primary Users
 1. **Linux Enthusiasts** seeking maximum software compatibility
 2. **Developers** working across multiple Linux environments
-3. **Gamers** wanting Garuda's gaming optimizations plus universal software access
+3. **Gamers** wanting Pop!_OS NVIDIA optimizations plus universal software access
 4. **Media Center Users** requiring comprehensive self-hosting solutions
 5. **System Administrators** managing diverse software stacks
 
 ### Use Cases
 - **Development Workstations**: Access to tools from any Linux ecosystem
-- **Gaming Systems**: Garuda's gaming performance + any software needed
+- **Gaming Systems**: Pop!_OS gaming performance + any software needed
 - **Media Servers**: 65+ pre-configured services for complete media centers
 - **Educational Environments**: Learning different Linux packaging systems
 - **Cross-Platform Testing**: Testing software across different package formats
@@ -114,8 +114,8 @@ These AI companions provide interactive system management, security monitoring, 
 
 ### Installation Methods
 
-1. **Live ISO**: Graphical Calamares installer
-2. **Network Install**: Minimal download with online package selection
+1. **Overlay Install**: Install NexusOS on existing Pop!_OS system
+2. **Fresh Install**: ZFS-on-root via debootstrap with ZFSBootMenu
 3. **Developer Build**: Build from source repository
 
 ### Download Information
@@ -140,8 +140,8 @@ These AI companions provide interactive system management, security monitoring, 
 - Automated system optimization and security monitoring
 
 ### 🎮 Gaming Excellence  
-- Built on Garuda Dr460nized Gaming Edition foundation
-- linux-zen kernel with gaming optimizations
+- Built on Pop!_OS 22.04 LTS NVIDIA foundation
+- Pop!_OS kernel with gaming optimizations
 - Hybrid GPU switching and performance monitoring
 
 ### 📺 Complete Media Center
@@ -161,7 +161,7 @@ These AI companions provide interactive system management, security monitoring, 
 ### Development Model
 - **Open Source**: GPL v3.0 licensed
 - **Community Driven**: Open to contributions
-- **Rolling Release**: Continuous updates based on Garuda/Arch
+- **LTS Release**: Stable updates based on Pop!_OS 22.04/Ubuntu
 - **Transparent Development**: Public GitHub repository
 
 ### Technology Stack
@@ -183,7 +183,7 @@ These AI companions provide interactive system management, security monitoring, 
 
 1. **Revolutionary Package Management**: First distribution to support ALL major Linux package formats natively
 2. **AI Companions**: Unique interactive AI assistants for system management
-3. **Gaming Optimized**: Built on proven Garuda gaming foundation
+3. **Gaming Optimized**: Built on proven Pop!_OS NVIDIA foundation
 4. **Media Center Ready**: Complete self-hosting solution with 65+ services
 5. **Developer Friendly**: Access to development tools from any Linux ecosystem
 6. **Universal Search**: Search across 25+ repositories with single command
@@ -238,9 +238,9 @@ These AI companions provide interactive system management, security monitoring, 
 - Live Medium
 - Media Center
 
-**Keywords**: universal, packages, AI, gaming, media, arch-based, rolling-release, compatibility
+**Keywords**: universal, packages, AI, gaming, media, ubuntu-based, LTS-based, compatibility
 
-**Based on**: Garuda Linux (which is based on Arch Linux)
+**Based on**: Pop!_OS (which is based on Ubuntu LTS)
 
 ---
 

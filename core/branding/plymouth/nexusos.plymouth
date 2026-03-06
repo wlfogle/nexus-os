@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=NexusOS
+Description=NexusOS AI-Native Operating System boot splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/nexusos
+ScriptFile=/usr/share/plymouth/themes/nexusos/nexusos.script

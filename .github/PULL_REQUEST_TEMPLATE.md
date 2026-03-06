@@ -35,7 +35,7 @@ Which part of NexusOS does this affect?
 - [ ] Unit tests pass
 - [ ] Integration tests pass
 - [ ] Manual testing completed
-- [ ] Tested on Garuda Dr460nized Gaming base
+- [ ] Tested on Pop!_OS 22.04 NVIDIA base
 - [ ] Performance impact assessed
 
 **Test Configuration:**
