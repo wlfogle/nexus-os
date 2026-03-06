@@ -74,5 +74,7 @@ struct task *task_get_current(void);
 void task_set_current(struct task *task);
 void task_yield(void);
 void task_sleep(uint32_t ms);
+int task_get_count(void);
+struct task *task_get(int index);
 
 #endif

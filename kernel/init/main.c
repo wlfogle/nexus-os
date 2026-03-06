@@ -179,11 +179,11 @@ void set_idt_entry(int num, uint64_t handler, uint16_t selector, uint8_t flags) 
 
 void init_idt(void) {
     idtp.limit = sizeof(idt) - 1;
-    idtp.base = (uint64_t)&idt;
+    idtp.base = (uint64_t)(uintptr_t)&idt;
     
     // Initialize all entries to default handler
     for (int i = 0; i < IDT_ENTRIES; i++) {
-        set_idt_entry(i, (uint64_t)default_handler, 0x08, 0x8E);
+        set_idt_entry(i, (uint64_t)(uintptr_t)default_handler, 0x08, 0x8E);
     }
     
     // Load IDT
@@ -240,14 +240,14 @@ void* allocate_page(void) {
         if (!(memory_bitmap[i / 8] & (1 << (i % 8)))) {
             memory_bitmap[i / 8] |= (1 << (i % 8));
             used_pages++;
-            return (void*)(i * PAGE_SIZE);
+            return (void*)(uintptr_t)(i * PAGE_SIZE);
         }
     }
     return NULL; // Out of memory
 }
 
 void free_page(void* page) {
-    uint64_t page_num = (uint64_t)page / PAGE_SIZE;
+    uint64_t page_num = (uint64_t)(uintptr_t)page / PAGE_SIZE;
     if (page_num < total_pages) {
         memory_bitmap[page_num / 8] &= ~(1 << (page_num % 8));
         used_pages--;
@@ -289,12 +289,12 @@ void kernel_main(void) {
     // Test memory allocation
     terminal_writestring("Testing memory allocation...\n");
     void* page1 = allocate_page();
-    void* page2 = allocate_page();
+    (void)allocate_page();  /* Verify second allocation works */
     terminal_writestring("Allocated pages at: ");
     
     // Simple hex print
     char hex_buf[20];
-    uint64_t addr = (uint64_t)page1;
+    uint64_t addr = (uint64_t)(uintptr_t)page1;
     hex_buf[0] = '0'; hex_buf[1] = 'x';
     for (int i = 15; i >= 0; i--) {
         uint8_t digit = (addr >> (i * 4)) & 0xF;

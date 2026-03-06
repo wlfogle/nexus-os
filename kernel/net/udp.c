@@ -3,6 +3,7 @@
 #include "../../include/kernel/ethernet.h"
 #include "../../include/kernel/serial.h"
 #include <stddef.h>
+#include <string.h>
 
 /* UDP socket table */
 static struct udp_socket udp_sockets[UDP_MAX_SOCKETS];
@@ -42,15 +43,18 @@ static uint16_t udp_checksum(const ipv4_addr_t *src_ip, const ipv4_addr_t *dest_
     
     /* Sum pseudo-header */
     uint32_t sum = 0;
-    const uint16_t *words = (const uint16_t *)&pseudo_hdr;
-    for (int i = 0; i < sizeof(pseudo_hdr) / 2; i++) {
-        sum += ntohs(words[i]);
+    const uint8_t *hdr_bytes = (const uint8_t *)&pseudo_hdr;
+    uint16_t word_val;
+    for (unsigned int i = 0; i < sizeof(pseudo_hdr) / 2; i++) {
+        memcpy(&word_val, hdr_bytes + i * 2, sizeof(uint16_t));
+        sum += ntohs(word_val);
     }
     
     /* Sum UDP packet */
-    words = (const uint16_t *)data;
+    const uint8_t *data_bytes = (const uint8_t *)data;
     for (uint32_t i = 0; i < len / 2; i++) {
-        sum += ntohs(words[i]);
+        memcpy(&word_val, data_bytes + i * 2, sizeof(uint16_t));
+        sum += ntohs(word_val);
     }
     
     /* Handle odd byte */
@@ -139,7 +143,7 @@ int udp_receive(struct netdev *dev, const ipv4_addr_t *src_ip, const uint8_t *da
     for (int i = 0; i < UDP_MAX_SOCKETS; i++) {
         if (udp_sockets[i].in_use && udp_sockets[i].local_port == dest_port) {
             /* Store packet for socket to receive */
-            uint8_t *payload = (uint8_t *)data + sizeof(struct udp_header);
+            (void)((uint8_t *)data + sizeof(struct udp_header));  /* payload available for future use */
             uint32_t payload_len = udp_len - sizeof(struct udp_header);
             
             /* Save sender info and payload (simple: store in socket for later retrieval) */
@@ -181,7 +185,7 @@ int udp_socket_create(uint16_t local_port)
     if (local_port == 0) {
         /* Allocate ephemeral port */
         sock->local_port = next_ephemeral_port++;
-        if (next_ephemeral_port > 65535) {
+        if (next_ephemeral_port == 0) {  /* Wrapped past 65535 */
             next_ephemeral_port = 49152;
         }
     } else {
@@ -219,8 +223,10 @@ int udp_socket_close(int socket_id)
 }
 
 /* Send data on UDP socket */
-int udp_socket_send(int socket_id, const ipv4_addr_t *dest_ip, uint16_t dest_port,
-                    const uint8_t *data, uint32_t len)
+int udp_socket_send(int socket_id, const ipv4_addr_t *dest_ip __attribute__((unused)),
+                    uint16_t dest_port __attribute__((unused)),
+                    const uint8_t *data __attribute__((unused)),
+                    uint32_t len __attribute__((unused)))
 {
     if (socket_id < 0 || socket_id >= UDP_MAX_SOCKETS) {
         return -1;
@@ -229,8 +235,6 @@ int udp_socket_send(int socket_id, const ipv4_addr_t *dest_ip, uint16_t dest_por
     if (!udp_sockets[socket_id].in_use) {
         return -1;
     }
-    
-    struct udp_socket *sock = &udp_sockets[socket_id];
     
     /* Would need netdev reference here - simplified for now */
     /* In real implementation, would get netdev from routing table */

@@ -46,18 +46,22 @@ static uint16_t tcp_checksum(const ipv4_addr_t *src_ip, const ipv4_addr_t *dest_
     sum += 0x0006;  /* TCP protocol number */
     sum += htons(sizeof(struct tcp_header) + len);
     
-    /* TCP header */
-    const uint16_t *ptr = (const uint16_t *)tcp_hdr;
+    /* TCP header (access byte-by-byte to avoid packed struct alignment issues) */
+    const uint8_t *hdr_bytes = (const uint8_t *)tcp_hdr;
+    const uint16_t *ptr;
+    uint16_t word;
     for (uint32_t i = 0; i < 10; i++) {  /* 20 bytes / 2 */
-        if (i != 8) {  /* Skip checksum field */
-            sum += ptr[i];
+    if (i != 8) {  /* Skip checksum field */
+            memcpy(&word, hdr_bytes + i * 2, sizeof(uint16_t));
+            sum += word;
         }
     }
     
     /* Data */
-    ptr = (const uint16_t *)data;
+    (void)ptr;
     for (uint32_t i = 0; i < len / 2; i++) {
-        sum += ptr[i];
+        memcpy(&word, data + i * 2, sizeof(uint16_t));
+        sum += word;
     }
     if (len % 2) {
         sum += ((const uint8_t *)data)[len - 1] << 8;
@@ -194,7 +198,8 @@ static int tcp_handle_syn(struct netdev *dev, const ipv4_addr_t *src_ip,
 }
 
 /* Handle ACK for SYN-RECV */
-static int tcp_handle_synack_ack(struct netdev *dev, const struct tcp_header *tcp_hdr, struct tcp_socket *sock) {
+static int tcp_handle_synack_ack(struct netdev *dev __attribute__((unused)),
+                                 const struct tcp_header *tcp_hdr, struct tcp_socket *sock) {
     uint32_t ack = ntohl(tcp_hdr->ack_num);
     
     if (ack != sock->seq_num + 1) {

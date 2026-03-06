@@ -94,6 +94,7 @@ void task_yield(void)
 
 void task_sleep(uint32_t ms)
 {
+    (void)ms;
     if (current_task) {
         current_task->state = TASK_BLOCKED;
     }

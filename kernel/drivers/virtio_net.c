@@ -1,6 +1,7 @@
 #include "../../include/kernel/netdev.h"
 #include "../../include/kernel/packet.h"
 #include "../../include/kernel/serial.h"
+#include "../../include/kernel/heap.h"
 #include <string.h>
 
 /* Virtio device configuration - QEMU standard */
@@ -122,6 +123,7 @@ void virtio_net_handle_rx(int device_id)
     if (device_id < 0 || device_id >= virtio_device_count) return;
 
     struct virtio_net_dev *dev = &virtio_devices[device_id];
+    (void)dev;  /* Reserved for future use */
     struct netdev *netdev = netdev_get(device_id);
 
     if (!netdev) return;

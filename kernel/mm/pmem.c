@@ -74,7 +74,7 @@ void pmem_free_page(uint32_t page_addr)
 
 uint32_t pmem_alloc_pages(int num_pages)
 {
-    if (num_pages <= 0 || free_pages < num_pages) {
+    if (num_pages <= 0 || free_pages < (uint32_t)num_pages) {
         return 0;
     }
     

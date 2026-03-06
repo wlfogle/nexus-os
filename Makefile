@@ -14,7 +14,7 @@ USERLAND_BUILD = $(BUILD_DIR)/userland
 # Source files - all C and S files in kernel directory and subdirectories
 BOOT_SOURCES = $(BOOT_DIR)/boot.s
 BOOT_ASM_SOURCES = $(wildcard $(BOOT_DIR)/*.s)
-KERNEL_SOURCES = $(wildcard $(KERNEL_DIR)/*.c) $(wildcard $(KERNEL_DIR)/*/*.c)
+KERNEL_SOURCES = $(wildcard $(KERNEL_DIR)/*.c) $(filter-out $(KERNEL_DIR)/init/main.c,$(wildcard $(KERNEL_DIR)/*/*.c))
 KERNEL_ASM_SOURCES = $(wildcard $(KERNEL_DIR)/*.s) $(wildcard $(KERNEL_DIR)/*/*.s)
 LIB_SOURCES = $(wildcard lib/*.c)
 
@@ -46,7 +46,7 @@ all: kernel userland
 
 # Create build directory and subdirectories
 $(BUILD_DIR):
-	mkdir -p $(BUILD_DIR) $(BUILD_DIR)/arch $(BUILD_DIR)/irq $(BUILD_DIR)/mm $(BUILD_DIR)/proc $(BUILD_DIR)/syscall $(BUILD_DIR)/drivers $(BUILD_DIR)/fs $(BUILD_DIR)/exec $(BUILD_DIR)/lib $(BUILD_DIR)/net $(BUILD_DIR)/sync $(BUILD_DIR)/device $(BUILD_DIR)/gpu $(BUILD_DIR)/security
+	mkdir -p $(BUILD_DIR) $(BUILD_DIR)/arch $(BUILD_DIR)/irq $(BUILD_DIR)/mm $(BUILD_DIR)/proc $(BUILD_DIR)/syscall $(BUILD_DIR)/drivers $(BUILD_DIR)/fs $(BUILD_DIR)/exec $(BUILD_DIR)/lib $(BUILD_DIR)/net $(BUILD_DIR)/sync $(BUILD_DIR)/device $(BUILD_DIR)/gpu $(BUILD_DIR)/security $(BUILD_DIR)/init $(BUILD_DIR)/pkg
 
 # Compile assembly files (bootloader uses 32-bit flags)
 $(BUILD_DIR)/boot.o: $(BOOT_DIR)/boot.s | $(BUILD_DIR)

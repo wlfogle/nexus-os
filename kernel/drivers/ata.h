@@ -15,8 +15,8 @@ typedef struct {
 } ata_drive_info_t;
 
 void ata_init(void);
-int ata_read_sectors(uint32_t lba, uint16_t count, void *buffer);
-int ata_write_sectors(uint32_t lba, uint16_t count, void *buffer);
+int ata_read_sectors(uint32_t lba, uint32_t count, void *buffer);
+int ata_write_sectors(uint32_t lba, uint32_t count, void *buffer);
 ata_drive_info_t *ata_get_drive_info(void);
 
 #endif

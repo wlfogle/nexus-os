@@ -94,7 +94,7 @@ int irq_unregister_handler(uint32_t irq, uint32_t device_id)
 }
 
 /* Sort handlers by priority (high to low) */
-static int compare_priority(const void *a, const void *b)
+static int __attribute__((unused)) compare_priority(const void *a, const void *b)
 {
     const irq_handler_entry_t *ha = (const irq_handler_entry_t *)a;
     const irq_handler_entry_t *hb = (const irq_handler_entry_t *)b;

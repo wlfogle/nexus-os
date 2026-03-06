@@ -74,7 +74,7 @@ int gpu_detect_devices(void)
 
 gpu_device_t *gpu_get_device(int index)
 {
-    if (index < 0 || index >= gpu_stats.total_devices) {
+    if (index < 0 || (uint32_t)index >= gpu_stats.total_devices) {
         return NULL;
     }
     
@@ -88,7 +88,7 @@ int gpu_device_count(void)
 
 int gpu_enable_device(uint32_t device_id)
 {
-    for (int i = 0; i < gpu_stats.total_devices; i++) {
+    for (uint32_t i = 0; i < gpu_stats.total_devices; i++) {
         if (gpu_devices[i].in_use && gpu_devices[i].device.device_id == device_id) {
             gpu_devices[i].enabled = 1;
             gpu_stats.active_devices++;
@@ -104,7 +104,7 @@ int gpu_enable_device(uint32_t device_id)
 
 int gpu_disable_device(uint32_t device_id)
 {
-    for (int i = 0; i < gpu_stats.total_devices; i++) {
+    for (uint32_t i = 0; i < gpu_stats.total_devices; i++) {
         if (gpu_devices[i].in_use && gpu_devices[i].device.device_id == device_id) {
             gpu_devices[i].enabled = 0;
             gpu_stats.active_devices--;
@@ -274,7 +274,8 @@ gpu_stats_t *gpu_get_stats(void)
     return &gpu_stats;
 }
 
-int gpu_get_memory_info(uint32_t device_id, uint32_t *total, uint32_t *free)
+int gpu_get_memory_info(uint32_t device_id __attribute__((unused)),
+                        uint32_t *total, uint32_t *free)
 {
     if (!total || !free) return -1;
     

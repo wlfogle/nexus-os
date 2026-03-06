@@ -39,11 +39,13 @@ int vfs_close(int fd) {
 }
 
 int vfs_read(int fd, void *buffer, uint32_t size) {
+    (void)size;
     if (fd < 0 || !buffer) return -1;
     return 0;
 }
 
 int vfs_write(int fd, void *buffer, uint32_t size) {
+    (void)size;
     if (fd < 0 || !buffer) return -1;
     return 0;
 }

@@ -1,4 +1,17 @@
 #include "../include/pkg_compat.h"
+#include <string.h>
+
+/* strstr not available in freestanding <string.h> */
+extern char *strstr(const char *, const char *);
+
+/* Forward declarations for format conversion functions */
+static int convert_deb_to_native(const void* src, void** dst);
+static int convert_rpm_to_native(const void* src, void** dst);
+static int convert_zst_to_native(const void* src, void** dst);
+static int convert_apk_to_native(const void* src, void** dst);
+static int convert_flatpak_to_native(const void* src, void** dst);
+static int convert_snap_to_native(const void* src, void** dst);
+static int convert_appimage_to_native(const void* src, void** dst);
 
 // Global package compatibility state
 static int pkg_compat_initialized = 0;
@@ -33,7 +46,7 @@ static struct distro_compat {
     pkg_format_t primary_format;
     uint32_t abi_flags;
     const char* name;
-} distro_compat_table[] = {
+} distro_compat_table[] __attribute__((unused)) = {
     {DISTRO_DEBIAN, PKG_FORMAT_DEB, PKG_COMPAT_GLIBC | PKG_COMPAT_SYSTEMD | PKG_COMPAT_DBUS, "Debian"},
     {DISTRO_UBUNTU, PKG_FORMAT_DEB, PKG_COMPAT_GLIBC | PKG_COMPAT_SYSTEMD | PKG_COMPAT_DBUS, "Ubuntu"},
     {DISTRO_FEDORA, PKG_FORMAT_RPM, PKG_COMPAT_GLIBC | PKG_COMPAT_SYSTEMD | PKG_COMPAT_SELINUX, "Fedora"},
@@ -351,62 +364,67 @@ void init_appimage_compat(void) {
 
 // ABI compatibility checking functions
 int check_glibc_compat(const char* required_version) {
-    // Check if glibc version is compatible
-    // For now, assume compatibility
+    (void)required_version;
     return PKG_SUCCESS;
 }
 
 int check_kernel_compat(uint32_t required_version) {
-    // NexusOS kernel provides compatibility with Linux kernel APIs
+    (void)required_version;
     return PKG_SUCCESS;
 }
 
 int check_init_system_compat(uint32_t flags) {
-    // NexusOS provides compatibility with multiple init systems
+    (void)flags;
     return PKG_SUCCESS;
 }
 
 int check_desktop_compat(uint32_t flags) {
-    // Check desktop environment compatibility
+    (void)flags;
     return PKG_SUCCESS;
 }
 
 // Logging functions
 void pkg_log(int level, const char* format, ...) {
-    // Implement kernel logging
-    // For now, just a stub
+    (void)level;
+    (void)format;
 }
 
 void pkg_debug(const char* format, ...) {
-    // Implement debug logging
-    // For now, just a stub
+    (void)format;
 }
 
 // Format conversion functions (stubs)
-int convert_deb_to_native(const void* src, void** dst) {
+static int convert_deb_to_native(const void* src, void** dst) {
+    (void)src; (void)dst;
     return PKG_ERROR_UNSUPPORTED;
 }
 
-int convert_rpm_to_native(const void* src, void** dst) {
+static int convert_rpm_to_native(const void* src, void** dst) {
+    (void)src; (void)dst;
     return PKG_ERROR_UNSUPPORTED;
 }
 
-int convert_zst_to_native(const void* src, void** dst) {
+static int convert_zst_to_native(const void* src, void** dst) {
+    (void)src; (void)dst;
     return PKG_ERROR_UNSUPPORTED;
 }
 
-int convert_apk_to_native(const void* src, void** dst) {
+static int convert_apk_to_native(const void* src, void** dst) {
+    (void)src; (void)dst;
     return PKG_ERROR_UNSUPPORTED;
 }
 
-int convert_flatpak_to_native(const void* src, void** dst) {
+static int convert_flatpak_to_native(const void* src, void** dst) {
+    (void)src; (void)dst;
     return PKG_ERROR_UNSUPPORTED;
 }
 
-int convert_snap_to_native(const void* src, void** dst) {
+static int convert_snap_to_native(const void* src, void** dst) {
+    (void)src; (void)dst;
     return PKG_ERROR_UNSUPPORTED;
 }
 
-int convert_appimage_to_native(const void* src, void** dst) {
+static int convert_appimage_to_native(const void* src, void** dst) {
+    (void)src; (void)dst;
     return PKG_ERROR_UNSUPPORTED;
 }

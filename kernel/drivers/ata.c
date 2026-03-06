@@ -50,7 +50,7 @@ static int ata_wait_busy(int timeout) {
     return -1;
 }
 
-static int ata_wait_ready(int timeout) {
+static int __attribute__((unused)) ata_wait_ready(int timeout) {
     for (int i = 0; i < timeout; i++) {
         uint8_t status = inb(ATA_PRIMARY_BASE + REG_STATUS);
         if ((status & STATUS_READY)) return 0;
@@ -88,7 +88,7 @@ void ata_init(void) {
     
     /* Read IDENTIFY data */
     uint16_t *buf = (uint16_t *)&drive_info;
-    for (int i = 0; i < 256; i++) {
+    for (unsigned int i = 0; i < 256; i++) {
         uint16_t word = inw(ATA_PRIMARY_BASE + REG_DATA);
         if (i < sizeof(ata_drive_info_t) / 2) {
             buf[i] = word;
@@ -100,14 +100,14 @@ void ata_init(void) {
     serial_puts("ATA drive initialized\n");
 }
 
-int ata_read_sectors(uint32_t lba, uint16_t count, void *buffer) {
+int ata_read_sectors(uint32_t lba, uint32_t count, void *buffer) {
     if (!drive_initialized || !buffer || count == 0) return -1;
     
     if (ata_wait_busy(10000) != 0) return -1;
     
     uint8_t *buf = (uint8_t *)buffer;
     
-    for (uint16_t i = 0; i < count; i++) {
+    for (uint32_t i = 0; i < count; i++) {
         uint32_t current_lba = lba + i;
         
         outb(ATA_PRIMARY_BASE + REG_COUNT, 1);
@@ -129,14 +129,14 @@ int ata_read_sectors(uint32_t lba, uint16_t count, void *buffer) {
     return count;
 }
 
-int ata_write_sectors(uint32_t lba, uint16_t count, void *buffer) {
+int ata_write_sectors(uint32_t lba, uint32_t count, void *buffer) {
     if (!drive_initialized || !buffer || count == 0) return -1;
     
     if (ata_wait_busy(10000) != 0) return -1;
     
     uint8_t *buf = (uint8_t *)buffer;
     
-    for (uint16_t i = 0; i < count; i++) {
+    for (uint32_t i = 0; i < count; i++) {
         uint32_t current_lba = lba + i;
         
         outb(ATA_PRIMARY_BASE + REG_COUNT, 1);

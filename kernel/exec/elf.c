@@ -1,5 +1,6 @@
 #include "elf.h"
 #include "../../include/kernel/serial.h"
+#include <string.h>
 
 #define ELF_MAGIC 0x464C457F
 

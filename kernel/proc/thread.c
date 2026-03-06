@@ -125,14 +125,14 @@ int thread_self(void)
 int thread_get_id(int thread_id)
 {
     struct thread *thread = thread_get(thread_id);
-    return thread ? thread->id : -1;
+    return thread ? (int)thread->id : -1;
 }
 
 /* Get thread control block */
 struct thread *thread_get(int thread_id)
 {
     for (int i = 0; i < 256; i++) {
-        if (thread_table[i] && thread_table[i]->id == thread_id) {
+        if (thread_table[i] && (int)thread_table[i]->id == thread_id) {
             return thread_table[i];
         }
     }
@@ -148,7 +148,7 @@ void thread_sleep_ms(uint32_t ms)
     thread->state = THREAD_BLOCKED;
     
     /* Convert ms to timer ticks and block */
-    uint32_t ticks = (ms + 9) / 10;
+    (void)((ms + 9) / 10);  /* ticks - used for future timer-based sleep */
     
     /* Busy sleep - in production would use timer */
     uint32_t iterations = ms * 1000;

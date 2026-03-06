@@ -184,10 +184,8 @@ void idt_init(void)
 /* Register a custom handler for a specific interrupt/exception */
 void idt_set_handler(uint8_t num, uint32_t handler, uint8_t type_attr)
 {
-    if (num < 256) {
-        idt_set_entry(num, handler, 0x08,
-                      IDT_PRESENT | IDT_PRIVILEGE_KERNEL | type_attr);
-    }
+    idt_set_entry(num, handler, 0x08,
+                  IDT_PRESENT | IDT_PRIVILEGE_KERNEL | type_attr);
 }
 
 /* Disable interrupts */

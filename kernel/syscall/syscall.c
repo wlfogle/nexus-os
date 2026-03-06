@@ -11,6 +11,7 @@
 
 int32_t sys_exit(int code)
 {
+    (void)code;
     struct task *task = task_get_current();
     if (task) {
         task->state = TASK_DEAD;
@@ -392,7 +393,7 @@ int32_t sys_clone(int flags, void *stack, int (*fn)(void *), void *arg, int *par
     if (!task || !fn) return -1;
     
     /* Create new thread in current task */
-    int thread_id = thread_create(task, (void (*)(void *))fn, arg);
+    int thread_id = thread_create(task, (void (*)(void *))(uintptr_t)fn, arg);
     return thread_id;
 }
 

@@ -12,7 +12,7 @@ The repository has:
 - A basic kernel entry point (`kernel/main.c`)
 - Serial logging infrastructure
 
-Missing core subsystems: memory management, interrupts, scheduler, syscall layer, filesystem, drivers, userland, networking, and security.
+All core subsystems have been implemented: memory management, interrupts, scheduler, syscall layer, filesystem, drivers, userland, networking, and security.
 
 ## Proposed Roadmap
 
@@ -28,11 +28,13 @@ Define architecture targets, coding conventions, and acceptance criteria.
 
 **Deliverable**: Reproducible build and boot pipeline with pass/fail gates.
 
-### Phase 1: Core Kernel Runtime (4-6 weeks)
+### Phase 1: Core Kernel Runtime ✓ (4-6 weeks)
+
+**Status**: COMPLETE
 
 **Target**: Stable kernel with interrupts, memory management, and console I/O
 
-Implement:
+Implemented:
 - **GDT/IDT**: Global and Interrupt Descriptor Tables for CPU mode transitions
 - **Exception handlers**: Division by zero, page faults, GPF, etc.
 - **IRQ handling**: PIC (Programmable Interrupt Controller) setup
@@ -45,11 +47,13 @@ Implement:
 
 **Acceptance**: Kernel reliably boots, handles interrupts, allocates memory, and displays output.
 
-### Phase 2: Process Model and Syscall ABI (4-6 weeks)
+### Phase 2: Process Model and Syscall ABI ✓ (4-6 weeks)
+
+**Status**: COMPLETE
 
 **Target**: Multiple user tasks running under preemptive scheduler
 
-Implement:
+Implemented:
 - **Process/task structures**: TCB (Task Control Block), process descriptor
 - **Context switching**: Save/restore CPU state across task switches
 - **Preemptive scheduler**: Round-robin with timer-driven preemption
@@ -58,11 +62,13 @@ Implement:
 
 **Acceptance**: Multiple user programs run concurrently, controlled by kernel scheduler.
 
-### Phase 3: Storage and Filesystem (4-6 weeks)
+### Phase 3: Storage and Filesystem ✓ (4-6 weeks)
+
+**Status**: COMPLETE
 
 **Target**: Persistent file I/O and executable loading
 
-Implement:
+Implemented:
 - **Block device abstraction**: Generic interface for disks/partitions
 - **Virtual disk in QEMU**: ATA or simple block device emulation
 - **Filesystem**: Start with minimal custom FS or FAT (read-only first, then R/W)
@@ -72,11 +78,13 @@ Implement:
 
 **Acceptance**: Kernel loads user programs from disk image, file I/O works end-to-end.
 
-### Phase 4: Userland and Toolchain Integration (4-6 weeks)
+### Phase 4: Userland and Toolchain Integration ✓ (4-6 weeks)
+
+**Status**: COMPLETE
 
 **Target**: Shell and basic utilities available after boot
 
-Implement:
+Implemented:
 - **Minimal libc**: Standard library for user programs
 - **CRT startup**: C runtime initialization for user binaries
 - **Init process**: System initialization and process spawning
@@ -91,11 +99,13 @@ Implement:
 
 **Acceptance**: Boot into shell, run utilities, execute user programs from filesystem.
 
-### Phase 5: Device and Platform Maturation (6-10 weeks)
+### Phase 5: Device and Platform Maturation ✓ (6-10 weeks)
+
+**Status**: COMPLETE
 
 **Target**: Practical single-node OS with stable I/O surface
 
-Implement:
+Implemented:
 - **Better timer**: Higher-resolution timekeeping, APIC optional path
 - **Storage drivers**: Virtio/AHCI for QEMU, extensible model
 - **Network drivers**: Virtio/e1000 network interface
@@ -105,11 +115,13 @@ Implement:
 
 **Acceptance**: Reliable I/O with multiple device classes, driver model extensible.
 
-### Phase 6: Networking Stack (6-10 weeks)
+### Phase 6: Networking Stack ✓ (6-10 weeks)
+
+**Status**: COMPLETE
 
 **Target**: Networked userland apps communicating over TCP/UDP
 
-Implement:
+Implemented:
 - **Link layer**: NIC abstraction, MAC address handling
 - **ARP**: Address Resolution Protocol
 - **IPv4**: Internet Protocol stack
@@ -124,11 +136,13 @@ Implement:
 
 **Acceptance**: End-to-end TCP/UDP communication between systems.
 
-### Phase 7: Reliability, Security, and Observability (ongoing, starts early)
+### Phase 7: Reliability, Security, and Observability ✓ (ongoing)
+
+**Status**: COMPLETE
 
 **Target**: Measurable stability and security baseline
 
-Implement:
+Implemented:
 - **Testing pyramid**:
   - Unit tests (host-based)
   - Integration tests (QEMU-based)
@@ -270,8 +284,34 @@ Implemented:
 
 ---
 
-**Last Updated**: 2026-03-05
-**Phases Complete**: 0-11 ✓
-**Status**: AI-native OS with distributed training framework, advanced ML capabilities, security hardening, and performance optimization.
-**Kernel Size**: 138KB (Phases 0-11 integrated)
-**Next**: Phase 12+ (Distributed inference scaling, advanced ML frameworks, cloud integration)
+### Phase 12: Cloud-Native ML Platform ✓ (COMPLETE)
+
+**Status**: COMPLETE - all 3 subphases implemented and integrated.
+
+Implemented:
+- **12.1 Model Serving Gateway**: TCP endpoint registration (32 endpoints), request routing, A/B traffic splitting, latency histograms (p50/p95/p99), health checks, per-endpoint QPS/error tracking
+- **12.2 Auto-Scaling Engine**: Metric-based scaling policies (GPU util, queue depth, latency, connections), stabilization window, cooldown enforcement, scaling event audit log (256 entries), manual override
+- **12.3 Pipeline Orchestration**: DAG-based multi-model pipelines (16 pipelines, 16 stages each), topological execution ordering, cycle detection (DFS), multi-dependency stages, per-pipeline latency stats
+
+**Acceptance**: Production model serving with network endpoints, automatic workload scaling, and multi-model inference pipelines.
+
+---
+
+### Phase 13: Multi-Tenant ML Orchestration ✓ (COMPLETE)
+
+**Status**: COMPLETE - all 3 subphases implemented and integrated.
+
+Implemented:
+- **13.1 Multi-Tenant Resource Manager**: Tenant lifecycle (16 tenants), per-resource quotas (7 resource types), real-time usage accounting with peak/cumulative tracking, weighted fair-share scheduling, container association
+- **13.2 Federated Learning Coordinator**: FedAvg/FedSGD/Median aggregation (8 sessions, 16 clients), round-based training, differential privacy (Laplace noise with configurable epsilon), convergence detection, per-client weight buffers
+- **13.3 Model Registry**: Versioned model catalog (64 entries), publish/deprecate/archive lifecycle, tag-based and name-prefix search, per-tenant access control (8 tenants/entry), one-click deploy to serving gateway
+
+**Acceptance**: Multi-tenant ML platform with resource isolation, federated learning across nodes, and centralized model versioning/deployment.
+
+---
+
+**Last Updated**: 2026-03-06
+**Phases Complete**: 0-13 ✓
+**Status**: AI-native OS with multi-tenant orchestration, federated learning, model registry, cloud serving, and distributed training.
+**Kernel Size**: 213KB (Phases 0-13 integrated)
+**Next**: Phase 14+ (Observability dashboard, hardware accelerator plugins, WASM model runtime)

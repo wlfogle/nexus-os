@@ -352,6 +352,7 @@ int32_t ml_batch_execute_async(uint16_t batch_id,
 
 /* Wait for async execution to complete */
 int32_t ml_batch_wait(uint16_t batch_id, uint32_t timeout_ms) {
+    (void)timeout_ms;
     for (uint16_t i = 0; i < g_framework.batch_count; i++) {
         if (g_framework.batches[i].batch_id == batch_id) {
             /* In real implementation, would wait on completion event */
@@ -425,7 +426,7 @@ int32_t ml_execution_plan_generate(uint16_t model_id,
         layer_idx++;
 
         /* Check for fusion opportunity (simplified: ReLU after Dense) */
-        if (i + 1 < model->layer_count) {
+        if ((uint32_t)(i + 1) < model->layer_count) {
             if (fusion_count < 32) {
                 fusion_count++;
                 i++;  /* Skip next layer (fused) */

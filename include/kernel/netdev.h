@@ -25,6 +25,9 @@ struct net_packet {
     uint32_t flags;            /* RX/TX flags */
 };
 
+/* Forward declaration for use in netdev_ops */
+struct netdev;
+
 /* Network device operations */
 struct netdev_ops {
     int (*send)(struct netdev *dev, struct net_packet *pkt);
