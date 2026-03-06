@@ -34,6 +34,7 @@
 #include "../include/kernel/tenant.h"
 #include "../include/kernel/federated.h"
 #include "../include/kernel/model_registry.h"
+#include "pkg/nexuspkg.h"
 
 #define MULTIBOOT_MAGIC 0x2BADB002
 
@@ -116,18 +117,16 @@ void kernel_main(struct multiboot_info *mbi __attribute__((unused)),
     network_init();
     console_puts("[OK] Network stack\n");
 
+    /* Initialize VFS with ramfs at root */
+    vfs_init();
+    console_puts("[OK] VFS + ramfs (in-memory filesystem)\n");
+
+    /* Try ATA disk — non-fatal if no disk attached */
     ata_init();
     int ata_id = block_device_register("ata0", 512, ata_read_sectors, ata_write_sectors);
     if (ata_id >= 0) {
-        console_puts("[OK] ATA driver and block device\n");
-
-        if (vfs_mount(ata_id, VFS_FAT12) == 0) {
-            console_puts("[OK] FAT12 filesystem mounted\n");
-
-            int files = vfs_list_directory("/");
-            if (files >= 0) {
-                console_printf("[OK] Directory listing: %d files\n", files);
-            }
+        if (vfs_mount_fat(ata_id) == 0) {
+            console_puts("[OK] FAT12 disk mounted at /mnt/disk\n");
         }
     }
 
@@ -142,6 +141,10 @@ void kernel_main(struct multiboot_info *mbi __attribute__((unused)),
     federated_init();
     model_registry_init();
     console_puts("[OK] Multi-tenant orchestration\n");
+
+    /* Package manager */
+    nexuspkg_init();
+    console_puts("[OK] Package manager (nexuspkg)\n");
 
     console_puts("\n===== NexusOS Ready (Phases 0-13) =====\n");
 

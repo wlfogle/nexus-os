@@ -39,7 +39,7 @@ USERLAND_BIN_OBJS = $(USERLAND_BIN_SOURCES:$(USERLAND_DIR)/%.c=$(USERLAND_BUILD)
 KERNEL_BIN = $(BUILD_DIR)/kernel.bin
 ISO_FILE = $(BUILD_DIR)/nexus-os.iso
 
-.PHONY: all clean run iso kernel userland
+.PHONY: all clean run run-quick iso kernel userland disk
 
 # Default target
 all: kernel userland
@@ -203,6 +203,10 @@ ifeq ($(ARCH), x86_64)
 else
 	qemu-system-i386 -cdrom $(ISO_FILE) -m 32M
 endif
+
+# Quick run: boot kernel directly (no ISO, no GRUB)
+run-quick: $(KERNEL_BIN)
+	qemu-system-i386 -kernel $(KERNEL_BIN) -m 128M -serial stdio
 
 # Run with debugging support
 run-debug: $(ISO_FILE)
