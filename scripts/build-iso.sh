@@ -121,7 +121,7 @@ check_deps() {
 
     local deps=(debootstrap squashfs-tools xorriso mtools grub-pc-bin
                 grub-efi-amd64-bin grub-efi-amd64-signed shim-signed
-                rsync dosfstools)
+                rsync dosfstools isolinux syslinux-common)
     local missing=()
 
     for dep in "${deps[@]}"; do
@@ -132,11 +132,7 @@ check_deps() {
 
     if (( ${#missing[@]} > 0 )); then
         log "Installing: ${missing[*]}"
-        if command -v nala &>/dev/null; then
-            nala install -y "${missing[@]}"
-        else
-            apt-get install -y "${missing[@]}"
-        fi
+        nala install -y "${missing[@]}"
     fi
 
     log "Build dependencies satisfied"
@@ -204,7 +200,7 @@ install_base() {
             linux-generic linux-firmware
 
         apt-get install -y -qq \
-            systemd-timesyncd networkmanager \
+            systemd-timesyncd network-manager \
             bash bash-completion \
             sudo adduser passwd \
             nala \
@@ -222,7 +218,9 @@ install_base() {
             nano less man-db \
             pipewire pipewire-pulse wireplumber \
             flatpak \
-            unattended-upgrades apt-transport-https
+            unattended-upgrades apt-transport-https \
+            casper \
+            plymouth-label
 
         # Bluetooth
         apt-get install -y -qq \
@@ -287,11 +285,18 @@ install_kde() {
     run_in_chroot "
         export DEBIAN_FRONTEND=noninteractive
 
+        # Core KDE + display manager (must succeed)
         apt-get install -y -qq \
             kde-plasma-desktop plasma-workspace \
             sddm sddm-theme-breeze \
+            xserver-xorg-core xserver-xorg-input-all \
+            xserver-xorg-video-all \
+            xinit x11-xserver-utils
+
+        # KDE applications
+        apt-get install -y -qq \
             konsole dolphin ark kate okular \
-            gwenview spectacle \
+            gwenview kde-spectacle \
             plasma-nm plasma-pa plasma-systemmonitor \
             kde-config-sddm \
             breeze breeze-cursor-theme breeze-icon-theme \
@@ -299,17 +304,14 @@ install_kde() {
             kscreen kinfocenter \
             polkit-kde-agent-1 \
             xdg-utils xdg-user-dirs \
-            firefox \
-            xserver-xorg-core xserver-xorg-input-all \
-            xserver-xorg-video-all \
-            xinit x11-xserver-utils
+            firefox
 
-        # KDE Bluetooth, printing, and software center
+        # KDE extras (non-fatal)
         apt-get install -y -qq \
             bluedevil \
             print-manager \
             plasma-discover plasma-discover-backend-flatpak \
-            kde-spectacle partitionmanager \
+            partitionmanager \
             2>/dev/null || true
 
         echo 'sddm sddm/daemon select sddm' | debconf-set-selections
@@ -610,6 +612,9 @@ HOSTSEOF
         chmod 440 /etc/sudoers.d/${LIVE_USER}
     "
 
+    # Set graphical target (minbase defaults to multi-user)
+    run_in_chroot "systemctl set-default graphical.target"
+
     run_in_chroot "
         systemctl enable NetworkManager   2>/dev/null || true
         systemctl enable sddm             2>/dev/null || true
@@ -639,14 +644,41 @@ HOSTSEOF
         update-initramfs -u 2>/dev/null || true
     "
 
+    # SDDM autologin for live session
+    mkdir -p "${ROOT}/etc/sddm.conf.d"
+    cat > "${ROOT}/etc/sddm.conf.d/autologin.conf" << SDDMEOF
+[Autologin]
+User=${LIVE_USER}
+Session=plasma.desktop
+SDDMEOF
+
     # SDDM theme
     if [[ -d "${ROOT}/usr/share/sddm/themes/nexusos" ]]; then
-        mkdir -p "${ROOT}/etc/sddm.conf.d"
         cat > "${ROOT}/etc/sddm.conf.d/theme.conf" << 'SDDMEOF'
 [Theme]
 Current=nexusos
 SDDMEOF
     fi
+
+    # X11: prefer modesetting driver — NVIDIA module blocks X when no GPU present
+    mkdir -p "${ROOT}/etc/X11/xorg.conf.d"
+    cat > "${ROOT}/etc/X11/xorg.conf.d/10-modesetting.conf" << 'XORGEOF'
+Section "Device"
+    Identifier "Default GPU"
+    Driver     "modesetting"
+    Option     "AccelMethod" "glamor"
+EndSection
+XORGEOF
+
+    # Blacklist NVIDIA modules during live session (casper will load them if needed)
+    cat > "${ROOT}/etc/modprobe.d/nvidia-live-blacklist.conf" << 'BLKEOF'
+# Live session: prevent NVIDIA modules from blocking non-NVIDIA GPUs
+# Calamares post-install will remove this file on real installs with NVIDIA hardware
+blacklist nvidia
+blacklist nvidia_drm
+blacklist nvidia_modeset
+blacklist nvidia_uvm
+BLKEOF
 
     # Clean caches
     run_in_chroot "
@@ -666,18 +698,7 @@ build_live_fs() {
 
     mkdir -p "${ISO_DIR}"/{casper,boot/grub,EFI/boot,isolinux,.disk}
 
-    # Install casper for live boot support
-    mount_chroot
-    run_in_chroot "
-        export DEBIAN_FRONTEND=noninteractive
-        apt-get update -qq
-        apt-get install -y -qq casper lupin-casper 2>/dev/null || true
-        apt-get clean
-        rm -rf /var/lib/apt/lists/*
-    "
-    umount_chroot
-
-    # Squashfs
+    # Squashfs (casper is installed in install_base step)
     log "Compressing root filesystem (this takes several minutes)..."
     mksquashfs "$ROOT" "${ISO_DIR}/casper/filesystem.squashfs" \
         -comp xz -Xbcj x86 -b 1M -Xdict-size 1M -noappend
@@ -708,7 +729,7 @@ insmod all_video
 insmod gfxterm
 
 menuentry "NexusOS 1.0 — Live Session (KDE Plasma X11)" {
-    linux /casper/vmlinuz boot=casper quiet splash plymouth.enable=1 ---
+    linux /casper/vmlinuz boot=casper systemd.unit=graphical.target quiet splash plymouth.enable=1 ---
     initrd /casper/initrd
 }
 
@@ -728,11 +749,11 @@ menuentry "Check disc for defects" {
 }
 GRUBEOF
 
-    # Isolinux for BIOS boot
+    # Isolinux for BIOS boot (prefer host paths — isolinux is a host build dep)
     local isolinux_bin=""
-    for path in "${ROOT}/usr/lib/ISOLINUX/isolinux.bin" \
-                "${ROOT}/usr/lib/syslinux/isolinux.bin" \
-                /usr/lib/ISOLINUX/isolinux.bin; do
+    for path in /usr/lib/ISOLINUX/isolinux.bin \
+                "${ROOT}/usr/lib/ISOLINUX/isolinux.bin" \
+                "${ROOT}/usr/lib/syslinux/isolinux.bin"; do
         [[ -f "$path" ]] && { isolinux_bin="$path"; break; }
     done
     if [[ -n "$isolinux_bin" ]]; then
@@ -765,22 +786,22 @@ LABEL nexusos
     MENU LABEL NexusOS 1.0 — Live Session (KDE Plasma X11)
     MENU DEFAULT
     KERNEL /casper/vmlinuz
-    APPEND initrd=/casper/initrd boot=casper quiet splash ---
+    APPEND initrd=/casper/initrd boot=casper systemd.unit=graphical.target quiet splash ---
 
 LABEL safe
     MENU LABEL NexusOS 1.0 — Safe Graphics
     KERNEL /casper/vmlinuz
-    APPEND initrd=/casper/initrd boot=casper quiet splash nomodeset ---
+    APPEND initrd=/casper/initrd boot=casper systemd.unit=graphical.target quiet splash nomodeset ---
 
 LABEL toram
     MENU LABEL NexusOS 1.0 — Load to RAM
     KERNEL /casper/vmlinuz
-    APPEND initrd=/casper/initrd boot=casper quiet splash toram ---
+    APPEND initrd=/casper/initrd boot=casper systemd.unit=graphical.target quiet splash toram ---
 
 LABEL check
     MENU LABEL Check disc for defects
     KERNEL /casper/vmlinuz
-    APPEND initrd=/casper/initrd boot=casper integrity-check quiet splash ---
+    APPEND initrd=/casper/initrd boot=casper systemd.unit=graphical.target integrity-check quiet splash ---
 SYSEOF
         log "BIOS boot (isolinux) configured"
     else
@@ -852,16 +873,22 @@ build_iso() {
     mkdir -p "$OUTPUT_DIR"
 
     if [[ -f "${ISO_DIR}/isolinux/isolinux.bin" ]] && [[ -f "${ISO_DIR}/boot/grub/efi.img" ]]; then
-        # Hybrid BIOS + UEFI boot
+        # Hybrid BIOS + UEFI boot (isohybrid for USB stick booting)
+        local isohdpfx=""
+        for p in /usr/lib/ISOLINUX/isohdpfx.bin /usr/lib/syslinux/mbr/isohdpfx.bin; do
+            [[ -f "$p" ]] && { isohdpfx="$p"; break; }
+        done
         xorriso -as mkisofs \
             -volid "$ISO_LABEL" \
             -J -R -l -iso-level 3 \
             -b isolinux/isolinux.bin \
             -c isolinux/boot.cat \
             -no-emul-boot -boot-load-size 4 -boot-info-table \
+            ${isohdpfx:+-isohybrid-mbr "$isohdpfx"} \
             -eltorito-alt-boot \
             -e boot/grub/efi.img \
             -no-emul-boot \
+            -isohybrid-gpt-basdat \
             -append_partition 2 0xEF "${ISO_DIR}/boot/grub/efi.img" \
             -o "${OUTPUT_DIR}/${ISO_NAME}" \
             "$ISO_DIR"
