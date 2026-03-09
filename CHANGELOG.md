@@ -5,98 +5,82 @@ All notable changes to NexusOS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0-alpha] - 2025-01-07
+## [1.0.0-dev] - 2026-03-09
 
-### 🚀 Initial Alpha Release - "Universal Foundation"
+### 🚀 Working ISO Build - "Universal Foundation"
 
-This is the first public alpha release of NexusOS, introducing the world's first truly universal Linux distribution with AI mascot companions.
+First bootable NexusOS ISO (4.8G) successfully built from debootstrap with all major package managers compiled from source.
 
 ### ✨ Added
 
-#### 🌍 Universal Package Management
-- **nexuspkg**: Revolutionary universal package manager supporting all major Linux distributions
-- **Cross-Distribution Compatibility**: Install packages from Debian, Ubuntu, Red Hat, SUSE, Alpine, Void, NixOS, Gentoo
-- **Universal Formats**: Full support for Flatpak, Snap, AppImage packages
-- **Source-Based Integration**: Direct pip, npm, cargo, gem, GitHub releases support
-- **OmnioSearch**: Search across 25+ repositories simultaneously with single command
-- **Auto-Detection**: Intelligent package source detection and optimal format selection
-- **AI Recommendations**: Optional AI-powered package suggestions
+#### 🌍 Universal Package Management (Compiled from Source)
+- **pacman** (Arch Linux) — compiled from gitlab.archlinux.org, configured with Arch mirrors
+- **portage/emerge** (Gentoo) — compiled from github.com/gentoo/portage
+- **apk-tools** (Alpine Linux) — compiled from gitlab.alpinelinux.org
+- **xbps** (Void Linux) — compiled from github.com/void-linux/xbps
+- **zypper/libzypp/libsolv** (openSUSE) — compiled from github.com/openSUSE
+- **rpm/dnf/alien** (Fedora/RHEL) — from Ubuntu repos
+- **apt/dpkg/nala** (Debian/Ubuntu) — native from debootstrap
+- **flatpak/snap/AppImage** — universal formats pre-installed
+- **Nix** — first-boot install via `sudo nexus-setup-nix`
+- **pip, npm, cargo, gem, go** — language package managers
+- **nexuspkg** — unified CLI wrapping all backends
 
 #### 🤖 AI Mascot Companions
-- **Stella (Golden Retriever)**: Security guardian and package management assistant
-- **Max Jr. (Cat)**: Performance optimizer and system monitoring companion
-- **Interactive Commands**: stella/maxjr CLI interfaces for system interaction
-- **AI Service Orchestrator**: FastAPI-based coordination service
-- **Real-time Monitoring**: Performance and security status updates
+- **Stella (Golden Retriever)**: Security guardian — FastAPI service on :8601
+- **Max Jr. (Cat)**: Performance optimizer — FastAPI service on :8602
+- **Orchestrator**: Central coordination API on :8600
+- **systemd timers**: Automated health checks and updates
 
-#### 🎮 Gaming Excellence
-- **Pop!_OS Base**: Built on acclaimed Pop!_OS 22.04 NVIDIA
-- **Pop!_OS Kernel**: Gaming-optimized kernel with latest performance patches
-- **Gaming Optimizations**: Pre-configured for maximum gaming performance
-- **GPU Management**: Hybrid GPU switching and optimization
-- **Steam Integration**: Ready-to-use gaming environment
+#### 🎮 GPU — PRIME Render Offload
+- **Intel iGPU**: Primary display via modesetting driver
+- **NVIDIA dGPU**: On-demand via `prime-run` or `__NV_PRIME_RENDER_OFFLOAD=1`
+- **RTD3 power management**: GPU sleeps when idle
+- **nvidia-drm modeset=1**: Required for PRIME
+- **Xorg OutputClass config**: Automatic NVIDIA detection
 
-#### 🖥️ NexusDE Desktop Environment
-- **Hybrid Display**: X11/Wayland compatibility layer
-- **KDE Plasma Foundation**: Built on stable KDE Plasma 6
-- **Custom Theming**: NexusOS visual identity and branding
-- **AI Integration**: Desktop-integrated AI assistant features
-- **Gaming Mode**: Specialized desktop mode for gaming sessions
+#### 🖥️ KDE Plasma X11 Desktop
+- **KDE Plasma** desktop with SDDM display manager
+- **Autologin**: Live session auto-logs in as `nexus` user
+- **NexusOS branding**: Custom Plymouth boot splash, SDDM theme, wallpaper, neofetch
+- **Breeze theme**: Full Breeze icon/cursor/style set
+- **Apps**: Konsole, Dolphin, Kate, Firefox, Okular, Gwenview, LibreOffice
 
-#### 📺 Complete Media Center (65+ Services)
-- **Media Servers**: Jellyfin, Plex, Audiobookshelf, Navidrome
-- **Content Management**: Sonarr, Radarr, Lidarr, Readarr, Mylar3
-- **Indexers**: Prowlarr, Jackett, Autobrr for content discovery
-- **Monitoring**: Grafana, Prometheus, Tautulli for system insights
-- **Management Dashboards**: Organizr, Homarr, Portainer for service control
-- **Download Management**: qBittorrent, SABnzbd, NZBGet
-- **Request Management**: Overseerr, Ombi for user requests
-- **One-Click Deployment**: Automated Docker-based service stack
+#### 📺 Media Stack (65+ Services)
+- Docker-based self-hosted media services
+- Jellyfin, Plex, Sonarr, Radarr, Prowlarr, qBittorrent, etc.
+- One-click deployment via Docker Compose
 
-#### 🛡️ Security & Privacy
-- **Digital Fortress**: Privacy-focused security suite
-- **Vaultwarden Integration**: Self-hosted password management
-- **Package Security**: Stella-powered package validation
-- **System Hardening**: Security-optimized default configurations
-- **Privacy Tools**: Built-in VPN, DNS filtering, and anonymization tools
+#### 🛡️ Security
+- UFW firewall + fail2ban pre-configured
+- SSH hardening
+- Automated health checks via systemd timers
 
-#### 🔧 System Components
-- **Universal Package Detection**: Intelligent format and repository detection
-- **Package Conversion**: Convert between different package formats
-- **Dependency Management**: Cross-format dependency resolution
-- **Repository Management**: Add/remove repositories from any distribution
-- **System Status**: Comprehensive system and package status reporting
-- **Performance Monitoring**: Real-time system performance tracking
+### 🐛 Fixed (2026-03-09)
+- **Portage typing_extensions**: Upgrade typing_extensions before pip install (jammy's version too old)
+- **pip fallback order**: Try `pip3 install` before `pip3 install --break-system-packages` (jammy pip lacks that flag)
+- **Overlay boot panic**: Patched casper to use insmod fallback instead of panic on overlay module load
+- **NVIDIA DKMS hang**: Fake dkms stub prevents chroot compilation hang
+- **Initramfs rebuild hang**: Target only latest kernel, not `-k all`
+- **NVIDIA in initrd**: Stash nvidia .ko files during initramfs rebuild, restore after
+
+### 🆕 Added (2026-03-09)
+- **patch-iso.sh**: Delta patcher — extract squashfs, chroot fix, repack without full rebuild
+- **Overlay fallback script**: init-premount hook ensures overlay module before casper
+- **Casper apt cleanup**: casper-bottom script removes CD-ROM apt sources
+- **Plymouth SDDM integration**: Proper plymouth quit before SDDM start
 
 ### 🏗️ Technical Infrastructure
 
-#### Package Format Support
-- **DEB** (Debian/Ubuntu) - Native nala/apt integration
-- **PPA** (Ubuntu PPAs) - PPA and Flatpak support
-- **RPM** (Red Hat/Fedora) - rpm and dnf integration
-- **APK** (Alpine Linux) - apk package manager support
-- **XBPS** (Void Linux) - xbps-query and xbps-install integration
-- **NIX** (NixOS) - nix-env package management
-- **EMERGE** (Gentoo) - Portage system integration
-- **Flatpak** - Universal application format
-- **Snap** - Ubuntu's universal package system
-- **AppImage** - Portable application format
-- **Docker** - Container-based applications
-
-#### Language-Specific Managers
-- **Python** (pip) - PyPI package installation
-- **Node.js** (npm) - NPM registry integration
-- **Rust** (cargo) - Crates.io support
-- **Ruby** (gem) - RubyGems integration
-- **Go** (go get) - Go module system
-
 #### Core System
-- **Base**: Pop!_OS 22.04 NVIDIA
-- **Kernel**: Pop!_OS kernel (NVIDIA-optimized)
+- **Base**: Ubuntu Jammy 22.04 (debootstrap --variant=minbase)
+- **Kernel**: linux-generic from Ubuntu repos
 - **Init**: systemd with AI service orchestration
-- **Display**: KDE Plasma 6 with NexusDE enhancements
+- **Desktop**: KDE Plasma X11 + SDDM
 - **Package Manager**: nexuspkg (universal) + nala (native)
-- **Container Runtime**: Docker with service orchestration
+- **Container Runtime**: Docker pre-installed
+- **Live Boot**: casper + squashfs + overlay
+- **Boot**: GRUB (UEFI) + isolinux (BIOS) hybrid ISO
 
 ### 🎯 Target Audience Features
 

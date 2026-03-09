@@ -1,10 +1,12 @@
 # NexusOS — AI-Native Operating System
 
 [![Desktop](https://img.shields.io/badge/Desktop-KDE%20Plasma%20X11-blue)](https://kde.org)
+[![Base](https://img.shields.io/badge/Base-Ubuntu%20Jammy%2022.04-orange)](https://ubuntu.com)
 [![AI](https://img.shields.io/badge/AI-Stella%20%26%20Max%20Jr.-purple)](https://github.com/wlfogle/nexus-os)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Build](https://img.shields.io/badge/ISO-4.8G%20Bootable-green)](https://github.com/wlfogle/nexus-os)
 
-NexusOS is a standalone Linux distribution built from the ground up with AI at its core. It features KDE Plasma X11, NVIDIA GPU optimization, a universal package manager, and two AI companions that keep your system secure and fast.
+NexusOS is a standalone Linux distribution bootstrapped from Ubuntu Jammy (22.04) via debootstrap with AI at its core. It features KDE Plasma X11, NVIDIA PRIME render offload (Intel iGPU + NVIDIA dGPU), every major Linux package manager compiled from source, and two AI companions that keep your system secure and fast.
 
 ```
  ███╗   ██╗███████╗██╗  ██╗██╗   ██╗███████╗ ██████╗ ███████╗
@@ -48,7 +50,7 @@ NexusOS is a standalone Linux distribution built from the ground up with AI at i
 
 ## Quick Start
 
-### Build the ISO
+### Build the ISO (full rebuild ~70 min)
 
 ```bash
 git clone https://github.com/wlfogle/nexus-os.git
@@ -56,12 +58,21 @@ cd nexus-os
 sudo ./scripts/build-iso.sh
 ```
 
-The build script bootstraps a complete NexusOS root filesystem from scratch — no base ISO needed. Options:
+The build script debootstraps a complete NexusOS root filesystem from Ubuntu Jammy — no base ISO needed. Options:
 
 ```bash
 sudo ./scripts/build-iso.sh --no-nvidia       # Skip NVIDIA drivers
 sudo ./scripts/build-iso.sh --output ~/iso     # Custom output dir
 sudo ./scripts/build-iso.sh --mirror http://...  # Custom APT mirror
+```
+
+### Patch an existing ISO (faster)
+
+Apply fixes to an already-built ISO without a full rebuild:
+
+```bash
+sudo ./scripts/patch-iso.sh                    # Auto-finds latest ISO
+sudo ./scripts/patch-iso.sh path/to/nexusos.iso  # Specific ISO
 ```
 
 ### Test in QEMU
@@ -112,7 +123,8 @@ nexuspkg repos                # Show available backends
 ```
 nexus-os/
 ├── scripts/
-│   └── build-iso.sh          # ISO builder (debootstrap-based)
+│   ├── build-iso.sh          # Full ISO builder (debootstrap + compile)
+│   └── patch-iso.sh          # Delta patcher for existing ISOs
 ├── core/
 │   ├── bin/                   # CLI tools
 │   │   ├── nexus-control      # System management
@@ -159,14 +171,42 @@ nexus-os/
 | Stella | 8601 | Security scanning, firewall, login monitoring |
 | Max Jr. | 8602 | CPU/GPU/memory metrics, gaming detection |
 
+## GPU Configuration (PRIME Render Offload)
+
+NexusOS uses PRIME render offload — Intel iGPU drives the desktop, NVIDIA activates on demand:
+
+```bash
+prime-run glxgears              # Run app on NVIDIA GPU
+prime-run steam                 # Launch Steam on dGPU
+__NV_PRIME_RENDER_OFFLOAD=1 app # Manual env var method
+```
+
+Config files: `10-intel-primary.conf`, `11-nvidia-prime-offload.conf`, `nvidia-prime.conf`
+
 ## Hardware Optimized For
 
 - **CPU**: Intel i9-13900HX (scheduler tuning for P-core/E-core)
-- **GPU**: NVIDIA RTX 4080 (CUDA, persistence mode, power management)
+- **iGPU**: Intel UHD (modesetting, desktop rendering)
+- **dGPU**: NVIDIA RTX 4080 (PRIME offload for gaming/AI, CUDA, RTD3 power mgmt)
 - **RAM**: 64GB DDR5 (low swappiness, huge pages)
-- **Desktop**: KDE Plasma X11
+- **Desktop**: KDE Plasma X11 + SDDM
 
 Works on any x86_64 hardware with or without NVIDIA GPU.
+
+## Universal Package Managers (Compiled from Source)
+
+NexusOS ships every major Linux package manager, compiled natively:
+
+- **apt/dpkg/nala** — Debian/Ubuntu (.deb) — native
+- **rpm/dnf/alien** — Fedora/RHEL (.rpm) — from repos
+- **pacman** — Arch Linux (.pkg.tar.zst) — compiled from source
+- **portage/emerge** — Gentoo (ebuilds) — compiled from source
+- **apk-tools** — Alpine Linux (.apk) — compiled from source
+- **xbps** — Void Linux (.xbps) — compiled from source
+- **zypper/libzypp** — openSUSE (.rpm) — compiled from source
+- **flatpak/snap/AppImage** — universal formats
+- **Nix** — available via `sudo nexus-setup-nix`
+- **pip, npm, cargo, gem, go** — language managers
 
 ## Build Dependencies
 

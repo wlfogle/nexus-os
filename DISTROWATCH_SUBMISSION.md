@@ -3,17 +3,17 @@
 ## Distribution Information
 
 **Distribution Name**: NexusOS  
-**Version**: 1.0.0-alpha  
-**Release Date**: January 7, 2025  
+**Version**: 1.0.0-dev  
+**Release Date**: March 9, 2026  
 **Category**: Desktop, Gaming, Media Center  
 **Architecture**: x86_64  
-**Status**: Alpha Release (Active Development)
+**Status**: Development Build (ISO boots in QEMU, hardware testing pending)
 
 ---
 
 ## Distribution Description
 
-**NexusOS** is the world's first truly universal Linux distribution featuring revolutionary cross-distribution package compatibility and AI mascot companions. Built on the solid foundation of Pop!_OS 22.04 LTS NVIDIA, NexusOS introduces the groundbreaking `nexuspkg` universal package manager that can install software from ANY Linux distribution - Arch, Debian, Red Hat, SUSE, Alpine, Void, NixOS, Gentoo, and more.
+**NexusOS** is a standalone Linux distribution bootstrapped from Ubuntu Jammy (22.04) via debootstrap, featuring every major Linux package manager compiled from source and AI mascot companions. NexusOS ships pacman, portage/emerge, apk-tools, xbps, zypper, rpm/dnf, apt/nala, flatpak, snap, and more — all natively installed, with upstream repos configured.
 
 ### Key Innovation: Universal Package Management
 
@@ -39,16 +39,16 @@ These AI companions provide interactive system management, security monitoring, 
 
 | Specification | Details |
 |---------------|---------|
-| **Base Distribution** | Pop!_OS 22.04 LTS NVIDIA (Ubuntu/Debian-based) |
-| **Kernel** | Pop!_OS kernel (NVIDIA-optimized, HWE) |
-| **Architecture** | x86_64 |
-| **Desktop Environment** | NexusDE (based on KDE Plasma (X11)) |
-| **Display Server** | X11/Wayland hybrid |
-| **Init System** | systemd |
-| **Package Manager** | nexuspkg (universal) + nala (native) |
-| **Default Shell** | zsh with custom NexusOS configuration |
-| **Bootloader** | GRUB with NexusOS theming |
-| **Installation** | nexus-install.sh (overlay + fresh ZFS-on-root) |
+| **Base Distribution** | Ubuntu Jammy 22.04 (debootstrap) |
+|| **Kernel** | linux-generic from Ubuntu repos |
+|| **Architecture** | x86_64 |
+|| **Desktop Environment** | KDE Plasma X11 |
+|| **Display Server** | X11 |
+|| **Init System** | systemd |
+|| **Package Manager** | nexuspkg (universal) + nala (native) + 7 compiled backends |
+|| **Default Shell** | bash with NexusOS customizations |
+|| **Bootloader** | GRUB (UEFI) + isolinux (BIOS) hybrid |
+|| **GPU** | PRIME render offload (Intel + NVIDIA) |
 
 ---
 
@@ -213,18 +213,18 @@ These AI companions provide interactive system management, security monitoring, 
 - Desktop environment customized
 - Installation system working
 
-### Upcoming Releases
-- **Beta 1.0.0** (Q1 2025): GUI package manager, ARM64 support
-- **RC 1.0.0** (Q2 2025): Enterprise features, advanced AI
-- **Stable 1.0.0** (Q3 2025): Production-ready release
+### Upcoming Milestones
+- **Hardware boot testing**: Validate on real hardware
+- **Calamares installer**: Install-to-disk support
+- **nexuspkg GUI**: Graphical package manager frontend
+- **Stable 1.0.0**: Production-ready release
 
 ---
 
 ## Contact Information
 
 **Project Lead**: NexusOS Development Team  
-**Email**: contact@nexusos.org (to be established)  
-**GitHub**: https://github.com/nexusos/nexus-os  
+**GitHub**: https://github.com/wlfogle/nexus-os  
 **Website**: https://nexusos.org (planned)  
 
 ---
@@ -240,7 +240,7 @@ These AI companions provide interactive system management, security monitoring, 
 
 **Keywords**: universal, packages, AI, gaming, media, ubuntu-based, LTS-based, compatibility
 
-**Based on**: Pop!_OS (which is based on Ubuntu LTS)
+**Based on**: Ubuntu Jammy 22.04 LTS (debootstrap)
 
 ---
 
