@@ -85,15 +85,21 @@ mount_chroot
 log "Fixing portage (typing_extensions)..."
 run_in_chroot "
     set -e
-    pip3 install --upgrade typing_extensions 2>/dev/null || \
-        pip3 install --break-system-packages --upgrade typing_extensions
+
+    # Remove stale system typing_extensions so pip's build isolation
+    # doesn't pick up the old jammy version missing 'Required'
+    rm -f /usr/lib/python3/dist-packages/typing_extensions.py
+    rm -rf /usr/lib/python3/dist-packages/typing_extensions-*.egg-info
+    pip3 install --upgrade --force-reinstall typing_extensions
 
     if ! command -v emerge &>/dev/null; then
+        export DEBIAN_FRONTEND=noninteractive
+        pip3 install 'meson>=1.0,<1.4' ninja 'meson-python<0.16' 'packaging<24' 'pyproject-metadata<0.8'
         cd /tmp
         rm -rf portage-src
         git clone --depth 1 https://github.com/gentoo/portage.git portage-src
         cd portage-src
-        pip3 install . 2>/dev/null || pip3 install --break-system-packages .
+        pip3 install --no-build-isolation .
         command -v emerge >/dev/null && echo '[OK] portage/emerge installed'
         cd / && rm -rf /tmp/portage-src
     else
