@@ -169,6 +169,7 @@ APTEOF
 
     run_in_chroot "
         export DEBIAN_FRONTEND=noninteractive
+        set -e
         apt-get update -qq
     "
 
@@ -219,8 +220,23 @@ install_base() {
             pipewire pipewire-pulse wireplumber \
             flatpak \
             unattended-upgrades apt-transport-https \
-            casper \
-            plymouth-label
+            plymouth-label \
+            update-notifier-common \
+            ubuntu-release-upgrader-core
+
+        # Casper live boot — install separately to ensure it succeeds
+        # and its initramfs hooks are properly registered
+        apt-get install -y casper || {
+            echo '[FATAL] casper install failed — live boot will not work'
+            exit 1
+        }
+
+        # Verify casper boot script exists
+        if [ ! -f /usr/share/initramfs-tools/scripts/casper ]; then
+            echo '[FATAL] casper boot script missing after install'
+            dpkg -L casper | grep initramfs || true
+            exit 1
+        fi
 
         # Bluetooth
         apt-get install -y -qq \
@@ -268,6 +284,12 @@ install_base() {
             libdrm-amdgpu1 libdrm-radeon1 \
             xserver-xorg-video-amdgpu xserver-xorg-video-intel \
             2>/dev/null || true
+
+        # VM guest agents (SPICE auto-resize, QEMU guest integration)
+        apt-get install -y -qq \
+            spice-vdagent qemu-guest-agent \
+            xserver-xorg-video-qxl \
+            2>/dev/null || true
     "
 
     umount_chroot
@@ -291,7 +313,8 @@ install_kde() {
             sddm sddm-theme-breeze \
             xserver-xorg-core xserver-xorg-input-all \
             xserver-xorg-video-all \
-            xinit x11-xserver-utils
+            xinit x11-xserver-utils \
+            dbus-x11
 
         # KDE applications
         apt-get install -y -qq \
@@ -344,18 +367,32 @@ install_nvidia() {
 
     run_in_chroot "
         export DEBIAN_FRONTEND=noninteractive
-        apt-get install -y -qq \
+
+        # Prevent DKMS from trying to compile modules in chroot (hangs)
+        # The packaged pre-built .ko files are sufficient for the target kernel
+        mkdir -p /usr/local/bin
+        echo '#!/bin/sh' > /usr/local/bin/dkms
+        echo 'echo \"[nexusos] dkms skipped in chroot build\"' >> /usr/local/bin/dkms
+        chmod +x /usr/local/bin/dkms
+
+        apt-get install -y -qq --no-install-recommends \
             nvidia-driver-550 \
             nvidia-utils-550 \
             libnvidia-decode-550 libnvidia-encode-550 \
-            nvidia-cuda-toolkit \
             2>/dev/null || {
                 echo '[warn] NVIDIA 550 unavailable, trying 535...'
-                apt-get install -y -qq \
+                apt-get install -y -qq --no-install-recommends \
                     nvidia-driver-535 \
                     nvidia-utils-535 \
                     2>/dev/null || echo '[warn] NVIDIA install failed — will use nouveau'
             }
+
+        # Install CUDA toolkit separately (large, non-fatal)
+        apt-get install -y -qq nvidia-cuda-toolkit 2>/dev/null || \
+            echo '[warn] CUDA toolkit unavailable — install post-boot with: sudo apt install nvidia-cuda-toolkit'
+
+        # Remove fake dkms, restore real one if it exists
+        rm -f /usr/local/bin/dkms
     "
 
     umount_chroot
@@ -391,6 +428,288 @@ install_nexus_packages() {
 
     umount_chroot
     log "NexusOS packages installed"
+}
+
+# ---------------------------------------------------------------------------
+# Step 7b: Install Universal Package Management Backends
+# ---------------------------------------------------------------------------
+install_universal_pkg() {
+    log "Installing universal package management backends..."
+
+    mount_chroot
+
+    # ══════════════════════════════════════════════════════════════════════
+    # Build dependencies for compiling package managers from source
+    # ══════════════════════════════════════════════════════════════════════
+    run_in_chroot "
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get install -y -qq \
+            build-essential cmake meson ninja-build pkg-config autoconf automake libtool \
+            libarchive-dev libcurl4-openssl-dev libssl-dev libgpgme-dev \
+            python3-dev python3-pip python3-setuptools python3-wheel \
+            zlib1g-dev liblzma-dev libbz2-dev libzstd-dev \
+            asciidoc gettext doxygen \
+            git
+    "
+
+    # ══════════════════════════════════════════════════════════════════════
+    # NATIVE: apt / dpkg / nala  (already installed from debootstrap + base)
+    # ══════════════════════════════════════════════════════════════════════
+
+    # ══════════════════════════════════════════════════════════════════════
+    # NATIVE: RPM / DNF / alien  (Fedora, RHEL, SUSE .rpm support)
+    # ══════════════════════════════════════════════════════════════════════
+    run_in_chroot "
+        export DEBIAN_FRONTEND=noninteractive
+        set -e
+        apt-get install -y -qq rpm alien dnf
+        command -v rpm >/dev/null
+        command -v dnf >/dev/null
+    "
+
+    # ══════════════════════════════════════════════════════════════════════
+    # COMPILE: pacman  (Arch Linux — .pkg.tar.zst)
+    # Source: https://gitlab.archlinux.org/pacman/pacman
+    # ══════════════════════════════════════════════════════════════════════
+    log "Compiling pacman (Arch Linux package manager)..."
+    run_in_chroot "
+        export DEBIAN_FRONTEND=noninteractive
+        set -e
+        cd /tmp
+        rm -rf pacman-src
+        if ! git clone --depth 1 --branch v6.1.0 https://gitlab.archlinux.org/pacman/pacman.git pacman-src; then
+            git clone --depth 1 https://gitlab.archlinux.org/pacman/pacman.git pacman-src
+        fi
+        cd pacman-src
+        meson setup build --prefix=/usr \
+            -Ddoc=disabled -Dscriptlet-shell=/bin/bash -Duse-git-version=false
+        ninja -C build
+        ninja -C build install
+        command -v pacman >/dev/null
+        cd / && rm -rf /tmp/pacman-src
+        echo '[OK] pacman compiled and installed'
+    "
+    # Configure pacman with Arch repos
+    mkdir -p "${ROOT}/etc/pacman.d"
+    cat > "${ROOT}/etc/pacman.conf" << 'PACCONF'
+[options]
+Architecture = x86_64
+CheckSpace
+SigLevel = Optional TrustAll
+
+[core]
+Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch
+
+[extra]
+Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch
+
+[multilib]
+Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch
+PACCONF
+
+    # ══════════════════════════════════════════════════════════════════════
+    # COMPILE: portage / emerge  (Gentoo — ebuilds, source-based)
+    # Source: https://github.com/gentoo/portage
+    # ══════════════════════════════════════════════════════════════════════
+    log "Installing portage (Gentoo package manager)..."
+    run_in_chroot "
+        export DEBIAN_FRONTEND=noninteractive
+        set -e
+        # Upgrade typing_extensions — jammy's version is too old for modern pyproject-metadata
+        pip3 install --upgrade typing_extensions 2>/dev/null || \
+            pip3 install --break-system-packages --upgrade typing_extensions
+        cd /tmp
+        rm -rf portage-src
+        git clone --depth 1 https://github.com/gentoo/portage.git portage-src
+        cd portage-src
+        pip3 install . 2>/dev/null || pip3 install --break-system-packages .
+        command -v emerge >/dev/null
+        cd / && rm -rf /tmp/portage-src
+        echo '[OK] portage/emerge installed'
+    "
+    # Gentoo repo config
+    mkdir -p "${ROOT}/etc/portage" "${ROOT}/var/db/repos/gentoo"
+    cat > "${ROOT}/etc/portage/make.conf" << 'MAKECONF'
+GENTOO_MIRRORS="https://distfiles.gentoo.org"
+FEATURES="-sandbox -usersandbox -pid-sandbox -network-sandbox"
+ACCEPT_KEYWORDS="amd64"
+ACCEPT_LICENSE="*"
+MAKEOPTS="-j$(nproc)"
+MAKECONF
+    mkdir -p "${ROOT}/etc/portage/repos.conf"
+    cat > "${ROOT}/etc/portage/repos.conf/gentoo.conf" << 'GCONF'
+[DEFAULT]
+main-repo = gentoo
+
+[gentoo]
+location = /var/db/repos/gentoo
+sync-type = webrsync
+sync-uri = https://rsync.gentoo.org/gentoo-portage
+auto-sync = yes
+GCONF
+
+    # ══════════════════════════════════════════════════════════════════════
+    # COMPILE: apk-tools  (Alpine Linux — .apk)
+    # Source: https://gitlab.alpinelinux.org/alpine/apk-tools
+    # ══════════════════════════════════════════════════════════════════════
+    log "Compiling apk-tools (Alpine Linux package manager)..."
+    run_in_chroot "
+        export DEBIAN_FRONTEND=noninteractive
+        set -e
+        apt-get install -y -qq lua5.3 liblua5.3-dev scdoc
+        cd /tmp
+        rm -rf apk-src
+        if ! git clone --depth 1 --branch v2.14.6 https://gitlab.alpinelinux.org/alpine/apk-tools.git apk-src; then
+            git clone --depth 1 https://gitlab.alpinelinux.org/alpine/apk-tools.git apk-src
+        fi
+        cd apk-src
+        # Try meson first, fall back to make
+        if meson setup build --prefix=/usr -Dlua=disabled -Ddocs=disabled; then
+            ninja -C build && ninja -C build install
+        else
+            make -j\$(nproc) PREFIX=/usr
+            make PREFIX=/usr install
+        fi
+        command -v apk >/dev/null
+        cd / && rm -rf /tmp/apk-src
+        echo '[OK] apk-tools compiled and installed'
+    "
+    # Alpine repo config
+    mkdir -p "${ROOT}/etc/apk"
+    cat > "${ROOT}/etc/apk/repositories" << 'APKREPO'
+https://dl-cdn.alpinelinux.org/alpine/latest-stable/main
+https://dl-cdn.alpinelinux.org/alpine/latest-stable/community
+APKREPO
+
+    # ══════════════════════════════════════════════════════════════════════
+    # COMPILE: xbps  (Void Linux — .xbps)
+    # Source: https://github.com/void-linux/xbps
+    # ══════════════════════════════════════════════════════════════════════
+    log "Compiling xbps (Void Linux package manager)..."
+    run_in_chroot "
+        export DEBIAN_FRONTEND=noninteractive
+        set -e
+        cd /tmp
+        rm -rf xbps-src
+        git clone --depth 1 https://github.com/void-linux/xbps.git xbps-src
+        cd xbps-src
+        ./configure --prefix=/usr
+        make -j\$(nproc)
+        make install
+        command -v xbps-install >/dev/null
+        cd / && rm -rf /tmp/xbps-src
+        echo '[OK] xbps compiled and installed'
+    "
+    # Void repo config
+    mkdir -p "${ROOT}/etc/xbps.d"
+    cat > "${ROOT}/etc/xbps.d/00-repository-main.conf" << 'XBPSREPO'
+repository=https://repo-default.voidlinux.org/current
+XBPSREPO
+
+    # ══════════════════════════════════════════════════════════════════════
+    # COMPILE: zypper + libsolv + libzypp  (openSUSE — .rpm via zypper)
+    # ══════════════════════════════════════════════════════════════════════
+    log "Compiling zypper (openSUSE package manager)..."
+    run_in_chroot "
+        export DEBIAN_FRONTEND=noninteractive
+        set -e
+        apt-get install -y -qq libboost-all-dev libxml2-dev libyaml-cpp-dev \
+            libproxy-dev libsigc++-2.0-dev libreadline-dev libaugeas-dev \
+            librpm-dev libglib2.0-dev
+
+        # 1) libsolv
+        cd /tmp
+        rm -rf libsolv
+        git clone --depth 1 https://github.com/openSUSE/libsolv.git
+        cd libsolv
+        mkdir build && cd build
+        cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DENABLE_RPMMD=ON -DENABLE_RPMDB=ON \
+            -DENABLE_PUBKEY=ON -DENABLE_RPMDB_BYRPMHEADER=ON
+        make -j\$(nproc) && make install
+        cd /tmp && rm -rf libsolv
+
+        # 2) libzypp
+        rm -rf libzypp
+        git clone --depth 1 https://github.com/openSUSE/libzypp.git
+        cd libzypp
+        mkdir build && cd build
+        cmake .. -DCMAKE_INSTALL_PREFIX=/usr
+        make -j\$(nproc)
+        make install
+        cd /tmp && rm -rf libzypp
+
+        # 3) zypper
+        rm -rf zypper
+        git clone --depth 1 https://github.com/openSUSE/zypper.git
+        cd zypper
+        mkdir build && cd build
+        cmake .. -DCMAKE_INSTALL_PREFIX=/usr
+        make -j\$(nproc)
+        make install
+        cd /tmp && rm -rf zypper
+        command -v zypper >/dev/null
+        echo '[OK] zypper compiled and installed'
+    "
+
+    # ══════════════════════════════════════════════════════════════════════
+    # NATIVE: flatpak, snap, AppImage/FUSE
+    # ══════════════════════════════════════════════════════════════════════
+    run_in_chroot "
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get install -y -qq snapd 2>/dev/null || true
+        systemctl enable snapd.socket 2>/dev/null || true
+        apt-get install -y -qq libfuse2 libfuse3-3 2>/dev/null || true
+        mkdir -p /home/${LIVE_USER}/Applications
+        chown 1000:1000 /home/${LIVE_USER}/Applications 2>/dev/null || true
+    "
+
+    # ══════════════════════════════════════════════════════════════════════
+    # Nix — requires running daemon, install on first boot
+    # ══════════════════════════════════════════════════════════════════════
+    cat > "${ROOT}/usr/local/bin/nexus-setup-nix" << 'NIXSETUP'
+#!/usr/bin/env bash
+set -euo pipefail
+if command -v nix &>/dev/null; then
+    echo "Nix is already installed."; nix --version; exit 0
+fi
+[[ $EUID -ne 0 ]] && { echo "Run with sudo: sudo nexus-setup-nix"; exit 1; }
+echo "Installing Nix package manager (multi-user)..."
+sh <(curl -L https://nixos.org/nix/install) --daemon --yes
+echo "Nix installed. Log out and back in, then use: nix-env -iA nixpkgs.<package>"
+NIXSETUP
+    chmod +x "${ROOT}/usr/local/bin/nexus-setup-nix"
+
+    # ══════════════════════════════════════════════════════════════════════
+    # Language package managers
+    # ══════════════════════════════════════════════════════════════════════
+    run_in_chroot "
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get install -y -qq \
+            nodejs npm \
+            cargo rustc \
+            ruby ruby-dev \
+            golang-go \
+            2>/dev/null || true
+    "
+
+    # ══════════════════════════════════════════════════════════════════════
+    # Generate nexuspkg config + clean up build deps
+    # ══════════════════════════════════════════════════════════════════════
+    if [[ -f "${PROJECT_ROOT}/core/bin/nexuspkg" ]]; then
+        run_in_chroot "/opt/nexus-os/bin/nexuspkg init 2>/dev/null || true"
+    fi
+
+    # Remove build-only dependencies to save ISO space
+    run_in_chroot "
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get remove -y --purge \
+            meson ninja-build autoconf automake libtool doxygen asciidoc scdoc \
+            2>/dev/null || true
+        apt-get autoremove -y 2>/dev/null || true
+    "
+
+    umount_chroot
+    log "Universal package management installed"
 }
 
 # ---------------------------------------------------------------------------
@@ -612,6 +931,15 @@ HOSTSEOF
         chmod 440 /etc/sudoers.d/${LIVE_USER}
     "
 
+    # Override casper.conf so the live user matches SDDM autologin
+    cat > "${ROOT}/etc/casper.conf" << CASPEREOF
+export USERNAME="${LIVE_USER}"
+export USERFULLNAME="NexusOS Live User"
+export HOST="nexus"
+export BUILD_SYSTEM="NexusOS"
+export FLAVOUR="NexusOS"
+CASPEREOF
+
     # Set graphical target (minbase defaults to multi-user)
     run_in_chroot "systemctl set-default graphical.target"
 
@@ -631,17 +959,19 @@ HOSTSEOF
         systemctl enable power-profiles-daemon 2>/dev/null || true
     "
 
-    # Plymouth
+    # Plymouth — always attempt to set nexusos theme (the theme files are
+    # installed by apply_overlay before configure_system runs)
     run_in_chroot "
-        if [[ -d /usr/share/plymouth/themes/nexusos ]] && \
-           [[ -f /usr/share/plymouth/themes/nexusos/nexusos.plymouth ]]; then
+        if [ -f /usr/share/plymouth/themes/nexusos/nexusos.plymouth ]; then
             update-alternatives --install /usr/share/plymouth/themes/default.plymouth \
-                default.plymouth /usr/share/plymouth/themes/nexusos/nexusos.plymouth 200 \
-                2>/dev/null || true
+                default.plymouth /usr/share/plymouth/themes/nexusos/nexusos.plymouth 200
             update-alternatives --set default.plymouth \
-                /usr/share/plymouth/themes/nexusos/nexusos.plymouth 2>/dev/null || true
+                /usr/share/plymouth/themes/nexusos/nexusos.plymouth
+            plymouth-set-default-theme nexusos 2>/dev/null || true
+            echo '[OK] Plymouth theme set to nexusos'
+        else
+            echo '[WARN] nexusos plymouth theme not found — using default'
         fi
-        update-initramfs -u 2>/dev/null || true
     "
 
     # SDDM autologin for live session
@@ -660,25 +990,232 @@ Current=nexusos
 SDDMEOF
     fi
 
-    # X11: prefer modesetting driver — NVIDIA module blocks X when no GPU present
+    # PRIME Render Offload — Intel iGPU drives the display, NVIDIA available on-demand
+    # for gaming / AI workloads via prime-run or __NV_PRIME_RENDER_OFFLOAD=1
     mkdir -p "${ROOT}/etc/X11/xorg.conf.d"
-    cat > "${ROOT}/etc/X11/xorg.conf.d/10-modesetting.conf" << 'XORGEOF'
+
+    # Intel/AMD iGPU as primary display
+    cat > "${ROOT}/etc/X11/xorg.conf.d/10-intel-primary.conf" << 'XORGEOF'
 Section "Device"
-    Identifier "Default GPU"
+    Identifier "Intel iGPU"
     Driver     "modesetting"
     Option     "AccelMethod" "glamor"
+    Option     "TearFree"    "true"
 EndSection
 XORGEOF
 
-    # Blacklist NVIDIA modules during live session (casper will load them if needed)
-    cat > "${ROOT}/etc/modprobe.d/nvidia-live-blacklist.conf" << 'BLKEOF'
-# Live session: prevent NVIDIA modules from blocking non-NVIDIA GPUs
-# Calamares post-install will remove this file on real installs with NVIDIA hardware
-blacklist nvidia
-blacklist nvidia_drm
-blacklist nvidia_modeset
-blacklist nvidia_uvm
-BLKEOF
+    # NVIDIA as PRIME render offload provider (only activates if HW present)
+    cat > "${ROOT}/etc/X11/xorg.conf.d/11-nvidia-prime-offload.conf" << 'XORGEOF'
+# PRIME Render Offload — NVIDIA handles rendering when apps request it
+# Usage: prime-run <application>  OR  __NV_PRIME_RENDER_OFFLOAD=1 <application>
+Section "OutputClass"
+    Identifier  "nvidia"
+    MatchDriver "nvidia-drm"
+    Driver      "nvidia"
+    Option      "AllowEmptyInitialConfiguration"
+    Option      "PrimaryGPU" "no"
+    ModulePath  "/usr/lib/x86_64-linux-gnu/nvidia/xorg"
+EndSection
+XORGEOF
+
+    # prime-run helper — launch any app on the NVIDIA GPU
+    cat > "${ROOT}/usr/local/bin/prime-run" << 'PRIMEEOF'
+#!/bin/bash
+export __NV_PRIME_RENDER_OFFLOAD=1
+export __NV_PRIME_RENDER_OFFLOAD_PROVIDER=NVIDIA-G0
+export __GLX_VENDOR_LIBRARY_NAME=nvidia
+export __VK_LAYER_NV_optimus=NVIDIA_only
+exec "$@"
+PRIMEEOF
+    chmod +x "${ROOT}/usr/local/bin/prime-run"
+
+    # Ensure nvidia-drm modeset is enabled for PRIME to work
+    cat > "${ROOT}/etc/modprobe.d/nvidia-prime.conf" << 'MODEOF'
+options nvidia-drm modeset=1
+options nvidia NVreg_DynamicPowerManagement=0x02
+MODEOF
+
+    # Systemd service to set up NVIDIA power management (RTD3) for hybrid laptops/desktops
+    cat > "${ROOT}/etc/udev/rules.d/80-nvidia-pm.rules" << 'UVEOF'
+# Enable runtime PM for NVIDIA GPU — allows GPU to sleep when not in use
+ACTION=="bind", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x030000", TEST=="power/control", ATTR{power/control}="auto"
+ACTION=="bind", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x030200", TEST=="power/control", ATTR{power/control}="auto"
+UVEOF
+
+    # Disable apt CD-ROM source in live session — casper mounts the ISO at /cdrom
+    # but it has no Debian repository structure, causing apt-cdrom errors
+    cat > "${ROOT}/etc/apt/apt.conf.d/99no-cdrom" << 'APTCDEOF'
+APT::CDROM::NoMount "true";
+Acquire::cdrom::AutoDetect "false";
+APT::CDROM::NoAutoDetect "true";
+APTCDEOF
+
+    # Add a casper bottom script to clean up CD-ROM apt sources at live boot
+    mkdir -p "${ROOT}/usr/share/initramfs-tools/scripts/casper-bottom"
+    cat > "${ROOT}/usr/share/initramfs-tools/scripts/casper-bottom/99nexus_apt_cleanup" << 'CASPERBOT'
+#!/bin/sh
+PREREQ=""
+DESCRIPTION="Removing CD-ROM apt sources..."
+
+prereqs()
+{
+    echo "$PREREQ"
+}
+
+case $1 in
+    prereqs)
+        prereqs
+        exit 0
+        ;;
+esac
+
+. /scripts/casper-functions
+
+log_begin_msg "$DESCRIPTION"
+
+# Remove any cdrom entries from apt sources
+if [ -f /root/etc/apt/sources.list ]; then
+    sed -i '/^deb cdrom:/d' /root/etc/apt/sources.list
+fi
+rm -f /root/etc/apt/sources.list.d/cdrom-*.list 2>/dev/null
+
+log_end_msg
+CASPERBOT
+    chmod +x "${ROOT}/usr/share/initramfs-tools/scripts/casper-bottom/99nexus_apt_cleanup"
+
+    # Ensure Plymouth properly quits during casper boot to avoid
+    # "unexpectedly disconnected from boot status daemon" error
+    mkdir -p "${ROOT}/etc/systemd/system/sddm.service.d"
+    cat > "${ROOT}/etc/systemd/system/sddm.service.d/plymouth.conf" << 'PLYMEOF'
+[Unit]
+After=plymouth-quit-wait.service
+Conflicts=plymouth-quit.service
+
+[Service]
+ExecStartPre=-/usr/bin/plymouth deactivate
+ExecStartPre=-/usr/bin/plymouth quit --retain-splash
+PLYMEOF
+
+    # Ensure overlay filesystem module is included in initramfs
+    # (required by casper for copy-on-write live session)
+    echo 'overlay' >> "${ROOT}/etc/initramfs-tools/modules"
+
+    # Fallback: load overlay via insmod if modprobe fails at boot
+    # This runs in init-premount, before casper's main script tries modprobe overlay
+    mkdir -p "${ROOT}/usr/share/initramfs-tools/scripts/init-premount"
+    cat > "${ROOT}/usr/share/initramfs-tools/scripts/init-premount/overlay-fallback" << 'OVHOOK'
+#!/bin/sh
+PREREQ=""
+prereqs() { echo "$PREREQ"; }
+case $1 in prereqs) prereqs; exit 0;; esac
+
+# Ensure overlay filesystem support exists before casper needs union mount
+if ! grep -Eq '(^|[[:space:]])overlay$' /proc/filesystems 2>/dev/null; then
+    modprobe overlay 2>/dev/null || true
+fi
+if ! grep -Eq '(^|[[:space:]])overlay$' /proc/filesystems 2>/dev/null; then
+    # modprobe failed — try direct insmod as last resort
+    KVER="$(uname -r)"
+    for ko in "/lib/modules/${KVER}/kernel/fs/overlayfs/overlay.ko" \
+              "/lib/modules/${KVER}/kernel/fs/overlayfs/overlay.ko.zst" \
+              "/lib/modules/${KVER}/kernel/fs/overlayfs/overlay.ko.xz"; do
+        [ -f "$ko" ] && insmod "$ko" 2>/dev/null && break
+    done
+fi
+OVHOOK
+    chmod +x "${ROOT}/usr/share/initramfs-tools/scripts/init-premount/overlay-fallback"
+
+    # Patch casper's overlay setup to avoid false panic when overlay support
+    # is already present and to add direct insmod fallback if modprobe fails.
+    cat > "${ROOT}/tmp/patch-casper-overlay.py" << 'PYCASPER'
+from pathlib import Path
+
+casper = Path('/usr/share/initramfs-tools/scripts/casper')
+if not casper.exists():
+    raise SystemExit(0)
+
+text = casper.read_text()
+needle = '    modprobe "${MP_QUIET}" -b overlay || panic "/cow format specified as \'overlay\' and no support found"'
+replacement = '''    if ! grep -Eq '(^|[[:space:]])overlay$' /proc/filesystems; then
+        modprobe "${MP_QUIET}" -b overlay 2>/dev/null || true
+    fi
+    if ! grep -Eq '(^|[[:space:]])overlay$' /proc/filesystems; then
+        KVER="$(uname -r)"
+        for ko in "/lib/modules/${KVER}/kernel/fs/overlayfs/overlay.ko" \
+                  "/lib/modules/${KVER}/kernel/fs/overlayfs/overlay.ko.zst" \
+                  "/lib/modules/${KVER}/kernel/fs/overlayfs/overlay.ko.xz"; do
+            [ -f "$ko" ] && insmod "$ko" 2>/dev/null && break
+        done
+    fi
+    grep -Eq '(^|[[:space:]])overlay$' /proc/filesystems || panic "/cow format specified as 'overlay' and no support found"'''
+if needle not in text:
+    raise SystemExit("FATAL: expected casper overlay line not found")
+
+casper.write_text(text.replace(needle, replacement, 1))
+PYCASPER
+    run_in_chroot "python3 /tmp/patch-casper-overlay.py && rm -f /tmp/patch-casper-overlay.py"
+
+    # Rebuild initramfs — MUST happen after casper is installed and all
+    # custom scripts (casper-bottom, overlay-fallback, plymouth, etc.) are in place.
+    # Stash NVIDIA .ko files out of the module tree first so update-initramfs
+    # won't include them (hooks run BEFORE module copying, so a hook can't
+    # remove them — we must hide them from the source tree instead).
+    log "Rebuilding initramfs with casper hooks..."
+    run_in_chroot "
+        KVER=\$(ls /lib/modules/ | sort -V | tail -1)
+        echo \"[nexusos] Target kernel: \${KVER}\"
+
+        # Remove old kernel versions — only keep the latest
+        for d in /lib/modules/*/; do
+            kv=\$(basename \"\${d}\")
+            [ \"\${kv}\" = \"\${KVER}\" ] && continue
+            echo \"[nexusos] Removing old kernel modules: \${kv}\"
+            rm -rf \"/lib/modules/\${kv}\"
+            rm -f /boot/vmlinuz-\${kv} /boot/initrd.img-\${kv} \
+                  /boot/config-\${kv} /boot/System.map-\${kv} 2>/dev/null || true
+        done
+
+        # Stash nvidia .ko files so update-initramfs won't copy them into initrd
+        mkdir -p /tmp/nvidia-stash
+        find \"/lib/modules/\${KVER}\" -name 'nvidia*.ko*' \
+            -exec mv -t /tmp/nvidia-stash {} + 2>/dev/null || true
+
+        # Rebuild module dependency database without nvidia
+        depmod -a \"\${KVER}\"
+
+        # Build initramfs for target kernel only (not -k all)
+        update-initramfs -u -k \"\${KVER}\" || { echo '[FATAL] initramfs rebuild failed'; exit 1; }
+
+        # Restore nvidia modules to rootfs (needed if user installs to disk)
+        if ls /tmp/nvidia-stash/nvidia*.ko* 1>/dev/null 2>&1; then
+            nvidia_dir=\"/lib/modules/\${KVER}/updates/dkms\"
+            mkdir -p \"\${nvidia_dir}\"
+            mv /tmp/nvidia-stash/nvidia*.ko* \"\${nvidia_dir}/\"
+            depmod -a \"\${KVER}\"
+        fi
+        rm -rf /tmp/nvidia-stash
+        echo \"[nexusos] initramfs rebuilt for \${KVER}\"
+    "
+
+    # Verify casper + overlay support in the initramfs (use chroot kernel, not host kernel)
+    run_in_chroot "
+        KVER=\$(ls /boot/vmlinuz-* | sort -V | tail -1 | sed 's|.*/vmlinuz-||')
+        INITRD=/boot/initrd.img-\${KVER}
+
+        lsinitramfs \${INITRD} 2>/dev/null | grep -q '^scripts/casper$' || {
+            echo '[FATAL] casper scripts missing from initramfs'
+            exit 1
+        }
+        lsinitramfs \${INITRD} 2>/dev/null | grep -q '^scripts/init-premount/overlay-fallback$' || {
+            echo '[FATAL] overlay-fallback script missing from initramfs'
+            exit 1
+        }
+        lsinitramfs \${INITRD} 2>/dev/null | grep -Eq 'kernel/fs/overlayfs/overlay\.ko(\.zst|\.xz)?$' || {
+            echo '[FATAL] overlay module missing from initramfs'
+            exit 1
+        }
+        echo '[OK] casper + overlay assets found in initramfs'
+    "
 
     # Clean caches
     run_in_chroot "
@@ -812,12 +1349,13 @@ SYSEOF
     echo "NexusOS 1.0 \"AI-Native\" - Release x86_64 (${BUILD_DATE})" > "${ISO_DIR}/.disk/info"
     touch "${ISO_DIR}/.disk/base_installable"
 
-    # casper.conf
+    # casper.conf — must match the rootfs copy in /etc/casper.conf
     cat > "${ISO_DIR}/casper/casper.conf" << CASPEREOF
 export USERNAME="${LIVE_USER}"
 export USERFULLNAME="NexusOS Live User"
 export HOST="nexus"
 export BUILD_SYSTEM="NexusOS"
+export FLAVOUR="NexusOS"
 CASPEREOF
 
     log "Live filesystem built"
@@ -979,6 +1517,7 @@ main() {
     install_nvidia
     install_nexus_packages
     apply_overlay
+    install_universal_pkg
     configure_system
     build_live_fs
     create_efi_image
