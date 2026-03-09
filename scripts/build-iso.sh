@@ -974,6 +974,23 @@ CASPEREOF
         fi
     "
 
+    # Fix xauth timeout on overlayfs — file locking doesn't work on casper's cow overlay
+    cat > "${ROOT}/etc/X11/Xsession.d/00nexus-xauthority" << 'XAUTHFIX'
+# NexusOS: Use tmpfs for Xauthority — overlayfs doesn't support flock()
+if [ -z "$XAUTHORITY" ] || echo "$XAUTHORITY" | grep -q '/home/'; then
+    export XAUTHORITY="/tmp/.Xauthority-${USER:-nexus}"
+fi
+XAUTHFIX
+
+    # KWin software rendering fallback for VMs without GPU acceleration
+    mkdir -p "${ROOT}/etc/xdg"
+    cat > "${ROOT}/etc/xdg/kwinrc" << 'KWINEOF'
+[Compositing]
+Backend=XRender
+GLCore=false
+OpenGLIsUnsafe=false
+KWINEOF
+
     # SDDM autologin for live session
     mkdir -p "${ROOT}/etc/sddm.conf.d"
     cat > "${ROOT}/etc/sddm.conf.d/autologin.conf" << SDDMEOF
@@ -981,6 +998,12 @@ CASPEREOF
 User=${LIVE_USER}
 Session=plasma.desktop
 SDDMEOF
+
+    # SDDM xauth fix for overlayfs live session
+    cat > "${ROOT}/etc/sddm.conf.d/xauth-fix.conf" << 'SDDMXAUTH'
+[X11]
+UserAuthFile=/tmp/.Xauthority-sddm
+SDDMXAUTH
 
     # SDDM theme
     if [[ -d "${ROOT}/usr/share/sddm/themes/nexusos" ]]; then
