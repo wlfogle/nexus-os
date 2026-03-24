@@ -307,10 +307,12 @@ install_kde() {
     run_in_chroot "
         export DEBIAN_FRONTEND=noninteractive
 
-        # Core KDE + display manager (must succeed)
+        # Core KDE + display managers (install both SDDM and LightDM;
+        # LightDM is the active DM — SDDM has xauth/flock issues on casper overlayfs)
         apt-get install -y -qq \
             kde-plasma-desktop plasma-workspace \
             sddm sddm-theme-breeze \
+            lightdm lightdm-gtk-greeter \
             xserver-xorg-core xserver-xorg-input-all \
             xserver-xorg-video-all \
             xinit x11-xserver-utils \
@@ -321,7 +323,6 @@ install_kde() {
             konsole dolphin ark kate okular \
             gwenview kde-spectacle \
             plasma-nm plasma-pa plasma-systemmonitor \
-            kde-config-sddm \
             breeze breeze-cursor-theme breeze-icon-theme \
             kde-style-breeze \
             kscreen kinfocenter \
@@ -337,9 +338,11 @@ install_kde() {
             partitionmanager \
             2>/dev/null || true
 
-        echo 'sddm sddm/daemon select sddm' | debconf-set-selections
-        dpkg-reconfigure -f noninteractive sddm 2>/dev/null || true
-        systemctl enable sddm
+        # Switch to LightDM as default display manager
+        systemctl disable sddm 2>/dev/null || true
+        systemctl enable lightdm
+        echo '/usr/sbin/lightdm' > /etc/X11/default-display-manager
+        groupadd -f autologin
         systemctl enable bluetooth 2>/dev/null || true
         systemctl enable cups 2>/dev/null || true
 
@@ -450,6 +453,14 @@ install_universal_pkg() {
             zlib1g-dev liblzma-dev libbz2-dev libzstd-dev \
             asciidoc gettext doxygen \
             git
+
+        # Upgrade meson + typing_extensions early so ALL subsequent compiles benefit
+        # (jammy ships meson 0.61.2 but portage/apk-tools need >=0.63)
+        rm -f /usr/lib/python3/dist-packages/typing_extensions.py
+        rm -rf /usr/lib/python3/dist-packages/typing_extensions-*.egg-info
+        pip3 install --upgrade --force-reinstall typing_extensions
+        pip3 install 'meson>=1.0,<1.4' ninja 'meson-python<0.16' 'packaging<24' 'pyproject-metadata<0.8'
+        echo '[OK] Build Python deps upgraded (meson, typing_extensions)'
     "
 
     # ══════════════════════════════════════════════════════════════════════
@@ -515,14 +526,11 @@ PACCONF
     run_in_chroot "
         export DEBIAN_FRONTEND=noninteractive
         set -e
-        # Upgrade typing_extensions — jammy's version is too old for modern pyproject-metadata
-        pip3 install --upgrade typing_extensions 2>/dev/null || \
-            pip3 install --break-system-packages --upgrade typing_extensions
         cd /tmp
         rm -rf portage-src
         git clone --depth 1 https://github.com/gentoo/portage.git portage-src
         cd portage-src
-        pip3 install . 2>/dev/null || pip3 install --break-system-packages .
+        pip3 install --no-build-isolation .
         command -v emerge >/dev/null
         cd / && rm -rf /tmp/portage-src
         echo '[OK] portage/emerge installed'
@@ -563,17 +571,18 @@ GCONF
             git clone --depth 1 https://gitlab.alpinelinux.org/alpine/apk-tools.git apk-src
         fi
         cd apk-src
-        # Try meson first, fall back to make
-        if meson setup build --prefix=/usr -Dlua=disabled -Ddocs=disabled; then
+        # v3.x has meson.build; v2.14.x uses make
+        if [ -f meson.build ] && meson setup build --prefix=/usr -Dlua=disabled -Ddocs=disabled; then
             ninja -C build && ninja -C build install
         else
-            make -j\$(nproc) PREFIX=/usr
-            make PREFIX=/usr install
+            # LUA=no disables lua (avoids missing lua-zlib module)
+            make -j\$(nproc) PREFIX=/usr LUA=no
+            make PREFIX=/usr LUA=no install
         fi
         command -v apk >/dev/null
         cd / && rm -rf /tmp/apk-src
         echo '[OK] apk-tools compiled and installed'
-    "
+    " || warn "apk-tools compilation failed — Alpine backend unavailable"
     # Alpine repo config
     mkdir -p "${ROOT}/etc/apk"
     cat > "${ROOT}/etc/apk/repositories" << 'APKREPO'
@@ -615,25 +624,31 @@ XBPSREPO
         set -e
         apt-get install -y -qq libboost-all-dev libxml2-dev libyaml-cpp-dev \
             libproxy-dev libsigc++-2.0-dev libreadline-dev libaugeas-dev \
-            librpm-dev libglib2.0-dev
+            librpm-dev libglib2.0-dev \
+            graphviz nginx vsftpd squid libfcgi-dev
 
-        # 1) libsolv
+        # 1) libsolv (installs FindLibSolv.cmake to /usr/share/cmake/Modules/)
         cd /tmp
         rm -rf libsolv
         git clone --depth 1 https://github.com/openSUSE/libsolv.git
         cd libsolv
         mkdir build && cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DENABLE_RPMMD=ON -DENABLE_RPMDB=ON \
-            -DENABLE_PUBKEY=ON -DENABLE_RPMDB_BYRPMHEADER=ON
+        cmake .. -DCMAKE_INSTALL_PREFIX=/usr \
+            -DENABLE_RPMMD=ON -DENABLE_RPMDB=ON \
+            -DENABLE_PUBKEY=ON -DENABLE_RPMDB_BYRPMHEADER=ON \
+            -DENABLE_COMPLEX_DEPS=ON
         make -j\$(nproc) && make install
+        ldconfig
+        ls /usr/share/cmake/Modules/FindLibSolv.cmake
         cd /tmp && rm -rf libsolv
 
-        # 2) libzypp
+        # 2) libzypp (finds libsolv via FindLibSolv.cmake in /usr/share/cmake/Modules/)
         rm -rf libzypp
         git clone --depth 1 https://github.com/openSUSE/libzypp.git
         cd libzypp
         mkdir build && cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=/usr
+        cmake .. -DCMAKE_INSTALL_PREFIX=/usr \
+            -DCMAKE_MODULE_PATH=/usr/share/cmake/Modules
         make -j\$(nproc)
         make install
         cd /tmp && rm -rf libzypp
@@ -643,13 +658,42 @@ XBPSREPO
         git clone --depth 1 https://github.com/openSUSE/zypper.git
         cd zypper
         mkdir build && cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=/usr
+        cmake .. -DCMAKE_INSTALL_PREFIX=/usr \
+            -DCMAKE_MODULE_PATH=/usr/share/cmake/Modules
         make -j\$(nproc)
         make install
         cd /tmp && rm -rf zypper
         command -v zypper >/dev/null
         echo '[OK] zypper compiled and installed'
-    "
+    " || warn "zypper compilation failed — openSUSE backend unavailable"
+
+    # ══════════════════════════════════════════════════════════════════════
+    # COMPILE: yay  (Arch User Repository helper)
+    # Source: https://github.com/Jguer/yay
+    # ══════════════════════════════════════════════════════════════════════
+    log "Compiling yay (AUR helper)..."
+    run_in_chroot "
+        export DEBIAN_FRONTEND=noninteractive
+        set -e
+        # yay needs Go 1.21+ (jammy only has 1.18); install from go.dev
+        if ! go version 2>/dev/null | grep -qE 'go1\.(2[1-9]|[3-9])'; then
+            curl -fsSL https://go.dev/dl/go1.22.5.linux-amd64.tar.gz -o /tmp/go.tar.gz
+            rm -rf /usr/local/go
+            tar -C /usr/local -xzf /tmp/go.tar.gz
+            rm -f /tmp/go.tar.gz
+        fi
+        export PATH=/usr/local/go/bin:\$PATH
+        export GOPATH=/tmp/go-cache
+        go version
+        cd /tmp
+        rm -rf yay-src
+        git clone --depth 1 https://github.com/Jguer/yay.git yay-src
+        cd yay-src
+        GOFLAGS='-buildvcs=false' go build -o /usr/local/bin/yay .
+        command -v yay >/dev/null
+        cd / && rm -rf /tmp/yay-src /tmp/go-cache
+        echo '[OK] yay compiled and installed'
+    " || warn "yay compilation failed — AUR backend unavailable"
 
     # ══════════════════════════════════════════════════════════════════════
     # NATIVE: flatpak, snap, AppImage/FUSE
@@ -700,10 +744,11 @@ NIXSETUP
     fi
 
     # Remove build-only dependencies to save ISO space
+    # Keep meson/ninja (pip-installed, not apt) — only remove apt build deps
     run_in_chroot "
         export DEBIAN_FRONTEND=noninteractive
         apt-get remove -y --purge \
-            meson ninja-build autoconf automake libtool doxygen asciidoc scdoc \
+            autoconf automake libtool doxygen asciidoc scdoc \
             2>/dev/null || true
         apt-get autoremove -y 2>/dev/null || true
     "
@@ -925,10 +970,13 @@ HOSTSEOF
     "
 
     run_in_chroot "
-        useradd -m -s /bin/bash -G sudo,docker,audio,video,plugdev,netdev ${LIVE_USER} 2>/dev/null || true
+        useradd -m -s /bin/bash -G sudo,docker,audio,video,plugdev,netdev,autologin ${LIVE_USER} 2>/dev/null || true
         echo '${LIVE_USER}:${LIVE_USER}' | chpasswd
         echo '${LIVE_USER} ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/${LIVE_USER}
         chmod 440 /etc/sudoers.d/${LIVE_USER}
+        # Fix /home/nexus ownership — install_universal_pkg may have created it as root
+        chown 1000:1000 /home/${LIVE_USER}
+        chmod 755 /home/${LIVE_USER}
     "
 
     # Override casper.conf so the live user matches SDDM autologin
@@ -945,7 +993,8 @@ CASPEREOF
 
     run_in_chroot "
         systemctl enable NetworkManager   2>/dev/null || true
-        systemctl enable sddm             2>/dev/null || true
+        systemctl disable sddm            2>/dev/null || true
+        systemctl enable lightdm          2>/dev/null || true
         systemctl enable docker            2>/dev/null || true
         systemctl enable ufw               2>/dev/null || true
         systemctl enable fail2ban          2>/dev/null || true
@@ -982,6 +1031,39 @@ if [ -z "$XAUTHORITY" ] || echo "$XAUTHORITY" | grep -q '/home/'; then
 fi
 XAUTHFIX
 
+    # LightDM autologin for live session (proven working config from fix-lightdm.sh)
+    rm -f "${ROOT}/etc/lightdm/lightdm.conf"
+    mkdir -p "${ROOT}/etc/lightdm/lightdm.conf.d"
+    cat > "${ROOT}/etc/lightdm/lightdm.conf.d/50-nexus-autologin.conf" << 'LDMEOF'
+[LightDM]
+user-authority-in-system-dir=true
+
+[Seat:*]
+autologin-user=nexus
+autologin-user-timeout=0
+user-session=plasma
+greeter-session=lightdm-gtk-greeter
+LDMEOF
+
+    # PAM autologin config for LightDM
+    cat > "${ROOT}/etc/pam.d/lightdm-autologin" << 'PAMEOF'
+auth required pam_succeed_if.so user != root quiet_success
+auth required pam_permit.so
+@include common-account
+session optional pam_loginuid.so
+session required pam_limits.so
+@include common-session
+@include common-password
+PAMEOF
+
+    # Remove stale XAUTHORITY/LIBGL overrides from /etc/environment
+    sed -i '/^XAUTHORITY=/d'          "${ROOT}/etc/environment" 2>/dev/null || true
+    sed -i '/^LIBGL_ALWAYS_SOFTWARE=/d' "${ROOT}/etc/environment" 2>/dev/null || true
+
+    # Pre-create Xorg log directory for live user
+    mkdir -p "${ROOT}/home/${LIVE_USER}/.local/share/xorg"
+    chown -R 1000:1000 "${ROOT}/home/${LIVE_USER}/.local"
+
     # KWin software rendering fallback for VMs without GPU acceleration
     mkdir -p "${ROOT}/etc/xdg"
     cat > "${ROOT}/etc/xdg/kwinrc" << 'KWINEOF'
@@ -991,21 +1073,17 @@ GLCore=false
 OpenGLIsUnsafe=false
 KWINEOF
 
-    # SDDM autologin for live session
+    # SDDM configs (kept as fallback if LightDM fails)
     mkdir -p "${ROOT}/etc/sddm.conf.d"
     cat > "${ROOT}/etc/sddm.conf.d/autologin.conf" << SDDMEOF
 [Autologin]
 User=${LIVE_USER}
 Session=plasma.desktop
 SDDMEOF
-
-    # SDDM xauth fix for overlayfs live session
     cat > "${ROOT}/etc/sddm.conf.d/xauth-fix.conf" << 'SDDMXAUTH'
 [X11]
 UserAuthFile=/tmp/.Xauthority-sddm
 SDDMXAUTH
-
-    # SDDM theme
     if [[ -d "${ROOT}/usr/share/sddm/themes/nexusos" ]]; then
         cat > "${ROOT}/etc/sddm.conf.d/theme.conf" << 'SDDMEOF'
 [Theme]
@@ -1108,8 +1186,8 @@ CASPERBOT
 
     # Ensure Plymouth properly quits during casper boot to avoid
     # "unexpectedly disconnected from boot status daemon" error
-    mkdir -p "${ROOT}/etc/systemd/system/sddm.service.d"
-    cat > "${ROOT}/etc/systemd/system/sddm.service.d/plymouth.conf" << 'PLYMEOF'
+    mkdir -p "${ROOT}/etc/systemd/system/lightdm.service.d"
+    cat > "${ROOT}/etc/systemd/system/lightdm.service.d/plymouth.conf" << 'PLYMEOF'
 [Unit]
 After=plymouth-quit-wait.service
 Conflicts=plymouth-quit.service
