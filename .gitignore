@@ -50,6 +50,7 @@ Thumbs.db
 
 # Debug and log files
 *.log
+wget-log*
 *.dump
 gdb.txt
 logs/
