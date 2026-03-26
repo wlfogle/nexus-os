@@ -1,0 +1,49 @@
+{
+  "name": "lous-garuda-ai-sysadmin-control-center",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Lou's Garuda AI SysAdmin Control Center - Ultimate system administration suite integrating ArchBackupPro, ArchForgePro, and OriginPC Control Center",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "check": "tsc --noEmit",
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint src --ext ts,tsx --fix"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^1.5.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.8.1",
+    "@reduxjs/toolkit": "^1.9.3",
+    "react-redux": "^8.0.5",
+    "lucide-react": "^0.263.1",
+    "recharts": "^2.6.2",
+    "framer-motion": "^10.12.4",
+    "date-fns": "^2.30.0",
+    "react-hot-toast": "^2.4.1",
+    "zustand": "^4.3.7",
+    "immer": "^10.0.1"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.5.6",
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "@typescript-eslint/eslint-plugin": "^5.57.1",
+    "@typescript-eslint/parser": "^5.57.1",
+    "@vitejs/plugin-react": "^4.0.0",
+    "autoprefixer": "^10.4.14",
+    "eslint": "^8.38.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.3.4",
+    "postcss": "^8.4.23",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5.0.2",
+    "vite": "^4.3.2"
+  }
+}
