@@ -1,0 +1,12 @@
+[Unit]
+Description=USB Performance Optimization for Rescue System
+After=multi-user.target
+Wants=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/usb-rescue-optimizer.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
