@@ -1,0 +1,80 @@
+[package]
+name = "omniosearch"
+version = "1.0.0"
+description = "🔍👁️ OmnioSearch - AI-Enhanced All-Seeing File Search for Linux"
+authors = ["OmnioSearch Team <omniosearch@ai.dev>"]
+license = "GPL-3.0-or-later"
+repository = "https://github.com/yourusername/OmnioSearch"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+# Tauri Core - Native Desktop App Framework
+tauri = { version = "2.0", features = ["fs", "shell", "window", "dialog"] }
+tauri-plugin-fs = "2.0"
+tauri-plugin-shell = "2.0"
+tauri-plugin-dialog = "2.0"
+tauri-plugin-window-state = "2.0"
+
+# Async Runtime
+tokio = { version = "1.0", features = ["full"] }
+futures = "0.3"
+
+# Error Handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Database & Indexing
+rusqlite = { version = "0.32", features = ["bundled", "fts5"] }
+tantivy = "0.22"
+
+# File System Operations
+walkdir = "2.5"
+ignore = "0.4"
+notify = { version = "6.1", features = ["macos_fsevent"] }
+globset = "0.4"
+
+# AI & ML
+candle-core = "0.7"
+candle-nn = "0.7"
+candle-transformers = "0.7"
+tokenizers = "0.20"
+hf-hub = "0.3"
+
+# Text Processing
+regex = "1.10"
+fuzzy-matcher = "0.3"
+unicode-segmentation = "1.12"
+
+# HTTP Client for Cloud APIs
+reqwest = { version = "0.12", features = ["json", "stream"] }
+oauth2 = "4.4"
+
+# Utilities
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.10", features = ["v4", "serde"] }
+dirs = "5.0"
+mime_guess = "2.0"
+
+# Performance & Monitoring
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+rayon = "1.10"
+
+# Configuration
+config = "0.14"
+toml = "0.8"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[[bin]]
+name = "omniosearch"
+path = "src/main.rs"
