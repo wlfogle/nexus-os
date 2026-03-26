@@ -1,0 +1,7 @@
+# Rust/GTK project ignores
+/target/
+**/*.rs.bk
+Cargo.lock
+.DS_Store
+.idea/
+.vscode/
