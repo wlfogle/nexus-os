@@ -1,0 +1,39 @@
+# Build directories and artifacts
+kernel-build/
+*.o
+*.ko
+*.mod.c
+*.symvers
+*.order
+*.tmp_versions/
+
+# Temporary files
+*.tmp
+*.log
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Generated scripts (these are created by the main scripts)
+monitor-llm-performance.sh
+manage-llm-models.sh
+benchmark-custom-kernel.sh
+
+# System configuration backups
+*.backup
+*.orig
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-*
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Local environment files
+.env
+.env.local
