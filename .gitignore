@@ -98,6 +98,15 @@ docs/_build/
 # Reference repos (embedded git repos)
 reference/
 
+# App build artifacts (monorepo)
+userspace/apps/*/node_modules/
+userspace/apps/*/dist/
+userspace/apps/*/target/
+userspace/apps/*/build/
+userspace/apps/*/.next/
+userspace/apps/*/.vite/
+userspace/apps/*/out/
+
 # Test artifacts
 test-results/
 test_results/
