@@ -1,0 +1,27 @@
+# The Walking Dead Webisodes Downloader Requirements
+
+# Core dependencies
+requests>=2.28.0
+yt-dlp>=2023.10.13
+
+# Optional dependencies for enhanced functionality
+beautifulsoup4>=4.11.0
+lxml>=4.9.0
+Pillow>=9.0.0
+
+# For better JSON handling and data structures
+dataclasses-json>=0.5.7
+
+# For progress bars and better CLI experience
+tqdm>=4.64.0
+rich>=12.0.0
+
+# For better logging and configuration
+pyyaml>=6.0
+colorlog>=6.7.0
+
+# For parallel downloads (optional)
+concurrent-futures>=3.1.1
+
+# For better error handling and retries
+tenacity>=8.1.0

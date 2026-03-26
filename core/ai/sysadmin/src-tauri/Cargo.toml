@@ -1,0 +1,118 @@
+[package]
+name = "lous-garuda-ai-sysadmin-control-center"
+version = "1.0.0-alpha"
+description = "Lou's Garuda AI SysAdmin Control Center - COMPLETE Alpha Release"
+authors = ["Lou <wlfogle@github.com>"]
+license = "MIT"
+repository = "https://github.com/wlfogle/ai-sysadmin-supreme"
+edition = "2021"
+rust-version = "1.75.0"
+keywords = ["ai", "sysadmin", "garuda", "linux", "automation"]
+categories = ["system-administration", "development-tools"]
+
+[build-dependencies]
+tauri-build = { version = "1.0", features = [] }
+
+[dependencies]
+# Tauri Core
+tauri = { version = "1.0", features = [
+    "system-tray",
+    "clipboard-all", 
+    "dialog-ask", 
+    "dialog-confirm", 
+    "dialog-message", 
+    "dialog-open", 
+    "dialog-save", 
+    "fs-copy-file", 
+    "fs-create-dir", 
+    "fs-exists", 
+    "fs-read-dir", 
+    "fs-read-file", 
+    "fs-remove-dir", 
+    "fs-remove-file", 
+    "fs-rename-file", 
+    "fs-write-file", 
+    "global-shortcut-all", 
+    "notification-all", 
+    "os-all", 
+    "path-all", 
+    "process-exit", 
+    "process-relaunch", 
+    "protocol-asset", 
+    "shell-execute", 
+    "shell-open"
+] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Async Runtime
+tokio = { version = "1.0", features = ["full"] }
+futures = "0.3"
+
+# Error Handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Time and Scheduling
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+# System Information and Control - FIXED VERSIONS
+sysinfo = "0.30"
+# procfs = "0.16" # Disabled - causing issues
+nix = { version = "0.28", features = ["process", "signal", "fs"] }
+
+# File System Operations
+notify = "6.0"
+walkdir = "2.0"
+fs_extra = "1.0"
+
+# Database for AI Learning
+rusqlite = { version = "0.30", features = ["bundled"] }
+# diesel = { version = "2.0", features = ["sqlite", "chrono"] } # Disabled for alpha
+
+# Neural Network for AI - UPDATED VERSIONS
+candle-core = "0.9"
+candle-nn = "0.9"
+
+# Hardware Control
+# hidapi = "2.0" # Disabled for alpha
+
+# Network Operations - REMOVED PROBLEMATIC DEPENDENCY
+# netstat2 = "0.9" # Causing compilation errors
+reqwest = { version = "0.11", features = ["json"] }
+
+# Compression and Archives
+flate2 = "1.0"
+tar = "0.4"
+
+# Configuration
+config = "0.13"
+toml = "0.8"
+
+# Regular Expressions
+regex = "1.0"
+
+# Math and Statistics
+nalgebra = "0.32"
+statrs = "0.17"
+
+# Crypto (for secure storage)
+sha2 = "0.10"
+aes-gcm = "0.10"
+
+# Additional working dependencies
+num_cpus = "1.16"
+whoami = "1.4"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[[bin]]
+name = "ai-sysadmin-supreme"
+path = "src/main.rs"
