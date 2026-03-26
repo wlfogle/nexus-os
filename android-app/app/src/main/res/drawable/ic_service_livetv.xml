@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- TV with antenna — Live TV / HDHomeRun -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M8.5,3l2.5,2.5 2.5,-2.5 1.5,1.5 -2.5,2.5h6c1.1,0 2,0.9 2,2v10c0,1.1 -0.9,2 -2,2H5c-1.1,0 -2,-0.9 -2,-2V9c0,-1.1 0.9,-2 2,-2h6L8.5,4.5 8.5,3zM5,9v10h14V9H5z" />
+</vector>

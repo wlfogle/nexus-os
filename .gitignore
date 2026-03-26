@@ -1,0 +1,23 @@
+# Android build artifacts
+android-app/.gradle/
+android-app/app/build/
+android-app/build/
+android-app/gradle/wrapper/gradle-wrapper.jar
+android-app/gradlew
+android-app/gradlew.bat
+android-app/local.properties
+
+# Editor swap files
+*.kate-swp
+*.swp
+*~
+.idea/
+
+# Secrets (never commit)
+.env
+*.key
+*.pem
+
+# OS junk
+.DS_Store
+Thumbs.db

@@ -1,0 +1,41 @@
+# Traefik v3 Static Configuration
+
+api:
+  dashboard: true
+  insecure: true   # OK for LAN-only; disable if exposing externally
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: media-net
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+# Uncomment for real domain + Let's Encrypt
+# certificatesResolvers:
+#   letsencrypt:
+#     acme:
+#       email: your@email.com
+#       storage: /acme.json
+#       httpChallenge:
+#         entryPoint: web
+
+log:
+  level: INFO
+  filePath: /logs/traefik.log
+
+accessLog:
+  filePath: /logs/access.log

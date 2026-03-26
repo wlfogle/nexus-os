@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base theme for phones/tablets -->
+    <style name="Theme.TiamatsStack" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/colorPrimaryDark</item>
+        <item name="android:navigationBarColor">@color/colorPrimaryDark</item>
+        <!-- Dark overflow menu popup -->
+        <item name="popupMenuStyle">@style/Widget.TiamatsStack.PopupMenu</item>
+        <item name="android:popupMenuStyle">@style/Widget.TiamatsStack.PopupMenu</item>
+        <item name="actionOverflowMenuStyle">@style/Widget.TiamatsStack.PopupMenu</item>
+    </style>
+
+    <style name="Widget.TiamatsStack.PopupMenu" parent="Widget.MaterialComponents.PopupMenu.Overflow">
+        <item name="android:popupBackground">@color/card_background</item>
+    </style>
+
+    <!-- Leanback theme for Fire TV / Android TV -->
+    <style name="Theme.TiamatsStack.Leanback" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowOverscan">true</item>
+    </style>
+
+</resources>

@@ -1,0 +1,32 @@
+---
+# wg-easy — WireGuard VPN with web UI for remote access
+# Allows laptop/tablet/phone to securely connect to home network remotely
+# NOTE: This is SEPARATE from the CT-100/CT-101 WireGuard used for qBittorrent
+# Port forward 51820/UDP on your router to 192.168.12.20
+
+services:
+  wg-easy:
+    image: ghcr.io/wg-easy/wg-easy:latest
+    container_name: wg-easy
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
+    ports:
+      - "51820:51820/udp"   # WireGuard tunnel
+      - "51821:51821/tcp"   # Web UI (restrict to LAN)
+    volumes:
+      - /opt/appdata/wg-easy:/etc/wireguard
+    environment:
+      - LANG=en
+      - WG_HOST=YOUR_PUBLIC_IP_OR_DDNS  # e.g. home.yourdomain.com or your public IP
+      - PASSWORD_HASH=CHANGE_ME          # Generate: docker run ghcr.io/wg-easy/wg-easy wgpw 'yourpassword'
+      - WG_DEFAULT_ADDRESS=10.8.0.x
+      - WG_DEFAULT_DNS=192.168.12.10,192.168.12.20  # Use AdGuard even when remote
+      - WG_ALLOWED_IPS=192.168.12.0/24,10.8.0.0/24  # Split tunnel — only route LAN traffic through VPN
+      - WG_PERSISTENT_KEEPALIVE=25
+      - UI_TRAFFIC_STATS=true
+      - UI_CHART_TYPE=1
