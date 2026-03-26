@@ -1,0 +1,78 @@
+{
+  "name": "Proxmox VE Server",
+  "description": "Proxmox Virtual Environment server with direct disk access",
+  "os_type": "linux",
+  "os_variant": "debian12",
+  "memory": 8192,
+  "vcpus": 4,
+  "created_at": "2025-08-26T18:03:46Z",
+  "network_config": {
+    "bridge": "virbr0",
+    "network_name": "default",
+    "mac_address": null,
+    "model": "virtio"
+  },
+  "storage_config": {
+    "pool_name": "default",
+    "format": "qcow2",
+    "bus": "virtio",
+    "cache": "writeback"
+  },
+  "display_config": {
+    "graphics_type": "spice",
+    "listen": "127.0.0.1",
+    "password": null,
+    "autoport": true
+  },
+  "boot_config": {
+    "boot_order": ["hd", "cdrom"],
+    "iso_path": null,
+    "kernel": null,
+    "initrd": null,
+    "cmdline": null
+  },
+  "storage_devices": [
+    {
+      "device": "vda",
+      "source": "/var/lib/libvirt/images/test-proxmox-ve.qcow2",
+      "format": "qcow2",
+      "size": 0,
+      "bus": "virtio",
+      "cache": "writeback"
+    }
+  ],
+  "network_interfaces": [
+    {
+      "mac_address": "52:54:00:12:34:56",
+      "network_name": "default",
+      "interface_type": "bridge",
+      "model": "virtio",
+      "link_state": "up"
+    }
+  ],
+  "recommended_settings": {
+    "cpu_mode": "host-passthrough",
+    "cpu_check": "none",
+    "machine_type": "q35",
+    "firmware": "efi",
+    "secure_boot": "off",
+    "tpm": "off",
+    "virtio_scsi": "on",
+    "virtio_rng": "on"
+  },
+  "proxmox_specific": {
+    "node_memory": "4096",
+    "cluster_enabled": false,
+    "ceph_enabled": false,
+    "backup_storage": "/var/lib/vz/dump",
+    "iso_storage": "/var/lib/vz/template/iso"
+  },
+  "passthrough_devices": [
+    {
+      "type": "disk",
+      "source": "/dev/nvme1n1p2",
+      "target": "vdb",
+      "description": "NVMe partition direct passthrough for Proxmox storage"
+    }
+  ]
+}
