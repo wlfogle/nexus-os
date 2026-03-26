@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# EA App (successor to Origin) installer for PortProton
+export PW_AUTOINSTALL_EXE="EADesktop-Installer.exe"
+export PW_PREFIX_NAME="EA_APP"
+export PW_VULKAN_USE="1"
+PW_WINE_USE="PROTON_LG" try_download_installer \
+"https://www.ea.com/ea-app/download" \
+"$PW_AUTOINSTALL_EXE" \
+"ea_app_installer"

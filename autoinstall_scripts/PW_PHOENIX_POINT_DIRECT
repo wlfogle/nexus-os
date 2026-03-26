@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Phoenix Point Direct Launcher for PortProton
+export PW_AUTOINSTALL_EXE="/media/lou/Games/Games/PhoenixPointEpic/PhoenixPointWin64.exe"
+export PW_PREFIX_NAME="PHOENIX_POINT"
+export PW_VULKAN_USE="1"
+if [[ -f "$PW_AUTOINSTALL_EXE" ]]; then
+    portwine_exe="$PW_AUTOINSTALL_EXE"
+    try_run_exe
+else
+    echo "Phoenix Point executable not found at: $PW_AUTOINSTALL_EXE"
+fi

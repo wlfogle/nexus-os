@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# GeForce Now installer for PortProton
+export PW_AUTOINSTALL_EXE="GeForceNOW-release.exe"
+export PW_PREFIX_NAME="GEFORCE_NOW"
+export PW_VULKAN_USE="1"
+PW_WINE_USE="PROTON_LG" try_download_installer \
+"https://www.nvidia.com/en-us/geforce-now/" \
+"$PW_AUTOINSTALL_EXE" \
+"geforce_now_installer"

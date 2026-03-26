@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Mafia III Definitive Edition Direct Launcher for PortProton
+export PW_AUTOINSTALL_EXE="/media/lou/Games/Games/Mafia III- Definitive Edition/Mafia3DefinitiveEdition.exe"
+export PW_PREFIX_NAME="MAFIA_III_DE"
+export PW_VULKAN_USE="1"
+if [[ -f "$PW_AUTOINSTALL_EXE" ]]; then
+    portwine_exe="$PW_AUTOINSTALL_EXE"
+    try_run_exe
+else
+    echo "Mafia III Definitive Edition executable not found at: $PW_AUTOINSTALL_EXE"
+fi

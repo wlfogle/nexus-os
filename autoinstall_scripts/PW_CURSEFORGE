@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# CurseForge App installer for PortProton
+export PW_AUTOINSTALL_EXE="CurseForge-Setup.exe"
+export PW_PREFIX_NAME="CURSEFORGE"
+export PW_VULKAN_USE="1"
+PW_WINE_USE="PROTON_LG" try_download_installer \
+"https://download.curseforge.com/" \
+"$PW_AUTOINSTALL_EXE" \
+"curseforge_installer"

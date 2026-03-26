@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Last Epoch Direct Launcher for PortProton
+export PW_AUTOINSTALL_EXE="/media/lou/Games/Games/Last Epoch/Last Epoch.exe"
+export PW_PREFIX_NAME="LAST_EPOCH"
+export PW_VULKAN_USE="1"
+if [[ -f "$PW_AUTOINSTALL_EXE" ]]; then
+    portwine_exe="$PW_AUTOINSTALL_EXE"
+    try_run_exe
+else
+    echo "Last Epoch executable not found at: $PW_AUTOINSTALL_EXE"
+fi

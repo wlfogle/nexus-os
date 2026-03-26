@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Auto-Detect ALL Games (Steam + Regular) for PortProton
+echo "=== Auto-detecting ALL games on your system ==="
+
+# Check regular games
+GAMES_DIR="/media/lou/Games/Games"
+regular_count=0
+if [[ -d "$GAMES_DIR" ]]; then
+    echo "Scanning regular games directory..."
+    for game_dir in "$GAMES_DIR"/*/; do
+        if [[ -d "$game_dir" ]]; then
+            main_exe=$(find "$game_dir" -maxdepth 2 -name "*.exe" | head -1)
+            if [[ -n "$main_exe" ]]; then
+                ((regular_count++))
+            fi
+        fi
+    done
+fi
+
+# Check Steam games
+STEAM_DIR="/media/lou/Games/SteamLibrary/steamapps/common"
+steam_count=0
+if [[ -d "$STEAM_DIR" ]]; then
+    echo "Scanning Steam games directory..."
+    for game_dir in "$STEAM_DIR"/*/; do
+        if [[ -d "$game_dir" && ! "$game_dir" =~ Proton ]]; then
+            main_exe=$(find "$game_dir" -maxdepth 3 -name "*.exe" | grep -v -i redist | head -1)
+            if [[ -n "$main_exe" ]]; then
+                ((steam_count++))
+            fi
+        fi
+    done
+fi
+
+echo "=== Game Detection Summary ==="
+echo "Regular games found: $regular_count"
+echo "Steam games found: $steam_count"
+echo "Total games: $((regular_count + steam_count))"
+echo ""
+echo "This would create PortProton shortcuts for all detected games."

@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Steam Games Parser for PortProton
+echo "=== Parsing Steam library for installed games ==="
+
+STEAM_APPS_DIR="/media/lou/Games/SteamLibrary/steamapps"
+MANIFEST_DIR="$STEAM_APPS_DIR"
+COMMON_DIR="$STEAM_APPS_DIR/common"
+
+if [[ ! -d "$STEAM_APPS_DIR" ]]; then
+    echo "Steam directory not found: $STEAM_APPS_DIR"
+    exit 1
+fi
+
+count=0
+echo "Reading Steam app manifests..."
+
+for manifest in "$MANIFEST_DIR"/appmanifest_*.acf; do
+    if [[ -f "$manifest" ]]; then
+        # Extract game info from manifest
+        app_name=$(grep -m 1 '"name"' "$manifest" | cut -d'"' -f4)
+        install_dir=$(grep -m 1 '"installdir"' "$manifest" | cut -d'"' -f4)
+        
+        if [[ -n "$app_name" && -n "$install_dir" ]]; then
+            game_path="$COMMON_DIR/$install_dir"
+            
+            if [[ -d "$game_path" ]]; then
+                # Find main executable
+                main_exe=$(find "$game_path" -maxdepth 3 -name "*.exe" | grep -v -E "(redist|_CommonRedist|vcredist|directx)" | head -1)
+                
+                if [[ -n "$main_exe" ]]; then
+                    echo "Steam Game: $app_name"
+                    echo "  Path: $game_path"
+                    echo "  Executable: $main_exe"
+                    echo "  Would create prefix: STEAM_$(echo "$install_dir" | tr '[:lower:]' '[:upper:]')"
+                    echo ""
+                    ((count++))
+                fi
+            fi
+        fi
+    fi
+done
+
+echo "=== Found $count Steam games with executables ==="

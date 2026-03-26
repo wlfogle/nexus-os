@@ -1,0 +1,545 @@
+app-id: ru.linux_gaming.PortProton
+runtime: org.freedesktop.Platform
+runtime-version: &runtime-version '24.08'
+x-gl-version: &gl-version '1.4'
+# Change to `25.08-extra` next year
+x-gl-versions: &gl-versions 24.08;24.08extra;1.4
+x-gl-merge-dirs: &gl-merge-dirs vulkan/icd.d;glvnd/egl_vendor.d;egl/egl_external_platform.d;OpenCL/vendors;lib/dri;lib/d3d;lib/gbm;vulkan/explicit_layer.d;vulkan/implicit_layer.d
+sdk: org.freedesktop.Sdk
+command: portproton
+separate-locales: false
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --socket=pulseaudio
+  - --device=all
+  - --share=network
+  - --allow=multiarch
+  - --allow=bluetooth
+  # For Wine crash handling
+  - --allow=devel
+  # For wine mono and gecko work
+  - --allow=per-app-dev-shm
+  # Wine uses UDisks2 to enumerate disk drives
+  - --system-talk-name=org.freedesktop.UDisks2
+  - --system-talk-name=org.freedesktop.NetworkManager
+  - --filesystem=xdg-run/gamescope-0:ro
+  - --filesystem=xdg-run/pipewire-0:ro
+  - --filesystem=host
+  # Mangohud, OBSVkCapture and GameScope
+  - --env=PATH=/app/bin:/usr/bin:/app/utils/bin:/usr/lib/extensions/vulkan/MangoHud/bin/:/usr/lib/extensions/vulkan/gamescope/bin:/usr/lib/extensions/vulkan/OBSVkCapture/bin
+  # For Steam Deck HDR support
+  - --env=LD_LIBRARY_PATH=/usr/lib/extensions/vulkan/gamescope/lib
+  - --env=GST_PLUGIN_SYSTEM_PATH=/app/lib/gstreamer-1.0:/app/lib32/gstreamer-1.0:/usr/lib/extensions/gstreamer-1.0:/usr/lib/x86_64-linux-gnu/gstreamer-1.0:/usr/lib/i386-linux-gnu/gstreamer-1.0
+  # These are for notifications/tray icons
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --talk-name=org.ayatana.indicator.application
+  - --talk-name=org.freedesktop.Notifications
+  # Inhibit ScreenSaver on Game Active
+  - --talk-name=org.freedesktop.ScreenSaver
+
+add-extensions:
+  org.freedesktop.Platform.Compat.i386:
+    directory: lib/i386-linux-gnu
+    version: *runtime-version
+
+  org.freedesktop.Platform.Compat.i386.Debug:
+    directory: lib/debug/lib/i386-linux-gnu
+    version: *runtime-version
+    no-autodownload: true
+
+  org.freedesktop.Platform.GL32:
+    directory: lib/i386-linux-gnu/GL
+    version: *gl-version
+    versions: *gl-versions
+    subdirectories: true
+    no-autodownload: true
+    autodelete: false
+    add-ld-path: lib
+    merge-dirs: *gl-merge-dirs
+    download-if: active-gl-driver
+    enable-if: active-gl-driver
+    autoprune-unless: active-gl-driver
+
+  org.freedesktop.Platform.GL32.Debug:
+    directory: lib/debug/lib/i386-linux-gnu/GL
+    version: *gl-version
+    versions: *gl-versions
+    subdirectories: true
+    no-autodownload: true
+    merge-dirs: *gl-merge-dirs
+    enable-if: active-gl-driver
+    autoprune-unless: active-gl-driver
+
+  org.freedesktop.Platform.VAAPI.Intel.i386:
+    directory: lib/i386-linux-gnu/dri/intel-vaapi-driver
+    version: *runtime-version
+    versions: *runtime-version
+    autodelete: false
+    no-autodownload: true
+    add-ld-path: lib
+    download-if: have-intel-gpu
+    autoprune-unless: have-intel-gpu
+
+  org.freedesktop.Platform.ffmpeg-full:
+    directory: lib/ffmpeg
+    add-ld-path: .
+    version: *runtime-version
+    autodelete: false
+
+  org.freedesktop.Platform.ffmpeg_full.i386:
+    directory: lib32/ffmpeg
+    add-ld-path: .
+    version: *runtime-version
+    autodelete: false
+
+  org.winehq.Wine.gecko:
+    directory: share/wine/gecko
+
+  org.winehq.Wine.mono:
+    directory: share/wine/mono
+
+sdk-extensions:
+  - org.freedesktop.Sdk.Compat.i386
+  - org.freedesktop.Sdk.Extension.toolchain-i386
+
+x-compat-i386-opts: &compat_i386_opts
+  prepend-pkg-config-path: /app/lib32/pkgconfig:/usr/lib/i386-linux-gnu/pkgconfig
+  # Some autotools-based builds will fail if -L/app/lib32 isn't first
+  ldflags: -L/app/lib32 -Wl,-rpath-link=/app/lib32 -Wl,-z,relro,-z,now -Wl,--as-needed
+  ldflags-override: true
+  append-path: /usr/lib/sdk/toolchain-i386/bin
+  env:
+    CC: ccache i686-unknown-linux-gnu-gcc
+    CXX: ccache i686-unknown-linux-gnu-g++
+  libdir: /app/lib32
+
+cleanup:
+  - /include
+  - /lib*/pkgconfig
+  - /man
+  - /share/doc
+  - /share/gtk-doc
+  - /share/man
+  - /share/pkgconfig
+  - /share/help
+  - /share/vala
+  - '*.la'
+  - '*.a'
+  - '*.pod'
+modules:
+  - ru.linux_gaming.PortProton.pypi-deps.yaml
+
+  - name: oniguruma
+    buildsystem: autotools
+    sources:
+      - type: archive
+        url: https://github.com/kkos/oniguruma/releases/download/v6.9.10/onig-6.9.10.tar.gz
+        sha256: 2a5cfc5ae259e4e97f86b68dfffc152cdaffe94e2060b770cb827238d769fc05
+        x-checker-data:
+          type: anitya
+          project-id: 11184
+          stable-only: true
+          url-template: https://github.com/kkos/oniguruma/releases/download/v${version}/onig-${version}.tar.gz
+
+  - name: jq
+    buildsystem: autotools
+    sources:
+      - type: archive
+        url: https://github.com/stedolan/jq/releases/download/jq-1.8.1/jq-1.8.1.tar.gz
+        sha256: 2be64e7129cecb11d5906290eba10af694fb9e3e7f9fc208a311dc33ca837eb0
+        x-checker-data:
+          type: anitya
+          project-id: 13252
+          stable-only: true
+          url-template: https://github.com/stedolan/jq/releases/download/jq-${version}/jq-${version}.tar.gz
+
+  - name: yad
+    config-opts:
+      - --enable-standalone
+      - --disable-icon-browser
+      - --disable-tools
+    sources:
+      - type: archive
+        url: https://github.com/v1cont/yad/releases/download/v14.1/yad-14.1.tar.xz
+        sha256: dde047a915cd8d3892c32b6ba031876f5cda673e01882c99613f043867c88133
+        x-checker-data:
+          type: anitya
+          project-id: 5280
+          stable-only: true
+          url-template: https://github.com/v1cont/yad/releases/download/v$version/yad-$version.tar.xz
+    modules:
+      - shared-modules/intltool/intltool-0.51.json
+      - shared-modules/lzo/lzo.json
+      - shared-modules/libayatana-appindicator/libayatana-appindicator-gtk3.json
+      - shared-modules/squashfs-tools/squashfs-tools.json
+
+  # Taken from https://github.com/flathub/fr.romainvigier.MetadataCleaner/blob/74c261effe8536e33c2669b75acb340ecfff3142/fr.romainvigier.MetadataCleaner.yaml#L73
+  - name: exiftool
+    buildsystem: simple
+    build-commands:
+      - perl Makefile.PL
+      - make install
+    cleanup:
+      - '*.pod'
+    sources:
+      - type: git
+        url: https://github.com/exiftool/exiftool.git
+        tag: '13.32'
+        commit: a755221b7937406a16b40bcd533e992aa8b5caa0
+        x-checker-data:
+          type: git
+          tag-pattern: ^(\d+\.\d+[02468])$
+    modules:
+      - name: perl
+        buildsystem: simple
+        build-commands:
+          - ./Configure -des -Dprefix=$FLATPAK_DEST -Dman1dir=none -Dman3dir=none
+          - make
+          - make install
+        post-install:
+          # Fix wrong permissions
+          - chmod -R u+w $FLATPAK_DEST/lib/perl5
+        cleanup:
+          - /bin/corelist
+          - /bin/cpan
+          - /bin/enc2xs
+          - /bin/encguess
+          - /bin/h2ph
+          - /bin/h2xs
+          - /bin/instmodsh
+          - /bin/json_pp
+          - /bin/libnetcfg
+          - /bin/perl5*
+          - /bin/perlbug
+          - /bin/perldoc
+          - /bin/perlivp
+          - /bin/perlthanks
+          - /bin/piconv
+          - /bin/pl2pm
+          - /bin/pod2html
+          - /bin/pod2man
+          - /bin/pod2text
+          - /bin/pod2usage
+          - /bin/podchecker
+          - /bin/prove
+          - /bin/ptar
+          - /bin/ptardiff
+          - /bin/ptargrep
+          - /bin/shasum
+          - /bin/splain
+          - /bin/streamzip
+          - /bin/xsubpp
+          - /bin/zipdetails
+          - '*.pod'
+        sources:
+          - type: git
+            url: https://github.com/Perl/perl5.git
+            tag: v5.38.2
+            commit: 55dd2f792ffc8cefe614350a411f785374281b24
+            disable-fsckobjects: true
+
+  - name: libXmu
+    buildsystem: autotools
+    config-opts:
+      - --disable-static
+    sources:
+      - type: archive
+        url: https://xorg.freedesktop.org/releases/individual/lib/libXmu-1.2.1.tar.gz
+        sha512: 404818db0bb75e0bbff0ef05d6203238e98c86a0ceebde1e05d72ec87cf9c7182e5aa51e9e819714e2a43642db10059f32e9ac7330a546d17c64ca860e155db9
+        x-checker-data:
+          type: anitya
+          project-id: 1785
+          url-template: https://xorg.freedesktop.org/releases/individual/lib/libXmu-$version.tar.gz
+
+  - name: xdpyinfo
+    buildsystem: autotools
+    sources:
+      - type: git
+        url: https://gitlab.freedesktop.org/xorg/app/xdpyinfo.git
+        tag: xdpyinfo-1.3.4
+        commit: ea4083ccb2a5ce4252acabeb2eb7bf49f7be25e0
+        x-checker-data:
+          type: git
+          tag-pattern: ^xdpyinfo-([\d.]+)$
+
+  - name: xrdb
+    buildsystem: autotools
+    sources:
+      - type: archive
+        url: https://xorg.freedesktop.org/releases/individual/app/xrdb-1.2.2.tar.gz
+        sha256: db2d774a35ae2f7e7ac61cc2de0dcae27fc2aa14399c35721f8300e63ea73549
+        x-checker-data:
+          type: anitya
+          project-id: 14956
+          url-template: https://xorg.freedesktop.org/releases/individual/app/xrdb-$version.tar.gz
+
+  - name: libXaw
+    buildsystem: autotools
+    sources:
+      - type: archive
+        url: https://xorg.freedesktop.org/releases/individual/lib/libXaw-1.0.16.tar.gz
+        sha256: 012f90adf8739f2f023d63a5fee1528949cf2aba92ef7ac1abcfc2ae9cf28798
+        x-checker-data:
+          type: anitya
+          project-id: 1766
+          url-template: https://xorg.freedesktop.org/releases/individual/lib/libXaw-$version.tar.gz
+
+  - name: xterm
+    buildsystem: autotools
+    config-opts:
+      - --disable-full-tgetent
+    sources:
+      - type: archive
+        url: https://invisible-mirror.net/archives/xterm/xterm-401.tgz
+        sha256: 3da2b5e64cb49b03aa13057d85e62e1f2e64f7c744719c00d338d11cd3e6ca1a
+        x-checker-data:
+          type: anitya
+          project-id: 5272
+          url-template: https://invisible-mirror.net/archives/xterm/xterm-$version.tgz
+
+  - name: desktop-file-utils
+    buildsystem: meson
+    sources:
+      - type: archive
+        url: https://www.freedesktop.org/software/desktop-file-utils/releases/desktop-file-utils-0.28.tar.xz
+        sha256: 4401d4e231d842c2de8242395a74a395ca468cd96f5f610d822df33594898a70
+        x-checker-data:
+          type: anitya
+          project-id: 421
+          url-template: https://www.freedesktop.org/software/desktop-file-utils/releases/desktop-file-utils-$version.tar.xz
+
+  - name: cabextract
+    sources:
+      - type: archive
+        url: https://www.cabextract.org.uk/cabextract-1.11.tar.gz
+        sha256: b5546db1155e4c718ff3d4b278573604f30dd64c3c5bfd4657cd089b823a3ac6
+
+  - name: vulkan-tools
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DGLSLANG_INSTALL_DIR=/app
+      - -DVULKAN_HEADERS_INSTALL_DIR=/app
+      - -DCMAKE_BUILD_TYPE=Release
+    sources:
+      - type: git
+        url: https://github.com/KhronosGroup/Vulkan-Tools.git
+        tag: sdk-1.3.261.1
+        commit: a7da7027ca9fd0901639f02619c226da9c6036f1
+        x-checker-data:
+          type: git
+          tag-pattern: ^sdk-([\d.]+)$
+    modules:
+      - name: vulkan-headers
+        buildsystem: cmake-ninja
+        sources:
+          - type: git
+            url: https://github.com/KhronosGroup/Vulkan-Headers.git
+            tag: sdk-1.3.261.1
+            commit: 85c2334e92e215cce34e8e0ed8b2dce4700f4a50
+            x-checker-data:
+              type: git
+              tag-pattern: ^sdk-([\d.]+)$
+
+  - name: xrandr
+    sources:
+      - type: archive
+        url: https://xorg.freedesktop.org/archive/individual/app/xrandr-1.5.1.tar.gz
+        sha256: 7b99edb7970a1365eaf5bcaf552144e4dfc3ccf510c4abc08569849929fb366e
+
+  - name: setxkbmap
+    sources:
+      - type: archive
+        url: https://xorg.freedesktop.org/archive/individual/app/setxkbmap-1.3.3.tar.xz
+        sha256: b560c678da6930a0da267304fa3a41cc5df39a96a5e23d06f14984c87b6f587b
+
+  - name: glxinfo
+    buildsystem: meson
+    config-opts:
+      - --bindir=/app/mesa-demos
+      - -Degl=disabled
+      - -Dglut=disabled
+      - -Dosmesa=disabled
+      - -Dvulkan=disabled
+      - -Dwayland=disabled
+    post-install:
+      - mv -v /app/mesa-demos/glxinfo /app/bin
+    sources:
+      - type: archive
+        url: https://archive.mesa3d.org/demos/mesa-demos-9.0.0.tar.xz
+        sha256: 3046a3d26a7b051af7ebdd257a5f23bfeb160cad6ed952329cdff1e9f1ed496b
+        x-checker-data:
+          type: anitya
+          project-id: 16781
+          stable-only: true
+          url-template: https://archive.mesa3d.org/demos/mesa-demos-$version.tar.xz
+    cleanup:
+      - /include
+      - /mesa-demos
+      - /share
+    modules:
+      - shared-modules/glu/glu-9.json
+
+  - name: glew
+    no-autogen: true
+    make-args: &glew-make-args
+      - GLEW_PREFIX=${FLATPAK_DEST}
+      - GLEW_DEST=${FLATPAK_DEST}
+      - LIBDIR=${FLATPAK_DEST}/lib
+      - CFLAGS.EXTRA:=${CFLAGS} -fPIC
+      - LDFLAGS.EXTRA=${LDFLAGS}
+    make-install-args: *glew-make-args
+    sources: &glew-sources
+      - type: archive
+        url: https://downloads.sourceforge.net/project/glew/glew/2.2.0/glew-2.2.0.tgz
+        sha256: d4fc82893cfb00109578d0a1a2337fb8ca335b3ceccf97b97e5cc7f08e4353e1
+
+  - name: glew-32bit
+    build-options:
+      arch:
+        x86_64: *compat_i386_opts
+    no-autogen: true
+    make-args: *glew-make-args
+    make-install-args: *glew-make-args
+    sources: *glew-sources
+
+  - name: libNVCtrl
+    no-autogen: true
+    no-make-install: true
+    build-commands:
+      - mkdir -p ${FLATPAK_DEST}/lib
+      - cp -a libXNVCtrl.so* ${FLATPAK_DEST}/lib/
+      - install -D *.h -t ${FLATPAK_DEST}/include/NVCtrl
+    subdir: src/libXNVCtrl
+    sources:
+      - type: archive
+        archive-type: tar
+        url: https://api.github.com/repos/NVIDIA/nvidia-settings/tarball/refs/tags/470.63.01
+        sha256: 0ede63515851d85ac0d1ed5f00e355f539968e6d1fd226120a27b2c66c3575de
+      - type: patch
+        path: patches/libxnvctrl_so_0.patch
+        x-checker-data:
+          type: json
+          url: https://api.github.com/repos/NVIDIA/nvidia-settings/tags
+          url-query: .[0].tarball_url
+          version-query: .[0].name
+
+  - name: hwdata
+    config-opts:
+      - --datarootdir=/app/share
+    sources:
+      - type: git
+        url: https://github.com/vcrhonek/hwdata
+        tag: v0.397
+        commit: e4423c783ca7db5c9d6d4881985272849f4892cf
+        x-checker-data:
+          type: json
+          url: https://api.github.com/repos/vcrhonek/hwdata/releases/latest
+          tag-query: .tag_name
+
+  - name: libusb
+    sources: &libusb-sources
+      - type: archive
+        url: https://github.com/libusb/libusb/releases/download/v1.0.29/libusb-1.0.29.tar.bz2
+        sha256: 5977fc950f8d1395ccea9bd48c06b3f808fd3c2c961b44b0c2e6e29fc3a70a85
+        x-checker-data:
+          type: json
+          url: https://api.github.com/repos/libusb/libusb/releases/latest
+          tag-query: .tag_name
+          version-query: $tag | sub("^[vV]"; "")
+          timestamp-query: .published_at
+          url-query: .assets[] | select(.name=="libusb-\($version).tar.bz2") | .browser_download_url
+
+  - name: libusb-32bit
+    build-options:
+      arch:
+        x86_64: *compat_i386_opts
+    sources: *libusb-sources
+
+  - name: eudev
+    cleanup:
+      - /bin
+      - /sbin
+      - /lib*/udev
+    post-install:
+      - udevadm hwdb --update --usr
+    sources: &eudev_sources
+      - type: archive
+        url: https://github.com/eudev-project/eudev/releases/download/v3.2.14/eudev-3.2.14.tar.gz
+        sha256: 8da4319102f24abbf7fff5ce9c416af848df163b29590e666d334cc1927f006f
+        x-checker-data:
+          type: json
+          url: https://api.github.com/repos/gentoo/eudev/releases/latest
+          tag-query: .tag_name
+          version-query: $tag | sub("^[vV]"; "")
+          timestamp-query: .published_at
+          url-query: .assets[] | select(.name=="eudev-\($version).tar.gz") | .browser_download_url
+
+  - name: eudev-32bit
+    build-options:
+      arch:
+        x86_64: *compat_i386_opts
+    cleanup:
+      - /bin
+      - /sbin
+      - /lib*/udev
+    sources: *eudev_sources
+
+  - name: usbutils
+    buildsystem: meson
+    sources:
+      - type: git
+        url: https://github.com/gregkh/usbutils
+        commit: cda6883cade6ec67671d0c7de61e70eb992509a9
+        tag: v018
+        x-checker-data:
+          type: anitya
+          project-id: 5061
+          stable-only: true
+          tag-template: v$version
+
+  - name: platform-bootstrap
+    buildsystem: simple
+    build-commands:
+      - |
+        set -e
+        mkdir -p /app/bin
+        mkdir -p /app/utils
+        mkdir -p /app/lib/ffmpeg
+        mkdir -p /app/lib32/ffmpeg
+        mkdir -p /app/lib/i386-linux-gnu
+        mkdir -p /app/lib/i386-linux-gnu/GL
+        mkdir -p /app/lib/debug/lib/i386-linux-gnu
+        mkdir -p /app/lib/debug/lib/i386-linux-gnu/GL
+        mkdir -p /app/lib/i386-linux-gnu/dri/intel-vaapi-driver
+        mkdir -p /app/share/vulkan/implicit_layer.d/
+        mkdir -p /app/share/wine/gecko/
+        mkdir -p /app/share/wine/mono/
+        install -Dm644 -t /app/etc ld.so.conf
+    sources:
+      - type: inline
+        dest-filename: ld.so.conf
+        contents: |
+          /app/lib32
+          /app/lib/i386-linux-gnu
+
+  - name: PortProton
+    buildsystem: simple
+    build-commands:
+      - |
+        set -e
+        install -Dm755 portproton /app/bin/portproton
+        install -Dm644 ru.linux_gaming.PortProton.svg /app/share/icons/hicolor/scalable/apps/ru.linux_gaming.PortProton.svg
+        install -Dm644 ru.linux_gaming.PortProton.desktop /app/share/applications/ru.linux_gaming.PortProton.desktop
+        install -Dm644 ru.linux_gaming.PortProton.metainfo.xml /app/share/metainfo/ru.linux_gaming.PortProton.metainfo.xml
+        install -Dm644 LICENSE /app/share/licenses/ru.linux_gaming.PortProton/LICENSE
+    sources:
+      - type: git
+        url: https://github.com/Castro-Fidel/PortProton_ALT
+        tag: v1.7.3
+        commit: 1275cd918e5770efcda9666ef90dcb4c7babb9b0
+        x-checker-data:
+          type: git
+          tag-pattern: ^v([\\d.]+)$

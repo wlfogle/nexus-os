@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Riot Games Client installer for PortProton
+export PW_AUTOINSTALL_EXE="RiotClientInstaller.exe"
+export PW_PREFIX_NAME="RIOT_CLIENT"
+export PW_VULKAN_USE="1"
+PW_WINE_USE="PROTON_LG" try_download_installer \
+"https://auth.riotgames.com/" \
+"$PW_AUTOINSTALL_EXE" \
+"riot_games_installer"

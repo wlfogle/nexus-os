@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# MultiMC (Minecraft launcher) installer for PortProton
+export PW_AUTOINSTALL_EXE="MultiMC-Setup.exe"
+export PW_PREFIX_NAME="MULTIMC"
+export PW_VULKAN_USE="1"
+PW_WINE_USE="PROTON_LG" try_download_installer \
+"https://multimc.org/" \
+"$PW_AUTOINSTALL_EXE" \
+"multimc_installer"
