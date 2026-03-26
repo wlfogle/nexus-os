@@ -1,0 +1,17 @@
+# CI Configuration for garuda-calamares-zfs package
+# This follows Garuda's CI/build system requirements
+
+# Package source configuration  
+CI_PKGBUILD_SOURCE="gitlab:wlfogle/calamares-zfs-integration"
+
+# Enable AUR management (set to false for Garuda-only package)
+CI_MANAGE_AUR="false"
+
+# Package bump configuration
+CI_PACKAGE_BUMP="1"
+
+# Build trigger configuration
+CI_ON_TRIGGER="tag"
+
+# Enable caching for sources
+BUILDER_CACHE_SOURCES="true"

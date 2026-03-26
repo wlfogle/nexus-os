@@ -1,0 +1,93 @@
+# Maintainer: Garuda Linux <team@garudalinux.org>
+# Contributor: wlfogle <wlfogle@users.noreply.github.com>
+
+pkgname=garuda-calamares-zfs
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Enhanced ZFS support for Calamares installer - optimized for Garuda Linux"
+arch=('any')
+url="https://github.com/wlfogle/calamares-zfs-integration"
+license=('GPL-3.0-or-later')
+depends=(
+    'calamares>=3.3.14'
+    'zfs-utils'
+    'python>=3.6'
+    'python-yaml'
+)
+optdepends=(
+    'zfs-dkms: ZFS kernel modules for DKMS'
+    'zfs-linux: ZFS kernel modules for linux kernel'
+)
+conflicts=('calamares-zfs')
+provides=('calamares-zfs')
+backup=(
+    'usr/share/calamares/modules/zfs/zfs.conf'
+    'usr/share/calamares/modules/zfspostcfg/zfspostcfg.conf'
+    'usr/share/calamares/settings-zfs.conf'
+)
+source=(
+    "calamares-zfs-integration-${pkgver}.tar.gz::https://github.com/wlfogle/calamares-zfs-integration/archive/v${pkgver}.tar.gz"
+)
+sha256sums=('SKIP')  # Will be updated with actual checksum
+
+package() {
+    cd "${srcdir}/calamares-zfs-integration-${pkgver}"
+    
+    # Create necessary directories
+    install -d "${pkgdir}/usr/lib/calamares/modules/zfspostcfg"
+    install -d "${pkgdir}/usr/share/calamares/modules/zfs"
+    install -d "${pkgdir}/usr/share/calamares/modules/zfspostcfg"
+    install -d "${pkgdir}/usr/share/calamares"
+    install -d "${pkgdir}/usr/share/doc/garuda-calamares-zfs"
+    
+    # Install zfspostcfg module files
+    install -Dm644 modules/zfspostcfg/main.py "${pkgdir}/usr/lib/calamares/modules/zfspostcfg/main.py"
+    install -Dm644 modules/zfspostcfg/module.desc "${pkgdir}/usr/lib/calamares/modules/zfspostcfg/module.desc"
+    install -Dm644 modules/zfspostcfg/zfspostcfg.conf "${pkgdir}/usr/share/calamares/modules/zfspostcfg/zfspostcfg.conf"
+    install -Dm644 modules/zfspostcfg/zfspostcfg.schema.yaml "${pkgdir}/usr/share/calamares/modules/zfspostcfg/zfspostcfg.schema.yaml"
+    
+    # Install enhanced ZFS configuration (backs up existing)
+    install -Dm644 modules/zfs.conf "${pkgdir}/usr/share/calamares/modules/zfs/zfs-garuda.conf"
+    
+    # Install ZFS-enabled Calamares settings
+    install -Dm644 settings/settings-zfs.conf "${pkgdir}/usr/share/calamares/settings-zfs.conf"
+    
+    # Install documentation
+    install -Dm644 README.md "${pkgdir}/usr/share/doc/garuda-calamares-zfs/README.md"
+    install -Dm644 INSTALL.md "${pkgdir}/usr/share/doc/garuda-calamares-zfs/INSTALL.md" 
+    install -Dm644 CHANGELOG.md "${pkgdir}/usr/share/doc/garuda-calamares-zfs/CHANGELOG.md"
+    install -Dm644 LICENSE "${pkgdir}/usr/share/doc/garuda-calamares-zfs/LICENSE"
+    install -Dm644 GARUDA_OUTREACH.md "${pkgdir}/usr/share/doc/garuda-calamares-zfs/GARUDA_OUTREACH.md"
+}
+
+post_install() {
+    echo ""
+    echo "==> Garuda ZFS Calamares Integration installed successfully!"
+    echo ""
+    echo "    To use ZFS with Calamares:"
+    echo "    1. Ensure ZFS kernel modules are loaded: sudo modprobe zfs"
+    echo "    2. Use ZFS-enabled settings: sudo cp /usr/share/calamares/settings-zfs.conf /etc/calamares/settings.conf"
+    echo "    3. Optionally update ZFS config: sudo cp /usr/share/calamares/modules/zfs/zfs-garuda.conf /usr/share/calamares/modules/zfs/zfs.conf"
+    echo ""
+    echo "    For more information:"
+    echo "    - Documentation: /usr/share/doc/garuda-calamares-zfs/"
+    echo "    - Repository: https://github.com/wlfogle/calamares-zfs-integration"
+    echo ""
+}
+
+post_upgrade() {
+    post_install
+}
+
+pre_remove() {
+    # Restore original configurations if they exist
+    if [[ -f /usr/share/calamares/modules/zfs/zfs.conf.pacorig ]]; then
+        echo "==> Restoring original ZFS configuration..."
+        mv /usr/share/calamares/modules/zfs/zfs.conf.pacorig /usr/share/calamares/modules/zfs/zfs.conf
+    fi
+    
+    if [[ -f /etc/calamares/settings.conf.pacorig ]]; then
+        echo "==> Restoring original Calamares settings..."
+        mv /etc/calamares/settings.conf.pacorig /etc/calamares/settings.conf  
+    fi
+}
