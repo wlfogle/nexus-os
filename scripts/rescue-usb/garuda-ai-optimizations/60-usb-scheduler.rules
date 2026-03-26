@@ -1,0 +1,10 @@
+# Set I/O scheduler for USB storage devices to optimize performance
+# Use mq-deadline for better interactive performance on USB
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="mq-deadline"
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTRS{idVendor}=="*", ATTRS{idProduct}=="*", ATTR{queue/scheduler}="mq-deadline"
+
+# Reduce queue depth for USB devices to prevent I/O congestion
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTRS{idVendor}=="*", ATTRS{idProduct}=="*", ATTR{queue/nr_requests}="32"
+
+# Reduce readahead for USB devices
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTRS{idVendor}=="*", ATTRS{idProduct}=="*", ATTR{queue/read_ahead_kb}="128"
