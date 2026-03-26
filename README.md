@@ -120,11 +120,15 @@ nexuspkg repos                # Show available backends
 
 ## Architecture
 
+NexusOS is a **monorepo** — all first-party components and tools live here.
+
 ```
 nexus-os/
 ├── scripts/
 │   ├── build-iso.sh          # Full ISO builder (debootstrap + compile)
-│   └── patch-iso.sh          # Delta patcher for existing ISOs
+│   ├── patch-iso.sh          # Delta patcher for existing ISOs
+│   ├── livecd/               # MobaLiveCD portable environment
+│   └── rescue-usb/           # AI-powered multi-platform rescue USB
 ├── core/
 │   ├── bin/                   # CLI tools
 │   │   ├── nexus-control      # System management
@@ -141,25 +145,41 @@ nexus-os/
 │   │   ├── sysctl-nexus.conf  # Kernel parameters
 │   │   ├── modprobe-nvidia.conf
 │   │   ├── udev-gaming.rules
-│   │   └── limits-nexus.conf
+│   │   ├── limits-nexus.conf
+│   │   ├── hw/                # i9-13900HX hardware optimizations
+│   │   └── optimization/      # Container/infrastructure tuning
 │   ├── branding/              # Visual identity
-│   │   ├── motd, issue        # Terminal branding
-│   │   ├── neofetch-nexus.conf
-│   │   ├── plymouth/          # Boot splash
-│   │   ├── sddm-theme/        # Login screen (QML)
-│   │   └── wallpaper/         # Desktop wallpaper
 │   ├── desktop/               # KDE Plasma config
-│   │   ├── plasma-layout.js   # Panel/desktop layout
-│   │   ├── konsole-nexus.profile
-│   │   ├── sddm-nexus.conf
-│   │   └── applications/      # .desktop launchers
 │   ├── shell/                 # Shell customizations
-│   │   ├── bashrc-nexus       # Aliases, prompt, PATH
-│   │   └── profile-nexus      # Login environment
 │   ├── security/              # Hardening scripts
-│   ├── ai/                    # Ollama setup
-│   ├── installer/             # Calamares config
-│   └── media-stack/           # Docker Compose (65+ services)
+│   ├── gaming/                # Gaming VM toolkit + GPU passthrough
+│   ├── ai/
+│   │   ├── (ollama setup)     # Local LLM configuration
+│   │   ├── powerhouse/        # AI dev environment setup
+│   │   ├── sysadmin/          # Autonomous AI sysadmin (Stella ancestor)
+│   │   └── ollama-checker/    # Ollama-based code analysis
+│   ├── installer/
+│   │   ├── (calamares cfg)    # Calamares installer modules
+│   │   └── zfs/               # ZFS support for Calamares
+│   └── media-stack/
+│       ├── (docker-compose)   # Core 65+ service stack
+│       ├── homelab/           # Homelab media stack (full platform)
+│       └── admin-scripts/     # Media stack production scripts
+├── userspace/
+│   ├── apps/
+│   │   ├── nexus-terminal/    # AI-powered terminal (Tauri/React)
+│   │   ├── kvm-manager/       # KVM VM manager (Tauri/Rust)
+│   │   ├── mediastack-control/ # Media stack dashboard (Flask)
+│   │   ├── omniosearch/       # AI file search
+│   │   ├── hyperion/          # Linux power utilities
+│   │   ├── eartrumpet/        # Audio management
+│   │   ├── portproton/        # Gaming/Wine (Ubuntu-native)
+│   │   ├── ollama-manager/    # Ollama GUI manager
+│   │   ├── ai-coding-assistant/ # AI coding assistant
+│   │   └── proxmox-admin/     # Proxmox/LXC manager (Tauri)
+│   ├── desktop/               # KDE desktop integration
+│   ├── shell/                 # User shell config
+│   └── system/                # System utilities
 └── build/                     # Built ISO output
 ```
 
