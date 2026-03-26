@@ -1,0 +1,88 @@
+/* FORCED SCROLLBARS - GUARANTEED TO WORK */
+.scroll-container {
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  scrollbar-width: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.scroll-container::-webkit-scrollbar {
+  width: 20px !important;
+  background-color: #374151 !important;
+  display: block !important;
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+  background-color: #60a5fa !important;
+  border-radius: 10px !important;
+  border: 3px solid #374151 !important;
+}
+
+.scroll-container::-webkit-scrollbar-thumb:hover {
+  background-color: #3b82f6 !important;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+  background-color: #1f2937 !important;
+  border-radius: 10px !important;
+}
+
+.scroll-container::-webkit-scrollbar-button {
+  display: block !important;
+  height: 20px !important;
+  background-color: #4b5563 !important;
+}
+
+.scroll-container::-webkit-scrollbar-button:hover {
+  background-color: #6b7280 !important;
+}
+
+/* Custom scrollbars for AI Assistant conversation area */
+.conversation-area {
+  scrollbar-width: thin;
+  scrollbar-color: #4a5568 #2d3748;
+}
+
+/* Webkit scrollbars for Chrome/Safari/Edge */
+.conversation-area::-webkit-scrollbar {
+  width: 14px;
+  background: transparent;
+}
+
+.conversation-area::-webkit-scrollbar-track {
+  background: #2d3748;
+  border-radius: 8px;
+  margin: 4px;
+}
+
+.conversation-area::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 8px;
+  border: 2px solid #2d3748;
+  background-clip: content-box;
+}
+
+.conversation-area::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
+.conversation-area::-webkit-scrollbar-thumb:active {
+  background: #a0aec0;
+}
+
+/* Force scrollbar to always be visible */
+.conversation-area::-webkit-scrollbar {
+  display: block !important;
+}
+
+/* Alternative scrollbar styling for better visibility */
+.ai-scroll-container {
+  scrollbar-gutter: stable;
+  overflow-y: scroll !important;
+  scrollbar-width: auto !important;
+}
+
+/* Ensure content can actually scroll */
+.ai-messages-container {
+  min-height: calc(100% + 1px);
+}
