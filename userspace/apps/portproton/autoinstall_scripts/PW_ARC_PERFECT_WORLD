@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Arc (Perfect World) installer for PortProton
+export PW_AUTOINSTALL_EXE="ArcSetup.exe"
+export PW_PREFIX_NAME="ARC_PERFECT_WORLD"
+export PW_VULKAN_USE="1"
+PW_WINE_USE="PROTON_LG" try_download_installer \
+"https://www.arcgames.com/en/games/download" \
+"$PW_AUTOINSTALL_EXE" \
+"arc_installer"

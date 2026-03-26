@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Humble App installer for PortProton
+export PW_AUTOINSTALL_EXE="HumbleApp-Setup.exe"
+export PW_PREFIX_NAME="HUMBLE_APP"
+export PW_VULKAN_USE="1"
+PW_WINE_USE="PROTON_LG" try_download_installer \
+"https://www.humblebundle.com/app" \
+"$PW_AUTOINSTALL_EXE" \
+"humble_app_installer"

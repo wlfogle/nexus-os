@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Auto-Detect Games in /media/lou/Games/Games for PortProton
+echo "=== Auto-detecting games in your Games directory ==="
+
+GAMES_DIR="/media/lou/Games/Games"
+if [[ ! -d "$GAMES_DIR" ]]; then
+    echo "Games directory not found: $GAMES_DIR"
+    exit 1
+fi
+
+cd "$GAMES_DIR"
+count=0
+
+for game_dir in */; do
+    if [[ -d "$game_dir" ]]; then
+        echo "Scanning: $game_dir"
+        
+        # Look for main executables
+        main_exe=$(find "$game_dir" -maxdepth 2 -name "*.exe" | head -1)
+        
+        if [[ -n "$main_exe" ]]; then
+            game_name=$(basename "$game_dir" | tr -d '/')
+            prefix_name="GAME_$(echo "$game_name" | tr ' ' '_' | tr '[:lower:]' '[:upper:]')"
+            
+            echo "Creating shortcut for: $game_name"
+            echo "Executable: $main_exe"
+            echo "Prefix: $prefix_name"
+            ((count++))
+        fi
+    fi
+done
+
+echo "=== Found $count games to create shortcuts for ==="
