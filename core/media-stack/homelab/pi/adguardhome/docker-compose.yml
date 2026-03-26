@@ -1,0 +1,14 @@
+---
+# AdGuard Home — Replica instance on Pi 3B+
+# Synced automatically from Proxmox primary via adguardhome-sync
+# Router DNS 2 should point here: 192.168.12.20
+
+services:
+  adguardhome:
+    image: adguard/adguardhome:latest
+    container_name: adguardhome
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /opt/appdata/adguardhome/work:/opt/adguardhome/work
+      - /opt/appdata/adguardhome/conf:/opt/adguardhome/conf

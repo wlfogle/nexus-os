@@ -1,0 +1,44 @@
+---
+# ============================================================
+# Authentik SSO — CT-107 (192.168.12.107:9000)
+# Requires: CT-105 Valkey (Redis) + CT-106 PostgreSQL
+# Copy .env.example to .env and fill in secrets before running
+# ============================================================
+
+services:
+  server:
+    image: ghcr.io/goauthentik/server:latest
+    restart: unless-stopped
+    command: server
+    environment:
+      AUTHENTIK_REDIS__HOST: ${AUTHENTIK_REDIS_HOST:-192.168.12.105}
+      AUTHENTIK_POSTGRESQL__HOST: ${AUTHENTIK_PG_HOST:-192.168.12.106}
+      AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_PG_USER:-authentik}
+      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_PG_NAME:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_PG_PASSWORD}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+    volumes:
+      - ./media:/media
+      - ./custom-templates:/templates
+    ports:
+      - "9000:9000"
+      - "9443:9443"
+
+  worker:
+    image: ghcr.io/goauthentik/server:latest
+    restart: unless-stopped
+    command: worker
+    user: root
+    environment:
+      AUTHENTIK_REDIS__HOST: ${AUTHENTIK_REDIS_HOST:-192.168.12.105}
+      AUTHENTIK_POSTGRESQL__HOST: ${AUTHENTIK_PG_HOST:-192.168.12.106}
+      AUTHENTIK_POSTGRESQL__USER: ${AUTHENTIK_PG_USER:-authentik}
+      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_PG_NAME:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${AUTHENTIK_PG_PASSWORD}
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+    volumes:
+      - ./media:/media
+      - ./certs:/certs
+      - /var/run/docker.sock:/var/run/docker.sock

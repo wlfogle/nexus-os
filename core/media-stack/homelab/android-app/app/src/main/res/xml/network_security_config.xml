@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Allow cleartext HTTP to the homelab subnet (192.168.12.x).
+  All LAN traffic is private — no public cleartext.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Per-service LXC architecture — each CT has its own IP on 192.168.12.x -->
+        <!-- Infrastructure (100-107) -->
+        <domain includeSubdomains="false">192.168.12.100</domain>
+        <domain includeSubdomains="false">192.168.12.101</domain>
+        <domain includeSubdomains="false">192.168.12.102</domain>
+        <domain includeSubdomains="false">192.168.12.103</domain>
+        <domain includeSubdomains="false">192.168.12.104</domain>
+        <domain includeSubdomains="false">192.168.12.105</domain>
+        <domain includeSubdomains="false">192.168.12.106</domain>
+        <domain includeSubdomains="false">192.168.12.107</domain>
+        <!-- Download stack (210-224) -->
+        <domain includeSubdomains="false">192.168.12.210</domain>
+        <domain includeSubdomains="false">192.168.12.212</domain>
+        <domain includeSubdomains="false">192.168.12.213</domain>
+        <domain includeSubdomains="false">192.168.12.214</domain>
+        <domain includeSubdomains="false">192.168.12.215</domain>
+        <domain includeSubdomains="false">192.168.12.217</domain>
+        <!-- Media servers (230-231) -->
+        <domain includeSubdomains="false">192.168.12.230</domain>
+        <domain includeSubdomains="false">192.168.12.231</domain>
+        <!-- DHCP services — update IPs if they change -->
+        <domain includeSubdomains="false">192.168.12.151</domain>
+        <domain includeSubdomains="false">192.168.12.188</domain>
+        <domain includeSubdomains="false">192.168.12.223</domain>
+        <!-- Proxmox host -->
+        <domain includeSubdomains="false">192.168.12.242</domain>
+        <!-- Ziggy Pi -->
+        <domain includeSubdomains="false">192.168.12.20</domain>
+        <!-- Laptop -->
+        <domain includeSubdomains="false">192.168.12.172</domain>
+        <!-- DuckDNS -->
+        <domain includeSubdomains="true">lou-fogle-media-stack.duckdns.org</domain>
+    </domain-config>
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

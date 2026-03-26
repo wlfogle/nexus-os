@@ -1,0 +1,29 @@
+---
+# Traefik reverse proxy — runs in Proxmox LXC
+# Provides routing + optional SSL for all media stack services
+
+networks:
+  traefik-net:
+    external: true
+    name: media-net
+
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: unless-stopped
+    networks: [traefik-net]
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"   # Dashboard (restrict to LAN only)
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/traefik.yml:ro
+      - ./acme.json:/acme.json      # TLS cert storage (chmod 600)
+      - ./logs:/logs
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.tiamat.local`)"
+      - "traefik.http.routers.traefik.service=api@internal"

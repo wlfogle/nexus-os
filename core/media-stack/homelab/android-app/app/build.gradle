@@ -1,0 +1,74 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.tiamat.mediastack'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.tiamat.mediastack"
+        minSdk 22
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+        // Fire TV / Android TV leanback support
+        buildConfigField "boolean", "IS_TV", "false"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            applicationIdSuffix ".debug"
+            debuggable true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    buildFeatures {
+        viewBinding true
+        buildConfig true
+    }
+
+    // Produce both phone/tablet and Fire TV APKs
+    flavorDimensions += "platform"
+    productFlavors {
+        mobile {
+            dimension "platform"
+            applicationIdSuffix ".mobile"
+            versionNameSuffix "-mobile"
+        }
+        firetv {
+            dimension "platform"
+            applicationIdSuffix ".firetv"
+            versionNameSuffix "-firetv"
+            // Fire TV requires LEANBACK_LAUNCHER intent
+            buildConfigField "boolean", "IS_TV", "true"
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    // Leanback for Fire TV D-pad navigation
+    implementation 'androidx.leanback:leanback:1.0.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+}

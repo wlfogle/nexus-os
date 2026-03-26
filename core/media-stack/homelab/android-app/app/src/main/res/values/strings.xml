@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TiamatsStack</string>
+    <string name="tv_subtitle">Search \u0026 add content</string>
+    <string name="coming_soon">Coming Soon</string>
+    <string name="service_icon_description">Service icon</string>
+</resources>
