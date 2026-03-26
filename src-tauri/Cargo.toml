@@ -1,0 +1,158 @@
+[package]
+name = "nexus-terminal"
+version = "1.0.0-beta.1"
+description = "NexusTerminal - Where AI meets the command line. The intelligent terminal experience."
+authors = ["wlfogle"]
+license = "MIT"
+repository = "https://github.com/wlfogle/nexus-terminal"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+# Core Tauri and serialization
+tauri = { version = "2.0", features = [] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.40", features = ["full"] }
+reqwest = { version = "0.12", features = ["json", "stream"] }
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Computer Vision Dependencies
+image = { version = "0.25", features = ["png", "jpeg"] }
+scrap = "0.5"
+tesseract = "0.15"
+
+# Utilities
+base64 = "0.22"
+uuid = { version = "1.6", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+dirs = "5.0"
+notify = "6.0"
+async-trait = "0.1"
+futures = "0.3"
+crossbeam-channel = "0.5"
+
+# Terminal and process management
+portable-pty = "0.8"
+shell-words = "1.1"
+
+# AI/LLM Integration
+ollama-rs = { version = "0.2", optional = true }
+
+# Encryption and security
+ring = "0.17"
+
+# Config and settings
+config = "0.14"
+toml = "0.8"
+dotenv = "0.15"
+
+# Git integration
+git2 = "0.18"
+
+# Web scraping dependencies
+select = "0.6"  # HTML parsing and selection
+scraper = "0.19"  # Web scraping utilities
+url = "2.4"  # URL parsing and manipulation
+robots_txt = "0.7"  # robots.txt parsing
+
+# File system operations
+walkdir = "2.0"
+ignore = "0.4"
+
+# Terminal utilities
+crossterm = "0.27"
+ratatui = "0.26"
+
+# Additional utilities
+tokio-util = { version = "0.7", features = ["full"] }
+bytes = "1.0"
+memmap2 = "0.9"
+flate2 = "1.0"
+tempfile = "3.0"
+once_cell = "1.0"
+parking_lot = "0.12"
+dashmap = "5.0"
+regex = "1.10"
+
+# Phase 4 Advanced Features
+# Security and vulnerability scanning
+sha2 = "0.10"
+md5 = "0.7"
+aes-gcm = "0.10"
+argon2 = "0.5"
+hmac = "0.12"
+pbkdf2 = "0.12"
+
+# Network and cloud integration
+aws-sdk-s3 = "1.0"
+aws-config = "1.0"
+rust-s3 = "0.34"
+
+# Analytics and metrics
+prometheus = "0.13"
+metrics = "0.21"
+metrics-exporter-prometheus = "0.12"
+
+# Ecosystem awareness and system monitoring
+sysinfo = "0.30"
+procfs = "0.16"
+
+# Machine learning and pattern recognition
+candle-core = "0.9"
+candle-nn = "0.9"
+candle-transformers = "0.9"
+smartcore = "0.3"
+linfa = "0.7"
+
+# Database and storage
+rusqlite = { version = "0.31", features = ["bundled"] }
+# Pure Rust key-value store (replacement for RocksDB)
+redb = "1.0"
+sled = "0.34"  # Alternative embedded database
+# In-memory caching
+moka = { version = "0.12", features = ["future"] }
+
+# Advanced terminal features
+vte = "0.13"
+termion = "2.0"
+
+# Plugin system
+libloading = "0.8"
+wasmtime = "17.0"
+wasi-common = "17.0"
+
+# Workflow automation
+cron = "0.12"
+
+# Collaboration features
+tungstenite = "0.20"
+tokio-tungstenite = "0.20"
+
+# Development tools integration
+tree-sitter = "0.20"
+lsp-types = "0.94"
+tower-lsp = "0.20"
+
+# Performance optimization
+rayon = "1.8"
+num_cpus = "1.16"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+ollama = ["dep:ollama-rs"]
+
+[profile.release]
+panic = "abort"
+codegen-units = 4
+lto = false
+opt-level = 2
+strip = true

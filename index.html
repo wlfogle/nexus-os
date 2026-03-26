@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/nexus-logo.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Nuclear Scrollbar Override: loaded before any other styles -->
+    <link rel="stylesheet" href="/src/scrollbar-override.css" />
+    <title>NexusTerminal - The Intelligent Terminal Experience</title>
+    <meta name="description" content="Where AI meets the command line. Multi-agent AI coordination, system diagnostics, and intelligent assistance." />
+    
+    <!-- Prevent zooming on mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
+    <!-- Theme color for browser chrome -->
+    <meta name="theme-color" content="#1a1a1a" />
+    
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+    
+    <!-- Prevent FOUC -->
+    <style>
+      body {
+        visibility: visible;
+        opacity: 1;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        overflow: auto !important; /* Changed from hidden to auto */
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    
+    <!-- Loading script -->
+    <script>
+      // Show body once loaded to prevent FOUC
+      window.addEventListener('load', () => {
+        document.body.classList.add('loaded')
+      })
+      
+      // Prevent context menu on production builds
+      if (import.meta.env.PROD) {
+        document.addEventListener('contextmenu', e => e.preventDefault())
+      }
+    </script>
+    
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
