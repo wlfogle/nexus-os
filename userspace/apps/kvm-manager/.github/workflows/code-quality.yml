@@ -1,0 +1,110 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  code-quality:
+    name: Code Quality & Coverage
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+        check-latest: true
+    
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    
+    - name: Download dependencies
+      run: go mod download
+    
+    - name: Run tests with coverage
+      run: |
+        go test -race -coverprofile=coverage.out -covermode=atomic ./...
+        go tool cover -html=coverage.out -o coverage.html
+    
+    - name: Generate coverage report
+      run: |
+        go tool cover -func=coverage.out
+        COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+        echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
+        echo "Total coverage: $COVERAGE%"
+    
+    - name: Coverage comment
+      if: github.event_name == 'pull_request'
+      run: |
+        echo "## 📊 Code Coverage Report" >> coverage_comment.md
+        echo "" >> coverage_comment.md
+        echo "**Total Coverage:** ${{ env.COVERAGE }}%" >> coverage_comment.md
+        echo "" >> coverage_comment.md
+        echo "<details>" >> coverage_comment.md
+        echo "<summary>📋 Detailed Coverage Report</summary>" >> coverage_comment.md
+        echo "" >> coverage_comment.md
+        echo '```' >> coverage_comment.md
+        go tool cover -func=coverage.out >> coverage_comment.md
+        echo '```' >> coverage_comment.md
+        echo "</details>" >> coverage_comment.md
+    
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.out
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}
+    
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v4
+      with:
+        version: latest
+        args: --timeout=5m --config=.golangci.yml
+    
+    - name: Check code complexity
+      run: |
+        go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+        gocyclo -over 15 .
+    
+    - name: Check for ineffective assignments
+      run: |
+        go install github.com/gordonklaus/ineffassign@latest
+        ineffassign .
+    
+    - name: Check for misspellings
+      run: |
+        go install github.com/client9/misspell/cmd/misspell@latest
+        misspell -error .
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: code-quality-reports
+        path: |
+          coverage.out
+          coverage.html
+        retention-days: 30
