@@ -62,7 +62,7 @@ Laptop — GPU inference server (192.168.12.172)
 ├── Ollama :11434 (RTX 4080, 12GB VRAM)   LLM inference for entire stack
 └── Tdarr node (Phase 6)                  Batch NVENC transcoding worker
 
-Ziggy (Raspberry Pi 3B+) — 192.168.12.20
+Bahamut (Raspberry Pi 4B 2GB) — 192.168.12.244
 ├── AdGuard Home :53/:3000    Network-wide DNS + ad-blocking (sole instance)
 ├── wg-easy :51821/:51820     Remote client VPN access
 └── Vaultwarden :443          via Caddy
@@ -211,12 +211,12 @@ Client Devices
 26. In CT-900: deploy SearXNG → configure as web search backend in Open WebUI
     - See docs/AI.md for full setup
 
-### Phase 7 — Ziggy (Raspberry Pi 3B+)
-24. Image SD → Raspberry Pi OS Lite 64-bit (Bookworm)
+### Phase 7 — Bahamut (Raspberry Pi 4B 2GB)
+24. DietPi already installed at 192.168.12.244 (headless, Ethernet, Dropbear SSH)
 25. Run `bash pi/setup-pi.sh`
 26. Configure wg-easy: set `WG_HOST` to public IP or DuckDNS hostname
-27. Forward port 51820/UDP on router to 192.168.12.20
-28. Set router DNS 1 = `192.168.12.20` (AdGuard Home), DNS 2 = `1.1.1.1`
+27. Forward port 51820/UDP on router to 192.168.12.244
+28. Set router DNS 1 = `192.168.12.244` (AdGuard Home), DNS 2 = `1.1.1.1`
 ### Phase 8 — Security
 29. Configure CrowdSec (CT-278) with Traefik bouncer
 30. Set up Authentik SSO for externally-exposed services
