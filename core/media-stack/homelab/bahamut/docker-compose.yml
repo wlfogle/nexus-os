@@ -1,0 +1,55 @@
+services:
+  adguardhome:
+    image: adguard/adguardhome:latest
+    container_name: adguardhome
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - /opt/appdata/adguardhome/conf:/opt/adguardhome/conf
+      - /opt/appdata/adguardhome/work:/opt/adguardhome/work
+
+  wg-easy:
+    image: ghcr.io/wg-easy/wg-easy:latest
+    container_name: wg-easy
+    restart: unless-stopped
+    environment:
+      - LANG=en
+      - WG_HOST=lou-fogle-media-stack.duckdns.org
+      - PASSWORD_HASH=$$2a$$12$$UyiAAF.ue2/k1OtIZ5eyxeC57h7BA4a4Pz2elC682S5YRHTPa.SmC
+      - WG_DEFAULT_DNS=192.168.12.244
+      - WG_DEFAULT_ADDRESS=10.0.0.x
+      - PORT=51821
+      - WG_PORT=51820
+    volumes:
+      - /opt/appdata/wg-easy:/etc/wireguard
+    ports:
+      - "51820:51820/udp"
+      - "51821:51821/tcp"
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    environment:
+      - DOMAIN=https://lou-fogle-media-stack.duckdns.org
+      - SIGNUPS_ALLOWED=false
+    volumes:
+      - /opt/appdata/vaultwarden:/data
+    ports:
+      - "8080:80"
+
+  caddy:
+    image: caddy-duckdns:latest
+    container_name: caddy
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /opt/appdata/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - /opt/appdata/caddy/data:/data
+      - /opt/appdata/caddy/config:/config
