@@ -37,7 +37,7 @@ services:
     container_name: vaultwarden
     restart: unless-stopped
     environment:
-      - DOMAIN=https://lou-fogle-media-stack.duckdns.org
+      - DOMAIN=https://vaultwarden.lou-fogle-media-stack.duckdns.org
       - SIGNUPS_ALLOWED=false
     volumes:
       - /opt/appdata/vaultwarden:/data
@@ -45,6 +45,9 @@ services:
       - "8080:80"
 
   caddy:
+    build:
+      context: /opt
+      dockerfile: Dockerfile.caddy
     image: caddy-duckdns:latest
     container_name: caddy
     restart: unless-stopped
