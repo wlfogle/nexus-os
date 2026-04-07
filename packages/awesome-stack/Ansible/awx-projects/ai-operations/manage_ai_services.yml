@@ -1,0 +1,19 @@
+---
+- name: Manage AI containers
+  hosts: all
+  tasks:
+    - name: Ensure Ollama is running
+      ansible.builtin.systemd:
+        name: ollama
+        state: started
+      become: yes
+
+    - name: Check Magicoder API status
+      ansible.builtin.uri:
+        url: "http://localhost:5000/api/status"
+        method: GET
+      register: magicoder_status
+
+    - name: Debug Magicoder status
+      ansible.builtin.debug:
+        var: magicoder_status.json

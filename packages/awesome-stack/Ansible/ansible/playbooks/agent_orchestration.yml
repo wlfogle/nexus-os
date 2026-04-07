@@ -1,0 +1,6 @@
+---
+- name: Deploy and orchestrate agent system
+  hosts: lxcs
+  become: yes
+  roles:
+    - agent

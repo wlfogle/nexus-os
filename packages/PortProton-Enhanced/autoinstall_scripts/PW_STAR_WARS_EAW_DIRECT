@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Star Wars Empire at War Direct Launcher for PortProton
+export PW_AUTOINSTALL_EXE="/media/lou/Games/Games/Star Wars Empire at War Gold Pack/corruption/StarWarsG.exe"
+export PW_PREFIX_NAME="SW_EMPIRE_AT_WAR"
+export PW_VULKAN_USE="1"
+if [[ -f "$PW_AUTOINSTALL_EXE" ]]; then
+    portwine_exe="$PW_AUTOINSTALL_EXE"
+    try_run_exe
+else
+    echo "Star Wars Empire at War executable not found at: $PW_AUTOINSTALL_EXE"
+fi

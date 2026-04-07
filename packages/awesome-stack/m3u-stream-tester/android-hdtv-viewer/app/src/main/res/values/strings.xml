@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HDTV Viewer</string>
+    <string name="channel_list">Channel List</string>
+    <string name="load_playlist">Load Playlist</string>
+    <string name="m3u_url_hint">Enter M3U playlist URL</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="stop">Stop</string>
+    <string name="back">Back</string>
+    <string name="loading">Loading...</string>
+    <string name="error_loading_playlist">Error loading playlist</string>
+    <string name="no_channels">No channels found</string>
+</resources>

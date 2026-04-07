@@ -1,0 +1,13 @@
+---
+- name: Automate Home Assistant and Alexa routines
+  hosts: all
+  tasks:
+    - name: Call Home Assistant REST API to trigger movie night scene
+      ansible.builtin.uri:
+        url: "http://homeassistant.local:8123/api/services/script/movie_night"
+        method: POST
+        headers:
+          Authorization: "Bearer {{ ha_token }}"
+          Content-Type: "application/json"
+        body: "{}"
+        status_code: 200

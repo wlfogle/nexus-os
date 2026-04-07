@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# 🕐 System Clock Jitter - Adds random microsecond variations
+# Prevents timing attack correlation
+
+if [ "$1" = "start" ]; then
+    echo "🕐 Starting system clock jitter..."
+    
+    # Function to add random time jitter
+    add_clock_jitter() {
+        while true; do
+            # Random sleep (0.1 to 2 seconds)
+            sleep $(echo "scale=1; $RANDOM/32767*1.9+0.1" | bc)
+            
+            # Very small time adjustment (±100ms max)
+            JITTER_MS=$((RANDOM % 200 - 100))
+            
+            # Only apply if we have privileges (optional)
+            if [ "$JITTER_MS" -ne 0 ] 2>/dev/null; then
+                # This would require root privileges for actual clock adjustment
+                # For user mode, we just introduce processing delays
+                usleep $((RANDOM % 1000)) 2>/dev/null || sleep 0.001
+            fi
+        done
+    }
+    
+    add_clock_jitter &
+    echo $! > "$HOME/.config/ghost-mode/clock-jitter.pid"
+    echo "✅ Clock jitter started (PID: $!)"
+    
+elif [ "$1" = "stop" ]; then
+    if [ -f "$HOME/.config/ghost-mode/clock-jitter.pid" ]; then
+        kill $(cat "$HOME/.config/ghost-mode/clock-jitter.pid") 2>/dev/null
+        rm "$HOME/.config/ghost-mode/clock-jitter.pid"
+        echo "✅ Clock jitter stopped"
+    fi
+    
+elif [ "$1" = "status" ]; then
+    if [ -f "$HOME/.config/ghost-mode/clock-jitter.pid" ]; then
+        if kill -0 $(cat "$HOME/.config/ghost-mode/clock-jitter.pid") 2>/dev/null; then
+            echo "✅ Clock jitter is running"
+        else
+            echo "❌ Clock jitter is not running"
+        fi
+    else
+        echo "❌ Clock jitter is not running"
+    fi
+else
+    echo "Usage: clock-jitter [start|stop|status]"
+fi

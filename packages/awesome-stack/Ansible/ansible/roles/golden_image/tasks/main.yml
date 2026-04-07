@@ -1,0 +1,25 @@
+---
+# TODO: Implement golden LXC template build steps here.
+- name: Install OpenBox & Xvfb
+  ansible.builtin.apt:
+    name:
+      - openbox
+      - xvfb
+    state: present
+    update_cache: yes
+
+# TODO: Clone agent-comms and warp_agent_bridge repositories, or use your own install method
+- name: Install agent-comms
+  ansible.builtin.git:
+    repo: 'https://github.com/your-org/agent-comms.git'
+    dest: '/opt/agent-comms'
+
+- name: Install warp_agent_bridge
+  ansible.builtin.git:
+    repo: 'https://github.com/your-org/warp_agent_bridge.git'
+    dest: '/opt/warp_agent_bridge'
+
+# TODO: Set up container as template for cloning (adjust command for your environment)
+- name: Set up as LXC template
+  ansible.builtin.command: pct template {{ inventory_hostname }}
+  when: inventory_hostname != "proxmox"

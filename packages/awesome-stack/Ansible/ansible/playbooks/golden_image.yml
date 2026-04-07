@@ -1,0 +1,6 @@
+---
+- name: Build and configure golden LXC template
+  hosts: lxc-golden-template
+  become: yes
+  roles:
+    - golden_image

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HDHomeRun TV Viewer</title>
+    <script type="module" src="/main.js" defer></script>
+  </head>
+
+  <body>
+    <main class="container">
+      <h1>HDHomeRun TV Viewer</h1>
+
+      <div class="section">
+        <h2>📺 TV Channels</h2>
+        <div id="channels-list"></div>
+      </div>
+
+      <div class="section">
+        <h2>Video Player</h2>
+        <div id="player-container">
+          <video id="video-player" controls width="800" height="450">
+            <p>Your browser doesn't support HTML5 video.</p>
+          </video>
+        </div>
+        <div id="volume-controls">
+          <label for="volume-slider">Volume:</label>
+          <input type="range" id="volume-slider" min="0" max="200" value="200">
+          <span id="volume-display">200%</span>
+          <button id="max-volume-btn">Max Volume (200%)</button>
+        </div>
+        <div id="current-channel"></div>
+      </div>
+
+      <div id="status"></div>
+    </main>
+  </body>
+</html>

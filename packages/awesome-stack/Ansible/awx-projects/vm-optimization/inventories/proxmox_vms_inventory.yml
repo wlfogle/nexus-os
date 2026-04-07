@@ -1,0 +1,120 @@
+---
+# AWX Inventory for ProxMox VM Optimization
+# Integrates with Awesome Stack infrastructure
+
+all:
+  children:
+    proxmox_vms:
+      hosts:
+        proxmox-stack:
+          ansible_host: "{{ proxmox_vm_ip | default('192.168.122.103') }}"
+          ansible_user: root
+          ansible_ssh_private_key_file: "{{ ssh_private_key_path | default('~/.ssh/id_rsa') }}"
+          ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+          
+          # VM specific variables
+          vm_name: "ProxMox-Stack"
+          vm_description: "Main Proxmox VM for Awesome Stack"
+          expected_ram_gb: 32
+          expected_cpu_cores: 24
+          expected_containers: 50
+          
+          # Warp agent configuration
+          warp_agent_port: 8080
+          message_broker_host: "192.168.122.86"
+          message_broker_port: 8080
+          agent_bridge_enabled: true
+          
+          # Media stack integration
+          plex_enabled: true
+          jellyfin_enabled: true
+          arr_services_enabled: true
+          traefik_enabled: true
+          
+          # Home automation
+          home_assistant_enabled: true
+          alexa_integration_enabled: true
+          
+          # AI services  
+          ollama_enabled: true
+          magicoder_enabled: true
+          ai_coding_assistant_enabled: true
+          
+          # Performance monitoring
+          performance_monitoring_enabled: true
+          health_check_interval: "*/3"  # Every 3 minutes
+          
+          # Storage mounts (using stable paths)
+          storage_mounts:
+            - device: "/dev/disk/by-id/nvme-eui.002538d411b0e742-part1"
+              mount_point: "/host-games"
+              fstype: "btrfs"
+              options: "defaults,noatime,compress=zstd"
+            - device: "/dev/disk/by-id/nvme-eui.002538d411b0e742-part3" 
+              mount_point: "/host-data1"
+              fstype: "btrfs"
+              options: "defaults,noatime,compress=zstd"
+            - device: "/dev/disk/by-id/nvme-eui.002538d411b0e742-part7"
+              mount_point: "/host-backup"
+              fstype: "ext4"
+              options: "defaults,noatime"
+            - device: "/dev/disk/by-id/nvme-eui.002538d411b0e742-part5"
+              mount_point: "/host-isos"
+              fstype: "ntfs"
+              options: "defaults,uid=1000,gid=1000,umask=022"
+            - device: "/dev/disk/by-id/nvme-eui.002538d411b0e742-part2"
+              mount_point: "/host-ziggy" 
+              fstype: "ext4"
+              options: "defaults,noatime"
+          
+    # Additional groups for different optimization levels
+    high_performance_vms:
+      hosts:
+        proxmox-stack:
+      vars:
+        optimization_level: "enhanced"
+        enable_cpu_isolation: true
+        enable_huge_pages: true
+        enable_real_time_kernel: false
+        
+    container_hosts:
+      hosts:
+        proxmox-stack:
+      vars:
+        docker_optimization: true
+        container_density_mode: "high"
+        max_containers: 60
+        container_memory_limit: "2G"
+        
+    warp_agent_hosts:
+      hosts:
+        proxmox-stack:
+      vars:
+        warp_agents_per_container: 1
+        agent_communication_optimized: true
+        openbox_sessions_enabled: true
+        agent_bridge_monitoring: true
+
+  vars:
+    # Global variables for all hosts
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_become: true
+    ansible_become_method: sudo
+    
+    # Optimization settings
+    optimization_backup_enabled: true
+    reboot_after_optimization: false  # Set to true for automatic reboot
+    send_notifications: true
+    
+    # Integration settings  
+    awx_workflow_enabled: true
+    message_broker_integration: true
+    performance_monitoring_integration: true
+    
+    # Security settings
+    ssh_key_checking: false
+    host_key_checking: false
+    
+    # Logging and debugging
+    ansible_verbosity: 1
+    log_optimization_steps: true

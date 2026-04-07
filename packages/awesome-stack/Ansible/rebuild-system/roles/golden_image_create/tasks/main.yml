@@ -1,0 +1,215 @@
+---
+# Golden Image Creation for Warp Agent + OpenBox Desktop Containers
+- name: Create golden image LXC container
+  delegate_to: "{{ proxmox_host }}"
+  command: >
+    pct create {{ golden_container_id }}
+    local:vztmpl/ubuntu-22.04-standard_22.04-1_amd64.tar.zst
+    --hostname {{ golden_hostname }}
+    --password {{ golden_password }}
+    --net0 name=eth0,bridge={{ bridge_interface }},ip=dhcp
+    --storage {{ storage_pool }}
+    --cores {{ golden_cores }}
+    --memory {{ golden_memory }}
+    --rootfs {{ storage_pool }}:{{ golden_disk_size }}
+    --unprivileged 1
+    --features nesting=1
+  register: golden_create
+  failed_when: 
+    - golden_create.rc != 0
+    - "'already exists' not in golden_create.stderr"
+
+- name: Start golden image container
+  delegate_to: "{{ proxmox_host }}"
+  command: pct start {{ golden_container_id }}
+  register: golden_start
+  failed_when:
+    - golden_start.rc != 0
+    - "'already running' not in golden_start.stderr"
+
+- name: Wait for container to be ready
+  delegate_to: "{{ proxmox_host }}"
+  wait_for:
+    timeout: 60
+  
+- name: Update package repository in golden container
+  delegate_to: "{{ proxmox_host }}"
+  command: >
+    pct exec {{ golden_container_id }} --
+    bash -c "apt update && apt upgrade -y"
+
+- name: Install base desktop environment and tools
+  delegate_to: "{{ proxmox_host }}"
+  command: >
+    pct exec {{ golden_container_id }} --
+    bash -c "DEBIAN_FRONTEND=noninteractive apt install -y 
+    openbox 
+    xterm 
+    tightvncserver 
+    xvfb 
+    x11vnc
+    python3 
+    python3-pip 
+    sqlite3 
+    curl 
+    wget 
+    git 
+    nano 
+    htop 
+    net-tools
+    systemd
+    dbus"
+
+- name: Install Docker in golden container
+  delegate_to: "{{ proxmox_host }}"
+  command: >
+    pct exec {{ golden_container_id }} --
+    bash -c "curl -fsSL https://get.docker.com | sh && 
+    systemctl enable docker"
+
+- name: Create warp user in golden container
+  delegate_to: "{{ proxmox_host }}"
+  command: >
+    pct exec {{ golden_container_id }} --
+    bash -c "useradd -m -s /bin/bash warp && 
+    usermod -aG docker,sudo warp &&
+    echo 'warp:{{ warp_user_password }}' | chpasswd"
+
+- name: Create directory structure for Warp Agent
+  delegate_to: "{{ proxmox_host }}"
+  command: >
+    pct exec {{ golden_container_id }} --
+    bash -c "mkdir -p /opt/{warp-agent,agent-comms,scripts} &&
+    mkdir -p /home/warp/.config/openbox &&
+    mkdir -p /var/log/warp-agent"
+
+- name: Copy Warp Agent Bridge script to golden image
+  delegate_to: "{{ proxmox_host }}"
+  copy:
+    src: "{{ item.src }}"
+    dest: "/var/lib/lxc/{{ golden_container_id }}/rootfs{{ item.dest }}"
+    mode: '0755'
+  loop:
+    - src: "{{ warp_bridge_script_path }}"
+      dest: "/opt/warp-agent/warp_agent_bridge_standalone.py"
+    - src: "{{ warp_launcher_script_path }}"
+      dest: "/opt/warp-agent/start_warp_bridge.sh"
+
+- name: Copy agent-comms system to golden image
+  delegate_to: "{{ proxmox_host }}"
+  synchronize:
+    src: "{{ agent_comms_path }}/"
+    dest: "/var/lib/lxc/{{ golden_container_id }}/rootfs/opt/agent-comms/"
+    delete: yes
+    recursive: yes
+
+- name: Configure OpenBox autostart for Warp
+  delegate_to: "{{ proxmox_host }}"
+  copy:
+    dest: "/var/lib/lxc/{{ golden_container_id }}/rootfs/home/warp/.config/openbox/autostart"
+    content: |
+      #!/bin/bash
+      # Warp Agent Autostart Script
+      
+      # Start X display manager
+      export DISPLAY=:1
+      
+      # Launch terminal
+      xterm &
+      
+      # Start Warp Agent Bridge
+      /opt/warp-agent/start_warp_bridge.sh &
+      
+      # Keep session alive
+      exec openbox-session
+    mode: '0755'
+
+- name: Create systemd service for X11 display
+  delegate_to: "{{ proxmox_host }}"
+  copy:
+    dest: "/var/lib/lxc/{{ golden_container_id }}/rootfs/etc/systemd/system/x11-display.service"
+    content: |
+      [Unit]
+      Description=X11 Display Server for Warp Agent
+      After=network.target
+      
+      [Service]
+      Type=simple
+      User=warp
+      Environment=DISPLAY=:1
+      ExecStart=/usr/bin/Xvfb :1 -screen 0 1024x768x16
+      Restart=always
+      RestartSec=5
+      
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Create systemd service for Warp Agent Bridge
+  delegate_to: "{{ proxmox_host }}"
+  copy:
+    dest: "/var/lib/lxc/{{ golden_container_id }}/rootfs/etc/systemd/system/warp-agent-bridge.service"
+    content: |
+      [Unit]
+      Description=Warp Agent Bridge
+      After=network.target x11-display.service
+      Requires=x11-display.service
+      
+      [Service]
+      Type=simple
+      User=warp
+      WorkingDirectory=/opt/warp-agent
+      Environment=DISPLAY=:1
+      ExecStart=/opt/warp-agent/start_warp_bridge.sh
+      Restart=always
+      RestartSec=10
+      StandardOutput=journal
+      StandardError=journal
+      
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Enable services in golden container
+  delegate_to: "{{ proxmox_host }}"
+  command: >
+    pct exec {{ golden_container_id }} --
+    bash -c "systemctl enable x11-display warp-agent-bridge docker"
+
+- name: Configure container for template conversion
+  delegate_to: "{{ proxmox_host }}"
+  command: >
+    pct exec {{ golden_container_id }} --
+    bash -c "apt clean && 
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* &&
+    history -c"
+
+- name: Stop golden image container
+  delegate_to: "{{ proxmox_host }}"
+  command: pct stop {{ golden_container_id }}
+
+- name: Convert container to template
+  delegate_to: "{{ proxmox_host }}"
+  command: pct template {{ golden_container_id }}
+  register: template_create
+
+- name: Display template creation status
+  debug:
+    msg: |
+      ✅ Golden Image Template Created Successfully!
+      
+      📦 Template Details:
+      - Container ID: {{ golden_container_id }}
+      - Template Name: {{ golden_hostname }}
+      - Base Image: Ubuntu 22.04 LTS
+      
+      🔧 Included Components:
+      - OpenBox Desktop Environment
+      - Xvfb Display Server
+      - Docker Engine
+      - Warp Agent Bridge
+      - Agent Communication System
+      - Python3 + Required Tools
+      
+      🚀 Ready for deployment with:
+      pct clone {{ golden_container_id }} <new-id> --hostname <new-name>
+      
+      💡 This template includes everything needed for self-configuring containers!

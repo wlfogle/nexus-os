@@ -1,0 +1,36 @@
+http:
+  routers:
+    prowlarr:
+      rule: "Host(`prowlarr.tiamat.local`)"
+      entryPoints: [web]
+      service: prowlarr
+    sonarr:
+      rule: "Host(`sonarr.tiamat.local`)"
+      entryPoints: [web]
+      service: sonarr
+    radarr:
+      rule: "Host(`radarr.tiamat.local`)"
+      entryPoints: [web]
+      service: radarr
+    qbittorrent:
+      rule: "Host(`qbittorrent.tiamat.local`)"
+      entryPoints: [web]
+      service: qbittorrent
+
+  services:
+    prowlarr:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.12.210:9696"
+    sonarr:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.12.214:8989"
+    radarr:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.12.215:7878"
+    qbittorrent:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.12.212:8080"

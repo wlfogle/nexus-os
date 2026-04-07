@@ -1,0 +1,823 @@
+﻿#EXTM3U
+#EXTINF:-1  tvg-id="WLKYDT1.us",
+https://apollo.production-public.tubi.io/live/ac-wlky.m3u8
+#EXTINF:-1  tvg-id="WHAS-DT1.us",WHAS 11 CBS
+https://livevideo01.whas11.com/hls/live/2016284/elvs/live.m3u8
+#EXTINF:-1  tvg-id="WKMJDT3.us",KET World
+https://2-fss-1.streamhoster.com/pl_122/amlst:200914-2942150/playlist.m3u8
+#EXTINF:-1  tvg-name="A&E US Eastern Feed SD" tvg-id="ae-us-eastern-feed" group-title="Live",A&E US Eastern Feed SD
+https://tvpass.org/live/AEEast/sd
+#EXTINF:-1  tvg-name="ACC Network SD" tvg-id="acc-network" group-title="Live",ACC Network SD
+https://tvpass.org/live/ACCNetwork/sd
+#EXTINF:-1  tvg-name="AMC Eastern Feed SD" tvg-id="amc-eastern-feed" group-title="Live",AMC Eastern Feed SD
+https://tvpass.org/live/AMCEast/sd
+#EXTINF:-1  tvg-name="American Heroes Channel SD" tvg-id="american-heroes-channel" group-title="Live",American Heroes Channel SD
+https://tvpass.org/live/AmericanHeroesChannel/sd
+#EXTINF:-1  tvg-name="Animal Planet US East SD" tvg-id="animal-planet-us-east" group-title="Live",Animal Planet US East SD
+https://tvpass.org/live/AnimalPlanetEast/sd
+#EXTINF:-1  tvg-name="BBC America East SD" tvg-id="bbc-america-east" group-title="Live",BBC America East SD
+https://tvpass.org/live/BBCAmericaEast/sd
+#EXTINF:-1  tvg-name="BBC News North America HD SD" tvg-id="bbc-news-north-america-hd" group-title="Live",BBC News North America HD SD
+https://tvpass.org/live/BBCWorldNewsNorthAmerica/sd
+#EXTINF:-1  tvg-name="BET Eastern Feed SD" tvg-id="bet-eastern-feed" group-title="Live",BET Eastern Feed SD
+https://tvpass.org/live/BETEast/sd
+#EXTINF:-1  tvg-name="BET Her SD" tvg-id="bet-her" group-title="Live",BET Her SD
+https://tvpass.org/live/BETHerEast/sd
+#EXTINF:-1  tvg-name="Big Ten Network SD" tvg-id="big-ten-network" group-title="Live",Big Ten Network SD
+https://tvpass.org/live/BTN/sd
+#EXTINF:-1  tvg-name="Boomerang SD" tvg-id="boomerang" group-title="Live",Boomerang SD
+https://tvpass.org/live/Boomerang/sd
+#EXTINF:-1  tvg-name="Bravo USA Eastern Feed SD" tvg-id="bravo-usa-eastern-feed" group-title="Live",Bravo USA Eastern Feed SD
+https://tvpass.org/live/BravoEast/sd
+#EXTINF:-1  tvg-name="Cartoon Network USA Eastern Feed SD" tvg-id="cartoon-network-usa-eastern-feed" group-title="Live",Cartoon Network USA Eastern Feed SD
+https://tvpass.org/live/CartoonNetworkEast/sd
+#EXTINF:-1  tvg-name="CBS Sports Network USA SD" tvg-id="cbs-sports-network-usa" group-title="Live",CBS Sports Network USA SD
+https://tvpass.org/live/CBSSportsNetworkUSA/sd
+#EXTINF:-1  tvg-name="Cinemax Eastern Feed SD" tvg-id="cinemax-eastern-feed" group-title="Live",Cinemax Eastern Feed SD
+https://tvpass.org/live/CinemaxEast/sd
+#EXTINF:-1  tvg-name="CMT US Eastern Feed SD" tvg-id="cmt-us-eastern-feed" group-title="Live",CMT US Eastern Feed SD
+https://tvpass.org/live/CMTEast/sd
+#EXTINF:-1  tvg-name="Comedy Central (US) Eastern Feed SD" tvg-id="comedy-central-us-eastern-feed" group-title="Live",Comedy Central (US) Eastern Feed SD
+https://tvpass.org/live/ComedyCentralEast/sd
+#EXTINF:-1  tvg-name="CW (WDCW) District of Columbia SD" tvg-id="cw-wdcw-district-of-columbia" group-title="Live",CW (WDCW) District of Columbia SD
+https://tvpass.org/live/cw-wdcw-district-of-columbia/sd
+#EXTINF:-1  tvg-name="Discovery Family Channel SD" tvg-id="discovery-family-channel" group-title="Live",Discovery Family Channel SD
+https://tvpass.org/live/DiscoveryFamily/sd
+#EXTINF:-1  tvg-name="Disney Junior USA East SD" tvg-id="disney-junior-usa-east" group-title="Live",Disney Junior USA East SD
+https://tvpass.org/live/DisneyJuniorEast/sd
+#EXTINF:-1  tvg-name="E! Entertainment USA Eastern Feed SD" tvg-id="e-entertainment-usa-eastern-feed" group-title="Live",E! Entertainment USA Eastern Feed SD
+https://tvpass.org/live/EEast/sd
+#EXTINF:-1  tvg-name="ESPN SD" tvg-id="espn" group-title="Live",ESPN SD
+https://tvpass.org/live/ESPN/sd
+#EXTINF:-1  tvg-name="ESPN Deportes SD" tvg-id="espn-deportes" group-title="Live",ESPN Deportes SD
+https://tvpass.org/live/espn-deportes/sd
+#EXTINF:-1  tvg-name="ESPN News SD" tvg-id="espn-news" group-title="Live",ESPN News SD
+https://tvpass.org/live/ESPNews/sd
+#EXTINF:-1  tvg-name="ESPN U SD" tvg-id="espn-u" group-title="Live",ESPN U SD
+https://tvpass.org/live/ESPNU/sd
+#EXTINF:-1  tvg-name="ESPN2 SD" tvg-id="espn2" group-title="Live",ESPN2 SD
+https://tvpass.org/live/ESPN2/sd
+#EXTINF:-1  tvg-name="Fanduel Sports Indiana SD" tvg-id="fanduel-sports-indiana" group-title="Live",Fanduel Sports Indiana SD
+https://tvpass.org/live/fanduel-sports-indiana/sd
+#EXTINF:-1  tvg-name="Food Network USA Eastern Feed SD" tvg-id="food-network-usa-eastern-feed" group-title="Live",Food Network USA Eastern Feed SD
+https://tvpass.org/live/FoodNetworkEast/sd
+#EXTINF:-1  tvg-name="FOX (KTTV) Los Angeles SD" tvg-id="fox-kttv-los-angeles-ca" group-title="Live",FOX (KTTV) Los Angeles SD
+https://tvpass.org/live/fox-kttv-los-angeles-ca/sd
+#EXTINF:-1  tvg-name="FOX (WNYW) New York, NY SD" tvg-id="fox-wnyw-new-york-ny" group-title="Live",NY SD
+https://tvpass.org/live/WNYWDT1/sd
+#EXTINF:-1  tvg-name="Fox Sports 1 SD" tvg-id="fox-sports-1" group-title="Live",Fox Sports 1 SD
+https://tvpass.org/live/FoxSports1/sd
+#EXTINF:-1  tvg-name="Fox Sports 2 SD" tvg-id="fox-sports-2" group-title="Live",Fox Sports 2 SD
+https://tvpass.org/live/FoxSports2/sd
+#EXTINF:-1  tvg-name="Freeform East Feed SD" tvg-id="freeform-east-feed" group-title="Live",Freeform East Feed SD
+https://tvpass.org/live/FreeformEast/sd
+#EXTINF:-1  tvg-name="FUSE TV Eastern feed SD" tvg-id="fuse-tv-eastern-feed" group-title="Live",FUSE TV Eastern feed SD
+https://tvpass.org/live/FuseEast/sd
+#EXTINF:-1  tvg-name="FX Movie Channel SD" tvg-id="fx-movie-channel" group-title="Live",FX Movie Channel SD
+https://tvpass.org/live/FXMovieChannel/sd
+#EXTINF:-1  tvg-name="FX Networks East Coast SD" tvg-id="fx-networks-east-coast" group-title="Live",FX Networks East Coast SD
+https://tvpass.org/live/FXEast/sd
+#EXTINF:-1  tvg-name="FXX USA Eastern SD" tvg-id="fxx-usa-eastern" group-title="Live",FXX USA Eastern SD
+https://tvpass.org/live/FXXEast/sd
+#EXTINF:-1  tvg-name="FYI USA Eastern SD" tvg-id="fyi-usa-eastern" group-title="Live",FYI USA Eastern SD
+https://tvpass.org/live/FYIEast/sd
+#EXTINF:-1  tvg-name="Game Show Network East SD" tvg-id="game-show-network-east" group-title="Live",Game Show Network East SD
+https://tvpass.org/live/game-show-network-east/sd
+#EXTINF:-1  tvg-name="Hallmark Eastern Feed SD" tvg-id="hallmark-eastern-feed" group-title="Live",Hallmark Eastern Feed SD
+https://tvpass.org/live/HallmarkChannelEast/sd
+#EXTINF:-1  tvg-name="Hallmark Family HD SD" tvg-id="hallmark-family-hd" group-title="Live",Hallmark Family HD SD
+https://tvpass.org/live/HallmarkDrama/sd
+#EXTINF:-1  tvg-name="Hallmark Mystery Eastern HD SD" tvg-id="hallmark-mystery-eastern-hd" group-title="Live",Hallmark Mystery Eastern HD SD
+https://tvpass.org/live/HallmarkMoviesMysteriesEast/sd
+#EXTINF:-1  tvg-name="HBO Eastern Feed SD" tvg-id="hbo-eastern-feed" group-title="Live",HBO Eastern Feed SD
+https://tvpass.org/live/HBOEast/sd
+#EXTINF:-1  tvg-name="HBO 2 Eastern Feed SD" tvg-id="hbo-2-eastern-feed" group-title="Live",HBO 2 Eastern Feed SD
+https://tvpass.org/live/HBO2East/sd
+#EXTINF:-1  tvg-name="HBO Comedy HD East SD" tvg-id="hbo-comedy-hd-east" group-title="Live",HBO Comedy HD East SD
+https://tvpass.org/live/HBOComedyEast/sd
+#EXTINF:-1  tvg-name="HBO Family Eastern Feed SD" tvg-id="hbo-family-eastern-feed" group-title="Live",HBO Family Eastern Feed SD
+https://tvpass.org/live/HBOFamilyEast/sd
+#EXTINF:-1  tvg-name="HBO Signature (HBO 3) Eastern SD" tvg-id="hbo-signature-hbo-3-eastern" group-title="Live",HBO Signature (HBO 3) Eastern SD
+https://tvpass.org/live/HBOSignatureEast/sd
+#EXTINF:-1  tvg-name="HBO Zone HD East SD" tvg-id="hbo-zone-hd-east" group-title="Live",HBO Zone HD East SD
+https://tvpass.org/live/HBOZoneEast/sd
+#EXTINF:-1  tvg-name="HGTV USA Eastern Feed SD" tvg-id="hgtv-usa-eastern-feed" group-title="Live",HGTV USA Eastern Feed SD
+https://tvpass.org/live/HGTVEast/sd
+#EXTINF:-1  tvg-name="History Channel US Eastern Feed SD" tvg-id="history-channel-us-eastern-feed" group-title="Live",History Channel US Eastern Feed SD
+https://tvpass.org/live/HistoryEast/sd
+#EXTINF:-1  tvg-name="HLN SD" tvg-id="hln" group-title="Live",HLN SD
+https://tvpass.org/live/HLN/sd
+#EXTINF:-1  tvg-name="Independent Film Channel US SD" tvg-id="independent-film-channel-us" group-title="Live",Independent Film Channel US SD
+https://tvpass.org/live/IFCEast/sd
+#EXTINF:-1  tvg-name="Investigation Discovery USA Eastern SD" tvg-id="investigation-discovery-usa-eastern" group-title="Live",Investigation Discovery USA Eastern SD
+https://tvpass.org/live/InvestigationDiscoveryEast/sd
+#EXTINF:-1  tvg-name="Investigation Discovery USA Eastern HD" tvg-id="investigation-discovery-usa-eastern" group-title="Live",Investigation Discovery USA Eastern HD
+https://tvpass.org/live/InvestigationDiscoveryEast/hd
+#EXTINF:-1  tvg-name="ION Eastern Feed SD" tvg-id="ion-eastern-feed" group-title="Live",ION Eastern Feed SD
+https://tvpass.org/live/IONTVEast/sd
+#EXTINF:-1  tvg-name="Lifetime Movies East SD" tvg-id="lifetime-movies-east" group-title="Live",Lifetime Movies East SD
+https://tvpass.org/live/LifetimeMoviesEast/sd
+#EXTINF:-1  tvg-name="Lifetime Network US Eastern Feed SD" tvg-id="lifetime-network-us-eastern-feed" group-title="Live",Lifetime Network US Eastern Feed SD
+https://tvpass.org/live/LifetimeEast/sd
+#EXTINF:-1  tvg-name="LOGO East SD" tvg-id="logo-east" group-title="Live",LOGO East SD
+https://tvpass.org/live/LogoEast/sd
+#EXTINF:-1  tvg-name="Marquee Sports Network SD" tvg-id="marquee-sports-network" group-title="Live",Marquee Sports Network SD
+https://tvpass.org/live/marquee-sports-network/sd
+#EXTINF:-1  tvg-name="MeTV Toons (WJLP2) New Jersey SD" tvg-id="metv-toons-wjlp2-new-jersey" group-title="Live",MeTV Toons (WJLP2) New Jersey SD
+https://tvpass.org/live/metv-toons/sd
+#EXTINF:-1  tvg-name="MeTV Wjlp New Jerseynew York SD" tvg-id="metv-wjlp-new-jerseynew-york" group-title="Live",MeTV Wjlp New Jerseynew York SD
+https://tvpass.org/live/metv-wjlp-new-jerseynew-york/sd
+#EXTINF:-1  tvg-name="Midatlantic Sports Network SD" tvg-id="midatlantic-sports-network" group-title="Live",Midatlantic Sports Network SD
+https://tvpass.org/live/midatlantic-sports-network/sd
+#EXTINF:-1  tvg-name="Monumental Sports Network SD" tvg-id="monumental-sports-network" group-title="Live",Monumental Sports Network SD
+https://tvpass.org/live/monumental-sports-network/sd
+#EXTINF:-1  tvg-name="MoreMax Eastern SD" tvg-id="moremax-eastern" group-title="Live",MoreMax Eastern SD
+https://tvpass.org/live/MoreMaxEast/sd
+#EXTINF:-1  tvg-name="Motor Trend HD SD" tvg-id="motor-trend-hd" group-title="Live",Motor Trend HD SD
+https://tvpass.org/live/Motortrend/sd
+#EXTINF:-1  tvg-name="MovieMax (Max 6) East SD" tvg-id="moviemax-max-6-east" group-title="Live",MovieMax (Max 6) East SD
+https://tvpass.org/live/MovieMaxEast/sd
+#EXTINF:-1  tvg-name="MSG Madison Square Gardens SD" tvg-id="msg-madison-square-gardens" group-title="Live",MSG Madison Square Gardens SD
+https://tvpass.org/live/msg-madison-square-gardens/sd
+#EXTINF:-1  tvg-name="MSG Plus SD" tvg-id="msg-plus" group-title="Live",MSG Plus SD
+https://tvpass.org/live/msg-plus/sd
+#EXTINF:-1  tvg-name="MSNBC USA SD" tvg-id="msnbc-usa" group-title="Live",MSNBC USA SD
+https://tvpass.org/live/MSNBC/sd
+#EXTINF:-1  tvg-name="MTV 2 East SD" tvg-id="mtv-2-east" group-title="Live",MTV 2 East SD
+https://tvpass.org/live/mtv-2-east/sd
+#EXTINF:-1  tvg-name="MTV USA Eastern Feed SD" tvg-id="mtv-usa-eastern-feed" group-title="Live",MTV USA Eastern Feed SD
+https://tvpass.org/live/MTVEast/sd
+#EXTINF:-1  tvg-name="National Geographic US Eastern SD" tvg-id="national-geographic-us-eastern" group-title="Live",National Geographic US Eastern SD
+https://tvpass.org/live/NationalGeographicEast/sd
+#EXTINF:-1  tvg-name="National Geographic Wild SD" tvg-id="national-geographic-wild" group-title="Live",National Geographic Wild SD
+https://tvpass.org/live/NationalGeographicWildEast/sd
+#EXTINF:-1  tvg-name="NewsMax TV SD" tvg-id="newsmax-tv" group-title="Live",NewsMax TV SD
+https://tvpass.org/live/NewsmaxTV/sd
+#EXTINF:-1  tvg-name="NFL Network SD" tvg-id="nfl-network" group-title="Live",NFL Network SD
+https://tvpass.org/live/NFLNetwork/sd
+#EXTINF:-1  tvg-name="NFL RedZone SD" tvg-id="nfl-redzone" group-title="Live",NFL RedZone SD
+https://tvpass.org/live/NFLRedZone/sd
+#EXTINF:-1  tvg-name="Oprah Winfrey Network USA Eastern SD" tvg-id="oprah-winfrey-network-usa-eastern" group-title="Live",Oprah Winfrey Network USA Eastern SD
+https://tvpass.org/live/OWNEast/sd
+#EXTINF:-1  tvg-name="Outdoor Channel US SD" tvg-id="outdoor-channel-us" group-title="Live",Outdoor Channel US SD
+https://tvpass.org/live/OutdoorChannel/sd
+#EXTINF:-1  tvg-name="Oxygen Eastern Feed SD" tvg-id="oxygen-eastern-feed" group-title="Live",Oxygen Eastern Feed SD
+https://tvpass.org/live/OxygenEast/sd
+#EXTINF:-1  tvg-name="PBS (WNET) New York, NY SD" tvg-id="pbs-wnet-new-york-ny" group-title="Live",NY SD
+https://tvpass.org/live/WNET/sd
+#EXTINF:-1  tvg-name="ReelzChannel SD" tvg-id="reelzchannel" group-title="Live",ReelzChannel SD
+https://tvpass.org/live/Reelz/sd
+#EXTINF:-1  tvg-name="Science SD" tvg-id="science" group-title="Live",Science SD
+https://tvpass.org/live/Science/sd
+#EXTINF:-1  tvg-name="SEC Network SD" tvg-id="sec-network" group-title="Live",SEC Network SD
+https://tvpass.org/live/SECN/sd
+#EXTINF:-1  tvg-name="Showtime Eastern Feed SD" tvg-id="paramount-with-showtime-eastern-feed" group-title="Live",Showtime Eastern Feed SD
+https://tvpass.org/live/ShowtimeEast/sd
+#EXTINF:-1  tvg-name="Showtime 2 Eastern SD" tvg-id="showtime-2-eastern" group-title="Live",Showtime 2 Eastern SD
+https://tvpass.org/live/Showtime2East/sd
+#EXTINF:-1  tvg-name="Space City Home Network SD" tvg-id="space-city-home-network" group-title="Live",Space City Home Network SD
+https://tvpass.org/live/space-city-home-network/sd
+#EXTINF:-1  tvg-name="Sportsnet (East) SD" tvg-id="sportsnet-east" group-title="Live",Sportsnet (East) SD
+https://tvpass.org/live/sportsnet-east/sd
+#EXTINF:-1  tvg-name="Sportsnet 360 SD" tvg-id="sportsnet-360" group-title="Live",Sportsnet 360 SD
+https://tvpass.org/live/sportsnet-360/sd
+#EXTINF:-1  tvg-name="Sportsnet One SD" tvg-id="sportsnet-one" group-title="Live",Sportsnet One SD
+https://tvpass.org/live/sportsnet-one/sd
+#EXTINF:-1  tvg-name="Sportsnet West SD" tvg-id="sportsnet-west" group-title="Live",Sportsnet West SD
+https://tvpass.org/live/sportsnet-west/sd
+#EXTINF:-1  tvg-name="Starz Eastern SD" tvg-id="starz-eastern" group-title="Live",Starz Eastern SD
+https://tvpass.org/live/StarzEast/sd
+#EXTINF:-1  tvg-name="SundanceTV USA East SD" tvg-id="sundancetv-usa-east" group-title="Live",SundanceTV USA East SD
+https://tvpass.org/live/SundanceTVEast/sd
+#EXTINF:-1  tvg-name="Syfy Eastern Feed SD" tvg-id="syfy-eastern-feed" group-title="Live",Syfy Eastern Feed SD
+https://tvpass.org/live/SyfyEast/sd
+#EXTINF:-1  tvg-name="TBS East SD" tvg-id="tbs-east" group-title="Live",TBS East SD
+https://tvpass.org/live/TBSEast/sd
+#EXTINF:-1  tvg-name="The Cooking Channel SD" tvg-id="the-cooking-channel" group-title="Live",The Cooking Channel SD
+https://tvpass.org/live/CookingChannel/sd
+#EXTINF:-1  tvg-name="The Weather Channel SD" tvg-id="the-weather-channel" group-title="Live",The Weather Channel SD
+https://tvpass.org/live/TheWeatherChannel/sd
+#EXTINF:-1  tvg-name="TLC USA Eastern SD" tvg-id="tlc-usa-eastern" group-title="Live",TLC USA Eastern SD
+https://tvpass.org/live/TLCEast/sd
+#EXTINF:-1  tvg-name="TMC (US) Eastern Feed SD" tvg-id="tmc-us-eastern-feed" group-title="Live",TMC (US) Eastern Feed SD
+https://tvpass.org/live/TheMovieChannelEast/sd
+#EXTINF:-1  tvg-name="TNT Eastern Feed SD" tvg-id="tnt-eastern-feed" group-title="Live",TNT Eastern Feed SD
+https://tvpass.org/live/TNTEast/sd
+#EXTINF:-1  tvg-name="Travel US East SD" tvg-id="travel-us-east" group-title="Live",Travel US East SD
+https://tvpass.org/live/TravelChannelEast/sd
+#EXTINF:-1  tvg-name="truTV USA Eastern SD" tvg-id="trutv-usa-eastern" group-title="Live",truTV USA Eastern SD
+https://tvpass.org/live/truTVEast/sd
+#EXTINF:-1  tvg-name="TSN1 SD" tvg-id="tsn1" group-title="Live",TSN1 SD
+https://tvpass.org/live/tsn1/sd
+#EXTINF:-1  tvg-name="TSN2 SD" tvg-id="tsn2" group-title="Live",TSN2 SD
+https://tvpass.org/live/tsn2/sd
+#EXTINF:-1  tvg-name="TSN3 SD" tvg-id="tsn3" group-title="Live",TSN3 SD
+https://tvpass.org/live/tsn3/sd
+#EXTINF:-1  tvg-name="TSN4 SD" tvg-id="tsn4" group-title="Live",TSN4 SD
+https://tvpass.org/live/tsn4/sd
+#EXTINF:-1  tvg-name="TSN5 SD" tvg-id="tsn5" group-title="Live",TSN5 SD
+https://tvpass.org/live/tsn5/sd
+#EXTINF:-1  tvg-name="Turner Classic Movies USA SD" tvg-id="turner-classic-movies-usa" group-title="Live",Turner Classic Movies USA SD
+https://tvpass.org/live/TCMEast/sd
+#EXTINF:-1  tvg-name="TV Land Eastern SD" tvg-id="tv-land-eastern" group-title="Live",TV Land Eastern SD
+https://tvpass.org/live/tv-land-eastern/sd
+#EXTINF:-1  tvg-name="TV One SD" tvg-id="tv-one" group-title="Live",TV One SD
+https://tvpass.org/live/TVOne/sd
+#EXTINF:-1  tvg-name="USA Network East Feed SD" tvg-id="usa-network-east-feed" group-title="Live",USA Network East Feed SD
+https://tvpass.org/live/USANetworkEast/sd
+#EXTINF:-1  tvg-name="VH1 Eastern Feed SD" tvg-id="vh1-eastern-feed" group-title="Live",VH1 Eastern Feed SD
+https://tvpass.org/live/VH1East/sd
+#EXTINF:-1  tvg-name="VICE SD" tvg-id="vice" group-title="Live",VICE SD
+https://tvpass.org/live/VICETV/sd
+#EXTINF:-1  tvg-name="WE (Women's Entertainment) Eastern SD" tvg-id="we-womens-entertainment-eastern" group-title="Live",WE (Women's Entertainment) Eastern SD
+https://tvpass.org/live/WeTVEast/sd
+#EXTINF:-1  tvg-name="WPIX New York (SUPERSTATION) SD" tvg-id="wpix-new-york-superstation" group-title="Live",WPIX New York (SUPERSTATION) SD
+https://tvpass.org/live/WPIX/sd
+#EXTINF:-1  tvg-name="Yes Network SD" tvg-id="yes-network" group-title="Live",Yes Network SD
+https://tvpass.org/live/yes-network/sd
+#EXTINF:-1  tvg-name="UFC Fight Night: Leon Edwards v Sean Brady (03/22 1:05 PM ET) SD" group-title="PPV",UFC Fight Night: Leon Edwards v Sean Brady (03/22 1:05 PM ET) SD
+https://tvpass.org/live/PPV01/sd
+#EXTINF:-1  tvg-name="TalkTV" group-title="English Channels",TalkTV
+https://live-talktv-ssai.simplestreamcdn.com/v1/master/774d979dd66704abea7c5b62cb34c6815fda0d35/talktv-live/index.m3u8
+#EXTINF:-1  tvg-name="The Craft Store" group-title="English Channels",The Craft Store
+https://live-hochanda.simplestreamcdn.com/hochanda/live.m3u8
+#EXTINF:-1  tvg-name="TJC" group-title="English Channels",TJC
+https://cdn-shop-lc-01.akamaized.net/Content/HLS_HLS/Live/channel(TJCOTT)/index.m3u8
+#EXTINF:-1  tvg-name="MTA8 America" group-title="English Channels",MTA8 America
+https://chlivemta.akamaized.net/hls/live/2016718/mta8/playlist.m3u8
+#EXTINF:-1  tvg-name="MUTV" group-title="English Channels",MUTV
+https://bcovlive-a.akamaihd.net/r2d2c4ca5bf57456fb1d16255c1a535c8/eu-west-1/6058004203001/playlist.m3u8
+#EXTINF:-1  tvg-name="Magna Vision" group-title="English Channels",Magna Vision
+https://j78dpa3edq5r-hls-live.5centscdn.com/abr/0864028584026e6ad9cdf922473177a4/playlist.m3u8
+#EXTINF:-1  tvg-name="MTA1 World" group-title="English Channels",MTA1 World
+https://chlivemta1.akamaized.net/hls/live/2008145/mta1/playlist.m3u8
+#EXTINF:-1  tvg-name="MTA2 Europe" group-title="English Channels",MTA2 Europe
+https://chlivemta1.akamaized.net/hls/live/2008145/mta2/playlist.m3u8
+#EXTINF:-1  tvg-name="iON TV" group-title="English Channels",iON TV
+https://ap02.iqplay.tv:8082/iqb8002/i09/playlist.m3u8
+#EXTINF:-1  tvg-name="W14DK-D 14.3 RetroTV" group-title="USA Channels",W14DK-D 14.3 RetroTV
+https://2-fss-2.streamhoster.com/pl_118/204972-1954132-1/playlist.m3u8
+#EXTINF:-1  tvg-name="TVS Vintage Network" group-title="USA Channels",TVS Vintage Network
+https://bozztv.com/gusa/gusa-tvsvintage/index.m3u8
+#EXTINF:-1  tvg-name="TVS Nostalgia Movies" group-title="USA Channels",TVS Nostalgia Movies
+https://bozztv.com/gusa/gusa-tvsNostalgiaMovies/index.m3u8
+#EXTINF:-1  tvg-name="TVS Pet Parade Network" group-title="USA Channels",TVS Pet Parade Network
+https://bozztv.com/gusa/gusa-petparadenetwork/index.m3u8
+#EXTINF:-1  tvg-name="TVS Pinball Network" group-title="USA Channels",TVS Pinball Network
+https://bozztv.com/gusa/gusa-TVSCartoonNetwork/index.m3u8
+#EXTINF:-1  tvg-name="TVS Quiz Show Network" group-title="USA Channels",TVS Quiz Show Network
+https://bozztv.com/gusa/gusa-tvsgameshow/index.m3u8
+#EXTINF:-1  tvg-name="TVS Select Network" group-title="USA Channels",TVS Select Network
+https://bozztv.com/gusa/gusa-tvsselect/index.m3u8
+#EXTINF:-1  tvg-name="TVS Sports" group-title="USA Channels",TVS Sports
+https://bozztv.com/gusa/gusa-tvssports/index.m3u8
+#EXTINF:-1  tvg-name="TVS Talk Network" group-title="USA Channels",TVS Talk Network
+https://bozztv.com/gusa/gusa-TVStalk/index.m3u8
+#EXTINF:-1  tvg-name="TVS Tally Ho" group-title="USA Channels",TVS Tally Ho
+https://bozztv.com/gusa/gusa-tvstallyho/index.m3u8
+#EXTINF:-1  tvg-name="TVS Travel Network" group-title="USA Channels",TVS Travel Network
+https://bozztv.com/gusa/gusa-tvstravel/index.m3u8
+#EXTINF:-1  tvg-name="TVS Turbo" group-title="USA Channels",TVS Turbo
+https://bozztv.com/gusa/gusa-tvsturbo/index.m3u8
+#EXTINF:-1  tvg-name="TVS Cipher Network" group-title="USA Channels",TVS Cipher Network
+https://bozztv.com/gusa/gusa-tvsmystery/index.m3u8
+#EXTINF:-1  tvg-name="TVS Classic Movies" group-title="USA Channels",TVS Classic Movies
+https://bozztv.com/gusa/gusa-tvsclassicmovies/index.m3u8
+#EXTINF:-1  tvg-name="TVS Comedy Network" group-title="USA Channels",TVS Comedy Network
+https://bozztv.com/gusa/gusa-tvscomedy/index.m3u8
+#EXTINF:-1  tvg-name="TVS Drive In Movie" group-title="USA Channels",TVS Drive In Movie
+https://bozztv.com/gusa/gusa-tvsdriveinmovie/index.m3u8
+#EXTINF:-1  tvg-name="TVS Family Channel" group-title="USA Channels",TVS Family Channel
+https://bozztv.com/gusa/gusa-TVSFamilyChannel/index.m3u8
+#EXTINF:-1  tvg-name="TVS Flashback Network" group-title="USA Channels",TVS Flashback Network
+https://bozztv.com/gusa/gusa-TVSFlashback/index.m3u8
+#EXTINF:-1  tvg-name="TVS Frontier Network" group-title="USA Channels",TVS Frontier Network
+https://bozztv.com/gusa/gusa-tvsfrontier/index.m3u8
+#EXTINF:-1  tvg-name="TVS Nostalgia" group-title="USA Channels",TVS Nostalgia
+https://bozztv.com/gusa/gusa-nostalgia/index.m3u8
+#EXTINF:-1  tvg-name="TUTV" group-title="USA Channels",TUTV
+https://livestream.telvue.com/templeuni1/f7b44cfafd5c52223d5498196c8a2e7b.sdp/playlist.m3u8
+#EXTINF:-1  tvg-name="The Library Channel TV18" group-title="USA Channels",The Library Channel TV18
+https://reflect-memphis.cablecast.tv/live-2/live/live.m3u8
+#EXTINF:-1  tvg-name="The Ultimate Music Channel" group-title="USA Channels",The Ultimate Music Channel
+https://app.viloud.tv/hls/channel/0694b92d093cc2bd5438ff9bbccaf1a2.m3u8
+#EXTINF:-1  tvg-name="Spirit TV" group-title="USA Channels",Spirit TV
+https://cdnlive.myspirit.tv/LS-ATL-43240-2/index.m3u8
+#EXTINF:-1  tvg-name="Story Television" group-title="USA Channels",Story Television
+https://2-fss-1.streamhoster.com/pl_122/206858-4412976-1/chunklist.m3u8
+#EXTINF:-1  tvg-name="Talkin Live Classics TV" group-title="USA Channels",Talkin Live Classics TV
+https://2-fss-1.streamhoster.com/pl_122/206338-3120682-1/playlist.m3u8
+#EXTINF:-1  tvg-name="RFD-TV" group-title="USA Channels",RFD-TV
+https://rfdtv-jw.cdn.vustreams.com/live/7cba1a3b-318a-4097-8492-374478370b91/live.isml/7cba1a3b-318a-4097-8492-374478370b91.m3u8
+#EXTINF:-1  tvg-name="Reelz" group-title="USA Channels",Reelz
+https://bcovlive-a.akamaihd.net/rc21a8bc6455344c699a06e9220fe2748/us-west-2/5245389775001/playlist.m3u8
+#EXTINF:-1  tvg-name="Revry 2" group-title="USA Channels",Revry 2
+https://785e3b6ff91d4c6db1d8a5b67a894571.mediatailor.us-west-2.amazonaws.com/v1/master/ba62fe743df0fe93366eba3a257d792884136c7f/LINEAR-5-REVRY-BRIGHTCOVE/mt/brightcove/5/hls/master/playlist.m3u8
+#EXTINF:-1  tvg-name="NBCLX" group-title="USA Channels",NBCLX
+https://nbculocallive.akamaized.net/hls/live/2037096/lx/use1.m3u8
+#EXTINF:-1  tvg-name="MAV Select CANADA" group-title="USA Channels",MAV Select CANADA
+https://d70mb4nkspm3g.cloudfront.net/v1/master/3722c60a815c199d9c0ef36c5b73da68a62b09d1/cc-vvwqo3j029lz0/playlist.m3u8
+#EXTINF:-1  tvg-name="MAV Select USA" group-title="USA Channels",MAV Select USA
+https://d3h07n6l1exhds.cloudfront.net/v1/master/3722c60a815c199d9c0ef36c5b73da68a62b09d1/cc-0z2yyo4dxctc7/playlist.m3u8
+#EXTINF:-1  tvg-name="MBC 1" group-title="USA Channels",MBC 1
+https://mbc1-enc.edgenextcdn.net/out/v1/0965e4d7deae49179172426cbfb3bc5e/index.m3u8
+#EXTINF:-1  tvg-name="Mega TV" group-title="USA Channels",Mega TV
+https://mdstrm.com/live-stream-playlist/660b066dae419408a11b6072.m3u8
+#EXTINF:-1  tvg-name="Loupe 4K" group-title="USA Channels",Loupe 4K
+https://d2dw21aq0j0l5c.cloudfront.net/playlist.m3u8
+#EXTINF:-1  tvg-name="Mad Dog and Merrill" group-title="USA Channels",Mad Dog and Merrill
+https://bozztv.com/gusa/gusa-mwg/index.m3u8
+#EXTINF:-1  tvg-name="IMPACT Plus!" group-title="USA Channels",IMPACT Plus!
+https://d2tuwvs0ja335j.cloudfront.net/hls/main.m3u8
+#EXTINF:-1  tvg-name="In the kitchen" group-title="USA Channels",In the kitchen
+https://qvc-amd-live.akamaized.net/hls/live/2034113/lsqvc4us/master.m3u8
+#EXTINF:-1  tvg-name="Golden TV" group-title="USA Channels",Golden TV
+https://bozztv.com/gusa/gusa-goldentv/index.m3u8
+#EXTINF:-1  tvg-name="Grit Xtra" group-title="USA Channels",Grit Xtra
+https://scripps-gritxtra-1-us.vizio.wurl.tv/playlist.m3u8
+#EXTINF:-1  tvg-name="Fox News Channel" group-title="USA Channels",Fox News Channel
+http://247preview.foxnews.com/hls/live/2020027/fncv3preview/primary.m3u8
+#EXTINF:-1  tvg-name="Fox Weather" group-title="USA Channels",Fox Weather
+https://247wlive.foxweather.com/stream/index.m3u8
+#EXTINF:-1  tvg-name="FX East" group-title="USA Channels",FX East
+http://fl2.moveonjoy.com/FX/index.m3u8
+#EXTINF:-1  tvg-name="FXX East" group-title="USA Channels",FXX East
+http://fl2.moveonjoy.com/FXX/index.m3u8
+#EXTINF:-1  tvg-name="Cult Classic Movie Theater" group-title="USA Channels",Cult Classic Movie Theater
+https://app.viloud.tv/hls/channel/053140e08adc29e3eac61eb05ff12f51.m3u8
+#EXTINF:-1  tvg-name="Del Mar TV" group-title="USA Channels",Del Mar TV
+https://d25ykpi2vxhoyc.cloudfront.net/delmar-cdn/dmtv/playlist.m3u8
+#EXTINF:-1  tvg-name="DerryTV 17" group-title="USA Channels",DerryTV 17
+https://livestream.telvue.com/derrynh1/f7b44cfafd5c52223d5498196c8a2e7b.sdp/playlist.m3u8
+#EXTINF:-1  tvg-name="DerryTV 23" group-title="USA Channels",DerryTV 23
+https://livestream.telvue.com/derrynh2/f7b44cfafd5c52223d5498196c8a2e7b.sdp/playlist.m3u8
+#EXTINF:-1  tvg-name="Chef Roc Show" group-title="USA Channels",Chef Roc Show
+https://bozztv.com/gusa/gusa-chefrock/index.m3u8
+#EXTINF:-1  tvg-name="Classic Cinema" group-title="USA Channels",Classic Cinema
+https://bozztv.com/gusa/gusa-classiccinema/index.m3u8
+#EXTINF:-1  tvg-name="Chef Champion" group-title="USA Channels",Chef Champion
+https://bozztv.com/gusa/gusa-chefchampion/index.m3u8
+#EXTINF:-1  tvg-name="BMC-HD TV" group-title="USA Channels",BMC-HD TV
+https://livestream.telvue.com/belmontmedia4/f7b44cfafd5c52223d5498196c8a2e7b.sdp/playlist.m3u8
+#EXTINF:-1  tvg-name="BEK TV Sports West" group-title="USA Channels",BEK TV Sports West
+https://cdn3.wowza.com/5/ZWQ1K2NYTmpFbGsr/BEK-WOWZA-1/smil:BEKPRIMEW.smil/playlist.m3u8
+#EXTINF:-1  tvg-name="AXS TV NOW" group-title="USA Channels",AXS TV NOW
+https://dikcfc9915kp8.cloudfront.net/hls/1080p/playlist.m3u8
+#EXTINF:-1  tvg-name="AKC TV" group-title="USA Channels",AKC TV
+https://install.akctvcontrol.com/speed/broadcast/138/desktop-playlist.m3u8
+#EXTINF:-1  tvg-name="AKC TV" group-title="USA Channels",AKC TV
+https://broadcast.blivenyc.com/speed/broadcast/22/desktop-playlist.m3u8
+#EXTINF:-1  tvg-name="AKC TV Meet The Breeds" group-title="USA Channels",AKC TV Meet The Breeds
+https://install.akctvcontrol.com/speed/broadcast/139/desktop-playlist.m3u8
+#EXTINF:-1  tvg-name="AKC TV Puppies 24/7" group-title="USA Channels",AKC TV Puppies 24/7
+https://install.akctvcontrol.com/speed/broadcast/140/desktop-playlist.m3u8
+#EXTINF:-1  tvg-name="30A TV Classic Movies" group-title="USA Channels",30A TV Classic Movies
+https://30a-tv.com/feeds/pzaz/30atvmovies.m3u8
+#EXTINF:-1  tvg-name="Orange TV" group-title="USA Channels",Orange TV
+http://otv3.ocfl.net:1936/OrangeTV/smil:OrangeTV.smil/playlist.m3u8
+#EXTINF:-1  tvg-name="Key TV" group-title="USA Channels",Key TV
+http://media4.tripsmarter.com:1935/LiveTV/KTVHD/playlist.m3u8
+#EXTINF:-1  tvg-name="Black Cinema" group-title="USA Channels",Black Cinema
+https://stitcher.pluto.tv/stitch/hls/channel/561c5b0dada51f8004c4d855/master.m3u8?deviceType=web&deviceMake=Chrome&deviceModel=Chrome&sid=6e360db0-724b-11e8-be77-bf4d1417b012&deviceId=889540f0-712d-11e8-b9ec-8ba319deeadf&deviceVersion=37.0.2049.0&appVersion=2.0.0&deviceDNT=0&userId=&advertisingId=&deviceLat=38.5783&deviceLon=-90.6666&app_name=&appName=&appStoreUrl=&serverSideAds=true
+#EXTINF:-1  tvg-id="KCKSLD4.us" tvg-logo="https://i.imgur.com/aMKtA68.png" group-title="Entertainment",Action (KCKS-LD4) (480p)
+https://cdn.igocast.com/channel4_hls/channel4_master.m3u8
+#EXTINF:-1  group-title="Undefined",Action Hollywood Movies
+https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-actionhollywood-samsungnz/playlist.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetAnal.us" tvg-logo="https://i.imgur.com/QFo6Ptm.png" group-title="XXX",AdultIPTV.net Anal (720p)
+http://cdn.adultiptv.net/anal.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetAsian.us" tvg-logo="https://i.imgur.com/mBJyTOp.png" group-title="XXX",AdultIPTV.net Asian (720p)
+http://cdn.adultiptv.net/asian.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetBigAss.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Big Ass (720p)
+http://cdn.adultiptv.net/bigass.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetBigDick.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Big Dick (720p)
+http://cdn.adultiptv.net/bigdick.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetBigTits.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Big Tits (720p)
+http://cdn.adultiptv.net/bigtits.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetBlonde.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Blonde (720p)
+http://cdn.adultiptv.net/blonde.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetBlowjob.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Blowjob (720p)
+http://cdn.adultiptv.net/blowjob.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetBrunette.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Brunette (720p)
+http://cdn.adultiptv.net/brunette.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetCompilation.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Compilation (720p)
+http://cdn.adultiptv.net/compilation.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetCuckold.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Cuckold (720p)
+http://cdn.adultiptv.net/cuckold.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetFetish.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Fetish (720p)
+http://cdn.adultiptv.net/fetish.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetGangbang.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Gangbang (720p)
+http://cdn.adultiptv.net/gangbang.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetGay.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Gay (720p)
+http://cdn.adultiptv.net/gay.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetHardcore.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Hardcore (720p)
+http://cdn.adultiptv.net/hardcore.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetInterracial.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Interracial (720p)
+http://cdn.adultiptv.net/interracial.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetLatina.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Latina (720p)
+http://cdn.adultiptv.net/latina.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetLesbian.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Lesbian (720p)
+http://cdn.adultiptv.net/lesbian.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetLiveCams.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Live Cams (720p)
+http://cdn.adultiptv.net/livecams.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetMILF.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net MILF (720p)
+http://cdn.adultiptv.net/milf.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetPornstar.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Pornstar (720p)
+http://cdn.adultiptv.net/pornstar.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetPOV.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net POV (720p)
+http://cdn.adultiptv.net/pov.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetRough.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Rough (720p)
+http://cdn.adultiptv.net/rough.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetRussian.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Russian (720p)
+http://cdn.adultiptv.net/russian.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetTeen.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Teen (720p)
+http://cdn.adultiptv.net/teen.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetThreesome.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Threesome (720p)
+http://cdn.adultiptv.net/threesome.m3u8
+#EXTINF:-1  tvg-id="AdultIPTVnetWoman.us" tvg-logo="https://i.imgur.com/3eUIaHx.png" group-title="XXX",AdultIPTV.net Woman (720p)
+http://live.redtraffic.net/woman.m3u8
+#EXTINF:-1  group-title="Undefined",AFV Family
+https://futuretoday-afv-family-2-ie.samsung.wurl.tv/playlist.m3u8
+#EXTINF:-1  tvg-id="AWEEncore.us" tvg-logo="https://i.imgur.com/0utwZ63.png" group-title="General",AWE Encore (720p)
+https://aweencore-vizio.amagi.tv/playlist.m3u8
+#EXTINF:-1  tvg-id="BeanoTV.uk" tvg-logo="https://i.imgur.com/IKHFZDJ.png" group-title="Undefined",Beano TV (720p)
+https://a7b60a6853d843dd9105acfa8d6e74c7.mediatailor.us-east-1.amazonaws.com/v1/master/44f73ba4d03e9607dcd9bebdcb8494d86964f1d8/Samsung-gb_BeanoTV/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",Bein Sport Xtra
+https://bein-xtra-samsung-canada.amagi.tv/playlist.m3u8
+#EXTINF:-1  tvg-id="bonappetit.us" tvg-logo="https://i.imgur.com/YhFFxlE.png" group-title="Cooking",bon appétit (1080p)
+https://bonappetit-samsung.amagi.tv/playlist.m3u8
+#EXTINF:-1  tvg-id="Circle.us" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Circle_Network_logo.svg/512px-Circle_Network_logo.svg.png" group-title="Entertainment",Circle (1080p)
+https://circle-roku.amagi.tv/playlist.m3u8
+#EXTINF:-1  tvg-id="ClassicRerunsTV.us" tvg-logo="https://i.imgur.com/55M8t19.png" group-title="Entertainment",Classic Reruns TV (720p) [Not 24/7]
+https://dai.google.com/linear/hls/event/wnQPvAN9QBODw9hP-H0rZA/master.m3u8
+#EXTINF:-1  tvg-id="CourtTVMystery.us" tvg-logo="https://i.imgur.com/JotdfTw.png" group-title="General",Court TV Mystery (WTXL-TV4) (480p)
+https://5e6cea03e25b6.streamlock.net/live/QVC.stream/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",Freebie TV (720p) [Not 24/7]
+https://d1h1d6qoy9vnra.cloudfront.net/v1/master/9d062541f2ff39b5c0f48b743c6411d25f62fc25/Freebie-Plex/187.m3u8
+#EXTINF:-1  tvg-id="FTF.us" tvg-logo="https://i.imgur.com/wCAwYZ7.png" group-title="Sports",FTF (720p)
+https://eleven-rebroadcast-samsung.roku.wurl.com/manifest/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",FTF For the fans (720p)
+https://elevensports-uk.samsung.wurl.com/manifest/playlist.m3u8
+#EXTINF:-1  tvg-id="FTV.bo" tvg-logo="https://i.imgur.com/YOr1Oac.png" group-title="Sports",FTV (720p)
+https://master.tucableip.com/ftv/index.m3u8
+#EXTINF:-1  tvg-id="FuboSportsNetwork.us" tvg-logo="https://i.imgur.com/qFNRJLb.png" group-title="Sports",fubo Sports Network (720p)
+https://dai2-xumo.fubo.tv/amagi_hls_data_xumo1212A-fubo/CDN/master.m3u8
+#EXTINF:-1  group-title="Undefined",Go USA
+https://brandusa-gousa-1-in.samsung.wurl.tv/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",Gusto TV
+https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01077-gustoworldwidem-gustotvnz-samsungnz/playlist.m3u8
+#EXTINF:-1  tvg-id="HardKnocks.ca" tvg-logo="https://i.imgur.com/nt9B6jx.png" group-title="Sports",Hard Knocks (1080p) [Not 24/7]
+https://d3uyzhwvmemdyf.cloudfront.net/v1/master/9d062541f2ff39b5c0f48b743c6411d25f62fc25/HardKnocks-PLEX/121.m3u8
+#EXTINF:-1  tvg-id="HiYAH.us" tvg-logo="https://i.imgur.com/sOYAnTB.png" group-title="Entertainment",Hi-YAH! (1080p)
+https://linear-59.frequency.stream/dist/plex/59/hls/master/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",ION Mystery (1080p)
+https://scripps-ionmystery-1-us.xumo.wurl.tv/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",Kartoon Channel
+https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-kartoonchannel-samsungnz/playlist.m3u8
+#EXTINF:-1  tvg-id="MyCamTVAnal.cy" tvg-logo="https://i.imgur.com/sli5irt.png" group-title="XXX",MyCamTV Anal
+http://live.mycamtv.com/anal.m3u8
+#EXTINF:-1  tvg-id="MyCamTVAsian.cy" tvg-logo="https://i.imgur.com/FBSodo6.png" group-title="XXX",MyCamTV Asian
+http://live.mycamtv.com/asian.m3u8
+#EXTINF:-1  tvg-id="MyCamTVBigAss.cy" tvg-logo="https://cdn.strpst.com/assets/icons/headerlogo_mycamtv.com.png" group-title="XXX",MyCamTV Big Ass
+http://live.mycamtv.com/defstream.m3u8
+#EXTINF:-1  tvg-id="MyCamTVBigTits.cy" tvg-logo="https://cdn.strpst.com/assets/icons/headerlogo_mycamtv.com.png" group-title="XXX",MyCamTV Big Tits
+http://live.mycamtv.com/bigtits.m3u8
+#EXTINF:-1  tvg-id="MyCamTVBlonde.cy" tvg-logo="https://cdn.strpst.com/assets/icons/headerlogo_mycamtv.com.png" group-title="XXX",MyCamTV Blonde
+http://live.mycamtv.com/blonde.m3u8
+#EXTINF:-1  tvg-id="MyCamTVBrunette.cy" tvg-logo="https://cdn.strpst.com/assets/icons/headerlogo_mycamtv.com.png" group-title="XXX",MyCamTV Brunette
+http://live.mycamtv.com/brunette.m3u8
+#EXTINF:-1  tvg-id="MyCamTVEbony.cy" tvg-logo="https://cdn.strpst.com/assets/icons/headerlogo_mycamtv.com.png" group-title="XXX",MyCamTV Ebony
+http://live.mycamtv.com/medium.m3u8
+#EXTINF:-1  tvg-id="MyCamTVLatina.cy" tvg-logo="https://cdn.strpst.com/assets/icons/headerlogo_mycamtv.com.png" group-title="XXX",MyCamTV Latina
+http://live.mycamtv.com/latina.m3u8
+#EXTINF:-1  tvg-id="MyCamTVSkinny.cy" tvg-logo="https://cdn.strpst.com/assets/icons/headerlogo_mycamtv.com.png" group-title="XXX",MyCamTV Skinny
+http://live.mycamtv.com/arab.m3u8
+#EXTINF:-1  tvg-id="MyCamTVSquirt.cy" tvg-logo="https://cdn.strpst.com/assets/icons/headerlogo_mycamtv.com.png" group-title="XXX",MyCamTV Squirt
+http://live.mycamtv.com/squirt.m3u8
+#EXTINF:-1  tvg-id="MyCamTVWhite.cy" tvg-logo="https://cdn.strpst.com/assets/icons/headerlogo_mycamtv.com.png" group-title="XXX",MyCamTV White
+http://live.mycamtv.com/white.m3u8
+#EXTINF:-1  group-title="Undefined",MyTime movie network (1080p)
+https://mytimeuk-rakuten-samsung.amagi.tv/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",MyTime movie network (1080p)
+https://mytime-roku-ingest.cinedigm.com/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",MyTime movie network (1080p)
+https://mytime-tcl.amagi.tv/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",Mytime Movies (1080p)
+https://mytimefrance-rakuten-samsung.amagi.tv/playlist.m3u8
+#EXTINF:-1  tvg-id="WKPCDT2.us" tvg-logo="https://upload.wikimedia.org/wikipedia/en/thumb/3/33/PBS_logo.svg/512px-PBS_logo.svg.png" group-title="Undefined",PBS KET2 (720p)
+https://2-fss-2.streamhoster.com/pl_140/amlst:200914-1315484/playlist.m3u8
+#EXTINF:-1  tvg-id="WKPCDT3.us" tvg-logo="https://upload.wikimedia.org/wikipedia/en/thumb/3/33/PBS_logo.svg/512px-PBS_logo.svg.png" group-title="Undefined",PBS KET KY (480p)
+https://2-fss-2.streamhoster.com/pl_132/amlst:200914-1315486/playlist.m3u8
+#EXTINF:-1  tvg-id="WKMJDT1.us" tvg-logo="https://i.imgur.com/U9HFzJk.png" group-title="Education",PBS KET Louisville KY (WKMJ-TV) (720p)
+https://2-fss-1.streamhoster.com/pl_134/amlst:200914-1282960/playlist.m3u8
+#EXTINF:-1  tvg-id="70sCinema.us" tvg-logo="https://i.imgur.com/mgXeEE4.png" group-title="Movies",Pluto TV 70s Cinema (684p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5f4d878d3d19b30007d2e782/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="80sRewind.us" tvg-logo="https://i.imgur.com/nkEeYfI.png" group-title="Movies",Pluto TV 80s Rewind (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5ca525b650be2571e3943c63/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="90sThrowback.us" tvg-logo="https://i.imgur.com/KoGko6M.png" group-title="Movies",Pluto TV 90s Throwback (684p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5f4d86f519358a00072b978e/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="PlutoTVAction.us" tvg-logo="https://i.imgur.com/tDapGal.png" group-title="Movies",Pluto TV Action (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5f8ed1ff5c39700007e2204a/master.m3u8?advertisingId=&appName=web&appVersion=5.14.0-0f5ca04c21649b8c8aad4e56266a23b96d73b83a&app_name=web&clientDeviceType=0&clientID=6fbead95-26b1-415d-998f-1bdef62d10be&clientModelNumber=na&deviceDNT=false&deviceId=6fbead95-26b1-415d-998f-1bdef62d10be&deviceLat=48.8582&deviceLon=2.3387&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=88.0.4324.150&marketingRegion=FR&serverSideAds=false&sessionID=cc7dc550-6be3-11eb-9c02-0242ac110002&sid=cc7dc550-6be3-11eb-9c02-0242ac110002&userId=
+#EXTINF:-1  tvg-id="AmericasTestKitchen.us" tvg-logo="https://i.imgur.com/prMkTsZ.png" group-title="Cooking",Pluto TV America's Test Kitchen (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5e84f54a82f05300080e6746/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5e84f54a82f05300080e6746&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=605&terminate=false&userId=
+#EXTINF:-1  tvg-id="PlutoTVAndromeda.us" tvg-logo="https://i.imgur.com/P280WPZ.png" group-title="Undefined",Pluto TV Andromeda (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5e8db96bccae160007c71eec/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="PlutoTVAnimals.us" tvg-logo="https://i.imgur.com/N00seOn.png" group-title="Documentary",Pluto TV Animals (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/56b27f85ff3037045055037e/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=56b27f85ff3037045055037e&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=666&terminate=false&userId=
+#EXTINF:-1  group-title="Undefined",Pluto TV Anime (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5f12136385bccc00070142ed/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="AnimeAllDay.us" tvg-logo="https://i.imgur.com/bYZtd0G.png" group-title="Animation",Pluto TV Anime All Day (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5812b7d3249444e05d09cc49/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5812b7d3249444e05d09cc49&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=830&terminate=false&userId=
+#EXTINF:-1  group-title="Undefined",Pluto TV Anime All Day (UK) (720p) [Not 24/7]
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5c363ac9e41be30cb6054c7c/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="PlutoTVBackcountry.us" tvg-logo="https://i.imgur.com/KnlQzs7.png" group-title="Outdoor",Pluto TV Backcountry (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5cabdf1437b88b26947346b2/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5cabdf1437b88b26947346b2&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=755&terminate=false&userId=
+#EXTINF:-1  group-title="Undefined",Pluto TV BBC Food (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5fb5844bf5514d0007945bda/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="BellatorMMA.us" tvg-logo="https://i.imgur.com/VBKoLHk.png" group-title="Sports",Pluto TV Bellator MMA (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5ebc8688f3697d00072f7cf8/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGSff
+#EXTINF:-1  tvg-id="BETEast.us" tvg-logo="https://i.imgur.com/copIbc9.png" group-title="Undefined",Pluto TV BET (720p)
+http://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5ca670f6593a5d78f0e85aed/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5ca670f6593a5d78f0e85aed&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=174&terminate=false&userId=
+#EXTINF:-1  tvg-id="BETHerEast.us" tvg-logo="https://i.imgur.com/oafsrlo.png" group-title="Entertainment",Pluto TV BET Her (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5d51e6949ab8e2b35bdcaa9f/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5d51e6949ab8e2b35bdcaa9f&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=175&terminate=false&userId=
+#EXTINF:-1  tvg-id="BlackCinema.us" tvg-logo="https://i.imgur.com/FKBp987.png" group-title="Movies",Pluto TV Black Cinema (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/58af4c093a41ca9d4ecabe96/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=58af4c093a41ca9d4ecabe96&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=80&terminate=false&userId=
+#EXTINF:-1  group-title="Undefined",Pluto TV British TV (720p)
+http://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5b68a18823ecb93393cba2f1/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5b68a18823ecb93393cba2f1&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=154&terminate=false&userId=
+#EXTINF:-1  tvg-id="ClassicMoviesChannel.us" tvg-logo="https://i.imgur.com/pQJxov2.png" group-title="Classic",Pluto TV Classic Movies (684p) [Not 24/7]
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/561c5b0dada51f8004c4d855/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  group-title="Undefined",Pluto TV Classic Movies (England) (720p)
+http://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5d134a74ca91eedee1630faa/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5d134a74ca91eedee1630faa&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=903&terminate=false&userId=
+#EXTINF:-1  tvg-id="PlutoTVClassicTVUK.uk" tvg-logo="https://i.imgur.com/hGdXRMd.png" group-title="Comedy",Pluto TV Classic TV (720p)
+http://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5e46ae801f347500099d461a/master.m3u8?appName=web&appVersion=unknown&clientTime=0&deviceDNT=0&deviceId=35f76fb0-e986-11eb-a0af-c3b401f46211&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=unknown&includeExtendedEvents=false&serverSideAds=false&sid=2fac39a7-56bc-492e-ae1e-3f6fb6cef1bc
+#EXTINF:-1  tvg-id="ClassicTVComedy.us" tvg-logo="https://i.imgur.com/wg5I5Fb.png" group-title="Classic",Pluto TV Classic TV Comedy (684p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5f15e32b297f96000768f928/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="ClassicTVDrama.us" tvg-logo="https://i.imgur.com/XHQxv0x.png" group-title="Classic",Pluto TV Classic TV Drama (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5f15e3cccf49290007053c67/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5f15e3cccf49290007053c67&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=520&terminate=false&userId=
+#EXTINF:-1  group-title="Undefined",Pluto TV Classic TV FR
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5e46ae801f347500099d461a/master.m3u8?appName=web&appVersion=unknown&clientTime=0&deviceDNT=0&deviceId=7c53ccf0-2c61-11ed-97e8-9197ab2286d6&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=unknown&includeExtendedEvents=false&serverSideAds=false&sid=c1f0b225-6ea9-4a37-b41c-8a14c7f5094f
+#EXTINF:-1  tvg-id="CMTPlutoTV.us" tvg-logo="https://i.imgur.com/hnmxBPZ.png" group-title="Music",Pluto TV CMT (720p)
+http://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5dcc42446750e200093b15e2/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5dcc42446750e200093b15e2&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=182&terminate=false&userId=
+#EXTINF:-1  tvg-id="PlutoTVComedy.us" tvg-logo="https://i.imgur.com/MTVrbd5.png" group-title="Comedy",Pluto TV Comedy (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5a4d3a00ad95e4718ae8d8db/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5a4d3a00ad95e4718ae8d8db&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=57&terminate=false&userId=
+#EXTINF:-1  tvg-id="PlutoTVCrimeMovies.us" tvg-logo="https://i.imgur.com/SJcqknt.png" group-title="Movies",Pluto TV Crime Movies (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5f4d8594eb979c0007706de7/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="CSI.us" tvg-logo="https://i.imgur.com/xLLNEfA.png" group-title="Series",Pluto TV CSI (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5efbd29e4aa26700076c0d06/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5efbd29e4aa26700076c0d06&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=355&terminate=false&userId=
+#EXTINF:-1  tvg-id="PlutoTVCultFilms.us" tvg-logo="https://i.imgur.com/xoaIAus.png" group-title="Movies",Pluto TV Cult Films (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5c5c31f2f21b553c1f673fb0/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="PlutoTVDrama.us" tvg-logo="https://i.imgur.com/PvhbHTZ.png" group-title="Movies",Pluto TV Drama (360p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5b4e92e4694c027be6ecece1/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5b4e92e4694c027be6ecece1&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=60&terminate=false&userId=
+#EXTINF:-1  tvg-id="FlicksofFury.us" tvg-logo="https://i.imgur.com/rtL5L81.png" group-title="Movies",Pluto TV Flicks of Fury (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/58e55b14ad8e9c364d55f717/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=58e55b14ad8e9c364d55f717&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=112&terminate=false&userId=
+#EXTINF:-1  group-title="Undefined",Pluto TV Food (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5dc280c9aa218c0009724b4b/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=1&deviceId=5dc280c9aa218c0009724b4b&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=DE&serverSideAds=false&sid=0734c282-0583-11eb-a18c-0242ac110002&terminate=false&userId=
+#EXTINF:-1  group-title="Undefined",Pluto TV Food (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5dc280c9aa218c0009724b4b/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  group-title="Undefined",Pluto TV Food (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5ddf930548ff9b00090d5686/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  group-title="Undefined",Pluto TV Food (England) (720p)
+http://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5ddf930548ff9b00090d5686/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5ddf930548ff9b00090d5686&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=500&terminate=false&userId=
+#EXTINF:-1  tvg-id="FoodTV.us" tvg-logo="https://i.imgur.com/WGUPTnL.png" group-title="Cooking",Pluto TV Food TV (240p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5877ac8cb791f4eb4a140d81/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5877ac8cb791f4eb4a140d81&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=601&terminate=false&userId=
+#EXTINF:-1  tvg-id="FunnyAF.us" tvg-logo="https://i.imgur.com/UCwjdtQ.png" group-title="Comedy",Pluto TV Funny AF (684p) [Not 24/7]
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/580e87ff497c73ba2f321dd3/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=580e87ff497c73ba2f321dd3&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=450&terminate=false&userId=
+#EXTINF:-1  tvg-id="GameShowCentral.us" tvg-logo="https://i.imgur.com/Uuc5h1s.png" group-title="Entertainment",Pluto TV Game Show Central (480p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5e54187aae660e00093561d6/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5e54187aae660e00093561d6&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=167&terminate=false&userId=
+#EXTINF:-1  tvg-id="PlutoTVGamingTV.us" tvg-logo="https://i.imgur.com/XkGjMTg.png" group-title="Entertainment",Pluto TV Gaming TV (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5f8eccd81062c300078a11df/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="PlutoTVGloryKickboxing.us" tvg-logo="https://i.imgur.com/tS7Ub7i.png" group-title="Sports",Pluto TV Glory Kickboxing (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5417a212ff9fba68282fbf5e/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5417a212ff9fba68282fbf5e&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=736&terminate=false&userId=
+#EXTINF:-1  tvg-id="PlutoTVHorror.us" tvg-logo="https://i.imgur.com/k6qttca.png" group-title="Movies",Pluto TV Horror (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/569546031a619b8f07ce6e25/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=569546031a619b8f07ce6e25&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=75&terminate=false&userId=
+#EXTINF:-1  tvg-id="PlutoTVHumor.us" tvg-logo="https://i.imgur.com/F7CWMB0.png" group-title="Undefined",Pluto TV Humor (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5e8397936791b30007ebb5a7/master.m3u8?advertisingId=&appName=web&appVersion=5.14.0-0f5ca04c21649b8c8aad4e56266a23b96d73b83a&app_name=web&clientDeviceType=0&clientID=6fbead95-26b1-415d-998f-1bdef62d10be&clientModelNumber=na&deviceDNT=false&deviceId=6fbead95-26b1-415d-998f-1bdef62d10be&deviceLat=19.4358&deviceLon=-99.1441&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=88.0.4324.150&marketingRegion=VE&serverSideAds=false&sessionID=b8e5a857-714a-11eb-b532-0242ac110002&sid=b8e5a857-714a-11eb-b532-0242ac110002&userId=
+#EXTINF:-1  tvg-id="PlutoTVHunter.us" tvg-logo="https://i.imgur.com/UKTKf7X.png" group-title="Outdoor",Pluto TV Hunter (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5c99f5810c95814ff92512f9/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  group-title="Undefined",Pluto TV IMPACT Wrestling (720p) [Not 24/7]
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/59b722526996084038c01e1b/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=59b722526996084038c01e1b&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=734&terminate=false&userId=
+#EXTINF:-1  group-title="Undefined",Pluto TV IMPACT Wrestling (720p) [Not 24/7]
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/59b722526996084038c01e1b/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="MissionImpossible.us" tvg-logo="https://i.imgur.com/QS5lg0t.png" group-title="Series",Pluto TV Mission: Impossible (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5f77977bd924d80007eee60c/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  group-title="Undefined",Pluto TV MOVIE CHANNEL (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5cb0cae7a461406ffe3f5213/master.m3u8?advertisingId=&appName=web&appVersion=5.2.2-d60060c7283e0978cc63ba036956b5c1657f8eba&architecture=&buildVersion=&clientTime=&deviceDNT=0&deviceId=9daeec78-6a24-43e9-b800-df83d8e465a8&deviceLat=-35.1192&deviceLon=-60.5047&deviceMake=Chrome&deviceModel=Chrome&deviceType=web&deviceVersion=80.0.3987.149&includeExtendedEvents=false&serverSideAds=true&sid=e2177d24-366a-4c1c-b974-702fe1d6159a&userId=
+#EXTINF:-1  tvg-id="PlutoTVMovies.us" tvg-logo="https://i.imgur.com/XzAbXAn.png" group-title="Movies",Pluto TV Movies (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5c5c3b948002db3c3e0b262e/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=1&deviceId=5c5c3b948002db3c3e0b262e&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=DE&serverSideAds=false&sid=eddfafe3-0584-11eb-82fe-0242ac110002&terminate=false&userId=
+#EXTINF:-1  group-title="Undefined",Pluto TV Movies (England) (684p)
+http://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5ad8d3a31b95267e225e4e09/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5ad8d3a31b95267e225e4e09&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=50&terminate=false&userId=
+#EXTINF:-1  group-title="Undefined",Pluto TV Movies+ (CH) (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5c8a6bc64dc7286c6afaf4ab/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=1&deviceId=5c8a6bc64dc7286c6afaf4ab&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=DE&serverSideAds=false&sid=f747754f-ee3e-4968-9e8e-779da031bce9&terminate=false&userId=
+#EXTINF:-1  tvg-id="PlutoTVRetroToons.us" tvg-logo="https://i.imgur.com/YUQL0ki.png" group-title="Kids",Pluto TV Retro Toons (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5e1c669094e0e80009b22ab8/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=1&deviceId=5e1c669094e0e80009b22ab8&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=DE&serverSideAds=false&sid=886c7aee-0585-11eb-8b9f-0242ac110002&terminate=false&userId=
+#EXTINF:-1  tvg-id="PlutoTVSabrina.us" tvg-logo="https://i.imgur.com/nbYhrom.png" group-title="Series",Pluto TV Sabrina (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5dbc327d0451770009ed7577/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=1&deviceId=5dbc327d0451770009ed7577&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=DE&serverSideAds=false&sid=4aa698a0-0715-11eb-aeab-0242ac110002&terminate=false&userId=
+#EXTINF:-1  tvg-id="PlutoTVSciFi.us" tvg-logo="https://i.imgur.com/vSzd5m7.png" group-title="Movies",Pluto TV Sci-Fi (360p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5b4fc274694c027be6ed3eea/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5b4fc274694c027be6ed3eea&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=151&terminate=false&userId=
+#EXTINF:-1  tvg-id="PlutoTVScience.us" tvg-logo="https://i.imgur.com/uhunRoU.png" group-title="Science",Pluto TV Science (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5d9492c77ea6f99188738ff1/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  group-title="Undefined",Pluto TV Series (720p) [Not 24/7]
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5dcde1317578340009b751d0/master.m3u8?advertisingId=&appName=web&appVersion=5.14.0-0f5ca04c21649b8c8aad4e56266a23b96d73b83a&app_name=web&clientDeviceType=0&clientID=6fbead95-26b1-415d-998f-1bdef62d10be&clientModelNumber=na&deviceDNT=false&deviceId=6fbead95-26b1-415d-998f-1bdef62d10be&deviceLat=19.4358&deviceLon=-99.1441&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=88.0.4324.150&marketingRegion=VE&serverSideAds=false&sessionID=b8e5a857-714a-11eb-b532-0242ac110002&sid=b8e5a857-714a-11eb-b532-0242ac110002&userId=
+#EXTINF:-1  tvg-id="PlutoTVSeriesRetro.us" tvg-logo="https://i.imgur.com/UpgGZJ1.png" group-title="Classic",Pluto TV Series Retro (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5de802659167b10009e7deba/master.m3u8?advertisingId=&appName=web&appVersion=5.14.0-0f5ca04c21649b8c8aad4e56266a23b96d73b83a&app_name=web&clientDeviceType=0&clientID=6fbead95-26b1-415d-998f-1bdef62d10be&clientModelNumber=na&deviceDNT=false&deviceId=6fbead95-26b1-415d-998f-1bdef62d10be&deviceLat=19.4358&deviceLon=-99.1441&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=88.0.4324.150&marketingRegion=VE&serverSideAds=false&sessionID=b8e5a857-714a-11eb-b532-0242ac110002&sid=b8e5a857-714a-11eb-b532-0242ac110002&userId=
+#EXTINF:-1  tvg-id="PlutoTVSherlockUK.uk" tvg-logo="https://i.imgur.com/SL3FNcm.png" group-title="Series",Pluto TV Sherlock (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5dc2c00abfed110009d97243/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="ShowtimeSelects.us" tvg-logo="https://i.imgur.com/a7cbvwK.png" group-title="Entertainment",Pluto TV Showtime Select (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5f988934a507de00075d9ae7/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="SpikeOutdoors.us" tvg-logo="https://i.imgur.com/cdCD2A2.png" group-title="Outdoor",Pluto TV Spike Outdoors (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5c393cad2de254456f7ef8c2/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5c393cad2de254456f7ef8c2&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=291&terminate=false&userId=
+#EXTINF:-1  tvg-id="PlutoTVSportsUK.uk" tvg-logo="https://i.imgur.com/LW77x7g.png" group-title="Sports",Pluto TV Sports (720p)
+http://service-stitcher.clusters.pluto.tv/stitch/hls/channel/6081310e48d3200007afaf3b/master.m3u8?appName=web&appVersion=unknown&clientTime=0&deviceDNT=0&deviceId=2c8bf322-e98a-11eb-a932-2f3c780ff9ff&deviceMake=Chrome&deviceModel=web&deviceType=web&deviceVersion=unknown&includeExtendedEvents=false&serverSideAds=false&sid=0727f4fb-ea0b-4814-bb58-fdf3c4534220
+#EXTINF:-1  tvg-id="StarTrek.us" tvg-logo="https://i.imgur.com/8cvXYiT.png" group-title="Series",Pluto TV Star Trek (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5efbd39f8c4ce900075d7698/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="PlutoTVSuspense.us" tvg-logo="https://i.imgur.com/RPtjZyZ.png" group-title="Entertainment",Pluto TV Suspense (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5f15e281b0b8840007324b55/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="TheAddamsFamily.us" tvg-logo="https://i.imgur.com/Bl8X7EW.png" group-title="Series",Pluto TV The Addams Family (240p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5d81607ab737153ea3c1c80e/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5d81607ab737153ea3c1c80e&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=511&terminate=false&userId=
+#EXTINF:-1  tvg-id="TheLoveBoat.us" tvg-logo="https://i.imgur.com/7ad6NQ8.png" group-title="Classic",Pluto TV The Love Boat (720p) [Not 24/7]
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5f7794a788d29000079d2f07/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="PlutoTVTheWalkingDeadESP.us" tvg-logo="https://i.imgur.com/u8Qh4zF.png" group-title="Series",Pluto TV The Walking Dead ESP (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5e82bb378601b80007b4bd78/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5e82bb378601b80007b4bd78&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=925&terminate=false&userId=
+#EXTINF:-1  tvg-id="ThisOldHouse.us" tvg-logo="https://i.imgur.com/nrVLyE6.png" group-title="Series",Pluto TV This Old House (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5d51e791b7dba3b2ae990ab2/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5d51e791b7dba3b2ae990ab2&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=618&terminate=false&userId=
+#EXTINF:-1  tvg-id="PlutoTVThrillers.us" tvg-logo="https://i.imgur.com/ULKvDN7.png" group-title="Series",Pluto TV Thrillers (720p) [Not 24/7]
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5dbfedccc563080009b60f4a/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="TVLandDrama.us" tvg-logo="https://i.imgur.com/y1rXIAS.png" group-title="Movies",Pluto TV TV Land Drama (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5d40bebc5e3d2750a2239d7e/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5d40bebc5e3d2750a2239d7e&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=130&terminate=false&userId=
+#EXTINF:-1  tvg-id="TVLandSitcoms.us" tvg-logo="https://i.imgur.com/phHHs7l.png" group-title="Comedy",Pluto TV TV Land Sitcoms (720p) [Not 24/7]
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5c2d64ffbdf11b71587184b8/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5c2d64ffbdf11b71587184b8&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=455&terminate=false&userId=
+#EXTINF:-1  tvg-id="YuGiOh.us" tvg-logo="https://i.imgur.com/Tl6aW2u.png" group-title="Animation",Pluto TV Yu-Gi-Oh (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5f4ec10ed9636f00089b8c89/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="PlymouthRockTV.ca" tvg-logo="https://i.imgur.com/KO3cVav.png" group-title="Undefined",Plymouth Rock TV (1080p)
+https://vse2-eu-all59.secdn.net/barakyah-channel/live/plymouthtv/playlist.m3u8
+#EXTINF:-1  tvg-id="PNTV.us" tvg-logo="https://i.imgur.com/MrjG6dC.png" group-title="Undefined",PNTV (720p)
+https://livefta.malimarcdn.com/ftaedge00/pntv.sdp/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",Polar 2 TV (1080p)
+https://stream.polar.cz/polar2/polarlive2-1/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",Pulse TV
+https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg01076-lightningintern-pulse-samsungnz/playlist.m3u8
+#EXTINF:-1  tvg-id="RCTV3.us" tvg-logo="https://i.imgur.com/TvFKG35.png" group-title="General",Rancho Cucamonga RCTV3 (Rancho Cucamonga CA) (480p)
+https://vod.cityofrc.us/live-6/live/live.m3u8
+#EXTINF:-1  tvg-id="Reelz.us" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Reelz.svg/512px-Reelz.svg.png" group-title="Documentary",Reelz
+https://live-news-manifest.tubi.video/live-news-manifest/csm/extlive/tubiprd01,Reelz.m3u8
+#EXTINF:-1  tvg-id="KCKSLD7.us" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Rev%27n_logo.jpg/512px-Rev%27n_logo.jpg" group-title="Entertainment",Rev'n (KCKS-LD7) (480p)
+https://cdn.igocast.com/channel7_hls/channel7_master.m3u8
+#EXTINF:-1  tvg-id="RevryNews.us" tvg-logo="https://i.imgur.com/lKMYCkb.png" group-title="Lifestyle",Revry News (720p) [Not 24/7]
+https://linear-44.frequency.stream/dist/plex/44/hls/master/playlist.m3u8
+#EXTINF:-1  tvg-id="SCVTV.us" tvg-logo="https://i.imgur.com/qEsZbZz.png" group-title="General",SCVTV (Santa Clarita CA) (1080p)
+https://reflect-scvtv.cablecast.tv/live-2/live/live.m3u8
+#EXTINF:-1  tvg-id="ShoutFactoryTV.us" tvg-logo="https://i.imgur.com/AgoGr6y.png" group-title="General",Shout! Factory TV (1080p)
+http://shoutfactory-redbox.amagi.tv/playlist.m3u8
+#EXTINF:-1  tvg-id="SkyNewsExtra1.au" tvg-logo="https://i.imgur.com/ZsPb8nL.png" group-title="News",Sky News Extra 1 (540p)
+https://skynewsau-live.akamaized.net/hls/live/2002689/skynewsau-extra1/master.m3u8
+#EXTINF:-1  tvg-id="SkyNewsExtra2.au" tvg-logo="https://i.imgur.com/ZsPb8nL.png" group-title="News",Sky News Extra 2 (540p) [Not 24/7]
+https://skynewsau-live.akamaized.net/hls/live/2002690/skynewsau-extra2/master.m3u8
+#EXTINF:-1  tvg-id="SLOCountyChannel21.us" tvg-logo="https://i.imgur.com/CyQ472C.png" group-title="Undefined",SLO County Channel 21 (360p)
+https://agp-nimble.streamguys1.com/SLOC/SLOC/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",SRF (720p)
+https://58de7a369a9c4.streamlock.net/srf/stream_720p/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",Strongman Champions League
+https://rightsboosterltd-scl-1-nl.samsung.wurl.tv/playlist.m3u8
+#EXTINF:-1  tvg-id="WACXDT1.us" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/WACX_logo_2021.png/512px-WACX_logo_2021.png" group-title="Undefined",SuperChannel Orlando (WACX-DT1) (720p)
+https://6305c8676ce84.streamlock.net/live/live/playlist.m3u8
+#EXTINF:-1  tvg-id="TBCN.us" tvg-logo="https://i.imgur.com/nNxl3F4.png" group-title="General",Tampa Bay Communnity Network TBCN (Tampa Bay FL) (480p)
+https://reflect-tampa-bay-community.cablecast.tv/live-16/live/live.m3u8
+#EXTINF:-1  group-title="Undefined",Tastemade International
+https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg00047-tastemade-tmintlaus-samsungnz/playlist.m3u8
+#EXTINF:-1  tvg-id="Tempe11.us" tvg-logo="https://i.imgur.com/KMeHRV3.png" group-title="Undefined",Tempe Channel 11
+https://cdn3.wowza.com/5/cFh0V0QwUVc4SDl2/tempe/G0355_003/chunklist.m3u8
+#EXTINF:-1  group-title="Undefined",The Grapevine
+https://ov.ottera.tv/live/master.m3u8?channel=mcom_gv_us
+#EXTINF:-1  tvg-id="TheNewDetectives.us" tvg-logo="https://i.imgur.com/GLXg9ge.png" group-title="Series",The New Detectives (720p)
+http://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5aea40b35126c2157123aa64/master.m3u8?advertisingId=91a6ae51-6f9d-4fbb-adb0-bdfffa44693e&appVersion=unknown&deviceDNT=0&deviceId=91a6ae51-6f9d-4fbb-adb0-bdfffa44693e&deviceLat=0&deviceLon=0&deviceMake=samsung&deviceModel=samsung&deviceType=samsung-tvplus&deviceUA=samsung/SM-T720/10&deviceVersion=unknown&embedPartner=samsung-tvplus&profileFloor=&profileLimit=&samsung_app_domain=https://play.google.com/store/apps/details?id=com.samsung.android.tvplus&samsung_app_name=Mobile+TV+Plus&us_privacy=1YNY
+#EXTINF:-1  group-title="Undefined",The Pet Collective
+https://the-pet-collective-international-nl.samsung.wurl.tv/playlist.m3u8
+#EXTINF:-1  tvg-id="ThePetCollective.us" tvg-logo="https://i.imgur.com/yH7n2dF.png" group-title="Family",The Pet Collective (720p)
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5bb1ad55268cae539bcedb08/master.m3u8?advertisingId=&appName=web&appStoreUrl=&appVersion=DNT&app_name=&architecture=&buildVersion=&deviceDNT=0&deviceId=5bb1ad55268cae539bcedb08&deviceLat=&deviceLon=&deviceMake=web&deviceModel=web&deviceType=web&deviceVersion=DNT&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false&sid=637&terminate=false&userId=
+#EXTINF:-1  tvg-id="TheRetroChannel.us" tvg-logo="https://i.imgur.com/t3i1HtE.jpg" group-title="Music",The Retro Channel (1080p) [Not 24/7]
+https://5fd5567570c0e.streamlock.net/theretrochannel/stream/playlist.m3u8
+#EXTINF:-1  tvg-id="ThisTVNetwork.us" tvg-logo="https://i.imgur.com/FQCVaSR.png" group-title="Undefined",This TV Network (480p)
+https://cdn.igocast.com/channel11_hls/channel11_master.m3u8
+#EXTINF:-1  tvg-id="TimeLine.uk" tvg-logo="https://i.imgur.com/AzZhwWR.jpg" group-title="Undefined",Time Line (720p)
+https://timeline-samsung-uk.amagi.tv/playlist.m3u8
+#EXTINF:-1  tvg-id="Timeline.us" tvg-logo="https://i.imgur.com/PZRQvFv.png" group-title="Entertainment",Timeline (1080p)
+https://lds-timeline-plex.amagi.tv/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",Top Gear (720p)
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/60d356a534f63f000850cdd7/master.m3u8?advertisingId=channel&appName=rokuchannel&appVersion=1.0&bmodel=bm1&channel_id=channel&content=channel&content_rating=ROKU_ADS_CONTENT_RATING&content_type=livefeed&coppa=false&deviceDNT=1&deviceId=channel&deviceMake=rokuChannel&deviceModel=web&deviceType=rokuChannel&deviceVersion=1.0&embedPartner=rokuChannel&genre=ROKU_ADS_CONTENT_GENRE&is_lat=1&platform=web&rdid=channel&serverSideAds=false&studio_id=viacom&tags=ROKU_CONTENT_TAGS
+#EXTINF:-1  tvg-id="CitiCABLE.us" tvg-logo="https://i.imgur.com/Y1qRHnC.png" group-title="General",Torrance CitiCABLE (Torrance CA) (360p)
+https://cdn3.wowza.com/5/dk84U1p2UUdoMGxT/torrance/G0057_005/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",Vice East
+https://d2do1g43aq7264.cloudfront.net/playlist.m3u8
+#EXTINF:-1  tvg-id="WLKYDT1.us" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/CBS_logo_%282020%29.svg/512px-CBS_logo_%282020%29.svg.png" group-title="News",WLKY-TV News Louisville KY (720p)
+https://live-news-manifest.tubi.video/live-news-manifest/csm/extlive/tubiprd01,Cloudfront-WLKY.m3u8
+#EXTINF:-1  tvg-id="WLNGRadio.us" tvg-logo="https://i.imgur.com/11r6tgW.png" group-title="Undefined",WLNG Radio (410p) [Not 24/7]
+http://wlngstudiowebcam.srfms.com:1935/wlngstudiowebcam/livestream/playlist.m3u8
+#EXTINF:-1  tvg-id="WLSDT1.us" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/ABC-2021-LOGO.svg/512px-ABC-2021-LOGO.svg.png" group-title="Undefined",WLS TV News (720p)
+https://content.uplynk.com/channel/ext/aac37e2c66614e699fb189ab391084ff/wls_24x7_news.m3u8
+#EXTINF:-1  group-title="Undefined",Wonder
+https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg00426-littledotstudio-wondernz-samsungnz/playlist.m3u8
+#EXTINF:-1  tvg-id="WorldPokerTour.us" tvg-logo="https://i.imgur.com/98kLMjj.png" group-title="Sports",World Poker Tour (1080p) [Not 24/7]
+https://d3w4n3hhseniak.cloudfront.net/v1/master/9d062541f2ff39b5c0f48b743c6411d25f62fc25/WPT-DistroTV/150.m3u8
+#EXTINF:-1  tvg-id="WPAATV.us" tvg-logo="https://i.imgur.com/LfFPsEC.png" group-title="General",WPAA TV (1080p)
+https://streams.helnix.com/autoHLS/ce3a40274f01c8fc/ce3a40274f01c8fc.m3u8
+#EXTINF:-1  tvg-id="WPSTV.us" tvg-logo="https://i.imgur.com/zwzmwse.jpg" group-title="Education",WPS TV (360p)
+https://2-fss-2.streamhoster.com/pl_120/amlst:203530-1426406/playlist.m3u8
+#EXTINF:-1  tvg-id="WTVDDT1.us" tvg-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/ABC-2021-LOGO.svg/512px-ABC-2021-LOGO.svg.png" group-title="Undefined",WTVD TV News (720p)
+https://content.uplynk.com/channel/ext/f05837c508c44712aa7129d531f7dbe6/wtvd_24x7_news.m3u8
+#EXTINF:-1  group-title="Undefined",Xite (720p)
+https://xite-samsung-de.amagi.tv/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",Xplore
+https://cdn-uw2-prod.tsv2.amagi.tv/linear/amg00111-hearstmediaprod-xploreintlnl-samsungnl/playlist.m3u8
+#EXTINF:-1  tvg-id="XploreTV.us" tvg-logo="https://i.imgur.com/WaGRlFO.png" group-title="Entertainment",Xplore (1080p)
+http://xlpore-samsungus.amagi.tv/playlist.m3u8
+#EXTINF:-1  tvg-id="YoungHollywood.us" tvg-logo="https://i.imgur.com/X27MGHd.png" group-title="Entertainment",Young Hollywood (720p)
+https://younghollywood-rakuten-samsung.amagi.tv/playlist.m3u8
+#EXTINF:-1  tvg-id="YoutooAmerica.us" tvg-logo="https://i.imgur.com/QNGYhNw.png" group-title="Entertainment",Youtoo America (1080p)
+https://thegateway.app/YouToo/CueTones/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",Zoo Moo (1080p)
+https://amg01553-blueantmediaasi-zoomoonz-samsungnz-rdufn.amagi.tv/playlist/amg01553-blueantmediaasi-zoomoonz-samsungnz/playlist.m3u8
+#EXTINF:-1  group-title="Undefined",Zoo Moo (Australia) (1080p)
+https://zoomoo-samsungau.amagi.tv/playlist.m3u8
+#EXTINF:-1  tvg-name="Pluto TV Anime" tvg-id="PLUTONZ_EPG5dcde17bf6591d0009839e02" tvg-logo="https://images.pluto.tv/channels/5dcde17bf6591d0009839e02/colorLogoPNG.png" group-title="ANIMATION",Pluto TV Anime
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5f12136385bccc00070142ed/master.m3u8?deviceId=channel&deviceModel=web&deviceVersion=1.0&appVersion=1.0&deviceType=rokuChannel&deviceMake=rokuChannel&deviceDNT=1&advertisingId=channel&embedPartner=rokuChannel&appName=rokuchannel&is_lat=1&bmodel=bm1&content=channel&platform=web&tags=ROKU_CONTENT_TAGS&coppa=false&content_type=livefeed&rdid=channel&genre=ROKU_ADS_CONTENT_GENRE&content_rating=ROKU_ADS_CONTENT_RATING&studio_id=viacom&channel_id=channel
+#EXTINF:-1  tvg-name="AMG TV (1080p)" tvg-id="USA_Networks_and_Sports_EPGAMGTV.us" tvg-logo="http://ky-iptv.com:25461/images/caa6593c14cb14a7357659c9572ddd33.PNG" group-title="ENTERTAINMENT",AMG TV (1080p)
+https://2-fss-2.streamhoster.com/pl_138/201660-1270634-1/playlist.m3u8
+#EXTINF:-1  tvg-name="AXS TV Now" tvg-id="USA_Networks_and_Sports_EPGAXSTVNOW.us" tvg-logo="http://ky-iptv.com:25461/images/55c4d4f29b045ee1ba968f70c45cc0ca.jpg" group-title="ENTERTAINMENT",AXS TV Now
+https://dikcfc9915kp8.cloudfront.net/hls/main.m3u8
+#EXTINF:-1  tvg-name="Circle" tvg-id="USA_Networks_and_Sports_EPGCircle.peacock" tvg-logo="http://iptvboss.xyz/logos/USA%20Networks%20and%20Sports/Circle.peacock.png" group-title="ENTERTAINMENT",Circle
+https://circle-vizio.amagi.tv/playlist.m3u8
+#EXTINF:-1  tvg-name="TV251 Buzzr" tvg-id="USAEPG01_EPGBuzzr.us" tvg-logo="https://cdn.tvpassport.com/image/station/100x100/buzzrtv.png" group-title="ENTERTAINMENT",TV25.1 Buzzr
+https://cdn.igocast.com/channel1_hls/channel1_master.m3u8
+#EXTINF:-1  tvg-name="TV253 Ace TV" tvg-id="TV253AceTV.us" tvg-logo="https://od.lk/s/MF8yMjM5NTI2OTZf/TV25_360x360.png" group-title="ENTERTAINMENT",TV25.3 Ace TV
+https://cdn.igocast.com/channel3_hls/channel3_master.m3u8
+#EXTINF:-1  tvg-name="TV259 Retro TV" tvg-id="USAEPG01_EPGRetroTV.us" tvg-logo="https://cdn.tvpassport.com/image/station/100x100/retro_tv.png" group-title="ENTERTAINMENT",TV25.9 Retro TV
+https://cdn.igocast.com/channel9_hls/channel9_master.m3u8
+#EXTINF:-1  tvg-name="Pluto TV Cuisine" tvg-id="PLUTONZ_EPG5f8ed48146ba9e00078424b6" tvg-logo="https://images.pluto.tv/channels/5f8ed48146ba9e00078424b6/colorLogoPNG.png" group-title="FOOD",Pluto TV Cuisine
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5f8ed48146ba9e00078424b6/master.m3u8?deviceId=channel&deviceModel=web&deviceVersion=1.0&appVersion=1.0&deviceType=rokuChannel&deviceMake=rokuChannel&deviceDNT=1&advertisingId=channel&embedPartner=rokuChannel&appName=rokuchannel&is_lat=1&bmodel=bm1&content=channel&platform=web&tags=ROKU_CONTENT_TAGS&coppa=false&content_type=livefeed&rdid=channel&genre=ROKU_ADS_CONTENT_GENRE&content_rating=ROKU_ADS_CONTENT_RATING&studio_id=viacom&channel_id=channel
+#EXTINF:-1  tvg-name="Pluto TV Food" tvg-id="PLUTONZ_EPG5dc280c9aa218c0009724b4b" tvg-logo="https://images.pluto.tv/channels/5dc280c9aa218c0009724b4b/colorLogoPNG.png" group-title="FOOD",Pluto TV Food
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5dc280c9aa218c0009724b4b/master.m3u8?terminate=false&deviceType=web&deviceMake=web&deviceModel=web&sid=0734c282-0583-11eb-a18c-0242ac110002&deviceId=5dc280c9aa218c0009724b4b&deviceVersion=DNT&appVersion=DNT&deviceDNT=1&userId=&advertisingId=&deviceLat=&deviceLon=&app_name=&appName=web&buildVersion=&appStoreUrl=&architecture=&includeExtendedEvents=false&marketingRegion=DE&serverSideAds=false
+#EXTINF:-1  tvg-name="Pluto TV Food" tvg-id="PLUTONZ_EPG5dc280c9aa218c0009724b4b" tvg-logo="https://images.pluto.tv/channels/5dc280c9aa218c0009724b4b/colorLogoPNG.png" group-title="FOOD",Pluto TV Food
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5dc280c9aa218c0009724b4b/master.m3u8?deviceId=channel&deviceModel=web&deviceVersion=1.0&appVersion=1.0&deviceType=rokuChannel&deviceMake=rokuChannel&deviceDNT=1&advertisingId=channel&embedPartner=rokuChannel&appName=rokuchannel&is_lat=1&bmodel=bm1&content=channel&platform=web&tags=ROKU_CONTENT_TAGS&coppa=false&content_type=livefeed&rdid=channel&genre=ROKU_ADS_CONTENT_GENRE&content_rating=ROKU_ADS_CONTENT_RATING&studio_id=viacom&channel_id=channel
+#EXTINF:-1  tvg-name="Pluto TV Food" tvg-id="PLUTONZ_EPG5dc280c9aa218c0009724b4b" tvg-logo="https://images.pluto.tv/channels/5dc280c9aa218c0009724b4b/colorLogoPNG.png" group-title="FOOD",Pluto TV Food
+https://service-stitcher.clusters.pluto.tv/v1/stitch/embed/hls/channel/5ddf930548ff9b00090d5686/master.m3u8?deviceId=channel&deviceModel=web&deviceVersion=1.0&appVersion=1.0&deviceType=rokuChannel&deviceMake=rokuChannel&deviceDNT=1&advertisingId=channel&embedPartner=rokuChannel&appName=rokuchannel&is_lat=1&bmodel=bm1&content=channel&platform=web&tags=ROKU_CONTENT_TAGS&coppa=false&content_type=livefeed&rdid=channel&genre=ROKU_ADS_CONTENT_GENRE&content_rating=ROKU_ADS_CONTENT_RATING&studio_id=viacom&channel_id=channel
+#EXTINF:-1  tvg-name="Pluto TV Food (England)" tvg-id="PlutoTVFoodEngland.us" tvg-logo="https://images.pluto.tv/channels/5ddf930548ff9b00090d5686/colorLogoPNG.png" group-title="FOOD",Pluto TV Food (England)
+http://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5ddf930548ff9b00090d5686/master.m3u8?terminate=false&deviceType=web&deviceMake=web&deviceModel=web&sid=500&deviceId=5ddf930548ff9b00090d5686&deviceVersion=DNT&appVersion=DNT&deviceDNT=0&userId=&advertisingId=&deviceLat=&deviceLon=&app_name=&appName=web&buildVersion=&appStoreUrl=&architecture=&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false
+#EXTINF:-1  tvg-name="Pluto TV Food TV" tvg-id="PlutoTV_EPGFood TV" tvg-logo="http://iptvboss.xyz/logos/PlutoTV/Food%20TV.png" group-title="FOOD",Pluto TV Food TV
+https://service-stitcher.clusters.pluto.tv/stitch/hls/channel/5877ac8cb791f4eb4a140d81/master.m3u8?terminate=false&deviceType=web&deviceMake=web&deviceModel=web&sid=601&deviceId=5877ac8cb791f4eb4a140d81&deviceVersion=DNT&appVersion=DNT&deviceDNT=0&userId=&advertisingId=&deviceLat=&deviceLon=&app_name=&appName=web&buildVersion=&appStoreUrl=&architecture=&includeExtendedEvents=false&marketingRegion=US&serverSideAds=false
+#EXTINF:-1  tvg-name="The Outdoor Cooking Channel" tvg-id="TheOutdoorCookingChannel.us" tvg-logo="https://i.imgur.com/PnBXXw4.png" group-title="FOOD",The Outdoor Cooking Channel
+https://ch.iptvmate.net/11e118e202992ae500578c6f72bcf142.m3u8
+#EXTINF:-1  tvg-name="Hard Knocks" tvg-id="USA_Networks_and_Sports_EPGHardKnocks.us" tvg-logo="https://web.opendrive.com/api/v1/download/file.json/MF8yMzA3OTUzMjRf?inline=1" group-title="SPORTS",Hard Knocks
+https://d397e8970cd346fdac04c0af81290c3a.mediatailor.us-west-2.amazonaws.com/v1/master/9d062541f2ff39b5c0f48b743c6411d25f62fc25/Hard-Knocks-DistroTV/109.m3u8
+#EXTINF:-1  tvg-name="IMPACT! Wrestling" tvg-id="PlutoTV_EPGIMPACT Wrestling" tvg-logo="http://iptvboss.xyz/logos/PlutoTV/IMPACT%20Wrestling.png" group-title="SPORTS",IMPACT! Wrestling
+https://d2p372oxiwmcn1.cloudfront.net/hls/main.m3u8
+#EXTINF:-1  tvg-id="2GB.au" tvg-logo="https://i.ibb.co/jwM8DFG/2GB-1.png" group-title="News",2GB Sydney (1080p)
+https://2gblive.akamaized.net/hls/live/2033805/2GB/index.m3u8
+#EXTINF:-1  tvg-id="6PR.au" tvg-logo="https://i.imgur.com/Q9iCxg1.png" group-title="News",6PR Perth (1080p)
+https://6prlive.akamaized.net/hls/live/2033806/6PR/index.m3u8
+#EXTINF:-1  tvg-id="ABCAustralia.au" tvg-logo="https://i.imgur.com/qQ33TVM.png" group-title="General",ABC Australia
+https://abc-news-dmd-streams-1.akamaized.net/out/v1/701126012d044971b3fa89406a440133/index.m3u8
+#EXTINF:-1  tvg-id="ABCMESydney.au" tvg-logo="https://i.imgur.com/6NyFLAm.png" group-title="Education;Kids",ABC Me (720p)
+https://c.mjh.nz/abc-me.m3u8
+#EXTINF:-1  tvg-id="ABCTVSA.au" tvg-logo="https://i.imgur.com/Ekjb7w8.png" group-title="General",ABC TV Adelaide (720p)
+https://c.mjh.nz/abc-sa.m3u8
+#EXTINF:-1  tvg-id="ABCTVQLD.au" tvg-logo="https://i.imgur.com/Ekjb7w8.png" group-title="General",ABC TV Brisbane (720p)
+https://c.mjh.nz/abc-qld.m3u8
+#EXTINF:-1  tvg-id="ABCTVACT.au" tvg-logo="https://i.imgur.com/Puq8t7f.png" group-title="General",ABC TV Canberra (720p)
+https://c.mjh.nz/abc-act.m3u8
+#EXTINF:-1  tvg-id="ABCTVNT.au" tvg-logo="https://i.imgur.com/Ekjb7w8.png" group-title="General",ABC TV Darwin (720p)
+https://c.mjh.nz/abc-nt.m3u8
+#EXTINF:-1  tvg-id="ABCTVTAS.au" tvg-logo="https://i.imgur.com/Ekjb7w8.png" group-title="General",ABC TV Hobart (720p)
+https://c.mjh.nz/abc-tas.m3u8
+#EXTINF:-1  tvg-id="ABCTVVIC.au" tvg-logo="https://i.imgur.com/Ekjb7w8.png" group-title="General",ABC TV Melbourne (720p)
+https://c.mjh.nz/abc-vic.m3u8
+#EXTINF:-1  tvg-id="ABCTVWA.au" tvg-logo="https://i.imgur.com/Ekjb7w8.png" group-title="General",ABC TV Perth (720p)
+https://c.mjh.nz/abc-wa.m3u8
+#EXTINF:-1  tvg-id="ABCTVPlusSydney.au" tvg-logo="https://upload.wikimedia.org/wikipedia/en/thumb/0/0f/ABC_TV_Plus_logo_2021.svg/512px-ABC_TV_Plus_logo_2021.svg.png" group-title="Entertainment",ABC TV Plus (720p)
+https://c.mjh.nz/abc-tv-plus.m3u8
+#EXTINF:-1  tvg-id="ABCTVNSW.au" tvg-logo="https://i.imgur.com/Ekjb7w8.png" group-title="General",ABC TV Sydney (720p)
+https://c.mjh.nz/abc-nsw.m3u8
+#EXTINF:-1  tvg-id="C31Melbourne.au" tvg-logo="https://i.imgur.com/Ge1EutY.png" group-title="General",C31 Melbourne (240p)
+https://d1k6kax80wecy5.cloudfront.net/RLnAKY/index.m3u8
+#EXTINF:-1  tvg-id="Channel44.au" tvg-logo="https://i.imgur.com/P2wUGh9.png" group-title="General",Channel 44 (480p)
+https://d1k6kax80wecy5.cloudfront.net/WFqZJc/index.m3u8
+#EXTINF:-1  tvg-id="FolkKlubTV.au" tvg-logo="https://i.imgur.com/Seq7Od7.png" group-title="Music",Folk Klub (720p)
+http://tv1.intv.mk:1935/live2/folkklub/index.m3u8
+#EXTINF:-1  tvg-id="HorseCountryTV.uk" tvg-logo="https://i.imgur.com/1x6zYZr.png" group-title="Outdoor",Horse and Country Free
+https://cdn-apse1-prod.tsv2.amagi.tv/linear/amg00810-horsecountrytvl-hncfreenz-samsungnz/playlist.m3u8
+#EXTINF:-1  tvg-id="Racingcom.au" tvg-logo="https://i.imgur.com/Q55HX1O.png" group-title="Sports",Racing.com (720p)
+https://racingvic-i.akamaized.net/hls/live/598695/racingvic/index1500.m3u8
+#EXTINF:-1  tvg-id="Tastemade.au" tvg-logo="https://i.imgur.com/rR7CLzZ.png" group-title="Cooking",Tastemade Australia (1080p)
+https://tmint-aus-samsungau.amagi.tv/playlist.m3u8
+#EXTINF:-1 ,INT: GANGBANG
+http://live.redtraffic.net/gangbang.m3u8
+#EXTINF:-1  tvg-logo="https://i.imgur.com/BuKv5Vj.png",My TV Channel
+http://connectiktv.ddns.net:5000/mytvchannel/@mytvchannel/chunklist.m3u8
+#EXTINF:-1  tvg-logo="https://i.imgur.com/J7stpmb.png",Net TV
+https://unlimited1-us.dps.live/nettv/nettv.smil/nettv/livestream1/chunks.m3u8
+#EXTINF:-1  tvg-logo="https://i.imgur.com/tf3KGP4.jpg",New Orleans TV
+http://media4.tripsmarter.com:1935/LiveTV/NOTVHD/playlist.m3u8
+#EXTINF:-1 ,Spacetoon
+http://stream.spacetoon.com:1935/live/stchannel/smil:livesmil.smil/chunklist_w693439211_b346000_slAR.m3u8
+#EXTINF:-1  tvg-logo="https://i.imgur.com/0XJcknD.png",XXX | Latina
+http://live.redtraffic.xyz/latina.m3u8?fluxuslust.m3u8
+#EXTINF:-1  tvg-logo="https://i.imgur.com/x6vlBzd.jpg",YourTime TV
+https://hls.yourtime.live/hls/stream.m3u8

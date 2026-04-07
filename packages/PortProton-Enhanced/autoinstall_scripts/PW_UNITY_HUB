@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Unity Hub installer for PortProton
+export PW_AUTOINSTALL_EXE="UnityHubSetup.exe"
+export PW_PREFIX_NAME="UNITY_HUB"
+export PW_VULKAN_USE="1"
+PW_WINE_USE="PROTON_LG" try_download_installer \
+"https://unity3d.com/get-unity/download" \
+"$PW_AUTOINSTALL_EXE" \
+"unity_hub_installer"

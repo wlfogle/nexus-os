@@ -1,0 +1,12 @@
+[workspace]
+members = [
+    "crates/common",
+    "crates/cli",
+    "crates/daemon",
+    "crates/pam-helper",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+license = "TBD"

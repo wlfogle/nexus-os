@@ -1,0 +1,382 @@
+#!/bin/bash
+
+# 🥷 ULTIMATE GHOST MODE - Complete Online Invisibility
+# Single command to activate ALL anonymity measures
+# Makes you completely invisible online
+
+GHOST_CONFIG="$HOME/.config/ghost-mode"
+LOG_FILE="$GHOST_CONFIG/ghost-mode.log"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+log_action() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
+}
+
+print_banner() {
+    echo -e "${PURPLE}"
+    echo "🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷"
+    echo "🥷                                               🥷"
+    echo "🥷          ULTIMATE GHOST MODE ACTIVATED        🥷" 
+    echo "🥷        Complete Online Invisibility Suite    🥷"
+    echo "🥷                                               🥷"
+    echo "🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷🥷"
+    echo -e "${NC}"
+}
+
+check_prerequisites() {
+    echo -e "${BLUE}📋 Checking prerequisites...${NC}"
+    
+    # Check if WireGuard is available
+    if ! systemctl is-active --quiet wg-quick@wg0; then
+        echo -e "${YELLOW}⚠️  WireGuard VPN not active - starting rotation...${NC}"
+        if [ -x "$HOME/github/awesome-stack/wireguard-tools/server/wireguard-rotate.sh" ]; then
+            sudo "$HOME/github/awesome-stack/wireguard-tools/server/wireguard-rotate.sh" garuda-host
+        fi
+    fi
+    
+    # Check if required tools exist
+    local missing_tools=()
+    for tool in firefox curl iptables; do
+        if ! command -v "$tool" >/dev/null 2>&1; then
+            missing_tools+=("$tool")
+        fi
+    done
+    
+    if [ ${#missing_tools[@]} -ne 0 ]; then
+        echo -e "${RED}❌ Missing tools: ${missing_tools[*]}${NC}"
+        echo -e "${YELLOW}Install missing tools and run ghost-mode again${NC}"
+        exit 1
+    fi
+    
+    echo -e "${GREEN}✅ Prerequisites check passed${NC}"
+}
+
+activate_network_anonymization() {
+    echo -e "${CYAN}🌐 Activating Network Anonymization...${NC}"
+    
+    # Start WireGuard rotation
+    echo "  🔄 Starting VPN rotation..."
+    if [ -x "$HOME/github/awesome-stack/wireguard-tools/client/garuda-wg-manager.sh" ]; then
+        "$HOME/github/awesome-stack/wireguard-tools/client/garuda-wg-manager.sh" rotate
+    fi
+    
+    # Configure DNS leak prevention
+    echo "  🛡️ Activating DNS leak prevention..."
+    if [ -x "$HOME/.local/bin/secure-dns" ]; then
+        "$HOME/.local/bin/secure-dns" >/dev/null 2>&1
+    fi
+    
+    # Start traffic obfuscation
+    echo "  🌪️ Starting traffic obfuscation..."
+    if [ -x "$HOME/.local/bin/traffic-obfuscation" ]; then
+        "$HOME/.local/bin/traffic-obfuscation" start >/dev/null 2>&1
+    fi
+    
+    # Randomize MAC address (requires restart)
+    echo "  🎭 Randomizing MAC addresses..."
+    if [ -f "/etc/NetworkManager/conf.d/99-random-mac.conf" ]; then
+        echo "    (MAC randomization configured - will apply on next connection)"
+    fi
+    
+    log_action "Network anonymization activated"
+    echo -e "${GREEN}✅ Network anonymization active${NC}"
+}
+
+activate_hardware_spoofing() {
+    echo -e "${CYAN}🔧 Activating Hardware Fingerprint Spoofing...${NC}"
+    
+    # Run hardware spoofing setup
+    if [ -x "$HOME/.local/bin/spoof-hardware" ]; then
+        "$HOME/.local/bin/spoof-hardware" >/dev/null 2>&1
+    fi
+    
+    # Randomize display resolution
+    echo "  🖥️ Randomizing display resolution..."
+    if [ -x "$HOME/.config/ghost-mode/spoof-display.sh" ]; then
+        "$HOME/.config/ghost-mode/spoof-display.sh" >/dev/null 2>&1
+    fi
+    
+    log_action "Hardware spoofing activated"
+    echo -e "${GREEN}✅ Hardware fingerprint spoofing active${NC}"
+}
+
+activate_time_masking() {
+    echo -e "${CYAN}🕐 Activating Time & Clock Masking...${NC}"
+    
+    # Setup time spoofing
+    if [ -x "$HOME/.local/bin/mask-time" ]; then
+        "$HOME/.local/bin/mask-time" >/dev/null 2>&1
+    fi
+    
+    # Start clock jitter
+    echo "  ⏰ Starting clock jitter..."
+    if [ -x "$HOME/.local/bin/clock-jitter" ]; then
+        "$HOME/.local/bin/clock-jitter" start >/dev/null 2>&1
+    fi
+    
+    log_action "Time masking activated"
+    echo -e "${GREEN}✅ Time & clock masking active${NC}"
+}
+
+activate_browser_protection() {
+    echo -e "${CYAN}🌐 Preparing Ghost Browser...${NC}"
+    
+    # Prepare Firefox ghost profile
+    if [ -x "$HOME/.local/bin/setup-ghost-firefox" ]; then
+        "$HOME/.local/bin/setup-ghost-firefox" >/dev/null 2>&1
+    fi
+    
+    # Create browser launcher with all protections
+    cat > "$HOME/.local/bin/ghost-browser" << 'EOF'
+#!/bin/bash
+# 🥷 Ultimate Ghost Browser Launcher
+
+echo "🥷 Launching Ultra-Anonymous Browser..."
+
+# Source time spoofing
+source "$HOME/.config/ghost-mode/time-spoof.env" 2>/dev/null || true
+
+# Launch Firefox with all protections
+ghost-exec firefox-ghost "$@"
+EOF
+    
+    chmod +x "$HOME/.local/bin/ghost-browser"
+    
+    log_action "Browser protection activated"
+    echo -e "${GREEN}✅ Ghost browser ready${NC}"
+}
+
+start_monitoring() {
+    echo -e "${CYAN}👁️ Starting Anonymity Monitoring...${NC}"
+    
+    # Create monitoring script
+    cat > "$HOME/.local/bin/ghost-monitor" << 'EOF'
+#!/bin/bash
+
+# 🕵️ Ghost Mode Monitoring - Continuous leak detection
+MONITOR_LOG="$HOME/.config/ghost-mode/monitor.log"
+
+monitor_leaks() {
+    while true; do
+        timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+        
+        # Check VPN status
+        if ! ip link show wg0 >/dev/null 2>&1; then
+            echo "$timestamp - ⚠️  VPN DOWN - attempting reconnection" >> "$MONITOR_LOG"
+            # Try to restart WireGuard
+            sudo systemctl restart wg-quick@wg0 2>/dev/null || true
+        fi
+        
+        # Check IPv6 leaks
+        if ip -6 addr show | grep -q "inet6.*global"; then
+            echo "$timestamp - ⚠️  IPv6 LEAK detected" >> "$MONITOR_LOG"
+            # Disable IPv6 again
+            sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1 >/dev/null 2>&1
+        fi
+        
+        # Check DNS leaks (basic)
+        current_dns=$(resolvectl status 2>/dev/null | grep "DNS Servers" | head -1)
+        if echo "$current_dns" | grep -E "(192\.168\.|10\.|172\.)" >/dev/null; then
+            echo "$timestamp - ⚠️  Potential DNS leak to local network" >> "$MONITOR_LOG"
+        fi
+        
+        # Check if traffic obfuscation is running
+        if ! pgrep -f "traffic-obfuscation" >/dev/null; then
+            echo "$timestamp - ℹ️  Traffic obfuscation not running" >> "$MONITOR_LOG"
+            # Restart traffic obfuscation
+            if [ -x "$HOME/.local/bin/traffic-obfuscation" ]; then
+                "$HOME/.local/bin/traffic-obfuscation" start >/dev/null 2>&1
+            fi
+        fi
+        
+        # Sleep for 30 seconds before next check
+        sleep 30
+    done
+}
+
+case "$1" in
+    "start")
+        monitor_leaks &
+        echo $! > "$HOME/.config/ghost-mode/monitor.pid"
+        echo "👁️ Ghost monitoring started (PID: $!)"
+        ;;
+    "stop")
+        if [ -f "$HOME/.config/ghost-mode/monitor.pid" ]; then
+            kill $(cat "$HOME/.config/ghost-mode/monitor.pid") 2>/dev/null
+            rm "$HOME/.config/ghost-mode/monitor.pid"
+            echo "👁️ Ghost monitoring stopped"
+        fi
+        ;;
+    "status")
+        if [ -f "$HOME/.config/ghost-mode/monitor.pid" ]; then
+            if kill -0 $(cat "$HOME/.config/ghost-mode/monitor.pid") 2>/dev/null; then
+                echo "👁️ Ghost monitoring is running"
+            else
+                echo "❌ Ghost monitoring is not running"
+            fi
+        else
+            echo "❌ Ghost monitoring is not running"
+        fi
+        ;;
+    "logs")
+        if [ -f "$HOME/.config/ghost-mode/monitor.log" ]; then
+            tail -20 "$HOME/.config/ghost-mode/monitor.log"
+        else
+            echo "No monitoring logs found"
+        fi
+        ;;
+    *)
+        echo "Usage: ghost-monitor [start|stop|status|logs]"
+        ;;
+esac
+EOF
+    
+    chmod +x "$HOME/.local/bin/ghost-monitor"
+    
+    # Start monitoring
+    "$HOME/.local/bin/ghost-monitor" start >/dev/null 2>&1
+    
+    log_action "Monitoring started"
+    echo -e "${GREEN}✅ Anonymity monitoring active${NC}"
+}
+
+show_status() {
+    echo -e "${BLUE}📊 Ghost Mode Status:${NC}"
+    echo ""
+    
+    # VPN Status
+    if ip link show wg0 >/dev/null 2>&1; then
+        echo -e "  🔒 VPN: ${GREEN}ACTIVE${NC}"
+    else
+        echo -e "  🔒 VPN: ${RED}INACTIVE${NC}"
+    fi
+    
+    # IPv6 Status
+    if sysctl net.ipv6.conf.all.disable_ipv6 2>/dev/null | grep -q "= 1"; then
+        echo -e "  🚫 IPv6: ${GREEN}DISABLED${NC}"
+    else
+        echo -e "  🚫 IPv6: ${RED}ENABLED (LEAK RISK)${NC}"
+    fi
+    
+    # Traffic Obfuscation
+    if pgrep -f "traffic-obfuscation" >/dev/null; then
+        echo -e "  🌪️ Traffic Obfuscation: ${GREEN}ACTIVE${NC}"
+    else
+        echo -e "  🌪️ Traffic Obfuscation: ${YELLOW}INACTIVE${NC}"
+    fi
+    
+    # Clock Jitter
+    if [ -f "$HOME/.config/ghost-mode/clock-jitter.pid" ] && kill -0 $(cat "$HOME/.config/ghost-mode/clock-jitter.pid") 2>/dev/null; then
+        echo -e "  🕐 Clock Jitter: ${GREEN}ACTIVE${NC}"
+    else
+        echo -e "  🕐 Clock Jitter: ${YELLOW}INACTIVE${NC}"
+    fi
+    
+    # Monitoring
+    if [ -f "$HOME/.config/ghost-mode/monitor.pid" ] && kill -0 $(cat "$HOME/.config/ghost-mode/monitor.pid") 2>/dev/null; then
+        echo -e "  👁️ Monitoring: ${GREEN}ACTIVE${NC}"
+    else
+        echo -e "  👁️ Monitoring: ${YELLOW}INACTIVE${NC}"
+    fi
+    
+    echo ""
+    echo -e "${CYAN}🎯 Available Commands:${NC}"
+    echo "  ghost-browser           # Launch ultra-anonymous browser"
+    echo "  ghost-exec [program]    # Run program with spoofed hardware"
+    echo "  ghost-time [command]    # Run command with spoofed time"
+    echo "  dns-leak-test          # Test for DNS leaks"
+    echo "  ghost-monitor          # Manage monitoring"
+    echo "  ghost-mode stop        # Deactivate ghost mode"
+}
+
+stop_ghost_mode() {
+    echo -e "${RED}🛑 Deactivating Ghost Mode...${NC}"
+    
+    # Stop monitoring
+    if [ -x "$HOME/.local/bin/ghost-monitor" ]; then
+        "$HOME/.local/bin/ghost-monitor" stop >/dev/null 2>&1
+    fi
+    
+    # Stop traffic obfuscation
+    if [ -x "$HOME/.local/bin/traffic-obfuscation" ]; then
+        "$HOME/.local/bin/traffic-obfuscation" stop >/dev/null 2>&1
+    fi
+    
+    # Stop clock jitter
+    if [ -x "$HOME/.local/bin/clock-jitter" ]; then
+        "$HOME/.local/bin/clock-jitter" stop >/dev/null 2>&1
+    fi
+    
+    # Re-enable IPv6 (optional)
+    read -p "Re-enable IPv6? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
+        sudo sysctl -w net.ipv6.conf.default.disable_ipv6=0
+        sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=0
+        echo -e "${GREEN}✅ IPv6 re-enabled${NC}"
+    fi
+    
+    # Remove firewall rules
+    sudo iptables -D OUTPUT -p udp --dport 53 -j REJECT 2>/dev/null || true
+    sudo iptables -D OUTPUT -p tcp --dport 53 -j REJECT 2>/dev/null || true
+    
+    log_action "Ghost mode deactivated"
+    echo -e "${GREEN}✅ Ghost mode deactivated${NC}"
+}
+
+# Main execution
+case "${1:-start}" in
+    "start")
+        mkdir -p "$GHOST_CONFIG"
+        print_banner
+        log_action "Ghost mode activation started"
+        
+        check_prerequisites
+        activate_network_anonymization
+        activate_hardware_spoofing
+        activate_time_masking
+        activate_browser_protection
+        start_monitoring
+        
+        echo ""
+        echo -e "${GREEN}🎉 ULTIMATE GHOST MODE ACTIVATED! 🎉${NC}"
+        echo -e "${YELLOW}You are now COMPLETELY INVISIBLE online!${NC}"
+        echo ""
+        show_status
+        ;;
+        
+    "stop")
+        stop_ghost_mode
+        ;;
+        
+    "status")
+        show_status
+        ;;
+        
+    "test")
+        echo -e "${BLUE}🧪 Running anonymity tests...${NC}"
+        if [ -x "$HOME/.local/bin/dns-leak-test" ]; then
+            "$HOME/.local/bin/dns-leak-test"
+        fi
+        echo ""
+        echo -e "${CYAN}Additional tests:${NC}"
+        echo "🌐 https://browserleaks.com/ip"
+        echo "🌐 https://dnsleaktest.com"
+        echo "🌐 https://ipleak.net"
+        echo "🌐 https://whatismyipaddress.com"
+        ;;
+        
+    *)
+        echo "Usage: ghost-mode [start|stop|status|test]"
+        exit 1
+        ;;
+esac

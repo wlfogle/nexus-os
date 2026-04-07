@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Exec=/~/Documents/recon_bt.sh
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name[en_GB]=Connect to Bluetooth Speaker
+Name=Connect to Bluetooth Speaker
+Comment[en_GB]=
+Comment=

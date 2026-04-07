@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Dead Island 2 Direct Launcher for PortProton
+export PW_AUTOINSTALL_EXE="/media/lou/Games/Games/Dead Island 2 Deluxe Edition/DeadIsland-Win64-Shipping.exe"
+export PW_PREFIX_NAME="DEAD_ISLAND_2"
+export PW_VULKAN_USE="1"
+if [[ -f "$PW_AUTOINSTALL_EXE" ]]; then
+    portwine_exe="$PW_AUTOINSTALL_EXE"
+    try_run_exe
+else
+    echo "Dead Island 2 executable not found at: $PW_AUTOINSTALL_EXE"
+fi

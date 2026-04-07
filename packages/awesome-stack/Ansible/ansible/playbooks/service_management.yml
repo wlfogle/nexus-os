@@ -1,0 +1,7 @@
+---
+- name: Deploy core media services
+  hosts: lxcs
+  become: yes
+  roles:
+    - ollama
+    - home_assistant

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire TV Remote Control</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .status {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 15px;
+            color: white;
+            padding: 15px;
+            margin: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            min-height: 50px;
+            min-width: 80px;
+        }
+        
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+            background: rgba(255, 255, 255, 0.4);
+        }
+        
+        .power-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            width: 100%;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        
+        .nav-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .nav-center {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .volume-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+        }
+        
+        .app-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .app-btn {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+            font-size: 14px;
+            padding: 10px 5px;
+        }
+        
+        .text-input {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .text-field {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 16px;
+        }
+        
+        .text-field::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .config-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .config-input {
+            width: 100%;
+            margin: 10px 0;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 14px;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+        }
+        
+        .notification.error {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .nav-grid {
+                gap: 8px;
+            }
+            
+            .btn {
+                font-size: 14px;
+                padding: 12px;
+                min-height: 45px;
+                min-width: 70px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥📺 Fire TV</h1>
+        </div>
+        
+        <div class="status" id="status">
+            <div>Status: <span id="statusText">Checking...</span></div>
+        </div>
+        
+        <button class="btn power-btn" onclick="sendCommand('power')">⚡ Power</button>
+        
+        <div class="nav-grid">
+            <div></div>
+            <button class="btn" onclick="sendCommand('up')">⬆️</button>
+            <div></div>
+            
+            <button class="btn" onclick="sendCommand('left')">⬅️</button>
+            <button class="btn nav-center" onclick="sendCommand('center')">OK</button>
+            <button class="btn" onclick="sendCommand('right')">➡️</button>
+            
+            <div></div>
+            <button class="btn" onclick="sendCommand('down')">⬇️</button>
+            <div></div>
+        </div>
+        
+        <div style="text-align: center; margin: 15px 0;">
+            <button class="btn" onclick="sendCommand('home')">🏠 Home</button>
+            <button class="btn" onclick="sendCommand('back')">↩️ Back</button>
+            <button class="btn" onclick="sendCommand('menu')">☰ Menu</button>
+        </div>
+        
+        <div class="volume-row">
+            <button class="btn" onclick="sendCommand('volume_down')">🔉</button>
+            <button class="btn" onclick="sendCommand('play_pause')">⏯️</button>
+            <button class="btn" onclick="sendCommand('volume_up')">🔊</button>
+        </div>
+        
+        <div class="text-input">
+            <input type="text" class="text-field" id="textInput" placeholder="Type text to send...">
+            <button class="btn" onclick="sendText()">Send</button>
+        </div>
+        
+        <div class="app-grid">
+            <button class="btn app-btn" onclick="launchApp('netflix')">Netflix</button>
+            <button class="btn app-btn" onclick="launchApp('prime')">Prime</button>
+            <button class="btn app-btn" onclick="launchApp('youtube')">YouTube</button>
+            <button class="btn app-btn" onclick="launchApp('plex')">Plex</button>
+            <button class="btn app-btn" onclick="launchApp('disney')">Disney+</button>
+            <button class="btn app-btn" onclick="launchApp('spotify')">Spotify</button>
+        </div>
+        
+        <div class="config-section">
+            <h3>Configuration</h3>
+            <input type="text" class="config-input" id="serverUrl" placeholder="Fire TV Controller URL (e.g., http://192.168.1.150:5000)" value="http://192.168.1.150:5000">
+            <button class="btn" onclick="saveConfig()" style="width: 100%;">Save Configuration</button>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+    
+    <script>
+        let serverUrl = localStorage.getItem('firetvServerUrl') || 'http://192.168.1.150:5000';
+        document.getElementById('serverUrl').value = serverUrl;
+        
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            setTimeout(() => {
+                notification.className = `notification ${type}`;
+            }, 3000);
+        }
+        
+        function saveConfig() {
+            serverUrl = document.getElementById('serverUrl').value;
+            localStorage.setItem('firetvServerUrl', serverUrl);
+            showNotification('Configuration saved!');
+            updateStatus();
+        }
+        
+        async function sendCommand(command, params = {}) {
+            try {
+                const response = await fetch(`${serverUrl}/command`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        command: command,
+                        params: params
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(`Command sent: ${command}`, 'success');
+                } else {
+                    showNotification(`Error: ${result.error}`, 'error');
+                }
+                
+                // Update status after command
+                setTimeout(updateStatus, 500);
+                
+            } catch (error) {
+                showNotification(`Network error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function launchApp(appName) {
+            const appMap = {
+                'netflix': 'com.netflix.ninja',
+                'prime': 'com.amazon.avod',
+                'youtube': 'com.google.android.youtube.tv',
+                'plex': 'com.plexapp.android',
+                'disney': 'com.disney.disneyplus',
+                'spotify': 'com.spotify.tv.android'
+            };
+            
+            const appId = appMap[appName] || appName;
+            await sendCommand('launch_app', { app_id: appId });
+        }
+        
+        function sendText() {
+            const textInput = document.getElementById('textInput');
+            const text = textInput.value.trim();
+            
+            if (text) {
+                sendCommand('text', { text: text });
+                textInput.value = '';
+            }
+        }
+        
+        async function updateStatus() {
+            try {
+                const response = await fetch(`${serverUrl}/status`);
+                const status = await response.json();
+                
+                const statusText = document.getElementById('statusText');
+                
+                if (status.connected) {
+                    statusText.textContent = `Connected - ${status.state || 'Unknown'}`;
+                    statusText.style.color = '#4CAF50';
+                    
+                    if (status.current_app) {
+                        statusText.textContent += ` (${status.current_app})`;
+                    }
+                } else {
+                    statusText.textContent = 'Disconnected';
+                    statusText.style.color = '#f44336';
+                }
+                
+            } catch (error) {
+                document.getElementById('statusText').textContent = 'Connection Error';
+                document.getElementById('statusText').style.color = '#f44336';
+            }
+        }
+        
+        // Handle Enter key in text input
+        document.getElementById('textInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendText();
+            }
+        });
+        
+        // Initial status update
+        updateStatus();
+        
+        // Update status every 30 seconds
+        setInterval(updateStatus, 30000);
+        
+        // Add touch/click feedback
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.95)';
+            });
+            
+            btn.addEventListener('touchend', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>

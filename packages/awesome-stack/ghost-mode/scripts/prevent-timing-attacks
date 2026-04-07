@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# 🛡️ Timing Attack Prevention
+# Adds random delays to various operations
+
+echo "🛡️ Activating timing attack prevention..."
+
+# Create function to add to shell profiles
+TIMING_PROTECTION='
+# 🕐 Timing Attack Prevention
+ghost_delay() {
+    # Add random delay before sensitive operations
+    sleep $(echo "scale=3; $RANDOM/32767*0.5" | bc 2>/dev/null || echo "0.1")
+}
+
+# Override common commands with timing protection
+alias ssh="ghost_delay; ssh"
+alias curl="ghost_delay; curl"
+alias wget="ghost_delay; wget"
+alias ping="ghost_delay; ping"
+'
+
+# Add to bashrc if not already present
+if ! grep -q "ghost_delay" "$HOME/.bashrc" 2>/dev/null; then
+    echo "$TIMING_PROTECTION" >> "$HOME/.bashrc"
+    echo "✅ Timing protection added to .bashrc"
+fi
+
+echo "✅ Timing attack prevention configured"

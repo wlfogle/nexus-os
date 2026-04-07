@@ -1,0 +1,24 @@
+# WARNING: CT-240 (bazarr) and CT-242 (jellyseerr) are DHCP.
+# Current IPs: bazarr=192.168.12.188, jellyseerr=192.168.12.151
+# Set static DHCP reservations on your router to lock these in, then
+# update this file if the IPs change.
+http:
+  routers:
+    bazarr:
+      rule: "Host(`bazarr.tiamat.local`)"
+      entryPoints: [web]
+      service: bazarr
+    jellyseerr:
+      rule: "Host(`jellyseerr.tiamat.local`)"
+      entryPoints: [web]
+      service: jellyseerr
+
+  services:
+    bazarr:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.12.188:6767"
+    jellyseerr:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.12.151:5055"

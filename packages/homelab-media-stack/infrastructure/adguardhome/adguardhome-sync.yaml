@@ -1,0 +1,22 @@
+# AdGuard Home Sync Configuration
+# Keeps Proxmox (primary) and Pi (replica) in sync automatically
+
+cron: "*/5 * * * *"   # Sync every 5 minutes
+runOnStart: true
+
+origin:
+  url: http://192.168.12.10:80
+  username: admin
+  password: CHANGE_ME   # Set to your AdGuard Home admin password
+
+replicas:
+  - url: http://192.168.12.20:80
+    username: admin
+    password: CHANGE_ME   # Same or different password for Pi instance
+
+# What to sync
+sync_settings: true
+sync_filters: true
+sync_rewrites: true
+sync_services: true
+sync_statistics: false   # Don't sync stats — each instance keeps its own

@@ -1,0 +1,17 @@
+[package]
+name = "garuda-hello"
+version = "0.0.1"
+edition = "2021"
+license = "TBD"
+
+[dependencies]
+garuda_hello_common = { path = "../common" }
+clap = { version = "4.0", features = ["derive"] }
+tokio = { version = "1.0", features = ["full"] }
+serde_json = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+[[bin]]
+name = "garuda-hello"
+path = "src/main.rs"

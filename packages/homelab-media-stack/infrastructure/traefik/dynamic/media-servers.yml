@@ -1,0 +1,20 @@
+http:
+  routers:
+    jellyfin:
+      rule: "Host(`jellyfin.tiamat.local`)"
+      entryPoints: [web]
+      service: jellyfin
+    plex:
+      rule: "Host(`plex.tiamat.local`)"
+      entryPoints: [web]
+      service: plex
+
+  services:
+    jellyfin:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.12.231:8096"
+    plex:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.12.230:32400"

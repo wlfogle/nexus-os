@@ -1,0 +1,164 @@
+#!/bin/bash
+
+# 🥷 Firefox Ghost Mode Setup - Complete Fingerprint Annihilation
+# Creates a completely anonymous Firefox profile with maximum privacy
+
+GHOST_PROFILE="$HOME/.mozilla/firefox-ghost"
+PREFS_FILE="$GHOST_PROFILE/user.js"
+
+echo "🥷 Setting up Firefox Ghost Mode..."
+
+# Create ghost Firefox profile
+mkdir -p "$GHOST_PROFILE"
+
+cat > "$PREFS_FILE" << 'EOF'
+// 🥷 FIREFOX GHOST MODE CONFIGURATION - MAXIMUM ANONYMITY
+// WARNING: This breaks many websites but provides maximum privacy
+
+// === NETWORK ANONYMIZATION ===
+// Disable WebRTC completely (prevents IP leaks)
+user_pref("media.peerconnection.enabled", false);
+user_pref("media.navigator.enabled", false);
+user_pref("media.peerconnection.turn.disable", true);
+user_pref("media.peerconnection.use_document_iceservers", false);
+user_pref("media.peerconnection.video.enabled", false);
+user_pref("media.peerconnection.identity.enabled", false);
+
+// Disable IPv6 to prevent leaks
+user_pref("network.dns.disableIPv6", true);
+
+// Force all DNS through VPN
+user_pref("network.proxy.socks_remote_dns", true);
+user_pref("network.dns.blockDotOnion", false);
+
+// Disable DNS over HTTPS (use VPN DNS instead)
+user_pref("network.trr.mode", 5);
+
+// === FINGERPRINTING PROTECTION ===
+// Spoof User Agent (rotate randomly)
+user_pref("general.useragent.override", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36");
+
+// Randomize screen resolution reporting
+user_pref("privacy.resistFingerprinting", true);
+user_pref("privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts", true);
+
+// Spoof hardware concurrency (CPU cores)
+user_pref("dom.maxHardwareConcurrency", 4);
+
+// Block canvas fingerprinting
+user_pref("privacy.resistFingerprinting.randomDataOnCanvasExtract", true);
+
+// Block WebGL fingerprinting
+user_pref("webgl.disabled", true);
+user_pref("webgl.enable-webgl2", false);
+
+// Block audio fingerprinting
+user_pref("media.webaudio.enabled", false);
+
+// Spoof timezone to UTC
+user_pref("privacy.resistFingerprinting.timezone", "UTC");
+
+// Block font fingerprinting
+user_pref("gfx.downloadable_fonts.enabled", false);
+user_pref("gfx.font_rendering.opentype_svg.enabled", false);
+
+// === TRACKING PROTECTION ===
+// Enable strict tracking protection
+user_pref("privacy.trackingprotection.enabled", true);
+user_pref("privacy.trackingprotection.socialtracking.enabled", true);
+user_pref("privacy.trackingprotection.cryptomining.enabled", true);
+user_pref("privacy.trackingprotection.fingerprinting.enabled", true);
+
+// Disable telemetry completely
+user_pref("toolkit.telemetry.enabled", false);
+user_pref("toolkit.telemetry.unified", false);
+user_pref("toolkit.telemetry.archive.enabled", false);
+user_pref("datareporting.healthreport.uploadEnabled", false);
+user_pref("datareporting.policy.dataSubmissionEnabled", false);
+
+// === MEMORY & HISTORY ===
+// Clear everything on exit
+user_pref("privacy.sanitize.sanitizeOnShutdown", true);
+user_pref("privacy.clearOnShutdown.cache", true);
+user_pref("privacy.clearOnShutdown.cookies", true);
+user_pref("privacy.clearOnShutdown.downloads", true);
+user_pref("privacy.clearOnShutdown.formdata", true);
+user_pref("privacy.clearOnShutdown.history", true);
+user_pref("privacy.clearOnShutdown.sessions", true);
+
+// Disable password saving
+user_pref("signon.rememberSignons", false);
+user_pref("signon.autofillForms", false);
+
+// === LANGUAGE SPOOFING ===
+// Randomize accept language
+user_pref("intl.accept_languages", "en-US,en");
+
+// === CACHE DISABLING ===
+// Disable all caching
+user_pref("browser.cache.disk.enable", false);
+user_pref("browser.cache.memory.enable", false);
+user_pref("browser.cache.offline.enable", false);
+user_pref("network.http.use-cache", false);
+
+// === REFERRER SPOOFING ===
+// Never send referrer
+user_pref("network.http.referer.XOriginPolicy", 0);
+user_pref("network.http.sendRefererHeader", 0);
+
+// === JAVASCRIPT RESTRICTIONS ===
+// Limit JavaScript capabilities
+user_pref("dom.event.clipboardevents.enabled", false);
+user_pref("dom.battery.enabled", false);
+user_pref("device.sensors.enabled", false);
+user_pref("geo.enabled", false);
+
+// Block push notifications
+user_pref("dom.push.enabled", false);
+user_pref("dom.serviceWorkers.enabled", false);
+
+// === ADDITIONAL HARDENING ===
+// Disable auto-updates (manual control)
+user_pref("app.update.enabled", false);
+user_pref("app.update.auto", false);
+
+// Disable pocket
+user_pref("extensions.pocket.enabled", false);
+
+// Disable screenshots
+user_pref("extensions.screenshots.disabled", true);
+EOF
+
+echo "✅ Ghost Firefox profile created at: $GHOST_PROFILE"
+
+# Create launcher script
+cat > "$HOME/.local/bin/firefox-ghost" << EOF
+#!/bin/bash
+# 🥷 Firefox Ghost Mode Launcher
+
+echo "🥷 Launching Firefox Ghost Mode..."
+echo "⚠️  WARNING: Many websites will break due to extreme privacy settings"
+echo "🛡️  All fingerprinting vectors are randomized/blocked"
+
+# Randomize user agent on each launch
+USER_AGENTS=(
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0"
+)
+
+RANDOM_UA=\${USER_AGENTS[\$RANDOM % \${#USER_AGENTS[@]}]}
+sed -i "s|general.useragent.override.*|general.useragent.override\", \"\$RANDOM_UA\");|" "$GHOST_PROFILE/user.js"
+
+# Launch with ghost profile
+firefox --profile "$GHOST_PROFILE" --private-window "\$@" &
+disown
+
+echo "🚀 Ghost Firefox launched in private mode"
+EOF
+
+chmod +x "$HOME/.local/bin/firefox-ghost"
+
+echo "🎯 Usage: firefox-ghost [URL]"
+echo "🔥 Ghost mode Firefox is ready!"

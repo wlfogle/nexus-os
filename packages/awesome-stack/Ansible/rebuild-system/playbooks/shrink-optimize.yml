@@ -1,0 +1,69 @@
+---
+- name: "🗜️ Awesome Stack Shrink & Optimization - Phase 1: Container Cleanup"
+  hosts: all:!templates:!proxmox_hosts
+  become: true
+  strategy: free
+  vars:
+    optimization_phase: "container_cleanup"
+  roles:
+    - role: container_cleanup
+      tags: [cleanup, shrink]
+
+- name: "📦 Awesome Stack Shrink & Optimization - Phase 2: Container Compression"
+  hosts: proxmox_hosts
+  become: true
+  serial: 1
+  vars:
+    optimization_phase: "container_compression"
+  roles:
+    - role: lxc_shrink_compress
+      tags: [shrink, compression]
+
+- name: "🖥️ Awesome Stack Shrink & Optimization - Phase 3: VM Optimization"
+  hosts: proxmox_hosts
+  become: true
+  serial: 1
+  vars:
+    optimization_phase: "vm_optimization"
+  roles:
+    - role: vm_shrink_optimize
+      tags: [vm, shrink, optimization]
+
+- name: "📊 Awesome Stack Shrink & Optimization - Phase 4: Storage Analysis"
+  hosts: proxmox_hosts
+  become: true
+  serial: 1
+  vars:
+    optimization_phase: "storage_analysis"
+  roles:
+    - role: storage_analysis
+      tags: [storage, analysis]
+
+- name: "✅ Optimization Complete - Summary Report"
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Display optimization summary
+      debug:
+        msg: |
+          🎉 Awesome Stack Optimization Complete!
+          
+          📊 Optimization Results:
+          - Containers optimized and compressed
+          - VM size reduced
+          - Storage reclaimed
+          - Performance maintained
+          
+          📈 Space Savings:
+          - Check /tmp/optimization-report.txt for detailed savings
+          - Total containers processed: {{ groups['all'] | length - groups['templates'] | length - groups['proxmox_hosts'] | length }}
+          
+          🚀 Next Steps:
+          1. Monitor performance with: ansible-playbook playbooks/health-check.yml
+          2. Create backup snapshot: ansible-playbook playbooks/backup-stack.yml
+          3. Test all services are working correctly
+          
+          ⚠️ Important:
+          - All containers have been optimized for minimal size
+          - Services should restart automatically
+          - Monitor logs for any issues: /var/log/optimization.log

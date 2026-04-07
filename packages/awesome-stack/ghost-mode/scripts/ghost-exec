@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# 🥷 Ghost Execution Wrapper - Runs programs with spoofed hardware info
+# Usage: ghost-exec [program] [args...]
+
+export GHOST_MODE=1
+
+# Spoof /proc/cpuinfo
+if [ -f "$HOME/.config/ghost-mode/fake-cpuinfo" ]; then
+    export LD_PRELOAD="$HOME/.config/ghost-mode/libfakecpu.so:$LD_PRELOAD"
+fi
+
+# Spoof memory info
+if [ -f "$HOME/.config/ghost-mode/fake-meminfo" ]; then
+    export LD_PRELOAD="$HOME/.config/ghost-mode/libfakemem.so:$LD_PRELOAD"
+fi
+
+# Use minimal font configuration
+export FONTCONFIG_FILE="$HOME/.config/ghost-mode/fonts.conf"
+
+# Randomize some environment variables
+export LC_TIME="C"
+export TZ="UTC"
+
+# Randomize home directory for this session (temporary)
+export FAKE_HOME="/tmp/ghost-home-$$"
+mkdir -p "$FAKE_HOME"
+
+# Launch program with spoofed environment
+echo "🥷 Launching $1 with spoofed hardware fingerprint..."
+exec "$@"

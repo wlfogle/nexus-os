@@ -1,0 +1,124 @@
+---
+# Deploy LXC containers from golden image template
+- name: Clone container from golden image template
+  delegate_to: "{{ proxmox_host }}"
+  command: >
+    pct clone {{ golden_container_id }} {{ container_id }}
+    --hostname {{ inventory_hostname }}
+    --full
+  register: container_clone
+  failed_when:
+    - container_clone.rc != 0
+    - "'already exists' not in container_clone.stderr"
+
+- name: Configure container resources
+  delegate_to: "{{ proxmox_host }}"
+  command: >
+    pct set {{ container_id }}
+    --cores {{ container_cores | default(2) }}
+    --memory {{ container_memory | default(2048) }}
+    --rootfs {{ storage_pool }}:{{ container_disk_size | default('8G') }}
+
+- name: Configure container networking
+  delegate_to: "{{ proxmox_host }}"
+  command: >
+    pct set {{ container_id }}
+    --net0 name=eth0,bridge={{ bridge_interface }},ip={{ ansible_host }}/24,gw=192.168.122.1
+  when: ansible_host is defined
+
+- name: Configure container mounts for media services
+  delegate_to: "{{ proxmox_host }}"
+  command: >
+    pct set {{ container_id }} --mp0 {{ item.source }},mp={{ item.target }}
+  loop: "{{ container_mounts | default([]) }}"
+  when: container_mounts is defined
+
+- name: Start the container
+  delegate_to: "{{ proxmox_host }}"
+  command: pct start {{ container_id }}
+  register: container_start
+  failed_when:
+    - container_start.rc != 0
+    - "'already running' not in container_start.stderr"
+
+- name: Wait for container to be ready
+  wait_for:
+    host: "{{ ansible_host }}"
+    port: 22
+    timeout: 120
+  when: ansible_host is defined
+
+- name: Update container hostname resolution
+  delegate_to: "{{ proxmox_host }}"
+  command: >
+    pct exec {{ container_id }} --
+    bash -c "echo '127.0.0.1 {{ inventory_hostname }}' >> /etc/hosts"
+
+- name: Configure container-specific environment
+  delegate_to: "{{ proxmox_host }}"
+  copy:
+    dest: "/var/lib/lxc/{{ container_id }}/rootfs/etc/environment"
+    content: |
+      # Container-specific environment variables
+      CONTAINER_ID="{{ container_id }}"
+      CONTAINER_NAME="{{ inventory_hostname }}"
+      SERVICE_TYPE="{{ service_type | default('generic') }}"
+      WARP_AGENT_PORT="{{ warp_agent_port }}"
+      WARP_BRIDGE_PORT="{{ warp_bridge_port }}"
+      DISPLAY=:1
+
+- name: Create container-specific service configuration
+  delegate_to: "{{ proxmox_host }}"
+  copy:
+    dest: "/var/lib/lxc/{{ container_id }}/rootfs/opt/warp-agent/container-config.json"
+    content: |
+      {
+        "container_id": "{{ container_id }}",
+        "container_name": "{{ inventory_hostname }}",
+        "service_type": "{{ service_type | default('generic') }}",
+        "ports": {{ ports | default([]) | to_json }},
+        "warp_config": {
+          "agent_port": {{ warp_agent_port }},
+          "bridge_port": {{ warp_bridge_port }},
+          "comms_server": "{{ groups['core_services'] | select('match', '.*agent-comms.*') | first }}"
+        },
+        "deployment_time": "{{ ansible_date_time.iso8601 }}"
+      }
+
+- name: Restart container services
+  delegate_to: "{{ proxmox_host }}"
+  command: >
+    pct exec {{ container_id }} --
+    bash -c "systemctl daemon-reload && 
+    systemctl restart x11-display warp-agent-bridge"
+
+- name: Validate container deployment
+  uri:
+    url: "http://{{ ansible_host }}:{{ warp_bridge_port }}/health"
+    method: GET
+    status_code: [200, 404]  # 404 acceptable if service not fully started yet
+  register: health_check
+  retries: 5
+  delay: 10
+  when: ansible_host is defined
+
+- name: Display container deployment status
+  debug:
+    msg: |
+      ✅ Container {{ inventory_hostname }} (ID: {{ container_id }}) deployed successfully!
+      
+      📦 Container Details:
+      - Hostname: {{ inventory_hostname }}
+      - IP Address: {{ ansible_host | default('DHCP') }}
+      - Service Type: {{ service_type | default('generic') }}
+      - Ports: {{ ports | default([]) | join(', ') }}
+      
+      🔧 Warp Agent Status:
+      - Bridge Port: {{ warp_bridge_port }}
+      - Agent Port: {{ warp_agent_port }}
+      - Health Check: {{ 'Pass' if health_check.status == 200 else 'Starting...' }}
+      
+      🖥️ Desktop Access:
+      - VNC available on container
+      - OpenBox + xterm ready
+      - Warp agent auto-starting

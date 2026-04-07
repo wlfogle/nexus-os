@@ -1,0 +1,30 @@
+[Desktop Entry]
+Name=Homelab Manager
+Name[en_US]=Homelab Manager
+Comment=Manage Proxmox VMs and Media Stack services
+Comment[en_US]=Manage Proxmox VMs and Media Stack services
+
+Icon=network-server
+Type=Service
+X-KDE-ServiceTypes=Plasma/Applet
+
+X-Plasma-API=declarativeappletscript
+X-Plasma-MainScript=ui/main.qml
+X-Plasma-Provides=org.kde.plasma.homelab
+
+X-KDE-PluginInfo-Author=Homelab User
+X-KDE-PluginInfo-Email=user@homelab.local
+X-KDE-PluginInfo-Name=org.kde.plasma.homelab
+X-KDE-PluginInfo-Version=1.0
+X-KDE-PluginInfo-Website=
+X-KDE-PluginInfo-Category=System Information
+X-KDE-PluginInfo-License=GPL v2+
+X-KDE-PluginInfo-EnabledByDefault=true
+
+[Property::X-Plasma-RemoteLocation]
+Name=Proxmox Server
+Name[en_US]=Proxmox Server
+Comment=Remote server to monitor
+Comment[en_US]=Remote server to monitor
+Type=QString
+Default=192.168.122.9

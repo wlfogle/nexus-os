@@ -1,0 +1,13 @@
+[0;1;31m×[0m docker.service - Docker Application Container Engine
+     Loaded: loaded (]8;;file://lou-eon17x/usr/lib/systemd/system/docker.service\/usr/lib/systemd/system/docker.service]8;;\; [0;1;32menabled[0m; preset: [0;1;38:5:185mdisabled[0m)
+     Active: [0;1;31mfailed[0m (Result: exit-code) since Tue 2025-08-12 09:56:46 EDT; 1min 10s ago
+ Invocation: 844d50487f1a4172b771cfaac0271c3c
+TriggeredBy: [0;1;31m×[0m docker.socket
+       Docs: ]8;;https://docs.docker.com\https://docs.docker.com]8;;\
+    Process: 96995 ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock [0;1;31m(code=exited, status=1/FAILURE)[0m
+   Main PID: 96995 (code=exited, status=1/FAILURE)
+
+Aug 12 09:56:46 lou-eon17x systemd[1]: docker.service: Scheduled restart job, restart counter is at 3.
+Aug 12 09:56:46 lou-eon17x systemd[1]: [0;1;38:5:185m[0;1;39m[0;1;38:5:185mdocker.service: Start request repeated too quickly.[0m
+Aug 12 09:56:46 lou-eon17x systemd[1]: [0;1;38:5:185m[0;1;39m[0;1;38:5:185mdocker.service: Failed with result 'exit-code'.[0m
+Aug 12 09:56:46 lou-eon17x systemd[1]: [0;1;31m[0;1;39m[0;1;31mFailed to start Docker Application Container Engine.[0m

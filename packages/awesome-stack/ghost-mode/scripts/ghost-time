@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# 🕐 Time-Spoofed Application Launcher
+# Launches applications with spoofed timezone and time
+
+# Source time spoofing environment
+source "/home/lou/.config/ghost-mode/time-spoof.env"
+
+echo "🕐 Launching with spoofed time (TZ: $TZ)"
+
+# Add random time delay to mask launch timing
+sleep $(echo "scale=2; $RANDOM/32767*2" | bc)
+
+# Launch application with spoofed time environment
+exec "$@"

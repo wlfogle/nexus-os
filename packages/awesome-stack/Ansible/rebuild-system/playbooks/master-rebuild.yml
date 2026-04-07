@@ -1,0 +1,145 @@
+---
+- name: "🚀 Awesome Stack Complete Rebuild - Phase 1: Infrastructure"
+  hosts: proxmox_hosts
+  become: true
+  serial: 1
+  vars:
+    rebuild_phase: "infrastructure"
+  roles:
+    - role: proxmox_setup
+      tags: [infrastructure, proxmox]
+    - role: networking_setup
+      tags: [infrastructure, network]
+    - role: storage_setup
+      tags: [infrastructure, storage]
+
+- name: "🔧 Awesome Stack Complete Rebuild - Phase 2: Golden Image"
+  hosts: proxmox_hosts
+  become: true
+  serial: 1
+  vars:
+    rebuild_phase: "golden_image"
+  roles:
+    - role: golden_image_create
+      tags: [golden, template]
+
+- name: "📦 Awesome Stack Complete Rebuild - Phase 3: Core Services"
+  hosts: core_services
+  become: true
+  strategy: free
+  vars:
+    rebuild_phase: "core_services"
+  roles:
+    - role: lxc_container_deploy
+      tags: [containers, core]
+    - role: warp_agent_setup
+      tags: [warp, agents]
+    - role: docker_in_lxc
+      tags: [docker, containers]
+
+- name: "🎬 Awesome Stack Complete Rebuild - Phase 4: Media Services"
+  hosts: media_services
+  become: true
+  strategy: free
+  vars:
+    rebuild_phase: "media_services"
+  roles:
+    - role: lxc_container_deploy
+      tags: [containers, media]
+    - role: warp_agent_setup
+      tags: [warp, agents]
+    - role: media_stack_deploy
+      tags: [media, services]
+
+- name: "📊 Awesome Stack Complete Rebuild - Phase 5: Monitoring"
+  hosts: monitoring
+  become: true
+  strategy: free
+  vars:
+    rebuild_phase: "monitoring"
+  roles:
+    - role: lxc_container_deploy
+      tags: [containers, monitoring]
+    - role: warp_agent_setup
+      tags: [warp, agents]
+    - role: monitoring_stack
+      tags: [monitoring, prometheus, grafana]
+
+- name: "🏠 Awesome Stack Complete Rebuild - Phase 6: Virtual Machines"
+  hosts: virtual_machines
+  become: true
+  strategy: free
+  vars:
+    rebuild_phase: "virtual_machines"
+  roles:
+    - role: vm_deploy
+      tags: [vms, home_assistant]
+
+- name: "🔐 Awesome Stack Complete Rebuild - Phase 7: Security & Access"
+  hosts: all:!templates
+  become: true
+  strategy: free
+  vars:
+    rebuild_phase: "security"
+  roles:
+    - role: security_hardening
+      tags: [security, hardening]
+    - role: traefik_routes
+      tags: [traefik, routing]
+    - role: ssl_certificates
+      tags: [ssl, security]
+
+- name: "🎯 Awesome Stack Complete Rebuild - Phase 8: Validation & Health Checks"
+  hosts: all:!templates
+  become: true
+  strategy: free
+  vars:
+    rebuild_phase: "validation"
+  roles:
+    - role: health_monitoring
+      tags: [health, monitoring]
+    - role: service_validation
+      tags: [validation, testing]
+
+- name: "📋 Awesome Stack Complete Rebuild - Phase 9: Documentation & Backup"
+  hosts: proxmox_hosts
+  become: true
+  serial: 1
+  vars:
+    rebuild_phase: "finalization"
+  roles:
+    - role: documentation_generator
+      tags: [docs, reporting]
+    - role: backup_configuration
+      tags: [backup, snapshots]
+
+- name: "✅ Awesome Stack Rebuild Complete"
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Display completion summary
+      debug:
+        msg: |
+          🎉 Awesome Stack Rebuild Complete!
+          
+          📊 Infrastructure Status:
+          - Proxmox VM: ✅ Online
+          - LXC Containers: ✅ {{ groups['core_services']|length + groups['media_services']|length + groups['monitoring']|length }} deployed
+          - Virtual Machines: ✅ {{ groups['virtual_machines']|length }} deployed
+          - Warp Agents: ✅ Active on all containers
+          
+          🌐 Access Points:
+          - Traefik Dashboard: http://192.168.122.103:9080/
+          - Media Stack: http://192.168.122.103:8080/
+          - Grafana: http://192.168.122.240:3000/
+          - Home Assistant: http://192.168.122.230:8123/
+          
+          📁 Next Steps:
+          1. Run optimization playbook when ready: ansible-playbook playbooks/optimize-stack.yml
+          2. Configure personal content in Plex/Jellyfin
+          3. Set up automated backups
+          
+          🔧 Management Commands:
+          - Health Check: ansible-playbook playbooks/health-check.yml
+          - Update Services: ansible-playbook playbooks/update-services.yml
+          - Shrink & Optimize: ansible-playbook playbooks/shrink-optimize.yml

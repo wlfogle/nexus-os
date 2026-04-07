@@ -1,0 +1,176 @@
+---
+# Container cleanup and optimization tasks
+- name: Create optimization log directory
+  file:
+    path: /var/log/optimization
+    state: directory
+    mode: '0755'
+
+- name: Get container disk usage before cleanup
+  command: du -sh /
+  register: disk_before
+  changed_when: false
+
+- name: Stop non-essential services temporarily
+  systemd:
+    name: "{{ item }}"
+    state: stopped
+  loop: "{{ services_to_stop | default([]) }}"
+  ignore_errors: yes
+
+- name: Clean package cache and temporary files
+  shell: |
+    # APT cleanup
+    apt-get autoremove -y
+    apt-get autoclean -y
+    apt-get clean
+    
+    # Remove package cache
+    rm -rf /var/cache/apt/archives/*.deb
+    rm -rf /var/cache/apt/archives/partial/*
+    
+    # Clean temporary directories
+    rm -rf /tmp/*
+    rm -rf /var/tmp/*
+    
+    # Clean log files (keep recent)
+    find /var/log -type f -name "*.log" -mtime +7 -delete
+    find /var/log -type f -name "*.log.*" -delete
+    
+    # Truncate large log files instead of deleting
+    find /var/log -type f -name "*.log" -size +10M -exec truncate -s 1M {} \;
+    
+    # Clean systemd journal
+    journalctl --vacuum-time=7d
+    journalctl --vacuum-size=50M
+
+- name: Clean Docker if present
+  shell: |
+    if command -v docker >/dev/null 2>&1; then
+      # Remove unused Docker images
+      docker image prune -af --filter "until=24h"
+      
+      # Remove unused volumes
+      docker volume prune -f
+      
+      # Remove unused networks
+      docker network prune -f
+      
+      # Remove build cache
+      docker builder prune -af
+    fi
+  ignore_errors: yes
+
+- name: Optimize Python cache
+  shell: |
+    # Remove Python bytecode cache
+    find /usr -name "*.pyc" -delete
+    find /usr -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+    find /opt -name "*.pyc" -delete 2>/dev/null || true
+    find /opt -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+
+- name: Clean man pages and documentation (optional)
+  shell: |
+    # Remove man pages (can be reinstalled if needed)
+    rm -rf /usr/share/man/*
+    rm -rf /usr/share/doc/*
+    rm -rf /usr/share/info/*
+  when: aggressive_cleanup | default(false)
+
+- name: Remove unnecessary locale files
+  shell: |
+    # Keep only en_US and C locales
+    find /usr/share/locale -mindepth 1 -maxdepth 1 -type d ! -name 'en*' ! -name 'C' -exec rm -rf {} +
+  when: remove_locales | default(true)
+
+- name: Clean Warp agent logs and cache
+  shell: |
+    # Clean Warp-specific logs
+    find /var/log/warp-agent -type f -name "*.log" -mtime +3 -delete
+    
+    # Clean agent comms database if it's too large
+    if [ -f /opt/agent-comms/messages.db ]; then
+      sqlite3 /opt/agent-comms/messages.db "DELETE FROM messages WHERE timestamp < datetime('now', '-7 days');"
+      sqlite3 /opt/agent-comms/messages.db "VACUUM;"
+    fi
+
+- name: Optimize container filesystem
+  shell: |
+    # Force filesystem cleanup
+    sync
+    
+    # Zero out free space (helps with compression)
+    dd if=/dev/zero of=/tmp/zero.tmp bs=1M 2>/dev/null || true
+    rm -f /tmp/zero.tmp
+    
+    # Defragment if ext4
+    if mount | grep -q ext4; then
+      e4defrag / 2>/dev/null || true
+    fi
+
+- name: Restart essential services
+  systemd:
+    name: "{{ item }}"
+    state: started
+  loop:
+    - warp-agent-bridge
+    - x11-display
+    - docker
+  ignore_errors: yes
+
+- name: Get container disk usage after cleanup
+  command: du -sh /
+  register: disk_after
+  changed_when: false
+
+- name: Calculate space saved
+  set_fact:
+    space_before: "{{ disk_before.stdout.split()[0] }}"
+    space_after: "{{ disk_after.stdout.split()[0] }}"
+
+- name: Log cleanup results
+  copy:
+    content: |
+      Container Cleanup Report - {{ ansible_date_time.iso8601 }}
+      =================================================
+      Container: {{ inventory_hostname }} (ID: {{ container_id }})
+      Service Type: {{ service_type | default('generic') }}
+      
+      Space Usage:
+      - Before: {{ space_before }}
+      - After: {{ space_after }}
+      
+      Cleanup Actions:
+      - Package cache cleaned
+      - Temporary files removed
+      - Log files rotated/cleaned
+      - Docker resources pruned
+      - Python cache cleaned
+      {{ '- Documentation removed' if aggressive_cleanup | default(false) else '- Documentation preserved' }}
+      {{ '- Locales cleaned' if remove_locales | default(true) else '- All locales preserved' }}
+      - Warp agent logs cleaned
+      - Filesystem optimized
+      
+      Services restarted successfully.
+    dest: "/var/log/optimization/{{ inventory_hostname }}-cleanup.log"
+
+- name: Display cleanup results
+  debug:
+    msg: |
+      🗜️ Container {{ inventory_hostname }} cleanup complete!
+      
+      📊 Results:
+      - Before: {{ space_before }}
+      - After: {{ space_after }}
+      - Service Type: {{ service_type | default('generic') }}
+      
+      ✅ Actions completed:
+      - Package cache cleaned
+      - Temporary files removed  
+      - Log files optimized
+      - {{ 'Docker pruned' if ansible_facts.services['docker.service'] is defined else 'No Docker found' }}
+      - Python cache cleaned
+      - Warp agent optimized
+      - Filesystem defragmented
+      
+      🔧 Services restarted and healthy

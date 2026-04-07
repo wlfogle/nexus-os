@@ -1,0 +1,12 @@
+---
+- name: Deploy Gluetun container
+  community.docker.docker_container:
+    name: gluetun
+    image: qmcgaw/gluetun
+    env:
+      - VPN_SERVICE_PROVIDER=custom
+      # Set other environment variables as needed
+    state: started
+    restart_policy: unless-stopped
+
+# TODO: Ensure keyctl, static IP, and correct volume mounts

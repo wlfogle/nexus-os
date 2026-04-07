@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Bethesda Launcher installer for PortProton
+export PW_AUTOINSTALL_EXE="BethesdaNetLauncher_Setup.exe"
+export PW_PREFIX_NAME="BETHESDA_LAUNCHER"
+export PW_VULKAN_USE="1"
+PW_WINE_USE="PROTON_LG" try_download_installer \
+"https://bethesda.net/en/game/bethesda-launcher" \
+"$PW_AUTOINSTALL_EXE" \
+"bethesda_launcher_installer"

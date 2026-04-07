@@ -1,0 +1,12 @@
+---
+- name: Deploy and configure the full stack
+  hosts: all
+  become: yes
+  roles:
+    - { role: openwrt_router, when: "'openwrt_router' in group_names" }
+    - { role: crowdsec, when: "'crowdsec' in group_names" }
+    - { role: tailscale, when: "'tailscale' in group_names" }
+    - { role: wireguard, when: "'wireguard' in group_names" }
+    - { role: gluetun, when: "'gluetun' in group_names" }
+    - { role: valkey, when: "'valkey' in group_names" }
+    - { role: alexa_bridge, when: "'alexa_bridge' in group_names" }

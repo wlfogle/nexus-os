@@ -1,0 +1,13 @@
+---
+- name: Install WireGuard
+  ansible.builtin.apt:
+    name: wireguard
+    state: present
+
+- name: Ensure WireGuard is running
+  ansible.builtin.systemd:
+    name: wg-quick@wg0
+    state: started
+    enabled: yes
+
+# TODO: Add WireGuard peer config from secrets

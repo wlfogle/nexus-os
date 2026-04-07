@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Brain / AI icon -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM12,4c1.1,0 2,0.9 2,2h-1.5c0,-0.28 -0.22,-0.5 -0.5,-0.5s-0.5,0.22 -0.5,0.5H10c0,-1.1 0.9,-2 2,-2zM8,8h2v1H8V8zM14,8h2v1h-2V8zM7,11h4v1H7V11zM13,11h4v1h-4V11zM9,14h6v1H9V14zM8,17h8v1H8V17z" />
+</vector>

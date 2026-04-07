@@ -1,0 +1,11 @@
+[Unit]
+Description=CPU Performance Optimization for AI/ML Workloads
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/cpu-optimize.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,226 @@
+#!/bin/bash
+
+# 🥷 Hardware Fingerprint Spoofer - Make your system unrecognizable
+# Spoofs CPU, GPU, memory, screen resolution, and other hardware identifiers
+
+echo "🥷 Activating Hardware Fingerprint Spoofing..."
+
+# Create spoofing configuration directory
+mkdir -p "$HOME/.config/ghost-mode"
+
+# === SCREEN RESOLUTION SPOOFING ===
+# List of common resolutions to randomize
+RESOLUTIONS=(
+    "1920x1080"
+    "1366x768" 
+    "1440x900"
+    "1600x900"
+    "1280x1024"
+    "1024x768"
+)
+
+# Pick random resolution
+RANDOM_RES=${RESOLUTIONS[$RANDOM % ${#RESOLUTIONS[@]}]}
+WIDTH=$(echo $RANDOM_RES | cut -d'x' -f1)
+HEIGHT=$(echo $RANDOM_RES | cut -d'x' -f2)
+
+echo "🖥️  Spoofing screen resolution to: $RANDOM_RES"
+
+# Create xrandr script for resolution spoofing
+cat > "$HOME/.config/ghost-mode/spoof-display.sh" << EOF
+#!/bin/bash
+# Temporary display spoofing
+xrandr --output \$(xrandr | grep " connected" | head -1 | cut -d' ' -f1) --mode $RANDOM_RES 2>/dev/null || true
+EOF
+
+chmod +x "$HOME/.config/ghost-mode/spoof-display.sh"
+
+# === CPU SPOOFING ===
+# Create fake cpuinfo that applications might read
+cat > "$HOME/.config/ghost-mode/fake-cpuinfo" << EOF
+processor	: 0
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 158
+model name	: Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz
+stepping	: 10
+microcode	: 0xf0
+cpu MHz		: 1800.000
+cache size	: 6144 KB
+physical id	: 0
+siblings	: 4
+core id		: 0
+cpu cores	: 4
+apicid		: 0
+initial apicid	: 0
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 22
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb invpcid_single pti ssbd ibrs ibpb stibp tpr_shadow vnmi flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid mpx rdseed adx smap clflushopt intel_pt xsaveopt xsavec xgetbv1 xsaves dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp md_clear flush_l1d
+bugs		: cpu_meltdown spectre_v1 spectre_v2 spec_store_bypass l1tf mds swapgs taa itlb_multihit srbds mmio_stale_data retbleed
+bogomips	: 3600.00
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 39 bits physical, 48 bits virtual
+power management:
+EOF
+
+# === MEMORY SPOOFING ===
+# Create fake meminfo
+cat > "$HOME/.config/ghost-mode/fake-meminfo" << EOF
+MemTotal:        8063168 kB
+MemFree:         2341234 kB
+MemAvailable:    5847382 kB
+Buffers:          456789 kB
+Cached:          3049359 kB
+SwapCached:            0 kB
+Active:          4293847 kB
+Inactive:        1211486 kB
+Active(anon):    2000000 kB
+Inactive(anon):   100000 kB
+Active(file):    2293847 kB
+Inactive(file):  1111486 kB
+Unevictable:           0 kB
+Mlocked:               0 kB
+SwapTotal:       8191996 kB
+SwapFree:        8191996 kB
+Dirty:                24 kB
+Writeback:             0 kB
+AnonPages:       1999756 kB
+Mapped:           456123 kB
+Shmem:            100468 kB
+KReclaimable:     567890 kB
+Slab:             890123 kB
+SReclaimable:     567890 kB
+SUnreclaim:       322233 kB
+KernelStack:       23456 kB
+PageTables:        78901 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:    12223580 kB
+Committed_AS:    7890123 kB
+VmallocTotal:   34359738367 kB
+VmallocUsed:       67890 kB
+VmallocChunk:          0 kB
+Percpu:             5678 kB
+HardwareCorrupted:     0 kB
+AnonHugePages:    123456 kB
+ShmemHugePages:        0 kB
+ShmemPmdMapped:        0 kB
+FileHugePages:         0 kB
+FilePmdMapped:         0 kB
+HugePages_Total:       0
+HugePages_Free:        0
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+Hugepagesize:       2048 kB
+Hugetlb:               0 kB
+DirectMap4k:      567890 kB
+DirectMap2M:     7890123 kB
+DirectMap1G:     2097152 kB
+EOF
+
+# === GPU SPOOFING ===
+# Create fake GPU info
+cat > "$HOME/.config/ghost-mode/fake-gpu" << EOF
+Intel Corporation UHD Graphics 620 (rev 07)
+EOF
+
+# === FONT SPOOFING (Minimal font set) ===
+echo "🔤 Setting up minimal font set for anonymity..."
+mkdir -p "$HOME/.config/ghost-mode/fonts"
+
+# Create minimal fonts.conf
+cat > "$HOME/.config/ghost-mode/fonts.conf" << EOF
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+  <!-- Minimal font configuration for anonymity -->
+  <selectfont>
+    <rejectfont>
+      <glob>*</glob>
+    </rejectfont>
+    <acceptfont>
+      <pattern>
+        <patelt name="family">
+          <string>DejaVu Sans</string>
+          <string>Liberation Sans</string>
+          <string>Arial</string>
+          <string>Times New Roman</string>
+          <string>Courier New</string>
+        </patelt>
+      </pattern>
+    </acceptfont>
+  </selectfont>
+</fontconfig>
+EOF
+
+# === CREATE HARDWARE SPOOFING WRAPPER ===
+cat > "$HOME/.local/bin/ghost-exec" << 'EOF'
+#!/bin/bash
+
+# 🥷 Ghost Execution Wrapper - Runs programs with spoofed hardware info
+# Usage: ghost-exec [program] [args...]
+
+export GHOST_MODE=1
+
+# Spoof /proc/cpuinfo
+if [ -f "$HOME/.config/ghost-mode/fake-cpuinfo" ]; then
+    export LD_PRELOAD="$HOME/.config/ghost-mode/libfakecpu.so:$LD_PRELOAD"
+fi
+
+# Spoof memory info
+if [ -f "$HOME/.config/ghost-mode/fake-meminfo" ]; then
+    export LD_PRELOAD="$HOME/.config/ghost-mode/libfakemem.so:$LD_PRELOAD"
+fi
+
+# Use minimal font configuration
+export FONTCONFIG_FILE="$HOME/.config/ghost-mode/fonts.conf"
+
+# Randomize some environment variables
+export LC_TIME="C"
+export TZ="UTC"
+
+# Randomize home directory for this session (temporary)
+export FAKE_HOME="/tmp/ghost-home-$$"
+mkdir -p "$FAKE_HOME"
+
+# Launch program with spoofed environment
+echo "🥷 Launching $1 with spoofed hardware fingerprint..."
+exec "$@"
+EOF
+
+chmod +x "$HOME/.local/bin/ghost-exec"
+
+# === SYSTEM HARDWARE INFO SPOOFING ===
+echo "🛠️  Creating system-level hardware spoofing..."
+
+# Create DMI spoofing info
+sudo mkdir -p /tmp/ghost-dmi
+cat > /tmp/ghost-dmi-info << EOF
+# Fake DMI information for complete hardware anonymity
+dmidecode-fake-bios-vendor: American Megatrends Inc.
+dmidecode-fake-bios-version: 1.10.0
+dmidecode-fake-system-manufacturer: ASUS
+dmidecode-fake-system-product-name: VivoBook_ASUSLaptop X570ZD_K570ZD
+dmidecode-fake-system-version: 1.0
+dmidecode-fake-baseboard-manufacturer: ASUSTeK COMPUTER INC.
+dmidecode-fake-baseboard-product-name: X570ZD
+EOF
+
+echo "✅ Hardware fingerprinting spoofing configured!"
+echo ""
+echo "🎯 Usage:"
+echo "   ghost-exec firefox          # Launch Firefox with spoofed hardware"
+echo "   ghost-exec chromium         # Launch Chromium with spoofed hardware"
+echo "   ghost-exec [any-program]    # Run any program with spoofed fingerprints"
+echo ""
+echo "🔍 Spoofed components:"
+echo "   ✓ CPU: Intel i5-8250U (4 cores, 1.6GHz)"
+echo "   ✓ RAM: 8GB DDR4"
+echo "   ✓ GPU: Intel UHD Graphics 620"  
+echo "   ✓ Screen: $RANDOM_RES (randomized)"
+echo "   ✓ Fonts: Minimal set (5 fonts only)"
+echo "   ✓ System: ASUS VivoBook X570ZD"

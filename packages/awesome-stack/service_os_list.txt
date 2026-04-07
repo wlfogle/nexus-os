@@ -1,0 +1,80 @@
+# Media Stack Services and Recommended OS
+
+## Core Infrastructure:
+1. **Postgres** - Linux (Alpine recommended for lightweight containers)
+2. **Valkey** - Linux (Alpine)
+3. **Gluetun** - Linux (Alpine)
+4. **Traefik** - Linux (Alpine)
+5. **Authentik Server & Worker** - Linux (Debian/Ubuntu)
+
+## Essential Media Services:
+6. **Prowlarr** - Linux (Ubuntu/Debian)
+7. **Jackett** - Linux (Ubuntu/Debian)
+8. **Flaresolverr** - Linux (Debian)
+9. **qBittorrent & Deluge** - Linux (Ubuntu for GUI, Alpine for server)
+10. **Sonarr, Radarr, Lidarr, Readarr, Mylar3, Whisparr** - Linux (Ubuntu/Debian)
+
+## Media Servers:
+11. **Jellyfin, Plex, Emby** - Linux (Ubuntu for wide support)
+12. **Audiobookshelf, Calibre-Web** - Linux (Debian)
+13. **IPTV-Proxy, Tvheadend** - Linux (Ubuntu/Debian)
+
+## Enhancement Services:
+14. **Bazarr, Overseerr, Jellyseerr, Ombi** - Linux (Debian)
+15. **Tautulli, Kometa, Gaps** - Linux (Debian/Ubuntu)
+
+## Monitoring & Analytics:
+16. **Prometheus, Grafana** - Linux (Alpine)
+17. **Exportarr, Checkrr** - Linux (Debian/Ubuntu)
+
+## Management & Utilities:
+18. **Portainer, Filebot** - Linux (Alpine for Docker management)
+19. **Flexget, Buildarr** - Linux (Debian)
+20. **Vaultwarden** - Linux (Debian)
+
+## Security & Access:
+21. **Crowdsec, Tailscale** - Linux (Debian)
+
+## Dashboards & Maintenance:
+22. **Organizr, Homarr, Homepage** - Linux (Ubuntu)
+23. **Watchtower, Recyclarr, Unpackerr** - Linux (Alpine)
+Media Servers (Containers 230-239)
+1. Container 230: Plex - Ubuntu Server
+2. Container 231: Jellyfin - Ubuntu Server
+3. Container 232: Audiobookshelf - Ubuntu Server
+4. Container 233: Calibre-web - Ubuntu Server
+5. Container 234: IPTV-Proxy - Alpine Linux
+6. Container 235: TVHeadend - Debian
+7. Container 236: Tdarr Server - Ubuntu Server
+8. Container 237: Tdarr Node - Ubuntu Server
+
+Enhancement Services (Containers 240-249)
+1. Container 240: Bazarr - Debian
+2. Container 241: Overseerr - Ubuntu Server
+3. Container 242: Jellyseerr - Ubuntu Server
+4. Container 243: Ombi - Ubuntu Server
+5. Container 244: Tautulli - Ubuntu Server
+6. Container 245: Kometa - Debian
+7. Container 246: Gaps - Debian
+8. Container 247: Janitorr - Ubuntu Server
+9. Container 248: Decluttarr - Debian
+10. Container 249: Watchlistarr - Debian
+11. Container 250: Traktarr - Debian
+
+Monitoring & Analytics (Containers 260-269)
+1. Container 260: Prometheus - Ubuntu Server
+2. Container 261: Grafana - Debian
+3. Container 262: Checkrr - Debian
+
+Management & Utilities (Containers 270-279)
+1. Container 270: FileBot - Debian
+2. Container 271: FlexGet - Debian
+3. Container 272: Buildarr - Debian
+4. Container 274: Organizr - Ubuntu Server
+5. Container 275: Homarr - Ubuntu Server
+6. Container 276: Homepage - Ubuntu Server
+7. Container 277: Recyclarr - Debian
+8. Container 278: CrowdSec - Debian
+9. Container 279: Tailscale - Debian
+
+

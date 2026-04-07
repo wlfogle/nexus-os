@@ -1,0 +1,454 @@
+{
+  "system_info": {
+    "user": "lou",
+    "home_directory": "/home/lou",
+    "os": "Garuda Linux",
+    "shell": "fish",
+    "mediastack_controller_path": "/home/lou/mediastack-new"
+  },
+  "storage_configuration": {
+    "drives": {
+      "sda1": {
+        "device": "/dev/sda1",
+        "mount_point": "/mnt/sda1",
+        "purpose": "main media storage and configs",
+        "usage": "long-term storage, media files, configuration files"
+      },
+      "sdb1": {
+        "device": "/dev/sdb1",
+        "mount_point": "/mnt/sdb1", 
+        "purpose": "transient files",
+        "usage": "downloads, temporary files, processing"
+      }
+    },
+    "key_paths": {
+      "media_storage": "/mnt/sda1/media/",
+      "config_storage": "/mnt/sda1/config/",
+      "downloads": "/mnt/sdb1/downloads/",
+      "temp_processing": "/mnt/sdb1/temp/"
+    }
+  },
+  "docker_configuration": {
+    "compose_file": "/home/lou/mediastack-new/docker-compose.yml",
+    "container_prefix": "mediastack_",
+    "network": "mediastack_default"
+  },
+  "services": {
+    "priority_arr_enhancements": {
+      "autobrr": {
+        "container_name": "mediastack_autobrr",
+        "port": "7474",
+        "config_path": "/mnt/sda1/config/autobrr",
+        "purpose": "Real-time IRC/RSS torrent automation",
+        "features": "Instant notifications, advanced filtering, race conditions"
+      },
+      "kometa": {
+        "container_name": "mediastack_kometa",
+        "config_path": "/mnt/sda1/config/kometa",
+        "purpose": "Plex Meta Manager - Collection management",
+        "features": "Dynamic collections, automated posters, metadata updates"
+      },
+      "janitorr": {
+        "container_name": "mediastack_janitorr",
+        "port": "8070",
+        "config_path": "/mnt/sda1/config/janitorr",
+        "purpose": "Automated cleanup and management",
+        "features": "Failed download cleanup, orphaned files, storage optimization"
+      },
+      "traktarr": {
+        "container_name": "mediastack_traktarr",
+        "config_path": "/mnt/sda1/config/traktarr",
+        "purpose": "Trakt.tv integration for content discovery",
+        "features": "Automated content addition, trending monitoring, watchlist sync"
+      },
+      "buildarr": {
+        "container_name": "mediastack_buildarr",
+        "config_path": "/mnt/sda1/config/buildarr",
+        "purpose": "Configuration management for *arr services",
+        "features": "Declarative config, version control, automated provisioning"
+      },
+      "gaps": {
+        "container_name": "mediastack_gaps",
+        "port": "8484",
+        "config_path": "/mnt/sda1/config/gaps",
+        "purpose": "Plex collection gap detection",
+        "features": "Missing movie detection, collection analysis, automated recommendations"
+      },
+      "decluttarr": {
+        "container_name": "mediastack_decluttarr",
+        "config_path": "/mnt/sda1/config/decluttarr",
+        "purpose": "Smart media management",
+        "features": "Duplicate detection, quality analysis, intelligent cleanup"
+      },
+      "exportarr": {
+        "container_name": "mediastack_exportarr",
+        "port": "9707",
+        "config_path": "/mnt/sda1/config/exportarr",
+        "purpose": "Metrics export for monitoring",
+        "features": "Prometheus integration, performance monitoring, usage analytics"
+      },
+      "checkrr": {
+        "container_name": "mediastack_checkrr",
+        "port": "8666",
+        "config_path": "/mnt/sda1/config/checkrr",
+        "purpose": "Health monitoring for *arr services",
+        "features": "Service health checks, automated repairs, performance monitoring"
+      },
+      "organizr": {
+        "container_name": "mediastack_organizr",
+        "port": "8087",
+        "config_path": "/mnt/sda1/config/organizr",
+        "purpose": "Ultimate dashboard replacement",
+        "features": "Unified interface, user management, service integration"
+      },
+      "watchlistarr": {
+        "container_name": "mediastack_watchlistarr",
+        "config_path": "/mnt/sda1/config/watchlistarr",
+        "purpose": "Advanced list management",
+        "features": "Multiple service integration, automated syncing, custom filtering"
+      },
+      "autoscan": {
+        "container_name": "mediastack_autoscan",
+        "port": "3030",
+        "config_path": "/mnt/sda1/config/autoscan",
+        "purpose": "Real-time library updates",
+        "features": "Instant scanning, efficient processing, reduced load"
+      },
+      "flexget": {
+        "container_name": "mediastack_flexget",
+        "port": "5050",
+        "config_path": "/mnt/sda1/config/flexget",
+        "purpose": "Advanced automation framework",
+        "features": "Complex filtering, RSS management, advanced scheduling"
+      },
+      "ombi": {
+        "container_name": "mediastack_ombi",
+        "port": "5000",
+        "config_path": "/mnt/sda1/config/ombi",
+        "purpose": "User request management system",
+        "features": "Multi-server support, approval workflows, user quotas"
+      }
+    },
+    "enhanced_arr_services": {
+      "radarr_extended": {
+        "container_name": "mediastack_radarr_extended",
+        "port": "7879",
+        "config_path": "/mnt/sda1/config/radarr-extended",
+        "media_path": "/mnt/sda1/media/movies",
+        "purpose": "RandomNinjaAtk enhanced movie manager",
+        "features": "Automated subtitles, quality upgrading, metadata enhancement"
+      },
+      "sonarr_extended": {
+        "container_name": "mediastack_sonarr_extended",
+        "port": "8990",
+        "config_path": "/mnt/sda1/config/sonarr-extended",
+        "media_path": "/mnt/sda1/media/tv",
+        "purpose": "RandomNinjaAtk enhanced TV manager",
+        "features": "Enhanced series processing, automated upgrades, advanced metadata"
+      },
+      "lidarr_extended": {
+        "container_name": "mediastack_lidarr_extended",
+        "port": "8687",
+        "config_path": "/mnt/sda1/config/lidarr-extended",
+        "media_path": "/mnt/sda1/media/music",
+        "purpose": "RandomNinjaAtk enhanced music manager",
+        "features": "Lossless audio processing, advanced metadata, quality upgrades"
+      }
+    },
+    "ai_services": {
+      "ai_torrent_predictor": {
+        "container_name": "mediastack_ai_torrent_predictor",
+        "port": "8777",
+        "config_path": "/mnt/sda1/config/ai-torrent-predictor",
+        "purpose": "AI-powered torrent quality prediction",
+        "features": "Machine learning quality analysis, automated model retraining"
+      },
+      "ai_recommendation_engine": {
+        "container_name": "mediastack_ai_recommendation_engine",
+        "port": "8778",
+        "config_path": "/mnt/sda1/config/ai-recommendation-engine",
+        "purpose": "AI-powered content recommendations",
+        "features": "User preference learning, content similarity analysis, A/B testing"
+      },
+      "ai_storage_optimizer": {
+        "container_name": "mediastack_ai_storage_optimizer",
+        "port": "8779",
+        "config_path": "/mnt/sda1/config/ai-storage-optimizer",
+        "purpose": "AI-powered storage management",
+        "features": "Predictive cleanup, duplicate detection, storage trend analysis"
+      }
+    },
+    "download_clients": {
+      "deluge": {
+        "container_name": "mediastack_deluge",
+        "port": "8112",
+        "config_path": "/mnt/sda1/config/deluge",
+        "download_path": "/mnt/sdb1/downloads",
+        "completed_path": "/mnt/sda1/media/",
+        "recommended_settings": {
+          "download_location": "/mnt/sdb1/downloads",
+          "move_completed_to": "/mnt/sda1/media/",
+          "copy_torrents_to": "/mnt/sda1/config/torrents",
+          "prioritize_first_last": true,
+          "sequential_download": true,
+          "pre_allocate_disk": true
+        }
+      },
+      "qbittorrent": {
+        "container_name": "mediastack_qbittorrent",
+        "port": "8080"
+      },
+      "transmission": {
+        "container_name": "mediastack_transmission",
+        "port": "9091"
+      }
+    },
+    "media_management": {
+      "sonarr": {
+        "container_name": "mediastack_sonarr",
+        "port": "8989",
+        "config_path": "/mnt/sda1/config/sonarr",
+        "media_path": "/mnt/sda1/media/tv"
+      },
+      "radarr": {
+        "container_name": "mediastack_radarr", 
+        "port": "7878",
+        "config_path": "/mnt/sda1/config/radarr",
+        "media_path": "/mnt/sda1/media/movies"
+      },
+      "lidarr": {
+        "container_name": "mediastack_lidarr",
+        "port": "8686",
+        "config_path": "/mnt/sda1/config/lidarr",
+        "media_path": "/mnt/sda1/media/music"
+      },
+      "readarr": {
+        "container_name": "mediastack_readarr",
+        "port": "8787",
+        "config_path": "/mnt/sda1/config/readarr",
+        "media_path": "/mnt/sda1/media/books"
+      },
+      "whisparr": {
+        "container_name": "mediastack_whisparr",
+        "port": "6969",
+        "config_path": "/mnt/sda1/config/whisparr",
+        "media_path": "/mnt/sda1/media/adult"
+      },
+      "bazarr": {
+        "container_name": "mediastack_bazarr",
+        "port": "6767",
+        "config_path": "/mnt/sda1/config/bazarr"
+      }
+    },
+    "indexers": {
+      "prowlarr": {
+        "container_name": "mediastack_prowlarr",
+        "port": "9696",
+        "config_path": "/mnt/sda1/config/prowlarr"
+      },
+      "jackett": {
+        "container_name": "mediastack_jackett",
+        "port": "9117",
+        "config_path": "/mnt/sda1/config/jackett"
+      }
+    },
+    "media_servers": {
+      "jellyfin": {
+        "container_name": "mediastack_jellyfin",
+        "port": "8096",
+        "config_path": "/mnt/sda1/config/jellyfin",
+        "media_path": "/mnt/sda1/media"
+      },
+      "plex": {
+        "container_name": "mediastack_plex",
+        "port": "32400",
+        "config_path": "/mnt/sda1/config/plex",
+        "media_path": "/mnt/sda1/media"
+      },
+      "emby": {
+        "container_name": "mediastack_emby",
+        "port": "8096",
+        "config_path": "/mnt/sda1/config/emby",
+        "media_path": "/mnt/sda1/media"
+      }
+    },
+    "utilities": {
+      "recyclarr": {
+        "container_name": "mediastack_recyclarr",
+        "config_path": "/mnt/sda1/config/recyclarr"
+      },
+      "unpackerr": {
+        "container_name": "mediastack_unpackerr",
+        "config_path": "/mnt/sda1/config/unpackerr"
+      },
+      "filebot": {
+        "container_name": "mediastack_filebot",
+        "config_path": "/mnt/sda1/config/filebot"
+      },
+      "tautulli": {
+        "container_name": "mediastack_tautulli",
+        "port": "8181",
+        "config_path": "/mnt/sda1/config/tautulli",
+        "status": "problematic",
+        "notes": "Often has database issues"
+      }
+    },
+    "monitoring": {
+      "overseerr": {
+        "container_name": "mediastack_overseerr",
+        "port": "5055",
+        "config_path": "/mnt/sda1/config/overseerr"
+      },
+      "organizr": {
+        "container_name": "mediastack_organizr",
+        "port": "80",
+        "config_path": "/mnt/sda1/config/organizr"
+      },
+      "heimdall": {
+        "container_name": "mediastack_heimdall",
+        "port": "8080",
+        "config_path": "/mnt/sda1/config/heimdall"
+      }
+    },
+    "networking": {
+      "wireguard": {
+        "container_name": "mediastack_wireguard",
+        "port": "51820",
+        "config_path": "/mnt/sda1/config/wireguard"
+      },
+      "gluetun": {
+        "container_name": "mediastack_gluetun",
+        "config_path": "/mnt/sda1/config/gluetun"
+      }
+    },
+    "books_audiobooks": {
+      "calibre-web": {
+        "container_name": "mediastack_calibre_web",
+        "port": "8084",
+        "config_path": "/mnt/sda1/config/calibre-web",
+        "media_path": "/mnt/sda1/media/books",
+        "purpose": "Web-based reading interface",
+        "features": "Read books, search library, user management",
+        "database": "Uses existing Calibre database"
+      },
+      "calibre-server": {
+        "container_name": "mediastack_calibre_server",
+        "port": "8085",
+        "config_path": "/mnt/sda1/config/calibre-server",
+        "media_path": "/mnt/sda1/media/books",
+        "purpose": "Full Calibre GUI for library management",
+        "features": "Add books, edit metadata, manage series, convert formats",
+        "login": "admin/calibre_admin_2024!",
+        "interface": "Web-based GUI via noVNC"
+      },
+      "audiobookshelf": {
+        "container_name": "mediastack_audiobookshelf",
+        "port": "13378",
+        "config_path": "/mnt/sda1/config/audiobookshelf",
+        "media_path": "/mnt/sda1/media/audiobooks"
+      }
+    },
+    "specialty": {
+      "pseudotv": {
+        "container_name": "mediastack_pseudotv",
+        "port": "8000",
+        "config_path": "/mnt/sda1/config/pseudotv"
+      },
+      "gaps": {
+        "container_name": "mediastack_gaps",
+        "port": "8484",
+        "config_path": "/mnt/sda1/config/gaps"
+      },
+      "elsewherr": {
+        "container_name": "mediastack_elsewherr",
+        "config_path": "/mnt/sda1/config/elsewherr"
+      },
+      "recommendarr": {
+        "container_name": "mediastack_recommendarr",
+        "config_path": "/mnt/sda1/config/recommendarr",
+        "status": "problematic",
+        "notes": "Frequently crashes or fails to start"
+      }
+    }
+  },
+  "common_commands": {
+    "docker_compose": {
+      "start_all": "docker-compose -f /home/lou/mediastack-new/docker-compose.yml up -d",
+      "stop_all": "docker-compose -f /home/lou/mediastack-new/docker-compose.yml down",
+      "restart_service": "docker-compose -f /home/lou/mediastack-new/docker-compose.yml restart {service_name}",
+      "logs": "docker-compose -f /home/lou/mediastack-new/docker-compose.yml logs -f {service_name}",
+      "exec_into": "docker exec -it mediastack_{service_name} /bin/bash"
+    },
+    "docker_direct": {
+      "list_containers": "docker ps -a --filter name=mediastack_",
+      "restart_container": "docker restart mediastack_{service_name}",
+      "logs_container": "docker logs -f mediastack_{service_name}",
+      "exec_container": "docker exec -it mediastack_{service_name} /bin/bash"
+    }
+  },
+  "troubleshooting": {
+    "common_issues": {
+      "permission_errors": "Check ownership: sudo chown -R 1000:1000 /mnt/sda1/config/{service}",
+      "mount_issues": "Verify mounts: df -h | grep -E '(sda1|sdb1)'",
+      "network_issues": "Check docker network: docker network ls",
+      "storage_full": "Check space: df -h /mnt/sda1 /mnt/sdb1",
+      "calibre_database_not_writable": "Fix permissions: sudo chown -R 1000:1000 '/path/to/calibre/library/metadata.db*'"
+    },
+    "problematic_services": {
+      "tautulli": "Database corruption issues, try rebuilding database",
+      "recommendarr": "Unstable service, consider alternative or manual management"
+    },
+    "port_conflicts": {
+      "description": "Fixed port conflicts between services",
+      "calibre-web": "Changed from 8083 to 8084 to avoid conflicts",
+      "calibre-server": "Uses 8085 to avoid Traefik dashboard conflict on 8080",
+      "traefik": "Uses 8080 for dashboard"
+    }
+  },
+  "default_credentials": {
+    "deluge": "admin/deluge",
+    "transmission": "admin/admin",
+    "organizr": "admin/admin",
+    "calibre-server": "admin/calibre_admin_2024!"
+  },
+  "api_keys": {
+    "audiobookshelf": {
+      "url": "http://192.168.12.204:13378",
+      "api_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlJZCI6IjJlOTcyZWE2LTY0MDYtNGMzYS1hZjgyLWVhNWE5MDdhNzM0ZSIsIm5hbWUiOiJSZWFkYXJyIEludGVncmF0aW9uIiwidHlwZSI6ImFwaSIsImlhdCI6MTc1MjY5MzEzM30.34j9Yr2yuRxwQLuOY7LD_HMcw5TuY8TOCC2hQZaViX0",
+      "library": "Lou's Library",
+      "books_count": "1400+"
+    }
+  },
+  "files_created": {
+    "dashboard": "/home/lou/MediaStack-Apps.html",
+    "reference": "/home/lou/mediastack-reference.json",
+    "compose_file": "/home/lou/mediastack-new/docker-compose.yml"
+  },
+  "system_stats": {
+    "total_services": 85,
+    "categories": {
+      "priority_arr_enhancements": 14,
+      "enhanced_arr_services": 3,
+      "ai_services": 3,
+      "download_clients": 3,
+      "media_management": 6,
+      "indexers": 2,
+      "media_servers": 3,
+      "utilities": 5,
+      "monitoring": 4,
+      "networking": 2,
+      "books_audiobooks": 3,
+      "specialty": 4,
+      "live_tv_streaming": 8,
+      "core_infrastructure": 15,
+      "security": 3,
+      "request_management": 4,
+      "dashboards": 4,
+      "remote_access": 3
+    },
+    "enhancement_level": "Ultimate Arr Media Stack",
+    "ai_powered": true,
+    "automation_level": "Advanced",
+    "monitoring_coverage": "Comprehensive"
+  }
+}

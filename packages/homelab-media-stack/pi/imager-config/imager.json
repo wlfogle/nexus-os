@@ -1,0 +1,17 @@
+{
+  "telemetry": false,
+  "customization": {
+    "hostname": "ziggy",
+    "sshEnabled": true,
+    "sshKeyEnabled": true,
+    "authorizedKeys": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF9Xpe5VzjPO6i6DfAZuJP/qCrBcEYwvm23DLAJgTUPS loufogle@pop-os",
+    "username": "pi",
+    "password": "",
+    "wifiSSID": "stella",
+    "wifiPassword": "YOUR_STELLA_WIFI_PASSWORD",
+    "wifiCountry": "US",
+    "timezone": "America/New_York",
+    "keyboardLayout": "us",
+    "skipFirstRunWizard": true
+  }
+}

@@ -95,8 +95,17 @@ docs/_build/
 *.bak
 *.backup
 
-# Reference repos (embedded git repos)
-reference/
+# Package build artifacts (monorepo)
+packages/*/node_modules/
+packages/*/target/
+packages/*/dist/
+packages/*/build/
+packages/*/.gradle/
+packages/*/legacy/
+packages/*/.next/
+packages/*/.vite/
+packages/*/out/
+packages/*/*.apk
 
 # App build artifacts (monorepo)
 userspace/apps/*/node_modules/

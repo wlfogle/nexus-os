@@ -1,0 +1,20 @@
+# Seerr (Jellyseerr fork) — CT-242 (privileged LXC, static 192.168.12.151)
+# NATIVE install — no Docker. Installed via scripts/install-seerr-ct242.sh
+# Service: systemctl status seerr  (inside CT-242)
+# Config:  /opt/seerr/config/settings.json  (inside CT-242)
+# First-run setup: http://192.168.12.151:5055 — sign in with Jellyfin (jellyfin/jellyfin)
+# Traefik route: http://jellyseerr.tiamat.local → CT-242:5055
+#
+# Connected services (pre-configured in settings.json):
+#   Jellyfin: 192.168.12.231:8096
+#   Radarr:   192.168.12.225:7878
+#   Sonarr:   192.168.12.214:8989
+#
+# NOTE: This docker-compose.yml is kept for reference only.
+# CT-242 was converted from Docker to native on 2026-04-05 to fix
+# Docker-in-unprivileged-LXC port mapping issues.
+
+# services:
+#   jellyseerr:
+#     image: fallenbagel/jellyseerr:latest
+#     (not used — native install)

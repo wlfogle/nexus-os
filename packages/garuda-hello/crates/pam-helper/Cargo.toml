@@ -1,0 +1,17 @@
+[package]
+name = "garuda-hello-pam"
+version = "0.1.0"
+edition = "2021"
+description = "PAM module for Garuda Hello biometric authentication"
+
+[dependencies]
+garuda_hello_common = { path = "../common" }
+tokio = { version = "1.0", features = ["full"] }
+serde_json = "1.0"
+libc = "0.2"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+[lib]
+name = "pam_garuda_hello"
+crate-type = ["cdylib"]

@@ -1,0 +1,59 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Sensitive files
+*passwords*
+*secrets*
+*keys*
+*.pem
+*.key
+
+# Temporary files
+*.tmp
+*.log
+*.swp
+*.kate-swp
+*~
+
+# Cache and build directories
+.cache/
+build/
+dist/
+target/
+node_modules/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.code-workspace
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker volumes and data
+**/data/
+**/appdata/
+**/config/
+**/logs/
+
+# Backup files
+*.tar.gz
+*.zip
+*.backup
+*-backup-*
+
+# Git directories (for nested repos)
+**/.git/
+
+# Large files that shouldn't be in git
+*.iso
+*.img
+*.qcow2

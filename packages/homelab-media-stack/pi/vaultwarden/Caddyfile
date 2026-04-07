@@ -1,0 +1,8 @@
+# Caddy reverse proxy for Vaultwarden (CT-104 LXC)
+# Provides HTTPS with internal TLS certs for SubtleCrypto API support
+# Vaultwarden listens on localhost:8080, Caddy terminates TLS on :443
+
+https://localhost, https://192.168.12.104, https://vaultwarden.tiamat.local {
+	tls internal
+	reverse_proxy localhost:8080
+}

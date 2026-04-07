@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Dark Deity Complete Edition Direct Launcher for PortProton
+export PW_AUTOINSTALL_EXE="/media/lou/Games/Games/Dark Deity- Complete Edition/DarkDeity.exe"
+export PW_PREFIX_NAME="DARK_DEITY_CE"
+export PW_VULKAN_USE="1"
+if [[ -f "$PW_AUTOINSTALL_EXE" ]]; then
+    portwine_exe="$PW_AUTOINSTALL_EXE"
+    try_run_exe
+else
+    echo "Dark Deity Complete Edition executable not found at: $PW_AUTOINSTALL_EXE"
+fi

@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* NATIVE TAURI SCROLLBAR STYLES */
+html, body {
+  scrollbar-width: auto;
+  scrollbar-color: #60a5fa #374151;
+}
+
+/* Webkit scrollbars for Tauri's WebView */
+*::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #374151;
+  border-radius: 6px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #60a5fa;
+  border-radius: 6px;
+  border: 2px solid #374151;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #3b82f6;
+}
+
+*::-webkit-scrollbar-corner {
+  background: #374151;
+}
+
+/* Force scrollbars on overflow containers */
+.overflow-y-auto {
+  scrollbar-width: auto !important;
+}
+
+/* Ensure messages containers are scrollable */
+.conversation-area,
+.ai-assistant,
+.terminal-output,
+.messages-container {
+  overflow-y: auto;
+  scrollbar-width: auto;
+}

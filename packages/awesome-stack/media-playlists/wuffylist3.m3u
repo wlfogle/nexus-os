@@ -1,0 +1,1529 @@
+#EXTM3U
+#EXTINF:0 CUID="139" tvg-name="5 STAR MAX" tvg-id="5starmax.us" tvg-logo="https://sotv.norago.tv/img/300x300/915077868624888199.png" group-title="USA",5 STAR MAX
+http://63.141.251.250/jamzone/isg.php?id=20001404&type=stream.m3u8
+#EXTINF:0 CUID="86" tvg-name="A&E USA" tvg-id="a&e.us" tvg-logo="https://mwjs.setplex.net/img/300x300/4560193008387007148.jpeg" group-title="USA",A&E USA
+http://63.141.251.250/jamzone/isg.php?id=20001381&type=stream.m3u8
+#EXTINF:0 CUID="2" tvg-name="ABC" tvg-id="abc5.us" tvg-logo="https://sotv.norago.tv/img/300x300/2775298770908020653.jpg" group-title="USA",ABC
+http://63.141.251.250/jamzone/isg.php?id=20000321&type=stream.m3u8
+#EXTINF:0 CUID="90" tvg-name="ABC SPARK" tvg-logo="https://sotv.norago.tv/img/300x300/7492536008522359862.png" group-title="USA",ABC SPARK
+http://63.141.251.250/jamzone/isg.php?id=20000290&type=stream.m3u8
+#EXTINF:0 CUID="3" tvg-name="ABC WEST" tvg-id="abckabcwest.us" tvg-logo="https://sotv.norago.tv/img/300x300/1579543583103502848.jpg" group-title="USA",ABC WEST
+http://63.141.251.250/jamzone/isg.php?id=20002548&type=stream.m3u8
+#EXTINF:0 CUID="140" tvg-name="ADULT SWIM" tvg-id="adultswim.us" tvg-logo="https://sotv.norago.tv/img/300x300/3511958744392856406.jpg" group-title="USA",ADULT SWIM
+http://63.141.251.250/jamzone/isg.php?id=20000194&type=stream.m3u8
+#EXTINF:0 CUID="15" tvg-name="AMC" tvg-id="amc.us" tvg-logo="https://sotv.norago.tv/img/300x300/6767417214780343674.jpg" group-title="USA",AMC
+http://63.141.251.250/jamzone/isg.php?id=20000044&type=stream.m3u8
+#EXTINF:0 CUID="16" tvg-name="AMC USA" tvg-id="amc.us" tvg-logo="https://sotv.norago.tv/img/300x300/8163559153215165117.jpg" group-title="USA",AMC USA
+http://63.141.251.250/jamzone/isg.php?id=20001382&type=stream.m3u8
+#EXTINF:0 CUID="166" tvg-name="AMERICAN HEROES CHANNEL" tvg-id="americanheroeschannel.us" tvg-logo="https://sotv.norago.tv/img/300x300/4707173700354622322.jpg" group-title="USA",AMERICAN HEROES CHANNEL
+http://63.141.251.250/jamzone/isg.php?id=20001337&type=stream.m3u8
+#EXTINF:0 CUID="172" tvg-name="ANIMAL PLANET" tvg-id="animalplanet.us" tvg-logo="https://sotv.norago.tv/img/300x300/3534394914099662937.jpg" group-title="USA",ANIMAL PLANET
+http://63.141.251.250/jamzone/isg.php?id=20000214&type=stream.m3u8
+#EXTINF:0 CUID="17" tvg-name="BBC AMERICA" tvg-id="bbcamerica.us" tvg-logo="https://mwjs.setplex.net/img/300x300/8143200487218495543.jpeg" group-title="USA",BBC AMERICA
+http://63.141.251.250/jamzone/isg.php?id=20001384&type=stream.m3u8
+#EXTINF:0 CUID="32" tvg-name="BBC NEWS" tvg-id="bbcnews.us" tvg-logo="https://sotv.norago.tv/img/300x300/6658233119508550825.jpg" group-title="USA",BBC NEWS
+http://63.141.251.250/jamzone/isg.php?id=20000358&type=stream.m3u8
+#EXTINF:0 CUID="98" tvg-name="BET USA" tvg-id="bet.us" tvg-logo="https://sotv.norago.tv/img/300x300/2019165695833117777.jpg" group-title="USA",BET USA
+http://63.141.251.250/jamzone/isg.php?id=20001459&type=stream.m3u8
+#EXTINF:0 CUID="40" tvg-name="BLOOMBERG" tvg-id="bloomberg.us" tvg-logo="https://mwjs.setplex.net/img/300x300/3232693792188854230.png" group-title="USA",BLOOMBERG
+http://63.141.251.250/jamzone/isg.php?id=20000912&type=stream.m3u8
+#EXTINF:0 CUID="63" tvg-name="BOOMERANG" tvg-id="boomerang.us" tvg-logo="https://sotv.norago.tv/img/300x300/2804800094434169218.png" group-title="USA",BOOMERANG
+http://63.141.251.250/jamzone/isg.php?id=20001195&type=stream.m3u8
+#EXTINF:0 CUID="42" tvg-name="BOUNCE USA" tvg-id="bounce.us" tvg-logo="https://mwjs.setplex.net/img/300x300/3521607664164938216.jpeg" group-title="USA",BOUNCE USA
+http://63.141.251.250/jamzone/isg.php?id=20001430&type=stream.m3u8
+#EXTINF:0 CUID="88" tvg-name="BRAVO USA" tvg-id="bravo.us" tvg-logo="https://sotv.norago.tv/img/300x300/2991612621970617371.jpg" group-title="USA",BRAVO USA
+http://63.141.251.250/jamzone/isg.php?id=20000033&type=stream.m3u8
+#EXTINF:0 CUID="60" tvg-name="CARTOON NETWORK" tvg-id="cartoonnetwork.us" tvg-logo="https://mwjs.setplex.net/img/300x300/4513375845768048824.png" group-title="USA",CARTOON NETWORK
+http://63.141.251.250/jamzone/isg.php?id=20000148&type=stream.m3u8
+#EXTINF:0 CUID="6" tvg-name="CBS" tvg-id="wcbs.us" tvg-logo="https://sotv.norago.tv/img/300x300/6045521178475521130.jpg" group-title="USA",CBS
+http://63.141.251.250/jamzone/isg.php?id=20000046&type=stream.m3u8
+#EXTINF:0 CUID="7" tvg-name="CBS WEST" tvg-id="tbswest.us" tvg-logo="https://sotv.norago.tv/img/300x300/4248749247525195473.png" group-title="USA",CBS WEST
+http://63.141.251.250/jamzone/isg.php?id=20002550&type=stream.m3u8
+#EXTINF:0 CUID="135" tvg-name="CINEMAX" tvg-id="cinemax.us" tvg-logo="https://sotv.norago.tv/img/300x300/976010716119168870.png" group-title="USA",CINEMAX
+http://63.141.251.250/jamzone/isg.php?id=20000339&type=stream.m3u8
+#EXTINF:0 CUID="137" tvg-name="CINEMAX THRILLERMAX USA" tvg-id="thrillermax.us" tvg-logo="https://mwjs.setplex.net/img/300x300/1181169276325021696.png" group-title="USA",CINEMAX THRILLERMAX USA
+http://63.141.251.250/jamzone/isg.php?id=20001399&type=stream.m3u8
+#EXTINF:0 CUID="136" tvg-name="CINEMAX WEST" tvg-id="cinemaxwest.us" tvg-logo="https://sotv.norago.tv/img/300x300/270587460865347958.png" group-title="USA",CINEMAX WEST
+http://63.141.251.250/jamzone/isg.php?id=20000340&type=stream.m3u8
+#EXTINF:0 CUID="101" tvg-name="CMT USA" tvg-id="cmt.us" tvg-logo="https://sotv.norago.tv/img/300x300/530026901197032127.jpg" group-title="USA",CMT USA
+http://63.141.251.250/jamzone/isg.php?id=20001385&type=stream.m3u8
+#EXTINF:0 CUID="33" tvg-name="CNBC" tvg-id="cnbc.us" tvg-logo="https://sotv.norago.tv/img/300x300/1161559840218923469.jpg" group-title="USA",CNBC
+http://63.141.251.250/jamzone/isg.php?id=20001185&type=stream.m3u8
+#EXTINF:0 CUID="34" tvg-name="CNN" tvg-id="cnn.us" tvg-logo="https://sotv.norago.tv/img/300x300/3609643204261612740.jpg" group-title="USA",CNN
+http://63.141.251.250/jamzone/isg.php?id=20000049&type=stream.m3u8
+#EXTINF:0 CUID="105" tvg-name="COMEDY CENTRAL USA" tvg-id="comedycentral.us" tvg-logo="https://sotv.norago.tv/img/300x300/3119472683400761300.png" group-title="USA",COMEDY CENTRAL USA
+http://63.141.251.250/jamzone/isg.php?id=20001388&type=stream.m3u8
+#EXTINF:0 CUID="73" tvg-name="COOKING CHANNEL USA" tvg-id="cookingchannel.us" tvg-logo="https://sotv.norago.tv/img/300x300/1437705032512550361.png" group-title="USA",COOKING CHANNEL USA
+http://63.141.251.250/jamzone/isg.php?id=20000328&type=stream.m3u8
+#EXTINF:0 CUID="149" tvg-name="Crime & Investigation USA" tvg-id="crime&investigation.us" tvg-logo="https://sotv.norago.tv/img/300x300/5773993272609710164.png" group-title="USA",Crime & Investigation USA
+http://63.141.251.250/jamzone/isg.php?id=20001424&type=stream.m3u8
+#EXTINF:0 CUID="10" tvg-name="CW" tvg-logo="https://sotv.norago.tv/img/300x300/4768791138151748549.jpg" group-title="USA",CW
+http://63.141.251.250/jamzone/isg.php?id=20000724&type=stream.m3u8
+#EXTINF:0 CUID="80" tvg-name="DESTINATION AMERICA" tvg-id="destinationamerica.us" tvg-logo="https://sotv.norago.tv/img/300x300/5499540539485702746.png" group-title="USA",DESTINATION AMERICA
+http://63.141.251.250/jamzone/isg.php?id=20001341&type=stream.m3u8
+#EXTINF:0 CUID="150" tvg-name="DISCOVERY USA" tvg-id="discoverylife.us" tvg-logo="https://sotv.norago.tv/img/300x300/920905947503952673.jpg" group-title="USA",DISCOVERY USA
+http://63.141.251.250/jamzone/isg.php?id=20001216&type=stream.m3u8
+#EXTINF:0 CUID="54" tvg-name="DISNEY CHANNEL" tvg-id="disneychannel.us" tvg-logo="https://sotv.norago.tv/img/300x300/4760611151329674516.jpg" group-title="USA",DISNEY CHANNEL
+http://63.141.251.250/jamzone/isg.php?id=20000305&type=stream.m3u8
+#EXTINF:0 CUID="53" tvg-name="DISNEY CHANNEL USA" tvg-id="disneychannel.us" tvg-logo="https://sotv.norago.tv/img/300x300/986879084173481623.jpg" group-title="USA",DISNEY CHANNEL USA
+http://63.141.251.250/jamzone/isg.php?id=20001389&type=stream.m3u8
+#EXTINF:0 CUID="56" tvg-name="DISNEY JR  USA" tvg-id="disney.us" tvg-logo="https://sotv.norago.tv/img/resize/300x300/3483900632336373829.jpg" group-title="USA",DISNEY JR  USA
+http://63.141.251.250/jamzone/isg.php?id=20001390&type=stream.m3u8
+#EXTINF:0 CUID="55" tvg-name="DISNEY XD USA" tvg-id="disneyxd.us" tvg-logo="https://sotv.norago.tv/img/300x300/4037620322513343311.jpg" group-title="USA",DISNEY XD USA
+http://63.141.251.250/jamzone/isg.php?id=20001391&type=stream.m3u8
+#EXTINF:0 CUID="165" tvg-name="DOCUMENTARY" tvg-id="documentary+.us" tvg-logo="https://mwjs.setplex.net/img/300x300/1272839009975761459.png" group-title="USA",DOCUMENTARY
+http://63.141.251.250/jamzone/isg.php?id=20000240&type=stream.m3u8
+#EXTINF:0 CUID="84" tvg-name="E! USA" tvg-id="eentertainment.us" tvg-logo="https://sotv.norago.tv/img/300x300/7983029847110324140.jpg" group-title="USA",E! USA
+http://63.141.251.250/jamzone/isg.php?id=20001233&type=stream.m3u8
+#EXTINF:0 CUID="153" tvg-name="EPIX" tvg-id="mgm+.us" tvg-logo="https://sotv.norago.tv/img/300x300/6656865526067291351.png" group-title="USA",EPIX
+http://63.141.251.250/jamzone/isg.php?id=20001985&type=stream.m3u8
+#EXTINF:0 CUID="154" tvg-name="EPIX HITS" tvg-id="mgm+marquee.us" tvg-logo="https://sotv.norago.tv/img/300x300/8373043130437563081.png" group-title="USA",EPIX HITS
+http://63.141.251.250/jamzone/isg.php?id=20001986&type=stream.m3u8
+#EXTINF:0 CUID="174" tvg-name="FIREPLACE CHANNEL" tvg-logo="https://sotv.norago.tv/img/300x300/4202637679388066721.jpg" group-title="USA",FIREPLACE CHANNEL
+http://63.141.251.250/jamzone/isg.php?id=20002104&type=stream.m3u8
+#EXTINF:0 CUID="76" tvg-name="FOOD NETWORK USA" tvg-id="foodnetwork.us" tvg-logo="https://sotv.norago.tv/img/300x300/7489949406902044942.jpg" group-title="USA",FOOD NETWORK USA
+http://63.141.251.250/jamzone/isg.php?id=20001393&type=stream.m3u8
+#EXTINF:0 CUID="8" tvg-name="FOX" tvg-id="fox.us" tvg-logo="https://sotv.norago.tv/img/300x300/8913278765173844018.png" group-title="USA",FOX
+http://63.141.251.250/jamzone/isg.php?id=20000090&type=stream.m3u8
+#EXTINF:0 CUID="39" tvg-name="FOX BUSINESS" tvg-id="foxbusiness.us" tvg-logo="https://sotv.norago.tv/img/300x300/7116894543527297854.png" group-title="USA",FOX BUSINESS
+http://63.141.251.250/jamzone/isg.php?id=20001184&type=stream.m3u8
+#EXTINF:0 CUID="38" tvg-name="FOX NEWS" tvg-id="foxnews.us" tvg-logo="https://sotv.norago.tv/img/300x300/7449586245884419350.png" group-title="USA",FOX NEWS
+http://63.141.251.250/jamzone/isg.php?id=20000846&type=stream.m3u8
+#EXTINF:0 CUID="9" tvg-name="FOX WEST" tvg-id="fxwest.us" tvg-logo="https://sotv.norago.tv/img/300x300/7031674055016776925.png" group-title="USA",FOX WEST
+http://63.141.251.250/jamzone/isg.php?id=20002551&type=stream.m3u8
+#EXTINF:0 CUID="68" tvg-name="FREE FORM" tvg-id="freeform.us" tvg-logo="https://sotv.norago.tv/img/300x300/1571247363110737830.jpg" group-title="USA",FREE FORM
+http://63.141.251.250/jamzone/isg.php?id=20001189&type=stream.m3u8
+#EXTINF:0 CUID="106" tvg-name="FUSE" tvg-id="fuse.us" tvg-logo="https://sotv.norago.tv/img/300x300/2918361304346068573.png" group-title="USA",FUSE
+http://63.141.251.250/jamzone/isg.php?id=20001987&type=stream.m3u8
+#EXTINF:0 CUID="87" tvg-name="FX" tvg-id="fx.us" tvg-logo="https://sotv.norago.tv/img/300x300/4052430070552142826.jpg" group-title="USA",FX
+http://63.141.251.250/jamzone/isg.php?id=20000073&type=stream.m3u8
+#EXTINF:0 CUID="113" tvg-name="FX USA" tvg-id="fx.us" tvg-logo="https://sotv.norago.tv/img/300x300/2648737365444495906.jpg" group-title="USA",FX USA
+http://63.141.251.250/jamzone/isg.php?id=20001394&type=stream.m3u8
+#EXTINF:0 CUID="114" tvg-name="FXX USA" tvg-id="fxx.us" tvg-logo="https://sotv.norago.tv/img/300x300/6748976404731839365.png" group-title="USA",FXX USA
+http://63.141.251.250/jamzone/isg.php?id=20001395&type=stream.m3u8
+#EXTINF:0 CUID="75" tvg-name="FYI USA" tvg-id="fyi.us" tvg-logo="https://sotv.norago.tv/img/300x300/2979759305542532004.png" group-title="USA",FYI USA
+http://63.141.251.250/jamzone/isg.php?id=20000060&type=stream.m3u8
+#EXTINF:0 CUID="43" tvg-name="GRIT USA" tvg-id="grit.us" tvg-logo="https://mwjs.setplex.net/img/300x300/6561472240100796408.png" group-title="USA",GRIT USA
+http://63.141.251.250/jamzone/isg.php?id=20001435&type=stream.m3u8
+#EXTINF:0 CUID="70" tvg-name="GSN USA" tvg-id="gsn.us" tvg-logo="https://sotv.norago.tv/img/300x300/1808783535363673127.png" group-title="USA",GSN USA
+http://63.141.251.250/jamzone/isg.php?id=20000248&type=stream.m3u8
+#EXTINF:0 CUID="92" tvg-name="HALLMARK CHANNEL" tvg-id="hallmarkchannel.us" tvg-logo="https://sotv.norago.tv/img/300x300/4716479108998878998.png" group-title="USA",HALLMARK CHANNEL
+http://63.141.251.250/jamzone/isg.php?id=20000457&type=stream.m3u8
+#EXTINF:0 CUID="91" tvg-name="HALLMARK MOVIE MYSTERIES" tvg-id="hallmarkmystery.us" tvg-logo="https://sotv.norago.tv/img/300x300/8005105789767227992.png" group-title="USA",HALLMARK MOVIE MYSTERIES
+http://63.141.251.250/jamzone/isg.php?id=20001429&type=stream.m3u8
+#EXTINF:0 CUID="117" tvg-name="HBO" tvg-id="hbo.us" tvg-logo="https://sotv.norago.tv/img/300x300/1413007551577153343.png" group-title="USA",HBO
+http://63.141.251.250/jamzone/isg.php?id=20000034&type=stream.m3u8
+#EXTINF:0 CUID="119" tvg-name="HBO 2" tvg-id="hbo2.us" tvg-logo="https://sotv.norago.tv/img/300x300/6367730547973055538.png" group-title="USA",HBO 2
+http://63.141.251.250/jamzone/isg.php?id=20000420&type=stream.m3u8
+#EXTINF:0 CUID="122" tvg-name="HBO COMEDY" tvg-id="hbocomedy.us" tvg-logo="https://sotv.norago.tv/img/300x300/3327314821254568845.jpg" group-title="USA",HBO COMEDY
+http://63.141.251.250/jamzone/isg.php?id=20000978&type=stream.m3u8
+#EXTINF:0 CUID="121" tvg-name="HBO FAMILY" tvg-id="hbofamily.us" tvg-logo="https://sotv.norago.tv/img/300x300/4708248348950670146.png" group-title="USA",HBO FAMILY
+http://63.141.251.250/jamzone/isg.php?id=20000977&type=stream.m3u8
+#EXTINF:0 CUID="123" tvg-name="HBO SIGNATURE" tvg-id="hbosignature.us" tvg-logo="https://sotv.norago.tv/img/300x300/5514563216278974619.png" group-title="USA",HBO SIGNATURE
+http://63.141.251.250/jamzone/isg.php?id=20000979&type=stream.m3u8
+#EXTINF:0 CUID="118" tvg-name="HBO USA" tvg-id="hbo.us" tvg-logo="https://sotv.norago.tv/img/300x300/74602948491525225.jpg" group-title="USA",HBO USA
+http://63.141.251.250/jamzone/isg.php?id=20000318&type=stream.m3u8
+#EXTINF:0 CUID="120" tvg-name="HBO ZONE" tvg-id="hbozone.us" tvg-logo="https://sotv.norago.tv/img/300x300/7448784924424651826.png" group-title="USA",HBO ZONE
+http://63.141.251.250/jamzone/isg.php?id=20001232&type=stream.m3u8
+#EXTINF:0 CUID="79" tvg-name="HGTV USA" tvg-id="hgtv.us" tvg-logo="https://sotv.norago.tv/img/300x300/5695085403628544077.png" group-title="USA",HGTV USA
+http://63.141.251.250/jamzone/isg.php?id=20001406&type=stream.m3u8
+#EXTINF:0 CUID="162" tvg-name="HISTORY" tvg-id="history.us" tvg-logo="https://sotv.norago.tv/img/300x300/5828928879061569863.jpg" group-title="USA",HISTORY
+http://63.141.251.250/jamzone/isg.php?id=20000072&type=stream.m3u8
+#EXTINF:0 CUID="163" tvg-name="HISTORY 2" tvg-id="history.us" tvg-logo="https://sotv.norago.tv/img/300x300/2102468405434499182.jpg" group-title="USA",HISTORY 2
+http://63.141.251.250/jamzone/isg.php?id=20000212&type=stream.m3u8
+#EXTINF:0 CUID="161" tvg-name="HISTORY USA" tvg-id="history.us" tvg-logo="https://mwjs.setplex.net/img/300x300/1351204547572193411.jpeg" group-title="USA",HISTORY USA
+http://63.141.251.250/jamzone/isg.php?id=20001405&type=stream.m3u8
+#EXTINF:0 CUID="35" tvg-name="HLN" tvg-id="hln.us" tvg-logo="https://sotv.norago.tv/img/300x300/8171092689417067756.jpg" group-title="USA",HLN
+http://63.141.251.250/jamzone/isg.php?id=20000359&type=stream.m3u8
+#EXTINF:0 CUID="147" tvg-name="ID USA" tvg-id="investigationdiscovery.us" tvg-logo="https://sotv.norago.tv/img/300x300/8984726858144953230.jpg" group-title="USA",ID USA
+http://63.141.251.250/jamzone/isg.php?id=20001218&type=stream.m3u8
+#EXTINF:0 CUID="41" tvg-name="IFC USA" tvg-id="ifc.us" tvg-logo="https://mwjs.setplex.net/img/300x300/5463338711392787558.jpeg" group-title="USA",IFC USA
+http://63.141.251.250/jamzone/isg.php?id=20001438&type=stream.m3u8
+#EXTINF:0 CUID="116" tvg-name="ION USA" tvg-id="ion.us" tvg-logo="https://sotv.norago.tv/img/300x300/5032756059953376830.png" group-title="USA",ION USA
+http://63.141.251.250/jamzone/isg.php?id=20001433&type=stream.m3u8
+#EXTINF:0 CUID="83" tvg-name="LIFETIME" tvg-id="lifetime.us" tvg-logo="https://sotv.norago.tv/img/300x300/6130056632303235254.png" group-title="USA",LIFETIME
+http://63.141.251.250/jamzone/isg.php?id=20000215&type=stream.m3u8
+#EXTINF:0 CUID="111" tvg-name="LMN" tvg-id="lmn.us" tvg-logo="https://sotv.norago.tv/img/300x300/7574444856279940462.png" group-title="USA",LMN
+http://63.141.251.250/jamzone/isg.php?id=20001211&type=stream.m3u8
+#EXTINF:0 CUID="74" tvg-name="MAGNOLIA NETWORK USA" tvg-id="magnolianetwork.us" tvg-logo="https://sotv.norago.tv/img/resize/300x300/e57556eb-3e4f-4642-bb6d-d989c205654f.jpg" group-title="USA",MAGNOLIA NETWORK USA
+http://63.141.251.250/jamzone/isg.php?id=20000062&type=stream.m3u8
+#EXTINF:0 CUID="115" tvg-name="MAV TV USA" tvg-id="mavtv.us" tvg-logo="https://sotv.norago.tv/img/300x300/9104317390182751649.jpg" group-title="USA",MAV TV USA
+http://63.141.251.250/jamzone/isg.php?id=20001432&type=stream.m3u8
+#EXTINF:0 CUID="138" tvg-name="MOREMAX" tvg-id="moremax.us" tvg-logo="https://mwjs.setplex.net/img/300x300/6416525666921532799.png" group-title="USA",MOREMAX
+http://63.141.251.250/jamzone/isg.php?id=20001193&type=stream.m3u8
+#EXTINF:0 CUID="155" tvg-name="MOTOR TREND" tvg-id="motortrend.us" tvg-logo="https://sotv.norago.tv/img/300x300/8276313288834032007.png" group-title="USA",MOTOR TREND
+http://63.141.251.250/jamzone/isg.php?id=20000137&type=stream.m3u8
+#EXTINF:0 CUID="141" tvg-name="MOVIETIME" tvg-id="lifetimemovies.us" tvg-logo="https://sotv.norago.tv/img/300x300/5679335163944866975.png" group-title="USA",MOVIETIME
+http://63.141.251.250/jamzone/isg.php?id=20000210&type=stream.m3u8
+#EXTINF:0 CUID="37" tvg-name="MSNBC" tvg-id="msnbc.us" tvg-logo="https://sotv.norago.tv/img/300x300/3624758423597831863.jpg" group-title="USA",MSNBC
+http://63.141.251.250/jamzone/isg.php?id=20000360&type=stream.m3u8
+#EXTINF:0 CUID="95" tvg-name="MTV2" tvg-id="mtv2.us" tvg-logo="https://sotv.norago.tv/img/300x300/1047833746698903214.png" group-title="USA",MTV2
+http://63.141.251.250/jamzone/isg.php?id=20000236&type=stream.m3u8
+#EXTINF:0 CUID="96" tvg-name="MTV Live USA" tvg-id="mtvlive.us" tvg-logo="https://mwjs.setplex.net/img/300x300/844591950990045512.png" group-title="USA",MTV Live USA
+http://63.141.251.250/jamzone/isg.php?id=20001428&type=stream.m3u8
+#EXTINF:0 CUID="94" tvg-name="MTV USA" tvg-id="mtv.us" tvg-logo="https://sotv.norago.tv/img/300x300/2625508761571699145.png" group-title="USA",MTV USA
+http://63.141.251.250/jamzone/isg.php?id=20001427&type=stream.m3u8
+#EXTINF:0 CUID="30" tvg-name="MY9" tvg-id="wwornewjersey.us" tvg-logo="https://sotv.norago.tv/img/300x300/901569648955767395.png" group-title="USA",MY9
+http://63.141.251.250/jamzone/isg.php?id=20001991&type=stream.m3u8
+#EXTINF:0 CUID="11" tvg-name="MY 13 USA" tvg-logo="https://mwjs.setplex.net/img/300x300/8191856943553334778.png" group-title="USA",MY 13 USA
+http://63.141.251.250/jamzone/isg.php?id=20001439&type=stream.m3u8
+#EXTINF:0 CUID="160" tvg-name="NAT GEO" tvg-id="natgeowest.us" tvg-logo="https://sotv.norago.tv/img/300x300/550471471536529708.jpg" group-title="USA",NAT GEO
+http://63.141.251.250/jamzone/isg.php?id=20000226&type=stream.m3u8
+#EXTINF:0 CUID="159" tvg-name="NAT GEO USA" tvg-id="natgeowest.us" tvg-logo="https://sotv.norago.tv/img/300x300/642663342906161872.jpg" group-title="USA",NAT GEO USA
+http://63.141.251.250/jamzone/isg.php?id=20001421&type=stream.m3u8
+#EXTINF:0 CUID="158" tvg-name="NAT GEO WILD" tvg-id="natgeowild.us" tvg-logo="https://sotv.norago.tv/img/300x300/2088759549814871274.jpg" group-title="USA",NAT GEO WILD
+http://63.141.251.250/jamzone/isg.php?id=20000004&type=stream.m3u8
+#EXTINF:0 CUID="157" tvg-name="Nat Geo Wild USA" tvg-id="natgeowild.us" tvg-logo="https://mwjs.setplex.net/img/300x300/887864842919642585.jpg" group-title="USA",Nat Geo Wild USA
+http://63.141.251.250/jamzone/isg.php?id=20001420&type=stream.m3u8
+#EXTINF:0 CUID="4" tvg-name="NBC" tvg-id="cnbc.us" tvg-logo="https://sotv.norago.tv/img/300x300/6965011270945350332.jpg" group-title="USA",NBC
+http://63.141.251.250/jamzone/isg.php?id=20000259&type=stream.m3u8
+#EXTINF:0 CUID="5" tvg-name="NBC WEST" tvg-id="nbcknbcwest.us" tvg-logo="https://sotv.norago.tv/img/300x300/231173067744397456.png" group-title="USA",NBC WEST
+http://63.141.251.250/jamzone/isg.php?id=20002549&type=stream.m3u8
+#EXTINF:0 CUID="59" tvg-name="NICK JR USA" tvg-id="nickjr.us" tvg-logo="https://sotv.norago.tv/img/300x300/2672253402624125339.png" group-title="USA",NICK JR USA
+http://63.141.251.250/jamzone/isg.php?id=20001407&type=stream.m3u8
+#EXTINF:0 CUID="58" tvg-name="NICKELODEON USA" tvg-id="nickelodeon.us" tvg-logo="https://sotv.norago.tv/img/resize/300x300/3237653739295573264.jpg" group-title="USA",NICKELODEON USA
+http://63.141.251.250/jamzone/isg.php?id=20001408&type=stream.m3u8
+#EXTINF:0 CUID="57" tvg-name="NICKTOONS" tvg-id="nicktoons.us" tvg-logo="https://sotv.norago.tv/img/300x300/5439898277922598238.jpg" group-title="USA",NICKTOONS
+http://63.141.251.250/jamzone/isg.php?id=20001409&type=stream.m3u8
+#EXTINF:0 CUID="29" tvg-name="ONE AMERICA NEWS" tvg-id="oneamericanews.us" tvg-logo="https://sotv.norago.tv/img/300x300/139101727190306372.png" group-title="USA",ONE AMERICA NEWS
+http://63.141.251.250/jamzone/isg.php?id=20002461&type=stream.m3u8
+#EXTINF:0 CUID="44" tvg-name="OUTDOOR USA" tvg-id="outdoorchannel.us" tvg-logo="https://sotv.norago.tv/img/300x300/7193004080832807347.jpg" group-title="USA",OUTDOOR USA
+http://63.141.251.250/jamzone/isg.php?id=20001455&type=stream.m3u8
+#EXTINF:0 CUID="66" tvg-name="OWN USA" tvg-id="own.us" tvg-logo="https://sotv.norago.tv/img/300x300/165608146127256701.jpg" group-title="USA",OWN USA
+http://63.141.251.250/jamzone/isg.php?id=20001220&type=stream.m3u8
+#EXTINF:0 CUID="112" tvg-name="OXYGEN" tvg-id="oxygen.us" tvg-logo="https://sotv.norago.tv/img/300x300/1048435805922227891.png" group-title="USA",OXYGEN
+http://63.141.251.250/jamzone/isg.php?id=20001941&type=stream.m3u8
+#EXTINF:0 CUID="103" tvg-name="Paramount Network" tvg-id="paramountnetwork.us" tvg-logo="https://mwjs.setplex.net/img/300x300/3863887267386929687.png" group-title="USA",Paramount Network
+http://63.141.251.250/jamzone/isg.php?id=20000307&type=stream.m3u8
+#EXTINF:0 CUID="46" tvg-name="PBS" tvg-id="pbs13newyork.us" tvg-logo="https://sotv.norago.tv/img/300x300/843955633732489741.png" group-title="USA",PBS
+http://63.141.251.250/jamzone/isg.php?id=20001350&type=stream.m3u8
+#EXTINF:0 CUID="152" tvg-name="REELZ" tvg-id="reelzchannel.us" tvg-logo="https://sotv.norago.tv/img/300x300/333941684760970410.jpg" group-title="USA",REELZ
+http://63.141.251.250/jamzone/isg.php?id=20001984&type=stream.m3u8
+#EXTINF:0 CUID="99" tvg-name="REVOLT" tvg-id="revolt.us" tvg-logo="https://mwjs.setplex.net/img/300x300/8293468351939319258.png" group-title="USA",REVOLT
+http://63.141.251.250/jamzone/isg.php?id=20001489&type=stream.m3u8
+#EXTINF:0 CUID="156" tvg-name="SCIENCE CHANNEL" tvg-id="sciencechannel.us" tvg-logo="https://sotv.norago.tv/img/300x300/7956202940641356920.jpg" group-title="USA",SCIENCE CHANNEL
+http://63.141.251.250/jamzone/isg.php?id=20000041&type=stream.m3u8
+#EXTINF:0 CUID="126" tvg-name="SHOWCASE" tvg-id="showcasewest.us" tvg-logo="https://sotv.norago.tv/img/300x300/8518604516541736888.png" group-title="USA",SHOWCASE
+http://63.141.251.250/jamzone/isg.php?id=20000258&type=stream.m3u8
+#EXTINF:0 CUID="125" tvg-name="SHOWTIME FAMILY ZONE" tvg-id="showtimefamilyzone.us" tvg-logo="https://mwjs.setplex.net/img/300x300/5757942023825094852.png" group-title="USA",SHOWTIME FAMILY ZONE
+http://63.141.251.250/jamzone/isg.php?id=20001400&type=stream.m3u8
+#EXTINF:0 CUID="124" tvg-name="SHOWTIME USA" tvg-id="showtime.us" tvg-logo="https://sotv.norago.tv/img/300x300/6999909396756198480.jpg" group-title="USA",SHOWTIME USA
+http://63.141.251.250/jamzone/isg.php?id=20000261&type=stream.m3u8
+#EXTINF:0 CUID="164" tvg-name="SMITHSONIAN" tvg-id="canalsmithsonian.us" tvg-logo="https://sotv.norago.tv/img/300x300/5985020536058962314.jpg" group-title="USA",SMITHSONIAN
+http://63.141.251.250/jamzone/isg.php?id=20000247&type=stream.m3u8
+#EXTINF:0 CUID="173" tvg-name="SPORTSMAN CHANNEL" tvg-id="sportsmanchannel.us" tvg-logo="https://sotv.norago.tv/img/300x300/7519791185647181204.jpg" group-title="USA",SPORTSMAN CHANNEL
+http://63.141.251.250/jamzone/isg.php?id=20000199&type=stream.m3u8
+#EXTINF:0 CUID="127" tvg-name="STARZ" tvg-id="starz.us" tvg-logo="https://sotv.norago.tv/img/300x300/5946256296907456126.jpg" group-title="USA",STARZ
+http://63.141.251.250/jamzone/isg.php?id=20000251&type=stream.m3u8
+#EXTINF:0 CUID="133" tvg-name="STARZ CINEMA" tvg-id="starzcinema.us" tvg-logo="https://sotv.norago.tv/img/300x300/5359830967094376445.png" group-title="USA",STARZ CINEMA
+http://63.141.251.250/jamzone/isg.php?id=20001402&type=stream.m3u8
+#EXTINF:0 CUID="134" tvg-name="STARZ COMEDY" tvg-id="starzcomedy.us" tvg-logo="https://sotv.norago.tv/img/300x300/4464248412012521476.png" group-title="USA",STARZ COMEDY
+http://63.141.251.250/jamzone/isg.php?id=20001401&type=stream.m3u8
+#EXTINF:0 CUID="129" tvg-name="STARZ EDGE" tvg-id="starzedge.us" tvg-logo="https://sotv.norago.tv/img/300x300/573041856340707150.png" group-title="USA",STARZ EDGE
+http://63.141.251.250/jamzone/isg.php?id=20001190&type=stream.m3u8
+#EXTINF:0 CUID="130" tvg-name="STARZ ENCORE BLACK" tvg-id="starzencoreblack.us" tvg-logo="https://sotv.norago.tv/img/300x300/4125751139910402124.png" group-title="USA",STARZ ENCORE BLACK
+http://63.141.251.250/jamzone/isg.php?id=20001403&type=stream.m3u8
+#EXTINF:0 CUID="132" tvg-name="STARZ FAMILY" tvg-id="starzkids&family.us" tvg-logo="https://sotv.norago.tv/img/300x300/4508681021276033079.png" group-title="USA",STARZ FAMILY
+http://63.141.251.250/jamzone/isg.php?id=20001536&type=stream.m3u8
+#EXTINF:0 CUID="128" tvg-name="STARZ WEST" tvg-id="starzwest.us" tvg-logo="https://sotv.norago.tv/img/300x300/2982670253353906753.png" group-title="USA",STARZ WEST
+http://63.141.251.250/jamzone/isg.php?id=20000254&type=stream.m3u8
+#EXTINF:0 CUID="131" tvg-name="STARZ WESTERNS" tvg-id="starzwest.us" tvg-logo="https://sotv.norago.tv/img/300x300/5277844133907987846.png" group-title="USA",STARZ WESTERNS
+http://63.141.251.250/jamzone/isg.php?id=20002103&type=stream.m3u8
+#EXTINF:0 CUID="109" tvg-name="SYFY" tvg-id="syfy.us" tvg-logo="https://sotv.norago.tv/img/300x300/6051232515891418175.jpg" group-title="USA",SYFY
+http://63.141.251.250/jamzone/isg.php?id=20000058&type=stream.m3u8
+#EXTINF:0 CUID="13" tvg-name="TBS" tvg-id="tbs.us" tvg-logo="https://sotv.norago.tv/img/300x300/1806792941506229137.png" group-title="USA",TBS
+http://63.141.251.250/jamzone/isg.php?id=20000361&type=stream.m3u8
+#EXTINF:0 CUID="45" tvg-name="TCM USA" tvg-id="tcm.us" tvg-logo="https://sotv.norago.tv/img/300x300/3578476015649624532.png" group-title="USA",TCM USA
+http://63.141.251.250/jamzone/isg.php?id=20001411&type=stream.m3u8
+#EXTINF:0 CUID="110" tvg-name="THE WEATHER CHANNEL" tvg-id="theweatherchannel.us" tvg-logo="https://sotv.norago.tv/img/300x300/5329237034548771031.png" group-title="USA",THE WEATHER CHANNEL
+http://63.141.251.250/jamzone/isg.php?id=20002941&type=stream.m3u8
+#EXTINF:0 CUID="81" tvg-name="TLC" tvg-id="tlc.us" tvg-logo="https://sotv.norago.tv/img/300x300/6244459747302498624.png" group-title="USA",TLC
+http://63.141.251.250/jamzone/isg.php?id=20000138&type=stream.m3u8
+#EXTINF:0 CUID="12" tvg-name="TNT" tvg-id="tnt.us" tvg-logo="https://mwjs.setplex.net/img/300x300/8858073026301040124.png" group-title="USA",TNT
+http://63.141.251.250/jamzone/isg.php?id=20000249&type=stream.m3u8
+#EXTINF:0 CUID="82" tvg-name="TRAVEL CHANNEL" tvg-id="travelchannel.us" tvg-logo="https://sotv.norago.tv/img/300x300/8691636644358722437.png" group-title="USA",TRAVEL CHANNEL
+http://63.141.251.250/jamzone/isg.php?id=20000085&type=stream.m3u8
+#EXTINF:0 CUID="104" tvg-name="TRUTV" tvg-id="trutv.us" tvg-logo="https://sotv.norago.tv/img/300x300/3963874334388243291.png" group-title="USA",TRUTV
+http://63.141.251.250/jamzone/isg.php?id=20000329&type=stream.m3u8
+#EXTINF:0 CUID="69" tvg-name="TV LAND" tvg-id="tvland.us" tvg-logo="https://sotv.norago.tv/img/300x300/893684437213220132.png" group-title="USA",TV LAND
+http://63.141.251.250/jamzone/isg.php?id=20001255&type=stream.m3u8
+#EXTINF:0 CUID="14" tvg-name="USA NETWORK" tvg-id="network.us" tvg-logo="https://sotv.norago.tv/img/300x300/4621786136286993206.png" group-title="USA",USA NETWORK
+http://63.141.251.250/jamzone/isg.php?id=20000061&type=stream.m3u8
+#EXTINF:0 CUID="100" tvg-name="VH1" tvg-id="vh1.us" tvg-logo="https://sotv.norago.tv/img/300x300/6990853828613118666.png" group-title="USA",VH1
+http://63.141.251.250/jamzone/isg.php?id=20000205&type=stream.m3u8
+#EXTINF:0 CUID="167" tvg-name="VICE TV" tvg-id="vice.us" tvg-logo="https://sotv.norago.tv/img/resize/300x300/f2e6adbd-c158-4663-b2ac-7a9d89979de2.jpg" group-title="USA",VICE TV
+http://63.141.251.250/jamzone/isg.php?id=20000244&type=stream.m3u8
+#EXTINF:0 CUID="93" tvg-name="WE TV" tvg-id="wetv.us" tvg-logo="https://sotv.norago.tv/img/300x300/763214209910516163.png" group-title="USA",WE TV
+http://63.141.251.250/jamzone/isg.php?id=20000723&type=stream.m3u8
+#EXTINF:0 CUID="1" tvg-name="WEATHERNATION USA" tvg-id="weathernation.us" tvg-logo="https://mwjs.setplex.net/img/300x300/5099435601623175876.jpg" group-title="USA",WEATHERNATION USA
+http://63.141.251.250/jamzone/isg.php?id=20001413&type=stream.m3u8
+#EXTINF:0 CUID="47" tvg-name="WGN USA" tvg-id="wgn9chicago.us" tvg-logo="https://sotv.norago.tv/img/300x300/9060963187171887454.jpg" group-title="USA",WGN USA
+http://63.141.251.250/jamzone/isg.php?id=20001210&type=stream.m3u8
+#EXTINF:0 CUID="31" tvg-name="YES TV" tvg-id="estv.us" tvg-logo="https://sotv.norago.tv/img/300x300/5772328238340928685.png" group-title="USA",YES TV
+http://63.141.251.250/jamzone/isg.php?id=20002000&type=stream.m3u8
+#EXTINF:0 CUID="530" tvg-name="ACCN ESPN" tvg-id="accnetwork.us" tvg-logo="https://sotv.norago.tv/img/300x300/287487270674478927.png" group-title="SPORTS",ACCN ESPN
+http://63.141.251.250/jamzone/isg.php?id=20002940&type=stream.m3u8
+#EXTINF:0 CUID="544" tvg-name="BEIN 1" tvg-id="bein.us" tvg-logo="https://mwjs.setplex.net/img/300x300/2608472340230543095.png" group-title="SPORTS",BEIN 1
+http://63.141.251.250/jamzone/isg.php?id=20000191&type=stream.m3u8
+#EXTINF:0 CUID="543" tvg-name="BEIN HD" tvg-id="bein.us" tvg-logo="https://sotv.norago.tv/img/300x300/7931879223667286463.png" group-title="SPORTS",BEIN HD
+http://63.141.251.250/jamzone/isg.php?id=20000045&type=stream.m3u8
+#EXTINF:0 CUID="542" tvg-name="BEIN SPANISH" tvg-logo="https://sotv.norago.tv/img/300x300/4679934454148561598.png" group-title="SPORTS",BEIN SPANISH
+http://63.141.251.250/jamzone/isg.php?id=20000471&type=stream.m3u8
+#EXTINF:0 CUID="529" tvg-name="BTN" tvg-id="sbtn.us" tvg-logo="https://sotv.norago.tv/img/300x300/5666571990568879652.jpg" group-title="SPORTS",BTN
+http://63.141.251.250/jamzone/isg.php?id=20001338&type=stream.m3u8
+#EXTINF:0 CUID="614" tvg-name="Canal Sport HD FR" tvg-logo="https://mwjs.setplex.net/img/300x300/8374413457659369042.jpeg" group-title="SPORTS",Canal Sport HD FR
+http://63.141.251.250/jamzone/isg.php?id=20001514&type=stream.m3u8
+#EXTINF:0 CUID="531" tvg-name="ESPN 1" tvg-id="espn.us" tvg-logo="https://sotv.norago.tv/img/300x300/1066335633595609002.jpg" group-title="SPORTS",ESPN 1
+http://63.141.251.250/jamzone/isg.php?id=20000180&type=stream.m3u8
+#EXTINF:0 CUID="532" tvg-name="ESPN 2" tvg-id="espn2.us" tvg-logo="https://sotv.norago.tv/img/300x300/6669389057268386564.png" group-title="SPORTS",ESPN 2
+http://63.141.251.250/jamzone/isg.php?id=20000182&type=stream.m3u8
+#EXTINF:0 CUID="533" tvg-name="ESPN U" tvg-id="espnu.us" tvg-logo="https://sotv.norago.tv/img/300x300/567645341408543700.jpg" group-title="SPORTS",ESPN U
+http://63.141.251.250/jamzone/isg.php?id=20001340&type=stream.m3u8
+#EXTINF:0 CUID="520" tvg-name="FIGHT NETWORK" tvg-id="fightnetwork.us" tvg-logo="https://sotv.norago.tv/img/300x300/4385260642230673730.jpg" group-title="SPORTS",FIGHT NETWORK
+http://63.141.251.250/jamzone/isg.php?id=20000256&type=stream.m3u8
+#EXTINF:0 CUID="536" tvg-name="FOX DEPORTES" tvg-id="foxdeportes.us" tvg-logo="https://mwjs.setplex.net/img/300x300/5510740469615941202.jpg" group-title="SPORTS",FOX DEPORTES
+http://63.141.251.250/jamzone/isg.php?id=20000474&type=stream.m3u8
+#EXTINF:0 CUID="534" tvg-name="FS1" tvg-id="fs1.us" tvg-logo="https://mwjs.setplex.net/img/300x300/8146831045625488268.png" group-title="SPORTS",FS1
+http://63.141.251.250/jamzone/isg.php?id=20000178&type=stream.m3u8
+#EXTINF:0 CUID="535" tvg-name="FS2" tvg-id="fs2.us" tvg-logo="https://mwjs.setplex.net/img/300x300/6158798404783054814.png" group-title="SPORTS",FS2
+http://63.141.251.250/jamzone/isg.php?id=20000179&type=stream.m3u8
+#EXTINF:0 CUID="552" tvg-name="FUEL TV USA" tvg-id="fueltv.us" tvg-logo="https://mwjs.setplex.net/img/300x300/8261771456237900981.png" group-title="SPORTS",FUEL TV USA
+http://63.141.251.250/jamzone/isg.php?id=20001188&type=stream.m3u8
+#EXTINF:0 CUID="540" tvg-name="GOLF" tvg-id="golfchannel.us" tvg-logo="https://sotv.norago.tv/img/300x300/2704205186980203130.jpg" group-title="SPORTS",GOLF
+http://63.141.251.250/jamzone/isg.php?id=20000851&type=stream.m3u8
+#EXTINF:0 CUID="541" tvg-name="GOLTV" tvg-id="goltv.us" tvg-logo="https://sotv.norago.tv/img/300x300/6178269812895026201.jpg" group-title="SPORTS",GOLTV
+http://63.141.251.250/jamzone/isg.php?id=20000229&type=stream.m3u8
+#EXTINF:0 CUID="528" tvg-name="MLB NETWORK" tvg-id="mlbnetwork.us" tvg-logo="https://sotv.norago.tv/img/300x300/2657913688873634419.jpg" group-title="SPORTS",MLB NETWORK
+http://63.141.251.250/jamzone/isg.php?id=20001192&type=stream.m3u8
+#EXTINF:0 CUID="526" tvg-name="MSG" tvg-id="msg.us" tvg-logo="https://mwjs.setplex.net/img/300x300/6527705186487258968.jpg" group-title="SPORTS",MSG
+http://63.141.251.250/jamzone/isg.php?id=20001215&type=stream.m3u8
+#EXTINF:0 CUID="518" tvg-name="NBA TV" tvg-id="nbatv.us" tvg-logo="https://sotv.norago.tv/img/300x300/9017929737935359497.png" group-title="SPORTS",NBA TV
+http://63.141.251.250/jamzone/isg.php?id=20000294&type=stream.m3u8
+#EXTINF:0 CUID="521" tvg-name="NBA USA" tvg-id="nba.us" tvg-logo="https://sotv.norago.tv/img/300x300/1466776894655924650.png" group-title="SPORTS",NBA USA
+http://63.141.251.250/jamzone/isg.php?id=20001191&type=stream.m3u8
+#EXTINF:0 CUID="538" tvg-name="NBC SPORTS" tvg-id="nbcsports.us" tvg-logo="https://sotv.norago.tv/img/300x300/4384896599659037253.png" group-title="SPORTS",NBC SPORTS
+http://63.141.251.250/jamzone/isg.php?id=20000007&type=stream.m3u8
+#EXTINF:0 CUID="525" tvg-name="NESN" tvg-id="nesn.us" tvg-logo="https://sotv.norago.tv/img/300x300/3210558956036790914.png" group-title="SPORTS",NESN
+http://63.141.251.250/jamzone/isg.php?id=20001998&type=stream.m3u8
+#EXTINF:0 CUID="522" tvg-name="NFL NETWORK" tvg-id="nflnetwork.us" tvg-logo="https://sotv.norago.tv/img/300x300/3103109607069609388.png" group-title="SPORTS",NFL NETWORK
+http://63.141.251.250/jamzone/isg.php?id=20000337&type=stream.m3u8
+#EXTINF:0 CUID="583" tvg-name="NFL RED ZONE" tvg-id="nflredzone.us" tvg-logo="https://mwjs.setplex.net/img/300x300/5511280118400993510.png" group-title="SPORTS",NFL RED ZONE
+http://63.141.251.250/jamzone/isg.php?id=20000506&type=stream.m3u8
+#EXTINF:0 CUID="523" tvg-name="NHL NETWORK" tvg-id="nhlnetwork.us" tvg-logo="https://sotv.norago.tv/img/300x300/3376052067432075411.png" group-title="SPORTS",NHL NETWORK
+http://63.141.251.250/jamzone/isg.php?id=20001360&type=stream.m3u8
+#EXTINF:0 CUID="524" tvg-name="SEC Network" tvg-id="secnetwork.us" tvg-logo="https://sotv.norago.tv/img/300x300/6009399239788255465.jpg" group-title="SPORTS",SEC Network
+http://63.141.251.250/jamzone/isg.php?id=20001336&type=stream.m3u8
+#EXTINF:0 CUID="545" tvg-name="SKY SPORTS 1" tvg-id="skysports1.uk" tvg-logo="https://mwjs.setplex.net/img/300x300/3108327494101783441.jpg" group-title="SPORTS",SKY SPORTS 1
+http://63.141.251.250/jamzone/isg.php?id=20000235&type=stream.m3u8
+#EXTINF:0 CUID="546" tvg-name="SKY SPORTS 2" tvg-id="skysports2.uk" tvg-logo="https://mwjs.setplex.net/img/300x300/7486983230096530311.png" group-title="SPORTS",SKY SPORTS 2
+http://63.141.251.250/jamzone/isg.php?id=20000170&type=stream.m3u8
+#EXTINF:0 CUID="549" tvg-name="SKY SPORTS ACTION" tvg-id="skysportsaction.uk" tvg-logo="https://sotv.norago.tv/img/300x300/560246061527464338.png" group-title="SPORTS",SKY SPORTS ACTION
+http://63.141.251.250/jamzone/isg.php?id=20001993&type=stream.m3u8
+#EXTINF:0 CUID="547" tvg-name="SKY SPORTS F1" tvg-id="skysportsf1.uk" tvg-logo="https://sotv.norago.tv/img/resize/300x300/96e53763-67b1-4fef-84e1-70534f8f5232.png" group-title="SPORTS",SKY SPORTS F1
+http://63.141.251.250/jamzone/isg.php?id=20001974&type=stream.m3u8
+#EXTINF:0 CUID="548" tvg-name="SKY SPORTS FOOTBALL" tvg-id="skysportsfootball.uk" tvg-logo="https://sotv.norago.tv/img/300x300/3896747508063151951.png" group-title="SPORTS",SKY SPORTS FOOTBALL
+http://63.141.251.250/jamzone/isg.php?id=20001992&type=stream.m3u8
+#EXTINF:0 CUID="550" tvg-name="SKY SPORTS GOLF" tvg-id="skysportsgolf.uk" tvg-logo="https://sotv.norago.tv/img/300x300/5399648115370192469.png" group-title="SPORTS",SKY SPORTS GOLF
+http://63.141.251.250/jamzone/isg.php?id=20001995&type=stream.m3u8
+#EXTINF:0 CUID="551" tvg-name="SKY SPORTS MAIN EVENT" tvg-id="skysportmainevent.uk" tvg-logo="https://sotv.norago.tv/img/300x300/5448602955137523079.png" group-title="SPORTS",SKY SPORTS MAIN EVENT
+http://63.141.251.250/jamzone/isg.php?id=20001996&type=stream.m3u8
+#EXTINF:0 CUID="513" tvg-name="SPORTSNET 360" tvg-id="sportsnetny.us" tvg-logo="https://sotv.norago.tv/img/300x300/531472430361439990.jpg" group-title="SPORTS",SPORTSNET 360
+http://63.141.251.250/jamzone/isg.php?id=20000187&type=stream.m3u8
+#EXTINF:0 CUID="517" tvg-name="SPORTSNET NEW YORK" tvg-id="sportsnetnewyork.us" tvg-logo="https://sotv.norago.tv/img/300x300/2241559084665025005.png" group-title="SPORTS",SPORTSNET NEW YORK
+http://63.141.251.250/jamzone/isg.php?id=20001999&type=stream.m3u8
+#EXTINF:0 CUID="514" tvg-name="SPORTSNET ONE" tvg-id="sportsnetny.us" tvg-logo="https://sotv.norago.tv/img/300x300/7222209751255005584.png" group-title="SPORTS",SPORTSNET ONE
+http://63.141.251.250/jamzone/isg.php?id=20000183&type=stream.m3u8
+#EXTINF:0 CUID="515" tvg-name="SPORTSNET ONTARIO" tvg-id="sportsnetontario.ca" tvg-logo="https://sotv.norago.tv/img/300x300/6355336085182422003.png" group-title="SPORTS",SPORTSNET ONTARIO
+http://63.141.251.250/jamzone/isg.php?id=20000193&type=stream.m3u8
+#EXTINF:0 CUID="516" tvg-name="SPORTSNET WEST" tvg-id="esportsnetwork.us" tvg-logo="https://sotv.norago.tv/img/300x300/7561667099773543030.png" group-title="SPORTS",SPORTSNET WEST
+http://63.141.251.250/jamzone/isg.php?id=20000288&type=stream.m3u8
+#EXTINF:0 CUID="512" tvg-name="SPORTSNET WORLD" tvg-id="esportsnetwork.us" tvg-logo="https://sotv.norago.tv/img/300x300/2541205339867277518.png" group-title="SPORTS",SPORTSNET WORLD
+http://63.141.251.250/jamzone/isg.php?id=20000185&type=stream.m3u8
+#EXTINF:0 CUID="539" tvg-name="TENNIS" tvg-id="tennischannel.us" tvg-logo="https://sotv.norago.tv/img/300x300/6017861449777162031.jpg" group-title="SPORTS",TENNIS
+http://63.141.251.250/jamzone/isg.php?id=20000850&type=stream.m3u8
+#EXTINF:0 CUID="507" tvg-name="TSN 1" tvg-id="tsn.us" tvg-logo="https://mwjs.setplex.net/img/300x300/5353203054534795443.png" group-title="SPORTS",TSN 1
+http://63.141.251.250/jamzone/isg.php?id=20000243&type=stream.m3u8
+#EXTINF:0 CUID="508" tvg-name="TSN 2" tvg-id="tsn.us" tvg-logo="https://mwjs.setplex.net/img/300x300/5132550465320254017.png" group-title="SPORTS",TSN 2
+http://63.141.251.250/jamzone/isg.php?id=20000281&type=stream.m3u8
+#EXTINF:0 CUID="509" tvg-name="TSN 3" tvg-id="tsn.us" tvg-logo="https://mwjs.setplex.net/img/300x300/488727594305467824.png" group-title="SPORTS",TSN 3
+http://63.141.251.250/jamzone/isg.php?id=20000282&type=stream.m3u8
+#EXTINF:0 CUID="510" tvg-name="TSN 4" tvg-id="tsn.us" tvg-logo="https://mwjs.setplex.net/img/300x300/5653366387498658493.png" group-title="SPORTS",TSN 4
+http://63.141.251.250/jamzone/isg.php?id=20000283&type=stream.m3u8
+#EXTINF:0 CUID="511" tvg-name="TSN 5" tvg-id="tsn.us" tvg-logo="https://mwjs.setplex.net/img/300x300/2334355204602000665.png" group-title="SPORTS",TSN 5
+http://63.141.251.250/jamzone/isg.php?id=20000284&type=stream.m3u8
+#EXTINF:0 CUID="537" tvg-name="UFC NETWORK" tvg-id="network.us" tvg-logo="https://mwjs.setplex.net/img/300x300/1823217478989551753.png" group-title="SPORTS",UFC NETWORK
+http://63.141.251.250/jamzone/isg.php?id=20001212&type=stream.m3u8
+#EXTINF:0 CUID="519" tvg-name="WWE" tvg-id="wwenetwork.us" tvg-logo="https://sotv.norago.tv/img/300x300/6353718950512252502.jpg" group-title="SPORTS",WWE
+http://63.141.251.250/jamzone/isg.php?id=20000306&type=stream.m3u8
+#EXTINF:0 CUID="527" tvg-name="YES NETWORK" tvg-id="yesnetwork.us" tvg-logo="https://sotv.norago.tv/img/300x300/2921751237428351632.jpg" group-title="SPORTS",YES NETWORK
+http://63.141.251.250/jamzone/isg.php?id=20002099&type=stream.m3u8
+#EXTINF:0 CUID="501" tvg-name="PPV EVENTS 1" tvg-logo="https://sotv.norago.tv/img/300x300/9021579335784985080.png" group-title="PPV",PPV EVENTS 1
+http://63.141.251.250/jamzone/isg.php?id=20000304&type=stream.m3u8
+#EXTINF:0 CUID="502" tvg-name="PPV EVENTS 2" tvg-logo="https://sotv.norago.tv/img/300x300/2984522076141462091.png" group-title="PPV",PPV EVENTS 2
+http://63.141.251.250/jamzone/isg.php?id=20000164&type=stream.m3u8
+#EXTINF:0 CUID="503" tvg-name="PPV EVENTS 3" tvg-logo="https://sotv.norago.tv/img/300x300/2067746313433209472.png" group-title="PPV",PPV EVENTS 3
+http://63.141.251.250/jamzone/isg.php?id=20002562&type=stream.m3u8
+#EXTINF:0 CUID="504" tvg-name="PPV EVENTS 4" tvg-logo="https://sotv.norago.tv/img/300x300/9121077106143622555.png" group-title="PPV",PPV EVENTS 4
+http://63.141.251.250/jamzone/isg.php?id=20002563&type=stream.m3u8
+#EXTINF:0 CUID="505" tvg-name="PPV EVENTS 5" tvg-logo="https://sotv.norago.tv/img/300x300/1177084878243392233.png" group-title="PPV",PPV EVENTS 5
+http://63.141.251.250/jamzone/isg.php?id=20002564&type=stream.m3u8
+#EXTINF:0 CUID="506" tvg-name="PPV EVENTS 6" tvg-logo="https://sotv.norago.tv/img/300x300/6930617658884232663.png" group-title="PPV",PPV EVENTS 6
+http://63.141.251.250/jamzone/isg.php?id=20002565&type=stream.m3u8
+#EXTINF:0 CUID="238" tvg-name="ABC ALBANY" tvg-id="abcwalbalbany.us" tvg-logo="https://sotv.norago.tv/img/300x300/4759669407720876424.png" group-title="USA LOCALS",ABC ALBANY
+http://63.141.251.250/jamzone/isg.php?id=20002448&type=stream.m3u8
+#EXTINF:0 CUID="237" tvg-name="ABC ALBUQUERQUE" tvg-id="abc7koatalbuquerque.us" tvg-logo="https://sotv.norago.tv/img/300x300/7178334783845617024.png" group-title="USA LOCALS",ABC ALBUQUERQUE
+http://63.141.251.250/jamzone/isg.php?id=20002447&type=stream.m3u8
+#EXTINF:0 CUID="177" tvg-name="ABC ANCHORAGE 13" tvg-logo="https://sotv.norago.tv/img/300x300/9010208842888274120.png" group-title="USA LOCALS",ABC ANCHORAGE 13
+http://63.141.251.250/jamzone/isg.php?id=20002105&type=stream.m3u8
+#EXTINF:0 CUID="241" tvg-name="ABC ASHEVILLE" tvg-id="abcwlosasheville.us" tvg-logo="https://sotv.norago.tv/img/300x300/5624696045539400390.png" group-title="USA LOCALS",ABC ASHEVILLE
+http://63.141.251.250/jamzone/isg.php?id=20002451&type=stream.m3u8
+#EXTINF:0 CUID="196" tvg-name="ABC ATLANTA" tvg-id="abcwsbatlanta.us" tvg-logo="https://sotv.norago.tv/img/300x300/1329999374438227544.png" group-title="USA LOCALS",ABC ATLANTA
+http://63.141.251.250/jamzone/isg.php?id=20002169&type=stream.m3u8
+#EXTINF:0 CUID="198" tvg-name="ABC AUGUSTA" tvg-logo="https://sotv.norago.tv/img/300x300/6397771053644732319.png" group-title="USA LOCALS",ABC AUGUSTA
+http://63.141.251.250/jamzone/isg.php?id=20002173&type=stream.m3u8
+#EXTINF:0 CUID="221" tvg-name="ABC AUSTIN" tvg-id="abckaalaustin.us" tvg-logo="https://sotv.norago.tv/img/300x300/2928070270271395852.png" group-title="USA LOCALS",ABC AUSTIN
+http://63.141.251.250/jamzone/isg.php?id=20002241&type=stream.m3u8
+#EXTINF:0 CUID="201" tvg-name="ABC BALTIMORE" tvg-id="abcwmarbaltimore.us" tvg-logo="https://sotv.norago.tv/img/300x300/3272370026248798483.png" group-title="USA LOCALS",ABC BALTIMORE
+http://63.141.251.250/jamzone/isg.php?id=20002183&type=stream.m3u8
+#EXTINF:0 CUID="227" tvg-name="ABC BATON ROUGE" tvg-id="abcwbrzbatonrouge.us" tvg-logo="https://sotv.norago.tv/img/300x300/1717983766190681958.png" group-title="USA LOCALS",ABC BATON ROUGE
+http://63.141.251.250/jamzone/isg.php?id=20002437&type=stream.m3u8
+#EXTINF:0 CUID="202" tvg-name="ABC BATTLE CREEK" tvg-id="abc41wotvbattlecreek.us" tvg-logo="https://sotv.norago.tv/img/300x300/4615835704852990273.png" group-title="USA LOCALS",ABC BATTLE CREEK
+http://63.141.251.250/jamzone/isg.php?id=20002184&type=stream.m3u8
+#EXTINF:0 CUID="181" tvg-name="ABC BIRMINGHAM" tvg-id="68wabmbirmingham.us" tvg-logo="https://sotv.norago.tv/img/300x300/3527260870283956161.png" group-title="USA LOCALS",ABC BIRMINGHAM
+http://63.141.251.250/jamzone/isg.php?id=20002118&type=stream.m3u8
+#EXTINF:0 CUID="229" tvg-name="ABC BOSTON" tvg-id="abcwcvbboston.us" tvg-logo="https://sotv.norago.tv/img/300x300/8114636408772115865.png" group-title="USA LOCALS",ABC BOSTON
+http://63.141.251.250/jamzone/isg.php?id=20002439&type=stream.m3u8
+#EXTINF:0 CUID="222" tvg-name="ABC BRYAN" tvg-logo="https://sotv.norago.tv/img/300x300/7381282192067787611.png" group-title="USA LOCALS",ABC BRYAN
+http://63.141.251.250/jamzone/isg.php?id=20002244&type=stream.m3u8
+#EXTINF:0 CUID="239" tvg-name="ABC BUFFALO" tvg-id="abcwkbwbuffalo.us" tvg-logo="https://sotv.norago.tv/img/300x300/197015976489030647.png" group-title="USA LOCALS",ABC BUFFALO
+http://63.141.251.250/jamzone/isg.php?id=20002449&type=stream.m3u8
+#EXTINF:0 CUID="216" tvg-name="ABC CHARLESTON 4" tvg-id="abcwchscharleston.us" tvg-logo="https://sotv.norago.tv/img/300x300/6634499096415099179.png" group-title="USA LOCALS",ABC CHARLESTON 4
+http://63.141.251.250/jamzone/isg.php?id=20002230&type=stream.m3u8
+#EXTINF:0 CUID="217" tvg-name="ABC CHARLESTON 8" tvg-id="abcwchscharleston.us" tvg-logo="https://sotv.norago.tv/img/300x300/6947143918556894889.png" group-title="USA LOCALS",ABC CHARLESTON 8
+http://63.141.251.250/jamzone/isg.php?id=20002233&type=stream.m3u8
+#EXTINF:0 CUID="205" tvg-name="ABC CHARLOTTE" tvg-id="abcwsoccharlotte.us" tvg-logo="https://sotv.norago.tv/img/300x300/4546138613318145267.png" group-title="USA LOCALS",ABC CHARLOTTE
+http://63.141.251.250/jamzone/isg.php?id=20002199&type=stream.m3u8
+#EXTINF:0 CUID="218" tvg-name="ABC CHATTANOOGA" tvg-id="abc9wtvcchattanooga.us" tvg-logo="https://sotv.norago.tv/img/300x300/679709510023879271.png" group-title="USA LOCALS",ABC CHATTANOOGA
+http://63.141.251.250/jamzone/isg.php?id=20002235&type=stream.m3u8
+#EXTINF:0 CUID="179" tvg-name="ABC CHICAGO" tvg-id="abc7wlschicago.us" tvg-logo="https://sotv.norago.tv/img/300x300/674356652987855944.png" group-title="USA LOCALS",ABC CHICAGO
+http://63.141.251.250/jamzone/isg.php?id=20002112&type=stream.m3u8
+#EXTINF:0 CUID="210" tvg-name="ABC CLEVELAND" tvg-id="abcwewscleveland.us" tvg-logo="https://sotv.norago.tv/img/300x300/5598165990305112697.png" group-title="USA LOCALS",ABC CLEVELAND
+http://63.141.251.250/jamzone/isg.php?id=20002206&type=stream.m3u8
+#EXTINF:0 CUID="209" tvg-name="ABC COLUMBUS" tvg-id="abcwsyxcolumbus.us" tvg-logo="https://sotv.norago.tv/img/300x300/7537112023735753619.png" group-title="USA LOCALS",ABC COLUMBUS
+http://63.141.251.250/jamzone/isg.php?id=20002209&type=stream.m3u8
+#EXTINF:0 CUID="223" tvg-name="ABC DALLAS" tvg-logo="https://sotv.norago.tv/img/300x300/2616532556262944165.png" group-title="USA LOCALS",ABC DALLAS
+http://63.141.251.250/jamzone/isg.php?id=20002248&type=stream.m3u8
+#EXTINF:0 CUID="211" tvg-name="ABC DAYTON" tvg-logo="https://sotv.norago.tv/img/300x300/4840142426682254924.png" group-title="USA LOCALS",ABC DAYTON
+http://63.141.251.250/jamzone/isg.php?id=20002210&type=stream.m3u8
+#EXTINF:0 CUID="230" tvg-name="ABC DETROIT" tvg-logo="https://sotv.norago.tv/img/300x300/5009396728729375431.png" group-title="USA LOCALS",ABC DETROIT
+http://63.141.251.250/jamzone/isg.php?id=20002440&type=stream.m3u8
+#EXTINF:0 CUID="224" tvg-name="ABC EL PASO" tvg-logo="https://sotv.norago.tv/img/300x300/6946086559842431765.png" group-title="USA LOCALS",ABC EL PASO
+http://63.141.251.250/jamzone/isg.php?id=20002250&type=stream.m3u8
+#EXTINF:0 CUID="189" tvg-name="ABC FORT MYERS" tvg-id="abcwzvnfortmyers.us" tvg-logo="https://sotv.norago.tv/img/300x300/5772907660231102615.png" group-title="USA LOCALS",ABC FORT MYERS
+http://63.141.251.250/jamzone/isg.php?id=20002146&type=stream.m3u8
+#EXTINF:0 CUID="183" tvg-name="ABC FRESNO" tvg-id="abckfsnfresno.us" tvg-logo="https://sotv.norago.tv/img/300x300/8206438003644553073.png" group-title="USA LOCALS",ABC FRESNO
+http://63.141.251.250/jamzone/isg.php?id=20002124&type=stream.m3u8
+#EXTINF:0 CUID="178" tvg-name="ABC GAINESVILLE" tvg-id="abc20wcjbgainesville.us" tvg-logo="https://sotv.norago.tv/img/300x300/7147348415312852187.png" group-title="USA LOCALS",ABC GAINESVILLE
+http://63.141.251.250/jamzone/isg.php?id=20002108&type=stream.m3u8
+#EXTINF:0 CUID="231" tvg-name="ABC GRAND RAPIDS" tvg-id="abc13wzzmgrandrapids.us" tvg-logo="https://sotv.norago.tv/img/300x300/6091493444736318621.png" group-title="USA LOCALS",ABC GRAND RAPIDS
+http://63.141.251.250/jamzone/isg.php?id=20002441&type=stream.m3u8
+#EXTINF:0 CUID="197" tvg-name="ABC HARRISBURG" tvg-id="abc3wsilharrisburg.us" tvg-logo="https://sotv.norago.tv/img/300x300/4723838435461118293.png" group-title="USA LOCALS",ABC HARRISBURG
+http://63.141.251.250/jamzone/isg.php?id=20002179&type=stream.m3u8
+#EXTINF:0 CUID="200" tvg-name="ABC HONOLULU" tvg-id="abckitvhonolulu.us" tvg-logo="https://sotv.norago.tv/img/300x300/534839125964230456.png" group-title="USA LOCALS",ABC HONOLULU
+http://63.141.251.250/jamzone/isg.php?id=20002175&type=stream.m3u8
+#EXTINF:0 CUID="182" tvg-name="ABC HUNTSVILLE" tvg-id="abc31waayhuntsville.us" tvg-logo="https://sotv.norago.tv/img/300x300/8732584884968585502.png" group-title="USA LOCALS",ABC HUNTSVILLE
+http://63.141.251.250/jamzone/isg.php?id=20002122&type=stream.m3u8
+#EXTINF:0 CUID="225" tvg-name="ABC INDIANAPOLIS" tvg-id="abcwrtvindianapolis.us" tvg-logo="https://sotv.norago.tv/img/300x300/5201630701181551142.png" group-title="USA LOCALS",ABC INDIANAPOLIS
+http://63.141.251.250/jamzone/isg.php?id=20002435&type=stream.m3u8
+#EXTINF:0 CUID="190" tvg-name="ABC JACKSONVILLE" tvg-id="abc25wjxxjacksonville.us" tvg-logo="https://sotv.norago.tv/img/300x300/7038078927869160556.png" group-title="USA LOCALS",ABC JACKSONVILLE
+http://63.141.251.250/jamzone/isg.php?id=20002150&type=stream.m3u8
+#EXTINF:0 CUID="180" tvg-name="ABC JEFFERSON CITY" tvg-id="abc17kmizjeffersoncity.us" tvg-logo="https://sotv.norago.tv/img/300x300/278407499755989121.png" group-title="USA LOCALS",ABC JEFFERSON CITY
+http://63.141.251.250/jamzone/isg.php?id=20002114&type=stream.m3u8
+#EXTINF:0 CUID="203" tvg-name="ABC KANSAS CITY" tvg-id="abc9kmbckansascity.us" tvg-logo="https://sotv.norago.tv/img/300x300/7616192151140482761.png" group-title="USA LOCALS",ABC KANSAS CITY
+http://63.141.251.250/jamzone/isg.php?id=20002187&type=stream.m3u8
+#EXTINF:0 CUID="236" tvg-name="ABC LAS VEGAS" tvg-id="abcktnvlasvegas.us" tvg-logo="https://sotv.norago.tv/img/300x300/1939494526272560353.png" group-title="USA LOCALS",ABC LAS VEGAS
+http://63.141.251.250/jamzone/isg.php?id=20002446&type=stream.m3u8
+#EXTINF:0 CUID="226" tvg-name="ABC LEXINGTON" tvg-id="abc36wtvqlexington.us" tvg-logo="https://sotv.norago.tv/img/300x300/1783317217364663049.png" group-title="USA LOCALS",ABC LEXINGTON
+http://63.141.251.250/jamzone/isg.php?id=20002436&type=stream.m3u8
+#EXTINF:0 CUID="184" tvg-name="ABC LOS ANGELES" tvg-logo="https://sotv.norago.tv/img/300x300/5154273325011699658.png" group-title="USA LOCALS",ABC LOS ANGELES
+http://63.141.251.250/jamzone/isg.php?id=20002128&type=stream.m3u8
+#EXTINF:0 CUID="199" tvg-name="ABC LOUISVILLE" tvg-id="abc11whaslouisville.us" tvg-logo="https://sotv.norago.tv/img/300x300/4715788293019201135.png" group-title="USA LOCALS",ABC LOUISVILLE
+http://63.141.251.250/jamzone/isg.php?id=20002181&type=stream.m3u8
+#EXTINF:0 CUID="204" tvg-name="ABC MANCHESTER" tvg-id="abcwmurmanchester.us" tvg-logo="https://sotv.norago.tv/img/300x300/1980362273919257460.png" group-title="USA LOCALS",ABC MANCHESTER
+http://63.141.251.250/jamzone/isg.php?id=20002191&type=stream.m3u8
+#EXTINF:0 CUID="219" tvg-name="ABC MEMPHIS" tvg-id="nbc5wmcmemphis.us" tvg-logo="https://sotv.norago.tv/img/300x300/3080103881353895841.png" group-title="USA LOCALS",ABC MEMPHIS
+http://63.141.251.250/jamzone/isg.php?id=20002238&type=stream.m3u8
+#EXTINF:0 CUID="191" tvg-name="ABC MIAMI" tvg-logo="https://sotv.norago.tv/img/300x300/8004435000049201328.png" group-title="USA LOCALS",ABC MIAMI
+http://63.141.251.250/jamzone/isg.php?id=20002152&type=stream.m3u8
+#EXTINF:0 CUID="234" tvg-name="ABC MISSOURI" tvg-logo="https://sotv.norago.tv/img/300x300/140530742369962225.png" group-title="USA LOCALS",ABC MISSOURI
+http://63.141.251.250/jamzone/isg.php?id=20002444&type=stream.m3u8
+#EXTINF:0 CUID="220" tvg-name="ABC NASHVILLE" tvg-id="abcwkrnnashville.us" tvg-logo="https://sotv.norago.tv/img/300x300/3541031682103296254.png" group-title="USA LOCALS",ABC NASHVILLE
+http://63.141.251.250/jamzone/isg.php?id=20002239&type=stream.m3u8
+#EXTINF:0 CUID="188" tvg-name="ABC NEW HAVEN" tvg-logo="https://sotv.norago.tv/img/300x300/2544153334540975647.png" group-title="USA LOCALS",ABC NEW HAVEN
+http://63.141.251.250/jamzone/isg.php?id=20002142&type=stream.m3u8
+#EXTINF:0 CUID="240" tvg-name="ABC NYC" tvg-logo="https://sotv.norago.tv/img/300x300/5527090108902993702.png" group-title="USA LOCALS",ABC NYC
+http://63.141.251.250/jamzone/isg.php?id=20002450&type=stream.m3u8
+#EXTINF:0 CUID="212" tvg-name="ABC OKLAHOMA CITY" tvg-id="abc5kocooklahomacity.us" tvg-logo="https://sotv.norago.tv/img/300x300/5781638525063974813.png" group-title="USA LOCALS",ABC OKLAHOMA CITY
+http://63.141.251.250/jamzone/isg.php?id=20002213&type=stream.m3u8
+#EXTINF:0 CUID="192" tvg-name="ABC ORLANDO" tvg-id="abcwftvorlando.us" tvg-logo="https://sotv.norago.tv/img/300x300/9059998009362019740.png" group-title="USA LOCALS",ABC ORLANDO
+http://63.141.251.250/jamzone/isg.php?id=20002153&type=stream.m3u8
+#EXTINF:0 CUID="193" tvg-name="ABC PENSACOLA" tvg-id="abcwearpensacola.us" tvg-logo="https://sotv.norago.tv/img/300x300/6491984840353444071.png" group-title="USA LOCALS",ABC PENSACOLA
+http://63.141.251.250/jamzone/isg.php?id=20002157&type=stream.m3u8
+#EXTINF:0 CUID="242" tvg-name="ABC PHILADELPHIA" tvg-id="abcwpviphiladelphia.us" tvg-logo="https://sotv.norago.tv/img/300x300/2437349156066821099.png" group-title="USA LOCALS",ABC PHILADELPHIA
+http://63.141.251.250/jamzone/isg.php?id=20002223&type=stream.m3u8
+#EXTINF:0 CUID="215" tvg-name="ABC PITTSBURGH" tvg-id="abcwtaepittsburgh.us" tvg-logo="https://sotv.norago.tv/img/300x300/2306246674194408799.png" group-title="USA LOCALS",ABC PITTSBURGH
+http://63.141.251.250/jamzone/isg.php?id=20002227&type=stream.m3u8
+#EXTINF:0 CUID="214" tvg-name="ABC PORTLAND" tvg-id="abc2katuportland.us" tvg-logo="https://sotv.norago.tv/img/300x300/2225906681861528339.png" group-title="USA LOCALS",ABC PORTLAND
+http://63.141.251.250/jamzone/isg.php?id=20002221&type=stream.m3u8
+#EXTINF:0 CUID="206" tvg-name="ABC RALEIGH" tvg-logo="https://sotv.norago.tv/img/300x300/6800585680907512859.png" group-title="USA LOCALS",ABC RALEIGH
+http://63.141.251.250/jamzone/isg.php?id=20002200&type=stream.m3u8
+#EXTINF:0 CUID="185" tvg-name="ABC SACRAMENTO" tvg-id="abckxtvsacramento.us" tvg-logo="https://sotv.norago.tv/img/300x300/8143699952732262482.png" group-title="USA LOCALS",ABC SACRAMENTO
+http://63.141.251.250/jamzone/isg.php?id=20002131&type=stream.m3u8
+#EXTINF:0 CUID="233" tvg-name="ABC SAINT PAUL" tvg-logo="https://sotv.norago.tv/img/300x300/3955193883628418796.png" group-title="USA LOCALS",ABC SAINT PAUL
+http://63.141.251.250/jamzone/isg.php?id=20002442&type=stream.m3u8
+#EXTINF:0 CUID="186" tvg-name="ABC SAN DIEGO" tvg-id="abckgtvsandiego.us" tvg-logo="https://sotv.norago.tv/img/300x300/7556821116718496798.png" group-title="USA LOCALS",ABC SAN DIEGO
+http://63.141.251.250/jamzone/isg.php?id=20002134&type=stream.m3u8
+#EXTINF:0 CUID="187" tvg-name="ABC SAN FRANCISCO" tvg-id="abckgosanfrancisco.us" tvg-logo="https://sotv.norago.tv/img/300x300/7949074901702867724.png" group-title="USA LOCALS",ABC SAN FRANCISCO
+http://63.141.251.250/jamzone/isg.php?id=20002138&type=stream.m3u8
+#EXTINF:0 CUID="194" tvg-name="ABC SARASOTA" tvg-id="abc7wwsbsarasota.us" tvg-logo="https://sotv.norago.tv/img/300x300/6668456863321315457.png" group-title="USA LOCALS",ABC SARASOTA
+http://63.141.251.250/jamzone/isg.php?id=20002161&type=stream.m3u8
+#EXTINF:0 CUID="228" tvg-name="ABC SHREVEPORT" tvg-id="abc3ktbsshreveport.us" tvg-logo="https://sotv.norago.tv/img/300x300/8769114759261623005.png" group-title="USA LOCALS",ABC SHREVEPORT
+http://63.141.251.250/jamzone/isg.php?id=20002438&type=stream.m3u8
+#EXTINF:0 CUID="235" tvg-name="ABC ST LOUIS" tvg-id="abckdnlstlouis.us" tvg-logo="https://sotv.norago.tv/img/300x300/1448577621200411039.png" group-title="USA LOCALS",ABC ST LOUIS
+http://63.141.251.250/jamzone/isg.php?id=20002445&type=stream.m3u8
+#EXTINF:0 CUID="208" tvg-name="ABC SYRACUSE" tvg-logo="https://sotv.norago.tv/img/300x300/6559251229459186823.png" group-title="USA LOCALS",ABC SYRACUSE
+http://63.141.251.250/jamzone/isg.php?id=20002195&type=stream.m3u8
+#EXTINF:0 CUID="195" tvg-name="ABC TAMPA" tvg-logo="https://sotv.norago.tv/img/300x300/8783671441348717152.png" group-title="USA LOCALS",ABC TAMPA
+http://63.141.251.250/jamzone/isg.php?id=20002165&type=stream.m3u8
+#EXTINF:0 CUID="213" tvg-name="ABC TULSA" tvg-logo="https://sotv.norago.tv/img/300x300/8454241282118234407.png" group-title="USA LOCALS",ABC TULSA
+http://63.141.251.250/jamzone/isg.php?id=20002217&type=stream.m3u8
+#EXTINF:0 CUID="207" tvg-name="ABC WINSTON SALEM" tvg-id="nbc12wxiiwinstonsalem.us" tvg-logo="https://sotv.norago.tv/img/300x300/5670903491250953263.png" group-title="USA LOCALS",ABC WINSTON SALEM
+http://63.141.251.250/jamzone/isg.php?id=20002204&type=stream.m3u8
+#EXTINF:0 CUID="232" tvg-name="ABC/NBC KGNS LAREDO TX" tvg-id="kgns.us" tvg-logo="https://sotv.norago.tv/img/300x300/3263349810073720318.png" group-title="USA LOCALS",ABC/NBC KGNS LAREDO TX
+http://63.141.251.250/jamzone/isg.php?id=20002249&type=stream.m3u8
+#EXTINF:0 CUID="277" tvg-name="CBS 2 KALB ALEXANDRIA LA" tvg-id="kalb.us" tvg-logo="https://sotv.norago.tv/img/300x300/8955944982779106078.png" group-title="USA LOCALS",CBS 2 KALB ALEXANDRIA LA
+http://63.141.251.250/jamzone/isg.php?id=20002253&type=stream.m3u8
+#EXTINF:0 CUID="278" tvg-name="CBS 2 WFMY GREENSBORO" tvg-id="wfmy.us" tvg-logo="https://sotv.norago.tv/img/300x300/3960739554191154546.png" group-title="USA LOCALS",CBS 2 WFMY GREENSBORO
+http://63.141.251.250/jamzone/isg.php?id=20002254&type=stream.m3u8
+#EXTINF:0 CUID="281" tvg-name="CBS 3 WFSB HARTFORD" tvg-id="wfsb.us" tvg-logo="https://sotv.norago.tv/img/300x300/1300673274763035055.png" group-title="USA LOCALS",CBS 3 WFSB HARTFORD
+http://63.141.251.250/jamzone/isg.php?id=20002257&type=stream.m3u8
+#EXTINF:0 CUID="282" tvg-name="CBS 4 KDBC EL PASO TX" tvg-id="kdbc.us" tvg-logo="https://sotv.norago.tv/img/300x300/3099652858841753485.png" group-title="USA LOCALS",CBS 4 KDBC EL PASO TX
+http://63.141.251.250/jamzone/isg.php?id=20002258&type=stream.m3u8
+#EXTINF:0 CUID="267" tvg-name="CBS 5 KCTV KANSAS CITY" tvg-id="kctv.us" tvg-logo="https://sotv.norago.tv/img/300x300/121419097730807759.png" group-title="USA LOCALS",CBS 5 KCTV KANSAS CITY
+http://63.141.251.250/jamzone/isg.php?id=20002211&type=stream.m3u8
+#EXTINF:0 CUID="284" tvg-name="CBS 5 KENS SAN ANTONIO" tvg-id="kens.us" tvg-logo="https://sotv.norago.tv/img/300x300/1303815015857970536.png" group-title="USA LOCALS",CBS 5 KENS SAN ANTONIO
+http://63.141.251.250/jamzone/isg.php?id=20002261&type=stream.m3u8
+#EXTINF:0 CUID="271" tvg-name="CBS 6 KAUZ WICHITA FALLS TX" tvg-id="kauz.us" tvg-logo="https://sotv.norago.tv/img/300x300/3642906389941954629.png" group-title="USA LOCALS",CBS 6 KAUZ WICHITA FALLS TX
+http://63.141.251.250/jamzone/isg.php?id=20002229&type=stream.m3u8
+#EXTINF:0 CUID="268" tvg-name="CBS 6 WKMG ORLANDO" tvg-id="wkmg.us" tvg-logo="https://sotv.norago.tv/img/300x300/202261556157591843.png" group-title="USA LOCALS",CBS 6 WKMG ORLANDO
+http://63.141.251.250/jamzone/isg.php?id=20002214&type=stream.m3u8
+#EXTINF:0 CUID="285" tvg-name="CBS 8 KCCI DES MOINES IA" tvg-id="kcci.us" tvg-logo="https://sotv.norago.tv/img/300x300/1919997212324953253.png" group-title="USA LOCALS",CBS 8 KCCI DES MOINES IA
+http://63.141.251.250/jamzone/isg.php?id=20002262&type=stream.m3u8
+#EXTINF:0 CUID="286" tvg-name="CBS 8 WAKA MONTGOMERY" tvg-id="waka.us" tvg-logo="https://sotv.norago.tv/img/300x300/7889921997117240116.png" group-title="USA LOCALS",CBS 8 WAKA MONTGOMERY
+http://63.141.251.250/jamzone/isg.php?id=20002263&type=stream.m3u8
+#EXTINF:0 CUID="275" tvg-name="CBS 12 KFVS CAPE GIRARDEAU MO" tvg-id="kfvs.us" tvg-logo="https://sotv.norago.tv/img/300x300/6432684165394519465.png" group-title="USA LOCALS",CBS 12 KFVS CAPE GIRARDEAU MO
+http://63.141.251.250/jamzone/isg.php?id=20002251&type=stream.m3u8
+#EXTINF:0 CUID="276" tvg-name="CBS 12 WKRC CINCINNATI" tvg-id="wkrc.us" tvg-logo="https://sotv.norago.tv/img/300x300/8243460349782715453.png" group-title="USA LOCALS",CBS 12 WKRC CINCINNATI
+http://63.141.251.250/jamzone/isg.php?id=20002252&type=stream.m3u8
+#EXTINF:0 CUID="279" tvg-name="CBS 21 WHP HARRISBURG" tvg-id="whp.us" tvg-logo="https://sotv.norago.tv/img/300x300/5352211794984621372.png" group-title="USA LOCALS",CBS 21 WHP HARRISBURG
+http://63.141.251.250/jamzone/isg.php?id=20002255&type=stream.m3u8
+#EXTINF:0 CUID="280" tvg-name="CBS 27 WKYT LEXINGTON KY" tvg-id="wkyt.us" tvg-logo="https://sotv.norago.tv/img/300x300/8453539885553246959.png" group-title="USA LOCALS",CBS 27 WKYT LEXINGTON KY
+http://63.141.251.250/jamzone/isg.php?id=20002256&type=stream.m3u8
+#EXTINF:0 CUID="283" tvg-name="CBS 47 WJAX JACKSONVILLE" tvg-id="wjax.us" tvg-logo="https://sotv.norago.tv/img/300x300/2664069321420079411.png" group-title="USA LOCALS",CBS 47 WJAX JACKSONVILLE
+http://63.141.251.250/jamzone/isg.php?id=20002260&type=stream.m3u8
+#EXTINF:0 CUID="248" tvg-name="CBS ALBUQUERQUE" tvg-id="cbs13krqealbuquerque.us" tvg-logo="https://sotv.norago.tv/img/300x300/2816991771289589054.jpg" group-title="USA LOCALS",CBS ALBUQUERQUE
+http://63.141.251.250/jamzone/isg.php?id=20002135&type=stream.m3u8
+#EXTINF:0 CUID="329" tvg-name="CBS ATLANTA" tvg-logo="https://sotv.norago.tv/img/300x300/2533818683755199772.png" group-title="USA LOCALS",CBS ATLANTA
+http://63.141.251.250/jamzone/isg.php?id=20002309&type=stream.m3u8
+#EXTINF:0 CUID="260" tvg-name="CBS AUSTIN" tvg-id="cbskeyeaustin.us" tvg-logo="https://sotv.norago.tv/img/300x300/3900608071953545801.png" group-title="USA LOCALS",CBS AUSTIN
+http://63.141.251.250/jamzone/isg.php?id=20002185&type=stream.m3u8
+#EXTINF:0 CUID="244" tvg-name="CBS BALTIMORE" tvg-id="cbswjzbaltimore.us" tvg-logo="https://sotv.norago.tv/img/300x300/8751837928679393673.jpg" group-title="USA LOCALS",CBS BALTIMORE
+http://63.141.251.250/jamzone/isg.php?id=20002109&type=stream.m3u8
+#EXTINF:0 CUID="243" tvg-name="CBS BOSTON" tvg-id="cbswbzboston.us" tvg-logo="https://sotv.norago.tv/img/300x300/6179715056177547741.jpg" group-title="USA LOCALS",CBS BOSTON
+http://63.141.251.250/jamzone/isg.php?id=20002106&type=stream.m3u8
+#EXTINF:0 CUID="252" tvg-name="CBS BUFFALO" tvg-logo="https://sotv.norago.tv/img/300x300/8117069361273682569.jpg" group-title="USA LOCALS",CBS BUFFALO
+http://63.141.251.250/jamzone/isg.php?id=20002147&type=stream.m3u8
+#EXTINF:0 CUID="246" tvg-name="CBS CHARLOTTE" tvg-id="cbswbtvcharlotte.us" tvg-logo="https://sotv.norago.tv/img/300x300/2610456842669271386.jpg" group-title="USA LOCALS",CBS CHARLOTTE
+http://63.141.251.250/jamzone/isg.php?id=20002125&type=stream.m3u8
+#EXTINF:0 CUID="331" tvg-name="CBS CHICAGO" tvg-id="cbswbbmchicago.us" tvg-logo="https://sotv.norago.tv/img/300x300/5012397685962768924.png" group-title="USA LOCALS",CBS CHICAGO
+http://63.141.251.250/jamzone/isg.php?id=20002311&type=stream.m3u8
+#EXTINF:0 CUID="257" tvg-name="CBS COLUMBIA" tvg-logo="https://sotv.norago.tv/img/300x300/6933227012259364839.png" group-title="USA LOCALS",CBS COLUMBIA
+http://63.141.251.250/jamzone/isg.php?id=20002170&type=stream.m3u8
+#EXTINF:0 CUID="253" tvg-name="CBS COLUMBUS" tvg-id="cbswbnscolumbus.us" tvg-logo="https://sotv.norago.tv/img/300x300/7360794889043333536.png" group-title="USA LOCALS",CBS COLUMBUS
+http://63.141.251.250/jamzone/isg.php?id=20002154&type=stream.m3u8
+#EXTINF:0 CUID="266" tvg-name="CBS DALLAS" tvg-logo="https://sotv.norago.tv/img/300x300/3724148955956827996.png" group-title="USA LOCALS",CBS DALLAS
+http://63.141.251.250/jamzone/isg.php?id=20002207&type=stream.m3u8
+#EXTINF:0 CUID="261" tvg-name="CBS FORT WORTH 18" tvg-logo="https://sotv.norago.tv/img/300x300/2017579863222844475.png" group-title="USA LOCALS",CBS FORT WORTH 18
+http://63.141.251.250/jamzone/isg.php?id=20002188&type=stream.m3u8
+#EXTINF:0 CUID="262" tvg-name="CBS FORT WORTH 19" tvg-logo="https://sotv.norago.tv/img/300x300/3190175404267953845.png" group-title="USA LOCALS",CBS FORT WORTH 19
+http://63.141.251.250/jamzone/isg.php?id=20002192&type=stream.m3u8
+#EXTINF:0 CUID="330" tvg-name="CBS HONOLULU" tvg-id="cbskgmbhonolulu.us" tvg-logo="https://sotv.norago.tv/img/300x300/3356168518458810978.png" group-title="USA LOCALS",CBS HONOLULU
+http://63.141.251.250/jamzone/isg.php?id=20002310&type=stream.m3u8
+#EXTINF:0 CUID="263" tvg-name="CBS HOUSTON" tvg-id="cbskhouhouston.us" tvg-logo="https://sotv.norago.tv/img/300x300/697563295149401635.png" group-title="USA LOCALS",CBS HOUSTON
+http://63.141.251.250/jamzone/isg.php?id=20002196&type=stream.m3u8
+#EXTINF:0 CUID="269" tvg-name="CBS KCBS LOS ANGELES" tvg-id="kcbs.us" tvg-logo="https://sotv.norago.tv/img/300x300/507821066970043863.png" group-title="USA LOCALS",CBS KCBS LOS ANGELES
+http://63.141.251.250/jamzone/isg.php?id=20002224&type=stream.m3u8
+#EXTINF:0 CUID="287" tvg-name="CBS KFDA AMARILLO TX" tvg-id="kfda.us" tvg-logo="https://sotv.norago.tv/img/300x300/1805133435495869420.png" group-title="USA LOCALS",CBS KFDA AMARILLO TX
+http://63.141.251.250/jamzone/isg.php?id=20002265&type=stream.m3u8
+#EXTINF:0 CUID="272" tvg-name="CBS KGAN CEDAR RAPIDS IA" tvg-id="kgan.us" tvg-logo="https://sotv.norago.tv/img/300x300/8523908099959162255.png" group-title="USA LOCALS",CBS KGAN CEDAR RAPIDS IA
+http://63.141.251.250/jamzone/isg.php?id=20002236&type=stream.m3u8
+#EXTINF:0 CUID="288" tvg-name="CBS KGBT RIO GRANDE VALLEY TX" tvg-id="kgbt.us" tvg-logo="https://sotv.norago.tv/img/300x300/7887346971853871715.png" group-title="USA LOCALS",CBS KGBT RIO GRANDE VALLEY TX
+http://63.141.251.250/jamzone/isg.php?id=20002266&type=stream.m3u8
+#EXTINF:0 CUID="289" tvg-name="CBS KGMB HONOLULU HI" tvg-id="kgmb.us" tvg-logo="https://sotv.norago.tv/img/300x300/3871849259355494918.png" group-title="USA LOCALS",CBS KGMB HONOLULU HI
+http://63.141.251.250/jamzone/isg.php?id=20002267&type=stream.m3u8
+#EXTINF:0 CUID="290" tvg-name="CBS KGWN CHEYENNE WY" tvg-id="kgwn.us" tvg-logo="https://sotv.norago.tv/img/300x300/5934672627647663928.png" group-title="USA LOCALS",CBS KGWN CHEYENNE WY
+http://63.141.251.250/jamzone/isg.php?id=20002268&type=stream.m3u8
+#EXTINF:0 CUID="291" tvg-name="CBS KIDK IDAHO FALLS ID" tvg-id="kidk.us" tvg-logo="https://sotv.norago.tv/img/300x300/6960963243893152997.png" group-title="USA LOCALS",CBS KIDK IDAHO FALLS ID
+http://63.141.251.250/jamzone/isg.php?id=20002269&type=stream.m3u8
+#EXTINF:0 CUID="292" tvg-name="CBS KION MONTEREY CA" tvg-id="kion.us" tvg-logo="https://sotv.norago.tv/img/300x300/7093339826433654203.png" group-title="USA LOCALS",CBS KION MONTEREY CA
+http://63.141.251.250/jamzone/isg.php?id=20002270&type=stream.m3u8
+#EXTINF:0 CUID="293" tvg-name="CBS KKTV COLORADO SPRINGS CO" tvg-id="kktv.us" tvg-logo="https://sotv.norago.tv/img/300x300/5188166025299404021.png" group-title="USA LOCALS",CBS KKTV COLORADO SPRINGS CO
+http://63.141.251.250/jamzone/isg.php?id=20002272&type=stream.m3u8
+#EXTINF:0 CUID="294" tvg-name="CBS KNPL NORTH PLATTE NE" tvg-logo="https://sotv.norago.tv/img/300x300/2099213751197123503.png" group-title="USA LOCALS",CBS KNPL NORTH PLATTE NE
+http://63.141.251.250/jamzone/isg.php?id=20002274&type=stream.m3u8
+#EXTINF:0 CUID="295" tvg-name="CBS KOLD 13 TUCSON AZ" tvg-id="kold.us" tvg-logo="https://sotv.norago.tv/img/300x300/8159201397564556753.png" group-title="USA LOCALS",CBS KOLD 13 TUCSON AZ
+http://63.141.251.250/jamzone/isg.php?id=20002275&type=stream.m3u8
+#EXTINF:0 CUID="296" tvg-name="CBS KOSA 7 ODESA TX" tvg-id="kosa.us" tvg-logo="https://sotv.norago.tv/img/300x300/359596557974565253.png" group-title="USA LOCALS",CBS KOSA 7 ODESA TX
+http://63.141.251.250/jamzone/isg.php?id=20002276&type=stream.m3u8
+#EXTINF:0 CUID="297" tvg-name="CBS KOTV TULSA OK" tvg-id="kotv.us" tvg-logo="https://sotv.norago.tv/img/300x300/5682198546234523877.png" group-title="USA LOCALS",CBS KOTV TULSA OK
+http://63.141.251.250/jamzone/isg.php?id=20002277&type=stream.m3u8
+#EXTINF:0 CUID="298" tvg-name="CBS KREM 2 SPOKANE WA" tvg-id="krem.us" tvg-logo="https://sotv.norago.tv/img/300x300/1255127113841427544.png" group-title="USA LOCALS",CBS KREM 2 SPOKANE WA
+http://63.141.251.250/jamzone/isg.php?id=20002278&type=stream.m3u8
+#EXTINF:0 CUID="299" tvg-name="CBS KTHV 11 LITTLE ROCK AR" tvg-id="kthv.us" tvg-logo="https://sotv.norago.tv/img/300x300/4232874698629967962.png" group-title="USA LOCALS",CBS KTHV 11 LITTLE ROCK AR
+http://63.141.251.250/jamzone/isg.php?id=20002279&type=stream.m3u8
+#EXTINF:0 CUID="300" tvg-name="CBS KTVN 2 RENO NV" tvg-id="ktvn.us" tvg-logo="https://sotv.norago.tv/img/300x300/3589445949579091072.png" group-title="USA LOCALS",CBS KTVN 2 RENO NV
+http://63.141.251.250/jamzone/isg.php?id=20002280&type=stream.m3u8
+#EXTINF:0 CUID="270" tvg-name="CBS KWCH 12 WICHITA KS" tvg-id="kwch.us" tvg-logo="https://sotv.norago.tv/img/300x300/1598517614732659659.png" group-title="USA LOCALS",CBS KWCH 12 WICHITA KS
+http://63.141.251.250/jamzone/isg.php?id=20002228&type=stream.m3u8
+#EXTINF:0 CUID="301" tvg-name="CBS KWTV OKLAHOMA CITY OK" tvg-id="kwtv.us" tvg-logo="https://sotv.norago.tv/img/300x300/8650522432585216266.png" group-title="USA LOCALS",CBS KWTV OKLAHOMA CITY OK
+http://63.141.251.250/jamzone/isg.php?id=20002281&type=stream.m3u8
+#EXTINF:0 CUID="302" tvg-name="CBS KWTX 10 WACO TX" tvg-id="kwtx.us" tvg-logo="https://sotv.norago.tv/img/300x300/4874192041721637047.png" group-title="USA LOCALS",CBS KWTX 10 WACO TX
+http://63.141.251.250/jamzone/isg.php?id=20002282&type=stream.m3u8
+#EXTINF:0 CUID="303" tvg-name="CBS KXDF 13 FAIRBANKS AK" tvg-id="cbs13kxdffairbanks.us" tvg-logo="https://sotv.norago.tv/img/300x300/7106737544624142656.png" group-title="USA LOCALS",CBS KXDF 13 FAIRBANKS AK
+http://63.141.251.250/jamzone/isg.php?id=20002283&type=stream.m3u8
+#EXTINF:0 CUID="304" tvg-name="CBS KYLX LAREDO TX" tvg-id="kylx.us" tvg-logo="https://sotv.norago.tv/img/300x300/5757799566359309440.png" group-title="USA LOCALS",CBS KYLX LAREDO TX
+http://63.141.251.250/jamzone/isg.php?id=20002284&type=stream.m3u8
+#EXTINF:0 CUID="251" tvg-name="CBS KYTX TYLER LONGVIEW TX" tvg-id="kytx.us" tvg-logo="https://sotv.norago.tv/img/300x300/2192195853145789750.png" group-title="USA LOCALS",CBS KYTX TYLER LONGVIEW TX
+http://63.141.251.250/jamzone/isg.php?id=20002460&type=stream.m3u8
+#EXTINF:0 CUID="249" tvg-name="CBS LAS VEGAS" tvg-id="cbsklaslasvegas.us" tvg-logo="https://sotv.norago.tv/img/300x300/3387294978712735200.jpg" group-title="USA LOCALS",CBS LAS VEGAS
+http://63.141.251.250/jamzone/isg.php?id=20002139&type=stream.m3u8
+#EXTINF:0 CUID="325" tvg-name="CBS LOS ANGELES 9" tvg-id="pbsklcslosangeles.us" tvg-logo="https://sotv.norago.tv/img/300x300/6108662459646679785.png" group-title="USA LOCALS",CBS LOS ANGELES 9
+http://63.141.251.250/jamzone/isg.php?id=20002305&type=stream.m3u8
+#EXTINF:0 CUID="326" tvg-name="CBS LOS ANGELES 31" tvg-id="pbsklcslosangeles.us" tvg-logo="https://sotv.norago.tv/img/300x300/7851281623336243401.png" group-title="USA LOCALS",CBS LOS ANGELES 31
+http://63.141.251.250/jamzone/isg.php?id=20002306&type=stream.m3u8
+#EXTINF:0 CUID="265" tvg-name="CBS MADISON" tvg-logo="https://sotv.norago.tv/img/300x300/7320728312783501465.png" group-title="USA LOCALS",CBS MADISON
+http://63.141.251.250/jamzone/isg.php?id=20002205&type=stream.m3u8
+#EXTINF:0 CUID="328" tvg-name="CBS MIAMI" tvg-logo="https://sotv.norago.tv/img/300x300/2609564063821774667.png" group-title="USA LOCALS",CBS MIAMI
+http://63.141.251.250/jamzone/isg.php?id=20002308&type=stream.m3u8
+#EXTINF:0 CUID="305" tvg-name="CBS NESQ PALM SPRINGS FL" tvg-id="abckesqpalmsprings.us" tvg-logo="https://sotv.norago.tv/img/300x300/6648245259439183859.png" group-title="USA LOCALS",CBS NESQ PALM SPRINGS FL
+http://63.141.251.250/jamzone/isg.php?id=20002285&type=stream.m3u8
+#EXTINF:0 CUID="250" tvg-name="CBS NEW YORK" tvg-id="cbs2wcbsnewyork.us" tvg-logo="https://sotv.norago.tv/img/300x300/3276573013296779571.jpg" group-title="USA LOCALS",CBS NEW YORK
+http://63.141.251.250/jamzone/isg.php?id=20002143&type=stream.m3u8
+#EXTINF:0 CUID="247" tvg-name="CBS OMAHA" tvg-logo="https://sotv.norago.tv/img/300x300/2442852098687321476.jpg" group-title="USA LOCALS",CBS OMAHA
+http://63.141.251.250/jamzone/isg.php?id=20002129&type=stream.m3u8
+#EXTINF:0 CUID="255" tvg-name="CBS PITTSBURGH" tvg-id="cbs2kdkapittsburgh.us" tvg-logo="https://sotv.norago.tv/img/300x300/6364404240660774151.png" group-title="USA LOCALS",CBS PITTSBURGH
+http://63.141.251.250/jamzone/isg.php?id=20002162&type=stream.m3u8
+#EXTINF:0 CUID="256" tvg-name="CBS PROVIDENCE" tvg-id="cbs12wpriprovidence.us" tvg-logo="https://sotv.norago.tv/img/300x300/7906881141143519783.png" group-title="USA LOCALS",CBS PROVIDENCE
+http://63.141.251.250/jamzone/isg.php?id=20002166&type=stream.m3u8
+#EXTINF:0 CUID="332" tvg-name="CBS SALT LAKE CITY" tvg-id="cbs2kutvsaltlakecity.us" tvg-logo="https://sotv.norago.tv/img/300x300/8138998609078655504.png" group-title="USA LOCALS",CBS SALT LAKE CITY
+http://63.141.251.250/jamzone/isg.php?id=20002452&type=stream.m3u8
+#EXTINF:0 CUID="264" tvg-name="CBS SEATTLE" tvg-id="cbskiroseattle.us" tvg-logo="https://sotv.norago.tv/img/300x300/6462031037467346332.png" group-title="USA LOCALS",CBS SEATTLE
+http://63.141.251.250/jamzone/isg.php?id=20002201&type=stream.m3u8
+#EXTINF:0 CUID="324" tvg-name="CBS SELMA" tvg-logo="https://sotv.norago.tv/img/300x300/1057823088935297273.png" group-title="USA LOCALS",CBS SELMA
+http://63.141.251.250/jamzone/isg.php?id=20002304&type=stream.m3u8
+#EXTINF:0 CUID="254" tvg-name="CBS SHAKER HEIGHTS" tvg-logo="https://sotv.norago.tv/img/300x300/9214037663451239804.png" group-title="USA LOCALS",CBS SHAKER HEIGHTS
+http://63.141.251.250/jamzone/isg.php?id=20002159&type=stream.m3u8
+#EXTINF:0 CUID="259" tvg-name="CBS SIOUX FALLS" tvg-id="cbs11kelosiouxfalls.us" tvg-logo="https://sotv.norago.tv/img/300x300/4706300464077251345.png" group-title="USA LOCALS",CBS SIOUX FALLS
+http://63.141.251.250/jamzone/isg.php?id=20002176&type=stream.m3u8
+#EXTINF:0 CUID="258" tvg-name="CBS SPARTANBURG" tvg-id="cbs7wspaspartanburg.us" tvg-logo="https://sotv.norago.tv/img/300x300/5920631829159280674.png" group-title="USA LOCALS",CBS SPARTANBURG
+http://63.141.251.250/jamzone/isg.php?id=20002174&type=stream.m3u8
+#EXTINF:0 CUID="306" tvg-name="CBS SPORTS NETWORK HD" tvg-id="iscsp.us" tvg-logo="https://sotv.norago.tv/img/300x300/103149847421948014.png" group-title="USA LOCALS",CBS SPORTS NETWORK HD
+http://63.141.251.250/jamzone/isg.php?id=20002286&type=stream.m3u8
+#EXTINF:0 CUID="245" tvg-name="CBS ST LOUIS" tvg-id="cbskmovstlouis.us" tvg-logo="https://sotv.norago.tv/img/300x300/2464206024381879004.jpg" group-title="USA LOCALS",CBS ST LOUIS
+http://63.141.251.250/jamzone/isg.php?id=20002119&type=stream.m3u8
+#EXTINF:0 CUID="273" tvg-name="CBS WAFB 9 BATON ROUGE LA" tvg-id="wafb.us" tvg-logo="https://sotv.norago.tv/img/300x300/7432173630958672893.png" group-title="USA LOCALS",CBS WAFB 9 BATON ROUGE LA
+http://63.141.251.250/jamzone/isg.php?id=20002240&type=stream.m3u8
+#EXTINF:0 CUID="327" tvg-name="CBS WASHINGTON" tvg-id="cbswusawashingtondc.us" tvg-logo="https://sotv.norago.tv/img/300x300/1696042692307256346.png" group-title="USA LOCALS",CBS WASHINGTON
+http://63.141.251.250/jamzone/isg.php?id=20002307&type=stream.m3u8
+#EXTINF:0 CUID="307" tvg-name="CBS WBOC 16 SALISBURY MD" tvg-id="wboc.us" tvg-logo="https://sotv.norago.tv/img/300x300/8201661425532325109.png" group-title="USA LOCALS",CBS WBOC 16 SALISBURY MD
+http://63.141.251.250/jamzone/isg.php?id=20002287&type=stream.m3u8
+#EXTINF:0 CUID="308" tvg-name="CBS WCAV CHARLOTTESVILLE VA" tvg-id="wcav.us" tvg-logo="https://sotv.norago.tv/img/300x300/7167518959720838310.png" group-title="USA LOCALS",CBS WCAV CHARLOTTESVILLE VA
+http://63.141.251.250/jamzone/isg.php?id=20002288&type=stream.m3u8
+#EXTINF:0 CUID="309" tvg-name="CBS WCSC CHARLESTON SC" tvg-id="wcsc.us" tvg-logo="https://sotv.norago.tv/img/300x300/961474870345037632.png" group-title="USA LOCALS",CBS WCSC CHARLESTON SC
+http://63.141.251.250/jamzone/isg.php?id=20002289&type=stream.m3u8
+#EXTINF:0 CUID="310" tvg-name="CBS WCTV TALLAHASSEE FL" tvg-id="wctv.us" tvg-logo="https://sotv.norago.tv/img/300x300/5650075280168750578.png" group-title="USA LOCALS",CBS WCTV TALLAHASSEE FL
+http://63.141.251.250/jamzone/isg.php?id=20002290&type=stream.m3u8
+#EXTINF:0 CUID="311" tvg-name="CBS WDBJ 7 ROANOKE VA" tvg-id="wdbj.us" tvg-logo="https://sotv.norago.tv/img/300x300/5940515879825359134.png" group-title="USA LOCALS",CBS WDBJ 7 ROANOKE VA
+http://63.141.251.250/jamzone/isg.php?id=20002291&type=stream.m3u8
+#EXTINF:0 CUID="312" tvg-name="CBS WECP PANAMA CITY FL" tvg-logo="https://sotv.norago.tv/img/300x300/5961454310433506635.png" group-title="USA LOCALS",CBS WECP PANAMA CITY FL
+http://63.141.251.250/jamzone/isg.php?id=20002292&type=stream.m3u8
+#EXTINF:0 CUID="313" tvg-name="CBS WENY 36 ELMIRA NY" tvg-id="weny.us" tvg-logo="https://sotv.norago.tv/img/300x300/1474152883860440479.png" group-title="USA LOCALS",CBS WENY 36 ELMIRA NY
+http://63.141.251.250/jamzone/isg.php?id=20002293&type=stream.m3u8
+#EXTINF:0 CUID="314" tvg-name="CBS WHIO 7 DAYTON OH" tvg-id="whio.us" tvg-logo="https://sotv.norago.tv/img/300x300/2561989119941978767.png" group-title="USA LOCALS",CBS WHIO 7 DAYTON OH
+http://63.141.251.250/jamzone/isg.php?id=20002294&type=stream.m3u8
+#EXTINF:0 CUID="315" tvg-name="CBS WIBW 13 TOPEKA KS" tvg-id="wibw.us" tvg-logo="https://sotv.norago.tv/img/300x300/2072572588828260343.png" group-title="USA LOCALS",CBS WIBW 13 TOPEKA KS
+http://63.141.251.250/jamzone/isg.php?id=20002295&type=stream.m3u8
+#EXTINF:0 CUID="316" tvg-name="CBS WIFR 23 ROCKFORD IL" tvg-id="cbs23kforrockford.us" tvg-logo="https://sotv.norago.tv/img/300x300/4922861265308706013.png" group-title="USA LOCALS",CBS WIFR 23 ROCKFORD IL
+http://63.141.251.250/jamzone/isg.php?id=20002296&type=stream.m3u8
+#EXTINF:0 CUID="317" tvg-name="CBS WIYE 47 PARKERSBURG WV" tvg-logo="https://sotv.norago.tv/img/300x300/4807597697561369686.png" group-title="USA LOCALS",CBS WIYE 47 PARKERSBURG WV
+http://63.141.251.250/jamzone/isg.php?id=20002297&type=stream.m3u8
+#EXTINF:0 CUID="318" tvg-name="CBS WLKY 32 LOUISVILLE KY" tvg-id="wlky.us" tvg-logo="https://sotv.norago.tv/img/300x300/5635449520949267374.png" group-title="USA LOCALS",CBS WLKY 32 LOUISVILLE KY
+http://63.141.251.250/jamzone/isg.php?id=20002298&type=stream.m3u8
+#EXTINF:0 CUID="319" tvg-name="CBS WMAZ 13 MACON GA" tvg-id="wmaz.us" tvg-logo="https://sotv.norago.tv/img/300x300/8884823801868294803.png" group-title="USA LOCALS",CBS WMAZ 13 MACON GA
+http://63.141.251.250/jamzone/isg.php?id=20002299&type=stream.m3u8
+#EXTINF:0 CUID="320" tvg-name="CBS WNEM 5 FLINT MI" tvg-id="wnem.us" tvg-logo="https://sotv.norago.tv/img/300x300/6830008291541846671.png" group-title="USA LOCALS",CBS WNEM 5 FLINT MI
+http://63.141.251.250/jamzone/isg.php?id=20002300&type=stream.m3u8
+#EXTINF:0 CUID="321" tvg-name="CBS WPEC 12 WEST PALM BEACH" tvg-id="wpec.us" tvg-logo="https://sotv.norago.tv/img/300x300/2496312433013740365.png" group-title="USA LOCALS",CBS WPEC 12 WEST PALM BEACH
+http://63.141.251.250/jamzone/isg.php?id=20002301&type=stream.m3u8
+#EXTINF:0 CUID="322" tvg-name="CBS WRDW 12 AUGUSTA GA" tvg-id="wrdw.us" tvg-logo="https://sotv.norago.tv/img/300x300/3964555373106079701.png" group-title="USA LOCALS",CBS WRDW 12 AUGUSTA GA
+http://63.141.251.250/jamzone/isg.php?id=20002302&type=stream.m3u8
+#EXTINF:0 CUID="323" tvg-name="CBS WRGB 6 SCHENECTADY NY" tvg-id="wrgb.us" tvg-logo="https://sotv.norago.tv/img/300x300/7285456968631358853.png" group-title="USA LOCALS",CBS WRGB 6 SCHENECTADY NY
+http://63.141.251.250/jamzone/isg.php?id=20002303&type=stream.m3u8
+#EXTINF:0 CUID="274" tvg-name="CBS WTSP 10 TAMPA BAY" tvg-id="wtsp.us" tvg-logo="https://sotv.norago.tv/img/300x300/8782162962426879930.png" group-title="USA LOCALS",CBS WTSP 10 TAMPA BAY
+http://63.141.251.250/jamzone/isg.php?id=20002242&type=stream.m3u8
+#EXTINF:0 CUID="347" tvg-name="FOX 8 WJW CLEVELAND OH" tvg-id="wjw.us" tvg-logo="https://sotv.norago.tv/img/300x300/8948066979699534061.png" group-title="USA LOCALS",FOX 8 WJW CLEVELAND OH
+http://63.141.251.250/jamzone/isg.php?id=20002171&type=stream.m3u8
+#EXTINF:0 CUID="408" tvg-name="FOX ALBANY" tvg-id="fox23wxxaalbany.us" tvg-logo="https://sotv.norago.tv/img/300x300/356029716789985862.png" group-title="USA LOCALS",FOX ALBANY
+http://63.141.251.250/jamzone/isg.php?id=20002359&type=stream.m3u8
+#EXTINF:0 CUID="384" tvg-name="FOX ATLANTA" tvg-id="foxwagaatlanta.us" tvg-logo="https://sotv.norago.tv/img/300x300/2324268076511026996.png" group-title="USA LOCALS",FOX ATLANTA
+http://63.141.251.250/jamzone/isg.php?id=20002335&type=stream.m3u8
+#EXTINF:0 CUID="423" tvg-name="FOX AUSTIN" tvg-logo="https://sotv.norago.tv/img/300x300/6732457292451727932.png" group-title="USA LOCALS",FOX AUSTIN
+http://63.141.251.250/jamzone/isg.php?id=20002374&type=stream.m3u8
+#EXTINF:0 CUID="393" tvg-name="FOX BATON ROUGE" tvg-id="foxwgmbbatonrouge.us" tvg-logo="https://sotv.norago.tv/img/300x300/1756581136323751425.png" group-title="USA LOCALS",FOX BATON ROUGE
+http://63.141.251.250/jamzone/isg.php?id=20002344&type=stream.m3u8
+#EXTINF:0 CUID="403" tvg-name="FOX BELMONT" tvg-logo="https://sotv.norago.tv/img/300x300/2228007995057686748.png" group-title="USA LOCALS",FOX BELMONT
+http://63.141.251.250/jamzone/isg.php?id=20002354&type=stream.m3u8
+#EXTINF:0 CUID="362" tvg-name="FOX BIRMINGHAM" tvg-id="foxwbrcbirmingham.us" tvg-logo="https://sotv.norago.tv/img/300x300/8643445042497232164.png" group-title="USA LOCALS",FOX BIRMINGHAM
+http://63.141.251.250/jamzone/isg.php?id=20002313&type=stream.m3u8
+#EXTINF:0 CUID="387" tvg-name="FOX BLOOMINGTON" tvg-id="fox43wyzzbloomington.us" tvg-logo="https://sotv.norago.tv/img/300x300/6373790580267775512.png" group-title="USA LOCALS",FOX BLOOMINGTON
+http://63.141.251.250/jamzone/isg.php?id=20002338&type=stream.m3u8
+#EXTINF:0 CUID="394" tvg-name="FOX BOSTON" tvg-logo="https://sotv.norago.tv/img/300x300/1867935633766961902.png" group-title="USA LOCALS",FOX BOSTON
+http://63.141.251.250/jamzone/isg.php?id=20002345&type=stream.m3u8
+#EXTINF:0 CUID="379" tvg-name="FOX CAPE CORAL" tvg-id="fox36wftxcapecoral.us" tvg-logo="https://sotv.norago.tv/img/300x300/4974787464288399653.png" group-title="USA LOCALS",FOX CAPE CORAL
+http://63.141.251.250/jamzone/isg.php?id=20002330&type=stream.m3u8
+#EXTINF:0 CUID="417" tvg-name="FOX CHARLESTON" tvg-id="fox11wchscharleston.us" tvg-logo="https://sotv.norago.tv/img/300x300/4778535067984068087.png" group-title="USA LOCALS",FOX CHARLESTON
+http://63.141.251.250/jamzone/isg.php?id=20002368&type=stream.m3u8
+#EXTINF:0 CUID="388" tvg-name="FOX CHICAGO" tvg-logo="https://sotv.norago.tv/img/300x300/6127981040379677233.png" group-title="USA LOCALS",FOX CHICAGO
+http://63.141.251.250/jamzone/isg.php?id=20002339&type=stream.m3u8
+#EXTINF:0 CUID="411" tvg-name="FOX CINCINNATI" tvg-id="foxwxixcincinnati.us" tvg-logo="https://sotv.norago.tv/img/300x300/1393959892442806920.png" group-title="USA LOCALS",FOX CINCINNATI
+http://63.141.251.250/jamzone/isg.php?id=20002362&type=stream.m3u8
+#EXTINF:0 CUID="412" tvg-name="FOX CLEVELAND" tvg-id="fox8wjwcleveland.us" tvg-logo="https://sotv.norago.tv/img/300x300/3893474828274177010.png" group-title="USA LOCALS",FOX CLEVELAND
+http://63.141.251.250/jamzone/isg.php?id=20002363&type=stream.m3u8
+#EXTINF:0 CUID="425" tvg-name="FOX DALLAS" tvg-id="foxkdfwdallas.us" tvg-logo="https://sotv.norago.tv/img/300x300/2010459992011760349.png" group-title="USA LOCALS",FOX DALLAS
+http://63.141.251.250/jamzone/isg.php?id=20002376&type=stream.m3u8
+#EXTINF:0 CUID="386" tvg-name="FOX DAVENPORT" tvg-id="fox18kljbdavenport.us" tvg-logo="https://sotv.norago.tv/img/300x300/7349246907459568101.png" group-title="USA LOCALS",FOX DAVENPORT
+http://63.141.251.250/jamzone/isg.php?id=20002337&type=stream.m3u8
+#EXTINF:0 CUID="372" tvg-name="FOX DENVER" tvg-logo="https://sotv.norago.tv/img/300x300/5402696559783849827.png" group-title="USA LOCALS",FOX DENVER
+http://63.141.251.250/jamzone/isg.php?id=20002323&type=stream.m3u8
+#EXTINF:0 CUID="398" tvg-name="FOX DETROIT" tvg-logo="https://sotv.norago.tv/img/300x300/3221009819365873156.png" group-title="USA LOCALS",FOX DETROIT
+http://63.141.251.250/jamzone/isg.php?id=20002349&type=stream.m3u8
+#EXTINF:0 CUID="406" tvg-name="FOX FARGO" tvg-logo="https://sotv.norago.tv/img/300x300/8372107558731012335.png" group-title="USA LOCALS",FOX FARGO
+http://63.141.251.250/jamzone/isg.php?id=20002357&type=stream.m3u8
+#EXTINF:0 CUID="363" tvg-name="FOX FORT SMITH" tvg-id="fox24kftafortsmith.us" tvg-logo="https://sotv.norago.tv/img/300x300/5851627238458402518.png" group-title="USA LOCALS",FOX FORT SMITH
+http://63.141.251.250/jamzone/isg.php?id=20002314&type=stream.m3u8
+#EXTINF:0 CUID="381" tvg-name="FOX FT MYERS" tvg-logo="https://sotv.norago.tv/img/300x300/3866289915358875157.png" group-title="USA LOCALS",FOX FT MYERS
+http://63.141.251.250/jamzone/isg.php?id=20002332&type=stream.m3u8
+#EXTINF:0 CUID="396" tvg-name="FOX GRAN RAPIDS" tvg-logo="https://sotv.norago.tv/img/300x300/383531163071254592.png" group-title="USA LOCALS",FOX GRAN RAPIDS
+http://63.141.251.250/jamzone/isg.php?id=20002347&type=stream.m3u8
+#EXTINF:0 CUID="418" tvg-name="FOX GREENVILLE" tvg-id="fox14wydogreenville.us" tvg-logo="https://sotv.norago.tv/img/300x300/3704627627788080689.png" group-title="USA LOCALS",FOX GREENVILLE
+http://63.141.251.250/jamzone/isg.php?id=20002369&type=stream.m3u8
+#EXTINF:0 CUID="373" tvg-name="FOX HARTFORD" tvg-logo="https://sotv.norago.tv/img/300x300/8064698800541674133.png" group-title="USA LOCALS",FOX HARTFORD
+http://63.141.251.250/jamzone/isg.php?id=20002324&type=stream.m3u8
+#EXTINF:0 CUID="407" tvg-name="FOX HENDERSON" tvg-logo="https://sotv.norago.tv/img/300x300/1329279424893586825.png" group-title="USA LOCALS",FOX HENDERSON
+http://63.141.251.250/jamzone/isg.php?id=20002358&type=stream.m3u8
+#EXTINF:0 CUID="404" tvg-name="FOX HIGH POINT" tvg-id="fox8wghphighpoint.us" tvg-logo="https://sotv.norago.tv/img/300x300/7816604647318193954.png" group-title="USA LOCALS",FOX HIGH POINT
+http://63.141.251.250/jamzone/isg.php?id=20002355&type=stream.m3u8
+#EXTINF:0 CUID="385" tvg-name="FOX HONOLULU" tvg-id="foxkhonhonolulu.us" tvg-logo="https://sotv.norago.tv/img/300x300/8749880768893497963.png" group-title="USA LOCALS",FOX HONOLULU
+http://63.141.251.250/jamzone/isg.php?id=20002336&type=stream.m3u8
+#EXTINF:0 CUID="424" tvg-name="FOX HOUSTON" tvg-id="foxkrivhouston.us" tvg-logo="https://sotv.norago.tv/img/300x300/7817068362732733267.png" group-title="USA LOCALS",FOX HOUSTON
+http://63.141.251.250/jamzone/isg.php?id=20002375&type=stream.m3u8
+#EXTINF:0 CUID="389" tvg-name="FOX INDIANAPOLIS" tvg-id="foxwxinindianapolis.us" tvg-logo="https://sotv.norago.tv/img/300x300/4676864768190505406.png" group-title="USA LOCALS",FOX INDIANAPOLIS
+http://63.141.251.250/jamzone/isg.php?id=20002340&type=stream.m3u8
+#EXTINF:0 CUID="383" tvg-name="FOX JACKSONVILLE" tvg-id="fox30wfoxjacksonville.us" tvg-logo="https://sotv.norago.tv/img/300x300/7466757151166716178.png" group-title="USA LOCALS",FOX JACKSONVILLE
+http://63.141.251.250/jamzone/isg.php?id=20002334&type=stream.m3u8
+#EXTINF:0 CUID="382" tvg-name="FOX JACKSONVILLE 14" tvg-id="fox30wfoxjacksonville.us" tvg-logo="https://sotv.norago.tv/img/300x300/8964228618455805011.png" group-title="USA LOCALS",FOX JACKSONVILLE 14
+http://63.141.251.250/jamzone/isg.php?id=20002333&type=stream.m3u8
+#EXTINF:0 CUID="414" tvg-name="FOX JOHNSTOWN" tvg-id="fox8wwcpjohnstown.us" tvg-logo="https://sotv.norago.tv/img/300x300/3969590068929812304.png" group-title="USA LOCALS",FOX JOHNSTOWN
+http://63.141.251.250/jamzone/isg.php?id=20002365&type=stream.m3u8
+#EXTINF:0 CUID="358" tvg-name="FOX KADN 15 LAFAYETTE LA" tvg-id="kadn.us" tvg-logo="https://sotv.norago.tv/img/300x300/4347669683109278481.png" group-title="USA LOCALS",FOX KADN 15 LAFAYETTE LA
+http://63.141.251.250/jamzone/isg.php?id=20002231&type=stream.m3u8
+#EXTINF:0 CUID="399" tvg-name="FOX KANSAS CITY" tvg-id="fox4wdafkansascity.us" tvg-logo="https://sotv.norago.tv/img/300x300/22824356912382969.png" group-title="USA LOCALS",FOX KANSAS CITY
+http://63.141.251.250/jamzone/isg.php?id=20002350&type=stream.m3u8
+#EXTINF:0 CUID="360" tvg-name="FOX KFXA 28 CEDAR RAPIDS IA" tvg-id="kfxa.us" tvg-logo="https://sotv.norago.tv/img/300x300/6573964622993675526.png" group-title="USA LOCALS",FOX KFXA 28 CEDAR RAPIDS IA
+http://63.141.251.250/jamzone/isg.php?id=20002237&type=stream.m3u8
+#EXTINF:0 CUID="428" tvg-name="FOX KMSP 9 MINNEAPOLIS MN" tvg-id="kmsp.us" tvg-logo="https://sotv.norago.tv/img/300x300/4844958147441927252.png" group-title="USA LOCALS",FOX KMSP 9 MINNEAPOLIS MN
+http://63.141.251.250/jamzone/isg.php?id=20002453&type=stream.m3u8
+#EXTINF:0 CUID="429" tvg-name="FOX KMVU 26 MEDFORD OR" tvg-id="kmvu.us" tvg-logo="https://sotv.norago.tv/img/300x300/8575824964791760655.png" group-title="USA LOCALS",FOX KMVU 26 MEDFORD OR
+http://63.141.251.250/jamzone/isg.php?id=20002454&type=stream.m3u8
+#EXTINF:0 CUID="334" tvg-name="FOX KNOXVILLE" tvg-id="fox43wtnzknoxville.us" tvg-logo="https://sotv.norago.tv/img/300x300/1645175353675387812.png" group-title="USA LOCALS",FOX KNOXVILLE
+http://63.141.251.250/jamzone/isg.php?id=20002116&type=stream.m3u8
+#EXTINF:0 CUID="344" tvg-name="FOX KSTU 13 SALT LAKE CITY" tvg-id="kstu.us" tvg-logo="https://sotv.norago.tv/img/300x300/2247851395689805539.png" group-title="USA LOCALS",FOX KSTU 13 SALT LAKE CITY
+http://63.141.251.250/jamzone/isg.php?id=20002155&type=stream.m3u8
+#EXTINF:0 CUID="356" tvg-name="FOX KTBC 7 AUSTIN TX" tvg-id="ktbc.us" tvg-logo="https://sotv.norago.tv/img/300x300/8364518306979094859.png" group-title="USA LOCALS",FOX KTBC 7 AUSTIN TX
+http://63.141.251.250/jamzone/isg.php?id=20002222&type=stream.m3u8
+#EXTINF:0 CUID="430" tvg-name="FOX KTMF MISSOULA MT" tvg-id="ktmf.us" tvg-logo="https://sotv.norago.tv/img/300x300/4069462348569151814.png" group-title="USA LOCALS",FOX KTMF MISSOULA MT
+http://63.141.251.250/jamzone/isg.php?id=20002455&type=stream.m3u8
+#EXTINF:0 CUID="357" tvg-name="FOX KTTV 11 LOS ANGELES" tvg-id="kttv.us" tvg-logo="https://sotv.norago.tv/img/300x300/4416766274666241866.png" group-title="USA LOCALS",FOX KTTV 11 LOS ANGELES
+http://63.141.251.250/jamzone/isg.php?id=20002225&type=stream.m3u8
+#EXTINF:0 CUID="431" tvg-name="FOX KWYB BUTTE MT" tvg-id="kwyb.us" tvg-logo="https://sotv.norago.tv/img/300x300/6159540349344309291.png" group-title="USA LOCALS",FOX KWYB BUTTE MT
+http://63.141.251.250/jamzone/isg.php?id=20002456&type=stream.m3u8
+#EXTINF:0 CUID="340" tvg-name="FOX LA CROSSE" tvg-id="foxwlaxlacrosse.us" tvg-logo="https://sotv.norago.tv/img/300x300/4193591463306685232.jpg" group-title="USA LOCALS",FOX LA CROSSE
+http://63.141.251.250/jamzone/isg.php?id=20002140&type=stream.m3u8
+#EXTINF:0 CUID="392" tvg-name="FOX LAFAYETTE" tvg-id="fox15kadnlafayette.us" tvg-logo="https://sotv.norago.tv/img/300x300/447496322333317563.png" group-title="USA LOCALS",FOX LAFAYETTE
+http://63.141.251.250/jamzone/isg.php?id=20002343&type=stream.m3u8
+#EXTINF:0 CUID="397" tvg-name="FOX LANSING" tvg-logo="https://sotv.norago.tv/img/300x300/8684264011034800014.png" group-title="USA LOCALS",FOX LANSING
+http://63.141.251.250/jamzone/isg.php?id=20002348&type=stream.m3u8
+#EXTINF:0 CUID="364" tvg-name="FOX LITTLE ROCK" tvg-id="fox16klrtlittlerock.us" tvg-logo="https://sotv.norago.tv/img/300x300/8787361762190701351.png" group-title="USA LOCALS",FOX LITTLE ROCK
+http://63.141.251.250/jamzone/isg.php?id=20002315&type=stream.m3u8
+#EXTINF:0 CUID="335" tvg-name="FOX LONGVIEW" tvg-logo="https://sotv.norago.tv/img/300x300/837921957771643524.jpg" group-title="USA LOCALS",FOX LONGVIEW
+http://63.141.251.250/jamzone/isg.php?id=20002120&type=stream.m3u8
+#EXTINF:0 CUID="368" tvg-name="FOX LOS ANGELES" tvg-logo="https://sotv.norago.tv/img/300x300/5684629735760573903.png" group-title="USA LOCALS",FOX LOS ANGELES
+http://63.141.251.250/jamzone/isg.php?id=20002319&type=stream.m3u8
+#EXTINF:0 CUID="390" tvg-name="FOX LOUISVILLE" tvg-id="fox41wdrblouisville.us" tvg-logo="https://sotv.norago.tv/img/300x300/4662415889132869102.png" group-title="USA LOCALS",FOX LOUISVILLE
+http://63.141.251.250/jamzone/isg.php?id=20002341&type=stream.m3u8
+#EXTINF:0 CUID="421" tvg-name="FOX MEMPHIS" tvg-logo="https://sotv.norago.tv/img/300x300/6303059822366125307.png" group-title="USA LOCALS",FOX MEMPHIS
+http://63.141.251.250/jamzone/isg.php?id=20002372&type=stream.m3u8
+#EXTINF:0 CUID="376" tvg-name="FOX MIAMI 7" tvg-logo="https://sotv.norago.tv/img/300x300/3924514904125056350.png" group-title="USA LOCALS",FOX MIAMI 7
+http://63.141.251.250/jamzone/isg.php?id=20002327&type=stream.m3u8
+#EXTINF:0 CUID="380" tvg-name="FOX MIAMI 35" tvg-logo="https://sotv.norago.tv/img/300x300/7284553164953866171.png" group-title="USA LOCALS",FOX MIAMI 35
+http://63.141.251.250/jamzone/isg.php?id=20002331&type=stream.m3u8
+#EXTINF:0 CUID="341" tvg-name="FOX MILWAUKEE" tvg-id="foxwitimilwaukee.us" tvg-logo="https://sotv.norago.tv/img/300x300/8188546095115030948.jpg" group-title="USA LOCALS",FOX MILWAUKEE
+http://63.141.251.250/jamzone/isg.php?id=20002144&type=stream.m3u8
+#EXTINF:0 CUID="395" tvg-name="FOX MINNEAPOLIS" tvg-id="fox9kmspminneapolis.us" tvg-logo="https://sotv.norago.tv/img/300x300/8647350838593858191.png" group-title="USA LOCALS",FOX MINNEAPOLIS
+http://63.141.251.250/jamzone/isg.php?id=20002346&type=stream.m3u8
+#EXTINF:0 CUID="419" tvg-name="FOX MYRTLE BEACH" tvg-id="foxwfxbmyrtlebeach.us" tvg-logo="https://sotv.norago.tv/img/300x300/5961186461314774948.png" group-title="USA LOCALS",FOX MYRTLE BEACH
+http://63.141.251.250/jamzone/isg.php?id=20002370&type=stream.m3u8
+#EXTINF:0 CUID="409" tvg-name="FOX NEW YORK" tvg-logo="https://sotv.norago.tv/img/300x300/9188314602060536515.png" group-title="USA LOCALS",FOX NEW YORK
+http://63.141.251.250/jamzone/isg.php?id=20002360&type=stream.m3u8
+#EXTINF:0 CUID="367" tvg-name="FOX OAKLAND" tvg-logo="https://sotv.norago.tv/img/300x300/823530358383584383.png" group-title="USA LOCALS",FOX OAKLAND
+http://63.141.251.250/jamzone/isg.php?id=20002318&type=stream.m3u8
+#EXTINF:0 CUID="377" tvg-name="FOX OCALA" tvg-logo="https://sotv.norago.tv/img/300x300/6770087638032705219.png" group-title="USA LOCALS",FOX OCALA
+http://63.141.251.250/jamzone/isg.php?id=20002328&type=stream.m3u8
+#EXTINF:0 CUID="378" tvg-name="FOX ORLANDO" tvg-id="foxwoflorlando.us" tvg-logo="https://sotv.norago.tv/img/300x300/8687634934598353464.png" group-title="USA LOCALS",FOX ORLANDO
+http://63.141.251.250/jamzone/isg.php?id=20002329&type=stream.m3u8
+#EXTINF:0 CUID="402" tvg-name="FOX OSAGE BEACH" tvg-id="fox49krbkosagebeach.us" tvg-logo="https://sotv.norago.tv/img/300x300/7189663871820748648.png" group-title="USA LOCALS",FOX OSAGE BEACH
+http://63.141.251.250/jamzone/isg.php?id=20002353&type=stream.m3u8
+#EXTINF:0 CUID="333" tvg-name="FOX PHILADELPHIA" tvg-id="foxwtxfphiladelphia.us" tvg-logo="https://sotv.norago.tv/img/300x300/6684462179913733701.png" group-title="USA LOCALS",FOX PHILADELPHIA
+http://63.141.251.250/jamzone/isg.php?id=20002110&type=stream.m3u8
+#EXTINF:0 CUID="416" tvg-name="FOX PROVIDENCE" tvg-id="foxwnacprovidence.us" tvg-logo="https://sotv.norago.tv/img/300x300/2848233076662772430.png" group-title="USA LOCALS",FOX PROVIDENCE
+http://63.141.251.250/jamzone/isg.php?id=20002367&type=stream.m3u8
+#EXTINF:0 CUID="405" tvg-name="FOX RALEIGH" tvg-logo="https://sotv.norago.tv/img/300x300/8247110896014779133.png" group-title="USA LOCALS",FOX RALEIGH
+http://63.141.251.250/jamzone/isg.php?id=20002356&type=stream.m3u8
+#EXTINF:0 CUID="427" tvg-name="FOX ROANOKE" tvg-id="fox27wfxrroanoke.us" tvg-logo="https://sotv.norago.tv/img/300x300/2978780846225151198.png" group-title="USA LOCALS",FOX ROANOKE
+http://63.141.251.250/jamzone/isg.php?id=20002378&type=stream.m3u8
+#EXTINF:0 CUID="336" tvg-name="FOX ROANOKE 36" tvg-logo="https://sotv.norago.tv/img/300x300/248200017782535498.png" group-title="USA LOCALS",FOX ROANOKE 36
+http://63.141.251.250/jamzone/isg.php?id=20002123&type=stream.m3u8
+#EXTINF:0 CUID="366" tvg-name="FOX SACRAMENTO" tvg-id="foxktxlsacramento.us" tvg-logo="https://sotv.norago.tv/img/300x300/8546016487160220784.png" group-title="USA LOCALS",FOX SACRAMENTO
+http://63.141.251.250/jamzone/isg.php?id=20002317&type=stream.m3u8
+#EXTINF:0 CUID="369" tvg-name="FOX SALINAS" tvg-logo="https://sotv.norago.tv/img/300x300/1699280996785812382.png" group-title="USA LOCALS",FOX SALINAS
+http://63.141.251.250/jamzone/isg.php?id=20002320&type=stream.m3u8
+#EXTINF:0 CUID="426" tvg-name="FOX SALT LAKE CITY" tvg-id="fox13kstusaltlakecity.us" tvg-logo="https://sotv.norago.tv/img/300x300/2476081067891280001.png" group-title="USA LOCALS",FOX SALT LAKE CITY
+http://63.141.251.250/jamzone/isg.php?id=20002377&type=stream.m3u8
+#EXTINF:0 CUID="370" tvg-name="FOX SAN DIEGO" tvg-id="foxkswbsandiego.us" tvg-logo="https://sotv.norago.tv/img/300x300/8488607109742628914.png" group-title="USA LOCALS",FOX SAN DIEGO
+http://63.141.251.250/jamzone/isg.php?id=20002321&type=stream.m3u8
+#EXTINF:0 CUID="371" tvg-name="FOX SAN JOSE" tvg-logo="https://sotv.norago.tv/img/300x300/7598495947181883275.png" group-title="USA LOCALS",FOX SAN JOSE
+http://63.141.251.250/jamzone/isg.php?id=20002322&type=stream.m3u8
+#EXTINF:0 CUID="365" tvg-name="FOX SAN LUIS OBISPO" tvg-id="fox11kkfxsanluisopo.us" tvg-logo="https://sotv.norago.tv/img/300x300/5603842667209517100.png" group-title="USA LOCALS",FOX SAN LUIS OBISPO
+http://63.141.251.250/jamzone/isg.php?id=20002316&type=stream.m3u8
+#EXTINF:0 CUID="391" tvg-name="FOX SHREVEPORT" tvg-id="fox33kmssshreveport.us" tvg-logo="https://sotv.norago.tv/img/300x300/660884361826842390.png" group-title="USA LOCALS",FOX SHREVEPORT
+http://63.141.251.250/jamzone/isg.php?id=20002342&type=stream.m3u8
+#EXTINF:0 CUID="420" tvg-name="FOX SIOUX FALLS" tvg-id="foxkdltsiouxfalls.us" tvg-logo="https://sotv.norago.tv/img/300x300/9075348146359560297.png" group-title="USA LOCALS",FOX SIOUX FALLS
+http://63.141.251.250/jamzone/isg.php?id=20002371&type=stream.m3u8
+#EXTINF:0 CUID="338" tvg-name="FOX SPOKANE" tvg-logo="https://sotv.norago.tv/img/300x300/5377529177835848980.png" group-title="USA LOCALS",FOX SPOKANE
+http://63.141.251.250/jamzone/isg.php?id=20002132&type=stream.m3u8
+#EXTINF:0 CUID="400" tvg-name="FOX SPRINGFIELD" tvg-id="fox6wggbspringfield.us" tvg-logo="https://sotv.norago.tv/img/300x300/6908756814265771094.png" group-title="USA LOCALS",FOX SPRINGFIELD
+http://63.141.251.250/jamzone/isg.php?id=20002351&type=stream.m3u8
+#EXTINF:0 CUID="401" tvg-name="FOX ST LOUIS" tvg-logo="https://sotv.norago.tv/img/300x300/3312986842735056114.png" group-title="USA LOCALS",FOX ST LOUIS
+http://63.141.251.250/jamzone/isg.php?id=20002352&type=stream.m3u8
+#EXTINF:0 CUID="410" tvg-name="FOX SYRACUSE" tvg-id="foxwsytsyracuse.us" tvg-logo="https://sotv.norago.tv/img/300x300/6848697310055351890.png" group-title="USA LOCALS",FOX SYRACUSE
+http://63.141.251.250/jamzone/isg.php?id=20002361&type=stream.m3u8
+#EXTINF:0 CUID="339" tvg-name="FOX TACOMA" tvg-id="foxkcpqtacoma.us" tvg-logo="https://sotv.norago.tv/img/300x300/1030260070197947193.png" group-title="USA LOCALS",FOX TACOMA
+http://63.141.251.250/jamzone/isg.php?id=20002136&type=stream.m3u8
+#EXTINF:0 CUID="375" tvg-name="FOX TAMPA" tvg-logo="https://sotv.norago.tv/img/300x300/6353792431641171926.png" group-title="USA LOCALS",FOX TAMPA
+http://63.141.251.250/jamzone/isg.php?id=20002326&type=stream.m3u8
+#EXTINF:0 CUID="413" tvg-name="FOX TULSA" tvg-logo="https://sotv.norago.tv/img/300x300/1321084877582602602.png" group-title="USA LOCALS",FOX TULSA
+http://63.141.251.250/jamzone/isg.php?id=20002364&type=stream.m3u8
+#EXTINF:0 CUID="337" tvg-name="FOX VIRGINIA BEACH" tvg-id="fox43wvbtvirginiabeach.us" tvg-logo="https://sotv.norago.tv/img/300x300/1544978562036778929.png" group-title="USA LOCALS",FOX VIRGINIA BEACH
+http://63.141.251.250/jamzone/isg.php?id=20002126&type=stream.m3u8
+#EXTINF:0 CUID="422" tvg-name="FOX WACO" tvg-logo="https://sotv.norago.tv/img/300x300/3851382939480919437.png" group-title="USA LOCALS",FOX WACO
+http://63.141.251.250/jamzone/isg.php?id=20002373&type=stream.m3u8
+#EXTINF:0 CUID="342" tvg-name="FOX WAGA 5 ATLANTA GA" tvg-id="waga.us" tvg-logo="https://sotv.norago.tv/img/300x300/8469017504964597759.jpg" group-title="USA LOCALS",FOX WAGA 5 ATLANTA GA
+http://63.141.251.250/jamzone/isg.php?id=20002148&type=stream.m3u8
+#EXTINF:0 CUID="374" tvg-name="FOX WASHINGTON" tvg-id="foxwttgwashingtondc.us" tvg-logo="https://sotv.norago.tv/img/300x300/4296133366390238853.png" group-title="USA LOCALS",FOX WASHINGTON
+http://63.141.251.250/jamzone/isg.php?id=20002325&type=stream.m3u8
+#EXTINF:0 CUID="351" tvg-name="FOX WFLD 32 CHICAGO IL" tvg-id="wfld.us" tvg-logo="https://sotv.norago.tv/img/300x300/8471162901961747633.png" group-title="USA LOCALS",FOX WFLD 32 CHICAGO IL
+http://63.141.251.250/jamzone/isg.php?id=20002193&type=stream.m3u8
+#EXTINF:0 CUID="345" tvg-name="FOX WFTC 9 MINNEAPOLIS MN" tvg-id="wftc.us" tvg-logo="https://sotv.norago.tv/img/300x300/6245908709869938515.png" group-title="USA LOCALS",FOX WFTC 9 MINNEAPOLIS MN
+http://63.141.251.250/jamzone/isg.php?id=20002163&type=stream.m3u8
+#EXTINF:0 CUID="346" tvg-name="FOX WFXT 25 BOSTON MA" tvg-id="wfxt.us" tvg-logo="https://sotv.norago.tv/img/300x300/7020803235128432232.png" group-title="USA LOCALS",FOX WFXT 25 BOSTON MA
+http://63.141.251.250/jamzone/isg.php?id=20002167&type=stream.m3u8
+#EXTINF:0 CUID="343" tvg-name="FOX WHBQ 13 MEMPHIS TN" tvg-id="whbq.us" tvg-logo="https://sotv.norago.tv/img/300x300/8020332582536191683.png" group-title="USA LOCALS",FOX WHBQ 13 MEMPHIS TN
+http://63.141.251.250/jamzone/isg.php?id=20002151&type=stream.m3u8
+#EXTINF:0 CUID="353" tvg-name="FOX WJBK 2 DETROIT MI" tvg-id="wjbk.us" tvg-logo="https://sotv.norago.tv/img/300x300/6583074948107029887.png" group-title="USA LOCALS",FOX WJBK 2 DETROIT MI
+http://63.141.251.250/jamzone/isg.php?id=20002202&type=stream.m3u8
+#EXTINF:0 CUID="355" tvg-name="FOX WJZY 46 CHARLOTTE NC" tvg-id="wjzy.us" tvg-logo="https://sotv.norago.tv/img/300x300/8596553274696323600.png" group-title="USA LOCALS",FOX WJZY 46 CHARLOTTE NC
+http://63.141.251.250/jamzone/isg.php?id=20002219&type=stream.m3u8
+#EXTINF:0 CUID="350" tvg-name="FOX WNYW 5 NEW YORK" tvg-id="wnyw.us" tvg-logo="https://sotv.norago.tv/img/300x300/8655421860030160628.png" group-title="USA LOCALS",FOX WNYW 5 NEW YORK
+http://63.141.251.250/jamzone/isg.php?id=20002189&type=stream.m3u8
+#EXTINF:0 CUID="354" tvg-name="FOX WOFL 35 ORLANDO FL" tvg-id="wofl.us" tvg-logo="https://sotv.norago.tv/img/300x300/5567823338798980950.png" group-title="USA LOCALS",FOX WOFL 35 ORLANDO FL
+http://63.141.251.250/jamzone/isg.php?id=20002215&type=stream.m3u8
+#EXTINF:0 CUID="359" tvg-name="FOX WPBI 16 LAFAYETTE IN" tvg-id="nbc16wpbilafayette.us" tvg-logo="https://sotv.norago.tv/img/300x300/2460032006671064602.png" group-title="USA LOCALS",FOX WPBI 16 LAFAYETTE IN
+http://63.141.251.250/jamzone/isg.php?id=20002232&type=stream.m3u8
+#EXTINF:0 CUID="352" tvg-name="FOX WSVN 7 MIAMI FL" tvg-id="wsvn.us" tvg-logo="https://sotv.norago.tv/img/300x300/3643307507982957592.png" group-title="USA LOCALS",FOX WSVN 7 MIAMI FL
+http://63.141.251.250/jamzone/isg.php?id=20002197&type=stream.m3u8
+#EXTINF:0 CUID="349" tvg-name="FOX WTTE 28 COLUMBUS OH" tvg-id="wtte.us" tvg-logo="https://sotv.norago.tv/img/300x300/4130793567572067330.png" group-title="USA LOCALS",FOX WTTE 28 COLUMBUS OH
+http://63.141.251.250/jamzone/isg.php?id=20002182&type=stream.m3u8
+#EXTINF:0 CUID="361" tvg-name="FOX WTVT 13 TAMPA BAY FL" tvg-id="wtvt.us" tvg-logo="https://sotv.norago.tv/img/300x300/9080051240088597967.png" group-title="USA LOCALS",FOX WTVT 13 TAMPA BAY FL
+http://63.141.251.250/jamzone/isg.php?id=20002243&type=stream.m3u8
+#EXTINF:0 CUID="348" tvg-name="FOX WTXF 29 PHILADELPHIA PA" tvg-id="wtxf.us" tvg-logo="https://sotv.norago.tv/img/300x300/9156195470693795007.png" group-title="USA LOCALS",FOX WTXF 29 PHILADELPHIA PA
+http://63.141.251.250/jamzone/isg.php?id=20002177&type=stream.m3u8
+#EXTINF:0 CUID="415" tvg-name="FOX YORK" tvg-logo="https://sotv.norago.tv/img/300x300/7127917795263278248.png" group-title="USA LOCALS",FOX YORK
+http://63.141.251.250/jamzone/isg.php?id=20002366&type=stream.m3u8
+#EXTINF:0 CUID="449" tvg-name="NBC 2 WESH ORLANDO FL" tvg-id="wesh.us" tvg-logo="https://sotv.norago.tv/img/300x300/4596724653136454665.png" group-title="USA LOCALS",NBC 2 WESH ORLANDO FL
+http://63.141.251.250/jamzone/isg.php?id=20002216&type=stream.m3u8
+#EXTINF:0 CUID="460" tvg-name="NBC ATLANTA" tvg-id="nbcwxiaatlanta.us" tvg-logo="https://sotv.norago.tv/img/300x300/8762867061860157458.png" group-title="USA LOCALS",NBC ATLANTA
+http://63.141.251.250/jamzone/isg.php?id=20002403&type=stream.m3u8
+#EXTINF:0 CUID="438" tvg-name="NBC AUSTIN" tvg-logo="https://sotv.norago.tv/img/300x300/7281361694931308671.png" group-title="USA LOCALS",NBC AUSTIN
+http://63.141.251.250/jamzone/isg.php?id=20002168&type=stream.m3u8
+#EXTINF:0 CUID="468" tvg-name="NBC BALTIMORE" tvg-id="nbcwbalbaltimore.us" tvg-logo="https://sotv.norago.tv/img/300x300/5240202759452130882.png" group-title="USA LOCALS",NBC BALTIMORE
+http://63.141.251.250/jamzone/isg.php?id=20002411&type=stream.m3u8
+#EXTINF:0 CUID="467" tvg-name="NBC BOSTON" tvg-logo="https://sotv.norago.tv/img/300x300/6895336769858012802.png" group-title="USA LOCALS",NBC BOSTON
+http://63.141.251.250/jamzone/isg.php?id=20002410&type=stream.m3u8
+#EXTINF:0 CUID="436" tvg-name="NBC BUFFALO" tvg-logo="https://sotv.norago.tv/img/300x300/6422463661082952812.png" group-title="USA LOCALS",NBC BUFFALO
+http://63.141.251.250/jamzone/isg.php?id=20002160&type=stream.m3u8
+#EXTINF:0 CUID="435" tvg-name="NBC CHARLOTTE" tvg-id="nbcwcnccharlotte.us" tvg-logo="https://sotv.norago.tv/img/300x300/3249313141163646683.png" group-title="USA LOCALS",NBC CHARLOTTE
+http://63.141.251.250/jamzone/isg.php?id=20002156&type=stream.m3u8
+#EXTINF:0 CUID="485" tvg-name="NBC CHEYENNE" tvg-id="nbckgwncheyenne.us" tvg-logo="https://sotv.norago.tv/img/300x300/6577323944939424249.png" group-title="USA LOCALS",NBC CHEYENNE
+http://63.141.251.250/jamzone/isg.php?id=20002429&type=stream.m3u8
+#EXTINF:0 CUID="462" tvg-name="NBC CHICAGO" tvg-logo="https://sotv.norago.tv/img/300x300/2403521956629913803.png" group-title="USA LOCALS",NBC CHICAGO
+http://63.141.251.250/jamzone/isg.php?id=20002405&type=stream.m3u8
+#EXTINF:0 CUID="484" tvg-name="NBC CLARKSBURG" tvg-id="nbc12wboyclarksburg.us" tvg-logo="https://sotv.norago.tv/img/300x300/1639577339815656285.png" group-title="USA LOCALS",NBC CLARKSBURG
+http://63.141.251.250/jamzone/isg.php?id=20002428&type=stream.m3u8
+#EXTINF:0 CUID="473" tvg-name="NBC CLEVELAND" tvg-id="nbcwkyccleveland.us" tvg-logo="https://sotv.norago.tv/img/300x300/4886067900140887047.png" group-title="USA LOCALS",NBC CLEVELAND
+http://63.141.251.250/jamzone/isg.php?id=20002416&type=stream.m3u8
+#EXTINF:0 CUID="474" tvg-name="NBC COLUMBUS" tvg-id="nbc4wcmhcolumbus.us" tvg-logo="https://sotv.norago.tv/img/300x300/3792298376248558616.png" group-title="USA LOCALS",NBC COLUMBUS
+http://63.141.251.250/jamzone/isg.php?id=20002417&type=stream.m3u8
+#EXTINF:0 CUID="480" tvg-name="NBC CORPUS CHRISTI" tvg-id="nbc6kriscorpuschristi.us" tvg-logo="https://sotv.norago.tv/img/300x300/2584485628910738297.png" group-title="USA LOCALS",NBC CORPUS CHRISTI
+http://63.141.251.250/jamzone/isg.php?id=20002424&type=stream.m3u8
+#EXTINF:0 CUID="434" tvg-name="NBC FORT MYERS" tvg-id="nbc20wbbhfortmyers.us" tvg-logo="https://sotv.norago.tv/img/300x300/7216862349714668474.jpg" group-title="USA LOCALS",NBC FORT MYERS
+http://63.141.251.250/jamzone/isg.php?id=20002145&type=stream.m3u8
+#EXTINF:0 CUID="479" tvg-name="NBC FORT WORTH" tvg-id="nbckxasfortworth.us" tvg-logo="https://sotv.norago.tv/img/300x300/3184722406833424792.png" group-title="USA LOCALS",NBC FORT WORTH
+http://63.141.251.250/jamzone/isg.php?id=20002422&type=stream.m3u8
+#EXTINF:0 CUID="459" tvg-name="NBC FT MYERS" tvg-logo="https://sotv.norago.tv/img/300x300/4692255169726856387.png" group-title="USA LOCALS",NBC FT MYERS
+http://63.141.251.250/jamzone/isg.php?id=20002402&type=stream.m3u8
+#EXTINF:0 CUID="477" tvg-name="NBC GREENVILLE" tvg-id="nbc4wyffgreenville.us" tvg-logo="https://sotv.norago.tv/img/300x300/1670691756094156136.png" group-title="USA LOCALS",NBC GREENVILLE
+http://63.141.251.250/jamzone/isg.php?id=20002420&type=stream.m3u8
+#EXTINF:0 CUID="461" tvg-name="NBC HONOLULU" tvg-id="nbckhnlhonolulu.us" tvg-logo="https://sotv.norago.tv/img/300x300/1136932289585853902.png" group-title="USA LOCALS",NBC HONOLULU
+http://63.141.251.250/jamzone/isg.php?id=20002404&type=stream.m3u8
+#EXTINF:0 CUID="481" tvg-name="NBC HOUSTON" tvg-id="nbckprchouston.us" tvg-logo="https://sotv.norago.tv/img/300x300/6451880708419519721.png" group-title="USA LOCALS",NBC HOUSTON
+http://63.141.251.250/jamzone/isg.php?id=20002425&type=stream.m3u8
+#EXTINF:0 CUID="464" tvg-name="NBC INDIANAPOLIS" tvg-id="nbcwthrindianapolis.us" tvg-logo="https://sotv.norago.tv/img/300x300/1417934906773553360.png" group-title="USA LOCALS",NBC INDIANAPOLIS
+http://63.141.251.250/jamzone/isg.php?id=20002407&type=stream.m3u8
+#EXTINF:0 CUID="451" tvg-name="NBC KNBC 4 LOS ANGELES" tvg-id="knbc.us" tvg-logo="https://sotv.norago.tv/img/300x300/845822468692466928.png" group-title="USA LOCALS",NBC KNBC 4 LOS ANGELES
+http://63.141.251.250/jamzone/isg.php?id=20002226&type=stream.m3u8
+#EXTINF:0 CUID="432" tvg-name="NBC KNSD 7 SAN DIEGO CA" tvg-id="knsd.us" tvg-logo="https://sotv.norago.tv/img/300x300/5478753407933345684.jpg" group-title="USA LOCALS",NBC KNSD 7 SAN DIEGO CA
+http://63.141.251.250/jamzone/isg.php?id=20002107&type=stream.m3u8
+#EXTINF:0 CUID="448" tvg-name="NBC KSHB 41 KANSAS CITY MO" tvg-id="kshb.us" tvg-logo="https://sotv.norago.tv/img/300x300/6672046097009175190.png" group-title="USA LOCALS",NBC KSHB 41 KANSAS CITY MO
+http://63.141.251.250/jamzone/isg.php?id=20002212&type=stream.m3u8
+#EXTINF:0 CUID="442" tvg-name="NBC KUSA 9 DENVER CO" tvg-id="kusa.us" tvg-logo="https://sotv.norago.tv/img/300x300/948596004999069195.png" group-title="USA LOCALS",NBC KUSA 9 DENVER CO
+http://63.141.251.250/jamzone/isg.php?id=20002186&type=stream.m3u8
+#EXTINF:0 CUID="447" tvg-name="NBC KXAS 5 DALLAS TX" tvg-id="kxas.us" tvg-logo="https://sotv.norago.tv/img/300x300/2013623495789664065.png" group-title="USA LOCALS",NBC KXAS 5 DALLAS TX
+http://63.141.251.250/jamzone/isg.php?id=20002208&type=stream.m3u8
+#EXTINF:0 CUID="471" tvg-name="NBC LAS VEGAS" tvg-id="nbcksnvlasvegas.us" tvg-logo="https://sotv.norago.tv/img/300x300/6923515503272366915.png" group-title="USA LOCALS",NBC LAS VEGAS
+http://63.141.251.250/jamzone/isg.php?id=20002414&type=stream.m3u8
+#EXTINF:0 CUID="433" tvg-name="NBC LOS ANGELES" tvg-logo="https://sotv.norago.tv/img/300x300/4567449483106976757.jpg" group-title="USA LOCALS",NBC LOS ANGELES
+http://63.141.251.250/jamzone/isg.php?id=20002141&type=stream.m3u8
+#EXTINF:0 CUID="439" tvg-name="NBC MADISON" tvg-logo="https://sotv.norago.tv/img/300x300/4162850554931162648.png" group-title="USA LOCALS",NBC MADISON
+http://63.141.251.250/jamzone/isg.php?id=20002172&type=stream.m3u8
+#EXTINF:0 CUID="458" tvg-name="NBC MIAMI" tvg-logo="https://sotv.norago.tv/img/300x300/6426580032282679052.png" group-title="USA LOCALS",NBC MIAMI
+http://63.141.251.250/jamzone/isg.php?id=20002400&type=stream.m3u8
+#EXTINF:0 CUID="453" tvg-name="NBC MONTGOMERY" tvg-id="nbc12wsfamontgomery.us" tvg-logo="https://sotv.norago.tv/img/300x300/9106560464955860706.png" group-title="USA LOCALS",NBC MONTGOMERY
+http://63.141.251.250/jamzone/isg.php?id=20002394&type=stream.m3u8
+#EXTINF:0 CUID="457" tvg-name="NBC NEW BRITAIN" tvg-id="nbc30wvitnewbritain.us" tvg-logo="https://sotv.norago.tv/img/300x300/7745817956810508051.png" group-title="USA LOCALS",NBC NEW BRITAIN
+http://63.141.251.250/jamzone/isg.php?id=20002399&type=stream.m3u8
+#EXTINF:0 CUID="465" tvg-name="NBC NEW ORLEANS" tvg-id="nbcwdsuneworleans.us" tvg-logo="https://sotv.norago.tv/img/300x300/7543354915136846489.png" group-title="USA LOCALS",NBC NEW ORLEANS
+http://63.141.251.250/jamzone/isg.php?id=20002408&type=stream.m3u8
+#EXTINF:0 CUID="469" tvg-name="NBC OMAHA" tvg-logo="https://sotv.norago.tv/img/300x300/2073037827040454974.png" group-title="USA LOCALS",NBC OMAHA
+http://63.141.251.250/jamzone/isg.php?id=20002412&type=stream.m3u8
+#EXTINF:0 CUID="437" tvg-name="NBC PHILADELPHIA" tvg-id="wtnbcd.us" tvg-logo="https://sotv.norago.tv/img/300x300/6601031835869680132.png" group-title="USA LOCALS",NBC PHILADELPHIA
+http://63.141.251.250/jamzone/isg.php?id=20002164&type=stream.m3u8
+#EXTINF:0 CUID="476" tvg-name="NBC PITTSBURGH" tvg-id="nbcwpxipittsburgh.us" tvg-logo="https://sotv.norago.tv/img/300x300/3287992760235554090.png" group-title="USA LOCALS",NBC PITTSBURGH
+http://63.141.251.250/jamzone/isg.php?id=20002419&type=stream.m3u8
+#EXTINF:0 CUID="472" tvg-name="NBC RIVERHEAD" tvg-logo="https://sotv.norago.tv/img/300x300/2725743214315439806.png" group-title="USA LOCALS",NBC RIVERHEAD
+http://63.141.251.250/jamzone/isg.php?id=20002415&type=stream.m3u8
+#EXTINF:0 CUID="456" tvg-name="NBC SACRAMENTO" tvg-id="nbckcrasacramento.us" tvg-logo="https://sotv.norago.tv/img/300x300/6984521073204777757.png" group-title="USA LOCALS",NBC SACRAMENTO
+http://63.141.251.250/jamzone/isg.php?id=20002397&type=stream.m3u8
+#EXTINF:0 CUID="455" tvg-name="NBC SAN DIEGO" tvg-id="nbcknsdsandiego.us" tvg-logo="https://sotv.norago.tv/img/300x300/4343799961201721353.png" group-title="USA LOCALS",NBC SAN DIEGO
+http://63.141.251.250/jamzone/isg.php?id=20002396&type=stream.m3u8
+#EXTINF:0 CUID="454" tvg-name="NBC SAN JOSE" tvg-logo="https://sotv.norago.tv/img/300x300/4469010333645560368.png" group-title="USA LOCALS",NBC SAN JOSE
+http://63.141.251.250/jamzone/isg.php?id=20002395&type=stream.m3u8
+#EXTINF:0 CUID="483" tvg-name="NBC SEATTLE" tvg-id="nbckingseattle.us" tvg-logo="https://sotv.norago.tv/img/300x300/8148743401959267449.png" group-title="USA LOCALS",NBC SEATTLE
+http://63.141.251.250/jamzone/isg.php?id=20002427&type=stream.m3u8
+#EXTINF:0 CUID="466" tvg-name="NBC SHREVEPORT" tvg-id="nbc6ktalshreveport.us" tvg-logo="https://sotv.norago.tv/img/300x300/2814209923639989015.png" group-title="USA LOCALS",NBC SHREVEPORT
+http://63.141.251.250/jamzone/isg.php?id=20002409&type=stream.m3u8
+#EXTINF:0 CUID="478" tvg-name="NBC SIOUX FALLS" tvg-id="nbc46kdltsiouxfalls.us" tvg-logo="https://sotv.norago.tv/img/300x300/6331577056284355621.png" group-title="USA LOCALS",NBC SIOUX FALLS
+http://63.141.251.250/jamzone/isg.php?id=20002421&type=stream.m3u8
+#EXTINF:0 CUID="482" tvg-name="NBC TEMPLE" tvg-logo="https://sotv.norago.tv/img/300x300/2624016713945593996.png" group-title="USA LOCALS",NBC TEMPLE
+http://63.141.251.250/jamzone/isg.php?id=20002426&type=stream.m3u8
+#EXTINF:0 CUID="475" tvg-name="NBC TULSA" tvg-logo="https://sotv.norago.tv/img/300x300/1188629509063874071.png" group-title="USA LOCALS",NBC TULSA
+http://63.141.251.250/jamzone/isg.php?id=20002418&type=stream.m3u8
+#EXTINF:0 CUID="470" tvg-name="NBC VINELAND" tvg-logo="https://sotv.norago.tv/img/300x300/1425674729094336261.png" group-title="USA LOCALS",NBC VINELAND
+http://63.141.251.250/jamzone/isg.php?id=20002413&type=stream.m3u8
+#EXTINF:0 CUID="440" tvg-name="NBC WCAU 10 PHILADELPHIA PA" tvg-id="wcau.us" tvg-logo="https://sotv.norago.tv/img/300x300/4344487479596324148.png" group-title="USA LOCALS",NBC WCAU 10 PHILADELPHIA PA
+http://63.141.251.250/jamzone/isg.php?id=20002178&type=stream.m3u8
+#EXTINF:0 CUID="450" tvg-name="NBC WCNC 36 CHARLOTTE NC" tvg-id="wcnc.us" tvg-logo="https://sotv.norago.tv/img/300x300/1338132143666941795.png" group-title="USA LOCALS",NBC WCNC 36 CHARLOTTE NC
+http://63.141.251.250/jamzone/isg.php?id=20002220&type=stream.m3u8
+#EXTINF:0 CUID="446" tvg-name="NBC WDIV 4 DETROIT MI" tvg-id="wdiv.us" tvg-logo="https://sotv.norago.tv/img/300x300/7566207214502560084.png" group-title="USA LOCALS",NBC WDIV 4 DETROIT MI
+http://63.141.251.250/jamzone/isg.php?id=20002203&type=stream.m3u8
+#EXTINF:0 CUID="463" tvg-name="NBC WECT 6 WILMINGTON NC" tvg-id="wect.us" tvg-logo="https://sotv.norago.tv/img/300x300/2996600613746160963.png" group-title="USA LOCALS",NBC WECT 6 WILMINGTON NC
+http://63.141.251.250/jamzone/isg.php?id=20002406&type=stream.m3u8
+#EXTINF:0 CUID="452" tvg-name="NBC WIS 10 COLUMBIA SC" tvg-id="wis.us" tvg-logo="https://sotv.norago.tv/img/300x300/8335835176693706210.png" group-title="USA LOCALS",NBC WIS 10 COLUMBIA SC
+http://63.141.251.250/jamzone/isg.php?id=20002247&type=stream.m3u8
+#EXTINF:0 CUID="490" tvg-name="NBC WLUC 6 UPPER MICHIGAN MI" tvg-id="wluc.us" tvg-logo="https://sotv.norago.tv/img/300x300/8530709359487089588.png" group-title="USA LOCALS",NBC WLUC 6 UPPER MICHIGAN MI
+http://63.141.251.250/jamzone/isg.php?id=20002457&type=stream.m3u8
+#EXTINF:0 CUID="444" tvg-name="NBC WMAQ 5 CHICAGO IL" tvg-id="wmaq.us" tvg-logo="https://sotv.norago.tv/img/300x300/363920961132184968.png" group-title="USA LOCALS",NBC WMAQ 5 CHICAGO IL
+http://63.141.251.250/jamzone/isg.php?id=20002194&type=stream.m3u8
+#EXTINF:0 CUID="491" tvg-name="NBC WMBF 32 MYRTLE BEACH SC" tvg-id="nbc32wmbfmyrtlebeach.us" tvg-logo="https://sotv.norago.tv/img/300x300/2753731868814272623.png" group-title="USA LOCALS",NBC WMBF 32 MYRTLE BEACH SC
+http://63.141.251.250/jamzone/isg.php?id=20002458&type=stream.m3u8
+#EXTINF:0 CUID="443" tvg-name="NBC WNBC 4 New York NY" tvg-id="wnbc.us" tvg-logo="https://sotv.norago.tv/img/300x300/3562258812312411517.png" group-title="USA LOCALS",NBC WNBC 4 New York NY
+http://63.141.251.250/jamzone/isg.php?id=20002190&type=stream.m3u8
+#EXTINF:0 CUID="441" tvg-name="NBC WTHR 13 INDIANAPOLIS IN" tvg-id="wthr.us" tvg-logo="https://sotv.norago.tv/img/300x300/4531823745421468366.png" group-title="USA LOCALS",NBC WTHR 13 INDIANAPOLIS IN
+http://63.141.251.250/jamzone/isg.php?id=20002180&type=stream.m3u8
+#EXTINF:0 CUID="445" tvg-name="NBC WTVJ 6 MIAMI FL" tvg-id="wtvj.us" tvg-logo="https://sotv.norago.tv/img/300x300/708796365131393211.png" group-title="USA LOCALS",NBC WTVJ 6 MIAMI FL
+http://63.141.251.250/jamzone/isg.php?id=20002198&type=stream.m3u8
+#EXTINF:0 CUID="486" tvg-name="NBC WVTM 13 BIRMINGHAM AL" tvg-id="wvtm.us" tvg-logo="https://sotv.norago.tv/img/300x300/2417925516506930232.png" group-title="USA LOCALS",NBC WVTM 13 BIRMINGHAM AL
+http://63.141.251.250/jamzone/isg.php?id=20002430&type=stream.m3u8
+#EXTINF:0 CUID="487" tvg-name="NBC WWBT 12 RICHMOND VA" tvg-id="wwbt.us" tvg-logo="https://sotv.norago.tv/img/300x300/9050865220621551922.png" group-title="USA LOCALS",NBC WWBT 12 RICHMOND VA
+http://63.141.251.250/jamzone/isg.php?id=20002431&type=stream.m3u8
+#EXTINF:0 CUID="488" tvg-name="NBC WXII 12 WINSTON SALEM NC" tvg-id="wxii.us" tvg-logo="https://sotv.norago.tv/img/300x300/2352196754700856411.png" group-title="USA LOCALS",NBC WXII 12 WINSTON SALEM NC
+http://63.141.251.250/jamzone/isg.php?id=20002432&type=stream.m3u8
+#EXTINF:0 CUID="489" tvg-name="NBC WYFF 4 GREENSVILLE SC" tvg-id="wyff.us" tvg-logo="https://sotv.norago.tv/img/300x300/6319546284275243923.png" group-title="USA LOCALS",NBC WYFF 4 GREENSVILLE SC
+http://63.141.251.250/jamzone/isg.php?id=20002433&type=stream.m3u8
+#EXTINF:0 CUID="492" tvg-name="NBC WYFF 4 GREENSVILLE SC" tvg-id="wyff.us" tvg-logo="https://sotv.norago.tv/img/300x300/6424972606240282832.png" group-title="USA LOCALS",NBC WYFF 4 GREENSVILLE SC
+http://63.141.251.250/jamzone/isg.php?id=20002459&type=stream.m3u8
+#EXTINF:0 CUID="36" tvg-name="BNN" tvg-id="bnn.ca" tvg-logo="https://sotv.norago.tv/img/300x300/9127486857983931792.png" group-title="Canada",BNN
+http://63.141.251.250/jamzone/isg.php?id=20000064&type=stream.m3u8
+#EXTINF:0 CUID="168" tvg-name="BRAVO CANADA" tvg-id="bravo.ca" tvg-logo="https://sotv.norago.tv/img/resize/300x300/c111a3ba-1e16-4b3f-919f-8fca529fe42c.jpg" group-title="Canada",BRAVO CANADA
+http://63.141.251.250/jamzone/isg.php?id=20000250&type=stream.m3u8
+#EXTINF:0 CUID="26" tvg-name="CBC" tvg-logo="https://sotv.norago.tv/img/300x300/8514265968269244320.jpg" group-title="Canada",CBC
+http://63.141.251.250/jamzone/isg.php?id=20000203&type=stream.m3u8
+#EXTINF:0 CUID="28" tvg-name="CBC NEWS" tvg-id="cbcnews.ca" tvg-logo="https://sotv.norago.tv/img/300x300/1599957286629103602.png" group-title="Canada",CBC NEWS
+http://63.141.251.250/jamzone/isg.php?id=20000006&type=stream.m3u8
+#EXTINF:0 CUID="18" tvg-name="CITY" tvg-id="citytv.ca" tvg-logo="https://sotv.norago.tv/img/300x300/5231486098917970978.jpg" group-title="Canada",CITY
+http://63.141.251.250/jamzone/isg.php?id=20000207&type=stream.m3u8
+#EXTINF:0 CUID="102" tvg-name="CMT" tvg-id="cmt.ca" tvg-logo="https://sotv.norago.tv/img/300x300/9157174441981751177.jpg" group-title="Canada",CMT
+http://63.141.251.250/jamzone/isg.php?id=20000475&type=stream.m3u8
+#EXTINF:0 CUID="169" tvg-name="COTTAGE LIFE" tvg-id="cottagelife.ca" tvg-logo="https://sotv.norago.tv/img/300x300/6166962469464034930.png" group-title="Canada",COTTAGE LIFE
+http://63.141.251.250/jamzone/isg.php?id=20000303&type=stream.m3u8
+#EXTINF:0 CUID="20" tvg-name="CP24" tvg-id="cp24.ca" tvg-logo="https://sotv.norago.tv/img/300x300/284369154302793929.png" group-title="Canada",CP24
+http://63.141.251.250/jamzone/isg.php?id=20000177&type=stream.m3u8
+#EXTINF:0 CUID="142" tvg-name="CRAVE 1" tvg-id="crave1.ca" tvg-logo="https://sotv.norago.tv/img/300x300/1949907551526142694.png" group-title="Canada",CRAVE 1
+http://63.141.251.250/jamzone/isg.php?id=20000218&type=stream.m3u8
+#EXTINF:0 CUID="143" tvg-name="CRAVE 2" tvg-id="crave2.ca" tvg-logo="https://sotv.norago.tv/img/300x300/4096882003969702373.png" group-title="Canada",CRAVE 2
+http://63.141.251.250/jamzone/isg.php?id=20000213&type=stream.m3u8
+#EXTINF:0 CUID="144" tvg-name="CRAVE 3" tvg-id="crave3.ca" tvg-logo="https://sotv.norago.tv/img/300x300/68294354055384747.png" group-title="Canada",CRAVE 3
+http://63.141.251.250/jamzone/isg.php?id=20000208&type=stream.m3u8
+#EXTINF:0 CUID="21" tvg-name="CTV" tvg-logo="https://sotv.norago.tv/img/300x300/7439005039404329757.png" group-title="Canada",CTV
+http://63.141.251.250/jamzone/isg.php?id=20000196&type=stream.m3u8
+#EXTINF:0 CUID="22" tvg-name="CTV 2" tvg-logo="https://sotv.norago.tv/img/300x300/5250855327673143689.png" group-title="Canada",CTV 2
+http://63.141.251.250/jamzone/isg.php?id=20000291&type=stream.m3u8
+#EXTINF:0 CUID="107" tvg-name="CTV Comedy" tvg-id="ctvcomedy.ca" tvg-logo="https://sotv.norago.tv/img/300x300/3488774813726001796.jpg" group-title="Canada",CTV Comedy
+http://63.141.251.250/jamzone/isg.php?id=20000255&type=stream.m3u8
+#EXTINF:0 CUID="89" tvg-name="CTV Drama" tvg-id="ctvdrama.ca" tvg-logo="https://sotv.norago.tv/img/300x300/3843991652109803427.jpg" group-title="Canada",CTV Drama
+http://63.141.251.250/jamzone/isg.php?id=20000192&type=stream.m3u8
+#EXTINF:0 CUID="67" tvg-name="CTV Life" tvg-id="ctvlife.ca" tvg-logo="https://sotv.norago.tv/img/300x300/5259685550828082297.jpg" group-title="Canada",CTV Life
+http://63.141.251.250/jamzone/isg.php?id=20000149&type=stream.m3u8
+#EXTINF:0 CUID="27" tvg-name="CTV NEWS" tvg-id="ctvnews.ca" tvg-logo="https://sotv.norago.tv/img/300x300/3841416168757038453.png" group-title="Canada",CTV NEWS
+http://63.141.251.250/jamzone/isg.php?id=20000252&type=stream.m3u8
+#EXTINF:0 CUID="108" tvg-name="CTV Sci-Fi" tvg-logo="https://sotv.norago.tv/img/300x300/7233222606688533230.jpg" group-title="Canada",CTV Sci-Fi
+http://63.141.251.250/jamzone/isg.php?id=20000038&type=stream.m3u8
+#EXTINF:0 CUID="72" tvg-name="DTOUR" tvg-id="dtour.ca" tvg-logo="https://sotv.norago.tv/img/300x300/811754427523759367.png" group-title="Canada",DTOUR
+http://63.141.251.250/jamzone/isg.php?id=20000067&type=stream.m3u8
+#EXTINF:0 CUID="85" tvg-name="E!" tvg-logo="https://sotv.norago.tv/img/300x300/7413546569015514752.png" group-title="Canada",E!
+http://63.141.251.250/jamzone/isg.php?id=20000735&type=stream.m3u8
+#EXTINF:0 CUID="50" tvg-name="FAMILY" tvg-id="familyjr.ca" tvg-logo="https://sotv.norago.tv/img/300x300/4062193016400341063.jpg" group-title="Canada",FAMILY
+http://63.141.251.250/jamzone/isg.php?id=20000274&type=stream.m3u8
+#EXTINF:0 CUID="52" tvg-name="FAMILY CHARGED" tvg-logo="https://sotv.norago.tv/img/300x300/1195037366582403764.png" group-title="Canada",FAMILY CHARGED
+http://63.141.251.250/jamzone/isg.php?id=20000327&type=stream.m3u8
+#EXTINF:0 CUID="51" tvg-name="FAMILY JR" tvg-id="familyjr.ca" tvg-logo="https://sotv.norago.tv/img/300x300/439801427676878501.png" group-title="Canada",FAMILY JR
+http://63.141.251.250/jamzone/isg.php?id=20000245&type=stream.m3u8
+#EXTINF:0 CUID="77" tvg-name="FLAVOUR NETWORK" tvg-id="flavournetwork.ca" tvg-logo="https://sotv.norago.tv/img/resize/300x300/5bc71884-7492-4c60-81f5-31bbb780081f.jpg" group-title="Canada",FLAVOUR NETWORK
+http://63.141.251.250/jamzone/isg.php?id=20000083&type=stream.m3u8
+#EXTINF:0 CUID="25" tvg-name="GLOBAL" tvg-id="globalbc.ca" tvg-logo="https://sotv.norago.tv/img/300x300/6390332191117405162.png" group-title="Canada",GLOBAL
+http://63.141.251.250/jamzone/isg.php?id=20000189&type=stream.m3u8
+#EXTINF:0 CUID="78" tvg-name="HGTV" tvg-id="hgtv.ca" tvg-logo="https://sotv.norago.tv/img/300x300/7833079669718403845.png" group-title="Canada",HGTV
+http://63.141.251.250/jamzone/isg.php?id=20000042&type=stream.m3u8
+#EXTINF:0 CUID="148" tvg-name="INVESTIGATION" tvg-id="investigation.ca" tvg-logo="https://sotv.norago.tv/img/300x300/1357935686324265953.png" group-title="Canada",INVESTIGATION
+http://63.141.251.250/jamzone/isg.php?id=20000088&type=stream.m3u8
+#EXTINF:0 CUID="170" tvg-name="LOVE NATURE" tvg-id="lovenature.ca" tvg-logo="https://sotv.norago.tv/img/300x300/230251930331170755.jpg" group-title="Canada",LOVE NATURE
+http://63.141.251.250/jamzone/isg.php?id=20000126&type=stream.m3u8
+#EXTINF:0 CUID="175" tvg-name="MLB STRIKE ZONE" tvg-logo="https://sotv.norago.tv/img/300x300/4377007350951877761.jpg" group-title="Canada",MLB STRIKE ZONE
+http://63.141.251.250/jamzone/isg.php?id=20002552&type=stream.m3u8
+#EXTINF:0 CUID="176" tvg-name="MSG" tvg-logo="https://mwjs.setplex.net/img/300x300/6527705186487258968.jpg" group-title="Canada",MSG
+http://63.141.251.250/jamzone/isg.php?id=20001215&type=stream.m3u8
+#EXTINF:0 CUID="23" tvg-name="OMNI 1" tvg-id="omni1.ca" tvg-logo="https://sotv.norago.tv/img/300x300/2310044487139146318.png" group-title="Canada",OMNI 1
+http://63.141.251.250/jamzone/isg.php?id=20000184&type=stream.m3u8
+#EXTINF:0 CUID="24" tvg-name="OMNI 2" tvg-id="omni2.ca" tvg-logo="https://sotv.norago.tv/img/300x300/7048157006095860498.jpg" group-title="Canada",OMNI 2
+http://63.141.251.250/jamzone/isg.php?id=20000056&type=stream.m3u8
+#EXTINF:0 CUID="171" tvg-name="REDBULL TV" tvg-logo="https://sotv.norago.tv/img/300x300/8763173721776051533.jpg" group-title="Canada",REDBULL TV
+http://63.141.251.250/jamzone/isg.php?id=20001990&type=stream.m3u8
+#EXTINF:0 CUID="65" tvg-name="SLICE TV" tvg-id="slicetv.ca" tvg-logo="https://sotv.norago.tv/img/300x300/5569022722326606606.png" group-title="Canada",SLICE TV
+http://63.141.251.250/jamzone/isg.php?id=20000286&type=stream.m3u8
+#EXTINF:0 CUID="145" tvg-name="SUPER CHANNEL 1" tvg-id="superchannelfuse.ca" tvg-logo="https://sotv.norago.tv/img/300x300/8920394262614718218.png" group-title="Canada",SUPER CHANNEL 1
+http://63.141.251.250/jamzone/isg.php?id=20000186&type=stream.m3u8
+#EXTINF:0 CUID="146" tvg-name="SUPER CHANNEL 2" tvg-id="superchannelfuse.ca" tvg-logo="https://mwjs.setplex.net/img/300x300/5622984775709384753.jpg" group-title="Canada",SUPER CHANNEL 2
+http://63.141.251.250/jamzone/isg.php?id=20000221&type=stream.m3u8
+#EXTINF:0 CUID="61" tvg-name="TELETOON" tvg-id="teletoon.ca" tvg-logo="https://sotv.norago.tv/img/300x300/9139886684098681939.jpg" group-title="Canada",TELETOON
+http://63.141.251.250/jamzone/isg.php?id=20000241&type=stream.m3u8
+#EXTINF:0 CUID="62" tvg-name="TREEHOUSE" tvg-id="treehouse.ca" tvg-logo="https://sotv.norago.tv/img/300x300/6784463341430829345.png" group-title="Canada",TREEHOUSE
+http://63.141.251.250/jamzone/isg.php?id=20000198&type=stream.m3u8
+#EXTINF:0 CUID="19" tvg-name="TV ONE" tvg-id="onetv.ca" tvg-logo="https://mwjs.setplex.net/img/300x300/3761250733249064312.png" group-title="Canada",TV ONE
+http://63.141.251.250/jamzone/isg.php?id=20001617&type=stream.m3u8
+#EXTINF:0 CUID="48" tvg-name="TVO" tvg-id="tvo.ca" tvg-logo="https://sotv.norago.tv/img/300x300/1254536607149242713.png" group-title="Canada",TVO
+http://63.141.251.250/jamzone/isg.php?id=20000209&type=stream.m3u8
+#EXTINF:0 CUID="151" tvg-name="USA NETWORK CANADA" tvg-id="wnetwork.ca" tvg-logo="https://sotv.norago.tv/img/300x300/5378448644298287621.jpg" group-title="Canada",USA NETWORK CANADA
+http://63.141.251.250/jamzone/isg.php?id=20000287&type=stream.m3u8
+#EXTINF:0 CUID="71" tvg-name="VISION" tvg-id="avision.ca" tvg-logo="https://sotv.norago.tv/img/300x300/3932372147720144260.jpg" group-title="Canada",VISION
+http://63.141.251.250/jamzone/isg.php?id=20000201&type=stream.m3u8
+#EXTINF:0 CUID="64" tvg-name="W NETWORK" tvg-id="wnetwork.ca" tvg-logo="https://sotv.norago.tv/img/300x300/3034888798990401752.png" group-title="Canada",W NETWORK
+http://63.141.251.250/jamzone/isg.php?id=20000099&type=stream.m3u8
+#EXTINF:0 CUID="49" tvg-name="YTV" tvg-id="ytv.ca" tvg-logo="https://sotv.norago.tv/img/300x300/6720107389886805876.jpg" group-title="Canada",YTV
+http://63.141.251.250/jamzone/isg.php?id=20000272&type=stream.m3u8
+#EXTINF:0 CUID="97" tvg-name="MUCH" tvg-logo="https://sotv.norago.tv/img/300x300/5512658501398609786.jpg" group-title="Canada",MUCH
+http://63.141.251.250/jamzone/isg.php?id=20000037&type=stream.m3u8
+#EXTINF:0 CUID="498" tvg-name="CBC" tvg-logo="https://sotv.norago.tv/img/300x300/8514265968269244320.jpg" group-title="CANADA LOCALS",CBC
+http://63.141.251.250/jamzone/isg.php?id=20000203&type=stream.m3u8
+#EXTINF:0 CUID="500" tvg-name="CBC NEWS" tvg-id="cbcnews.ca" tvg-logo="https://sotv.norago.tv/img/300x300/1599957286629103602.png" group-title="CANADA LOCALS",CBC NEWS
+http://63.141.251.250/jamzone/isg.php?id=20000006&type=stream.m3u8
+#EXTINF:0 CUID="493" tvg-name="CITY" tvg-id="citytv.ca" tvg-logo="https://sotv.norago.tv/img/300x300/5231486098917970978.jpg" group-title="CANADA LOCALS",CITY
+http://63.141.251.250/jamzone/isg.php?id=20000207&type=stream.m3u8
+#EXTINF:0 CUID="494" tvg-name="CP24" tvg-id="cp24.ca" tvg-logo="https://sotv.norago.tv/img/300x300/284369154302793929.png" group-title="CANADA LOCALS",CP24
+http://63.141.251.250/jamzone/isg.php?id=20000177&type=stream.m3u8
+#EXTINF:0 CUID="495" tvg-name="CTV" tvg-logo="https://sotv.norago.tv/img/300x300/7439005039404329757.png" group-title="CANADA LOCALS",CTV
+http://63.141.251.250/jamzone/isg.php?id=20000196&type=stream.m3u8
+#EXTINF:0 CUID="496" tvg-name="CTV 2" tvg-logo="https://sotv.norago.tv/img/300x300/5250855327673143689.png" group-title="CANADA LOCALS",CTV 2
+http://63.141.251.250/jamzone/isg.php?id=20000291&type=stream.m3u8
+#EXTINF:0 CUID="499" tvg-name="CTV NEWS" tvg-id="ctvnews.ca" tvg-logo="https://sotv.norago.tv/img/300x300/3841416168757038453.png" group-title="CANADA LOCALS",CTV NEWS
+http://63.141.251.250/jamzone/isg.php?id=20000252&type=stream.m3u8
+#EXTINF:0 CUID="497" tvg-name="GLOBAL" tvg-id="globalbc.ca" tvg-logo="https://sotv.norago.tv/img/300x300/6390332191117405162.png" group-title="CANADA LOCALS",GLOBAL
+http://63.141.251.250/jamzone/isg.php?id=20000189&type=stream.m3u8
+#EXTINF:0 CUID="616" tvg-name="MLB 01" tvg-logo="https://sotv.norago.tv/img/300x300/8006277065999995813.jpg" group-title="MLB",MLB 01
+http://63.141.251.250/jamzone/isg.php?id=20001174&type=stream.m3u8
+#EXTINF:0 CUID="617" tvg-name="MLB 02" tvg-logo="https://sotv.norago.tv/img/300x300/4168888415912925905.jpg" group-title="MLB",MLB 02
+http://63.141.251.250/jamzone/isg.php?id=20001175&type=stream.m3u8
+#EXTINF:0 CUID="618" tvg-name="MLB 03" tvg-logo="https://sotv.norago.tv/img/300x300/2658088058352503132.jpg" group-title="MLB",MLB 03
+http://63.141.251.250/jamzone/isg.php?id=20001176&type=stream.m3u8
+#EXTINF:0 CUID="619" tvg-name="MLB 04" tvg-logo="https://sotv.norago.tv/img/300x300/2051036675478174695.jpg" group-title="MLB",MLB 04
+http://63.141.251.250/jamzone/isg.php?id=20001177&type=stream.m3u8
+#EXTINF:0 CUID="620" tvg-name="MLB 05" tvg-logo="https://sotv.norago.tv/img/300x300/6272459012604169821.jpg" group-title="MLB",MLB 05
+http://63.141.251.250/jamzone/isg.php?id=20001178&type=stream.m3u8
+#EXTINF:0 CUID="621" tvg-name="MLB 06" tvg-logo="https://sotv.norago.tv/img/300x300/2952311012893734094.jpg" group-title="MLB",MLB 06
+http://63.141.251.250/jamzone/isg.php?id=20001179&type=stream.m3u8
+#EXTINF:0 CUID="622" tvg-name="MLB 07" tvg-logo="https://sotv.norago.tv/img/300x300/5824279726345378615.jpg" group-title="MLB",MLB 07
+http://63.141.251.250/jamzone/isg.php?id=20001180&type=stream.m3u8
+#EXTINF:0 CUID="623" tvg-name="MLB 08" tvg-logo="https://sotv.norago.tv/img/300x300/4398477664480224268.jpg" group-title="MLB",MLB 08
+http://63.141.251.250/jamzone/isg.php?id=20001181&type=stream.m3u8
+#EXTINF:0 CUID="624" tvg-name="MLB 09" tvg-logo="https://sotv.norago.tv/img/300x300/1075765482487493664.jpg" group-title="MLB",MLB 09
+http://63.141.251.250/jamzone/isg.php?id=20001182&type=stream.m3u8
+#EXTINF:0 CUID="625" tvg-name="MLB 10" tvg-logo="https://sotv.norago.tv/img/300x300/4207590023122328666.jpg" group-title="MLB",MLB 10
+http://63.141.251.250/jamzone/isg.php?id=20001183&type=stream.m3u8
+#EXTINF:0 CUID="626" tvg-name="MLB 11" tvg-logo="https://sotv.norago.tv/img/300x300/7802471373958706663.jpg" group-title="MLB",MLB 11
+http://63.141.251.250/jamzone/isg.php?id=20001374&type=stream.m3u8
+#EXTINF:0 CUID="627" tvg-name="MLB 12" tvg-logo="https://sotv.norago.tv/img/300x300/8295891032976885745.jpg" group-title="MLB",MLB 12
+http://63.141.251.250/jamzone/isg.php?id=20001375&type=stream.m3u8
+#EXTINF:0 CUID="628" tvg-name="MLB 13" tvg-logo="https://sotv.norago.tv/img/300x300/6412047291065203132.jpg" group-title="MLB",MLB 13
+http://63.141.251.250/jamzone/isg.php?id=20001376&type=stream.m3u8
+#EXTINF:0 CUID="629" tvg-name="MLB 14" tvg-logo="https://sotv.norago.tv/img/300x300/4141054000424562996.jpg" group-title="MLB",MLB 14
+http://63.141.251.250/jamzone/isg.php?id=20001377&type=stream.m3u8
+#EXTINF:0 CUID="630" tvg-name="MLB 15" tvg-logo="https://sotv.norago.tv/img/300x300/4601866741465815373.jpg" group-title="MLB",MLB 15
+http://63.141.251.250/jamzone/isg.php?id=20001378&type=stream.m3u8
+#EXTINF:0 CUID="615" tvg-name="MLB NETWORK" tvg-logo="https://sotv.norago.tv/img/300x300/2657913688873634419.jpg" group-title="MLB",MLB NETWORK
+http://63.141.251.250/jamzone/isg.php?id=20001192&type=stream.m3u8
+#EXTINF:0 CUID="633" tvg-name="NBA 01" tvg-logo="https://sotv.norago.tv/img/300x300/4039070659591109200.jpg" group-title="NBA",NBA 01
+http://63.141.251.250/jamzone/isg.php?id=20000476&type=stream.m3u8
+#EXTINF:0 CUID="634" tvg-name="NBA 02" tvg-logo="https://sotv.norago.tv/img/300x300/1957495654010100692.jpg" group-title="NBA",NBA 02
+http://63.141.251.250/jamzone/isg.php?id=20000477&type=stream.m3u8
+#EXTINF:0 CUID="635" tvg-name="NBA 03" tvg-logo="https://sotv.norago.tv/img/300x300/2351525740674191533.jpg" group-title="NBA",NBA 03
+http://63.141.251.250/jamzone/isg.php?id=20000478&type=stream.m3u8
+#EXTINF:0 CUID="636" tvg-name="NBA 04" tvg-logo="https://sotv.norago.tv/img/300x300/2475730503129456471.jpg" group-title="NBA",NBA 04
+http://63.141.251.250/jamzone/isg.php?id=20000479&type=stream.m3u8
+#EXTINF:0 CUID="637" tvg-name="NBA 05" tvg-logo="https://sotv.norago.tv/img/300x300/5735514201555738182.jpg" group-title="NBA",NBA 05
+http://63.141.251.250/jamzone/isg.php?id=20000480&type=stream.m3u8
+#EXTINF:0 CUID="638" tvg-name="NBA 06" tvg-logo="https://sotv.norago.tv/img/300x300/1287199063494741430.jpg" group-title="NBA",NBA 06
+http://63.141.251.250/jamzone/isg.php?id=20000481&type=stream.m3u8
+#EXTINF:0 CUID="639" tvg-name="NBA 07" tvg-logo="https://sotv.norago.tv/img/300x300/5438546837097063475.jpg" group-title="NBA",NBA 07
+http://63.141.251.250/jamzone/isg.php?id=20000482&type=stream.m3u8
+#EXTINF:0 CUID="640" tvg-name="NBA 08" tvg-logo="https://sotv.norago.tv/img/300x300/1215038212930020827.jpg" group-title="NBA",NBA 08
+http://63.141.251.250/jamzone/isg.php?id=20000483&type=stream.m3u8
+#EXTINF:0 CUID="641" tvg-name="NBA 09" tvg-logo="https://sotv.norago.tv/img/300x300/8500403364453140193.jpg" group-title="NBA",NBA 09
+http://63.141.251.250/jamzone/isg.php?id=20000484&type=stream.m3u8
+#EXTINF:0 CUID="642" tvg-name="NBA 10" tvg-logo="https://sotv.norago.tv/img/300x300/8046408614077450784.jpg" group-title="NBA",NBA 10
+http://63.141.251.250/jamzone/isg.php?id=20000485&type=stream.m3u8
+#EXTINF:0 CUID="643" tvg-name="NBA 11" tvg-logo="https://mwjs.setplex.net/img/300x300/1253620526523050840.jpg" group-title="NBA",NBA 11
+http://63.141.251.250/jamzone/isg.php?id=20001520&type=stream.m3u8
+#EXTINF:0 CUID="644" tvg-name="NBA 12" tvg-logo="https://mwjs.setplex.net/img/300x300/924241450778173762.jpg" group-title="NBA",NBA 12
+http://63.141.251.250/jamzone/isg.php?id=20001521&type=stream.m3u8
+#EXTINF:0 CUID="645" tvg-name="NBA 13" tvg-logo="https://mwjs.setplex.net/img/300x300/4064583615499929497.jpg" group-title="NBA",NBA 13
+http://63.141.251.250/jamzone/isg.php?id=20001522&type=stream.m3u8
+#EXTINF:0 CUID="646" tvg-name="NBA 14" tvg-logo="https://mwjs.setplex.net/img/300x300/1664703681225734382.jpg" group-title="NBA",NBA 14
+http://63.141.251.250/jamzone/isg.php?id=20001523&type=stream.m3u8
+#EXTINF:0 CUID="647" tvg-name="NBA 15" tvg-logo="https://mwjs.setplex.net/img/300x300/5765595419655823084.jpg" group-title="NBA",NBA 15
+http://63.141.251.250/jamzone/isg.php?id=20001524&type=stream.m3u8
+#EXTINF:0 CUID="631" tvg-name="NBA TV" tvg-logo="https://sotv.norago.tv/img/300x300/9017929737935359497.png" group-title="NBA",NBA TV
+http://63.141.251.250/jamzone/isg.php?id=20000294&type=stream.m3u8
+#EXTINF:0 CUID="632" tvg-name="NBA USA" tvg-logo="https://sotv.norago.tv/img/300x300/1466776894655924650.png" group-title="NBA",NBA USA
+http://63.141.251.250/jamzone/isg.php?id=20001191&type=stream.m3u8
+#EXTINF:0 CUID="649" tvg-name="NHL 01" tvg-logo="https://sotv.norago.tv/img/300x300/5156065620284316132.png" group-title="NHL",NHL 01
+http://63.141.251.250/jamzone/isg.php?id=20000496&type=stream.m3u8
+#EXTINF:0 CUID="650" tvg-name="NHL 02" tvg-logo="https://sotv.norago.tv/img/300x300/5658801893374177021.png" group-title="NHL",NHL 02
+http://63.141.251.250/jamzone/isg.php?id=20000497&type=stream.m3u8
+#EXTINF:0 CUID="651" tvg-name="NHL 03" tvg-logo="https://sotv.norago.tv/img/300x300/4898926765922600341.png" group-title="NHL",NHL 03
+http://63.141.251.250/jamzone/isg.php?id=20000498&type=stream.m3u8
+#EXTINF:0 CUID="652" tvg-name="NHL 04" tvg-logo="https://sotv.norago.tv/img/300x300/7940967723795142262.png" group-title="NHL",NHL 04
+http://63.141.251.250/jamzone/isg.php?id=20000499&type=stream.m3u8
+#EXTINF:0 CUID="653" tvg-name="NHL 05" tvg-logo="https://sotv.norago.tv/img/300x300/3310743328959171990.png" group-title="NHL",NHL 05
+http://63.141.251.250/jamzone/isg.php?id=20000500&type=stream.m3u8
+#EXTINF:0 CUID="654" tvg-name="NHL 06" tvg-logo="https://sotv.norago.tv/img/300x300/99563944866507495.png" group-title="NHL",NHL 06
+http://63.141.251.250/jamzone/isg.php?id=20000501&type=stream.m3u8
+#EXTINF:0 CUID="655" tvg-name="NHL 07" tvg-logo="https://sotv.norago.tv/img/300x300/2867128186669810055.png" group-title="NHL",NHL 07
+http://63.141.251.250/jamzone/isg.php?id=20000502&type=stream.m3u8
+#EXTINF:0 CUID="656" tvg-name="NHL 08" tvg-logo="https://sotv.norago.tv/img/300x300/3427513357983213645.png" group-title="NHL",NHL 08
+http://63.141.251.250/jamzone/isg.php?id=20000503&type=stream.m3u8
+#EXTINF:0 CUID="657" tvg-name="NHL 09" tvg-logo="https://sotv.norago.tv/img/300x300/4327176449183146453.png" group-title="NHL",NHL 09
+http://63.141.251.250/jamzone/isg.php?id=20000504&type=stream.m3u8
+#EXTINF:0 CUID="658" tvg-name="NHL 10" tvg-logo="https://sotv.norago.tv/img/300x300/4848068300970466287.png" group-title="NHL",NHL 10
+http://63.141.251.250/jamzone/isg.php?id=20000505&type=stream.m3u8
+#EXTINF:0 CUID="659" tvg-name="NHL 11" tvg-logo="https://mwjs.setplex.net/img/300x300/4777689695696162260.png" group-title="NHL",NHL 11
+http://63.141.251.250/jamzone/isg.php?id=20001525&type=stream.m3u8
+#EXTINF:0 CUID="660" tvg-name="NHL 12" tvg-logo="https://mwjs.setplex.net/img/300x300/6662338448185362812.png" group-title="NHL",NHL 12
+http://63.141.251.250/jamzone/isg.php?id=20001526&type=stream.m3u8
+#EXTINF:0 CUID="661" tvg-name="NHL 13" tvg-logo="https://mwjs.setplex.net/img/300x300/8800668718717658086.png" group-title="NHL",NHL 13
+http://63.141.251.250/jamzone/isg.php?id=20001527&type=stream.m3u8
+#EXTINF:0 CUID="662" tvg-name="NHL 14" tvg-logo="https://mwjs.setplex.net/img/300x300/4137907848584210647.png" group-title="NHL",NHL 14
+http://63.141.251.250/jamzone/isg.php?id=20001528&type=stream.m3u8
+#EXTINF:0 CUID="663" tvg-name="NHL 15" tvg-logo="https://mwjs.setplex.net/img/300x300/7521082881937445092.png" group-title="NHL",NHL 15
+http://63.141.251.250/jamzone/isg.php?id=20001529&type=stream.m3u8
+#EXTINF:0 CUID="648" tvg-name="NHL NETWORK" tvg-logo="https://sotv.norago.tv/img/300x300/3376052067432075411.png" group-title="NHL",NHL NETWORK
+http://63.141.251.250/jamzone/isg.php?id=20001360&type=stream.m3u8
+#EXTINF:0 CUID="665" tvg-name="NFL 01 - OFF AIR" tvg-logo="https://mwjs.setplex.net/img/300x300/3939798727884207332.png" group-title="NFL",NFL 01 - OFF AIR
+http://63.141.251.250/jamzone/isg.php?id=20000486&type=stream.m3u8
+#EXTINF:0 CUID="666" tvg-name="NFL 02 - OFF AIR" tvg-logo="https://mwjs.setplex.net/img/300x300/2801757849565937913.png" group-title="NFL",NFL 02 - OFF AIR
+http://63.141.251.250/jamzone/isg.php?id=20000487&type=stream.m3u8
+#EXTINF:0 CUID="667" tvg-name="NFL 03 - OFF AIR" tvg-logo="https://mwjs.setplex.net/img/300x300/2344111098426805092.png" group-title="NFL",NFL 03 - OFF AIR
+http://63.141.251.250/jamzone/isg.php?id=20000488&type=stream.m3u8
+#EXTINF:0 CUID="668" tvg-name="NFL 04 - OFF AIR" tvg-logo="https://mwjs.setplex.net/img/300x300/6172756018030128945.png" group-title="NFL",NFL 04 - OFF AIR
+http://63.141.251.250/jamzone/isg.php?id=20001493&type=stream.m3u8
+#EXTINF:0 CUID="669" tvg-name="NFL 05 - OFF AIR" tvg-logo="https://mwjs.setplex.net/img/300x300/5923548480082459761.png" group-title="NFL",NFL 05 - OFF AIR
+http://63.141.251.250/jamzone/isg.php?id=20001494&type=stream.m3u8
+#EXTINF:0 CUID="670" tvg-name="NFL 06 - OFF AIR" tvg-logo="https://mwjs.setplex.net/img/300x300/5551870093286917117.png" group-title="NFL",NFL 06 - OFF AIR
+http://63.141.251.250/jamzone/isg.php?id=20001495&type=stream.m3u8
+#EXTINF:0 CUID="671" tvg-name="NFL 07 - OFF AIR" tvg-logo="https://mwjs.setplex.net/img/300x300/8972857678513803498.png" group-title="NFL",NFL 07 - OFF AIR
+http://63.141.251.250/jamzone/isg.php?id=20001496&type=stream.m3u8
+#EXTINF:0 CUID="672" tvg-name="NFL 08 - OFF AIR" tvg-logo="https://mwjs.setplex.net/img/300x300/5019569857141239477.png" group-title="NFL",NFL 08 - OFF AIR
+http://63.141.251.250/jamzone/isg.php?id=20001497&type=stream.m3u8
+#EXTINF:0 CUID="673" tvg-name="NFL 09 - OFF AIR" tvg-logo="https://mwjs.setplex.net/img/300x300/8602683335664120657.png" group-title="NFL",NFL 09 - OFF AIR
+http://63.141.251.250/jamzone/isg.php?id=20001498&type=stream.m3u8
+#EXTINF:0 CUID="674" tvg-name="NFL 10 - OFF AIR" tvg-logo="https://mwjs.setplex.net/img/300x300/3811252130744778044.png" group-title="NFL",NFL 10 - OFF AIR
+http://63.141.251.250/jamzone/isg.php?id=20001499&type=stream.m3u8
+#EXTINF:0 CUID="675" tvg-name="NFL 11 - OFF AIR" tvg-logo="https://mwjs.setplex.net/img/300x300/5692829110145898128.png" group-title="NFL",NFL 11 - OFF AIR
+http://63.141.251.250/jamzone/isg.php?id=20001530&type=stream.m3u8
+#EXTINF:0 CUID="676" tvg-name="NFL 12 - OFF AIR" tvg-logo="https://mwjs.setplex.net/img/300x300/700732566288271875.png" group-title="NFL",NFL 12 - OFF AIR
+http://63.141.251.250/jamzone/isg.php?id=20001531&type=stream.m3u8
+#EXTINF:0 CUID="677" tvg-name="NFL 13 - OFF AIR" tvg-logo="https://mwjs.setplex.net/img/300x300/4312858054177248985.png" group-title="NFL",NFL 13 - OFF AIR
+http://63.141.251.250/jamzone/isg.php?id=20001532&type=stream.m3u8
+#EXTINF:0 CUID="678" tvg-name="NFL 14 - OFF AIR" tvg-logo="https://mwjs.setplex.net/img/300x300/7310921747529336727.png" group-title="NFL",NFL 14 - OFF AIR
+http://63.141.251.250/jamzone/isg.php?id=20001533&type=stream.m3u8
+#EXTINF:0 CUID="679" tvg-name="NFL 15 - OFF AIR" tvg-logo="https://mwjs.setplex.net/img/300x300/6776551819460039842.png" group-title="NFL",NFL 15 - OFF AIR
+http://63.141.251.250/jamzone/isg.php?id=20001534&type=stream.m3u8
+#EXTINF:0 CUID="664" tvg-name="NFL NETWORK" tvg-logo="https://sotv.norago.tv/img/300x300/3103109607069609388.png" group-title="NFL",NFL NETWORK
+http://63.141.251.250/jamzone/isg.php?id=20000337&type=stream.m3u8
+#EXTINF:0 CUID="680" tvg-name="NFL RED ZONE" tvg-logo="https://mwjs.setplex.net/img/300x300/5511280118400993510.png" group-title="NFL",NFL RED ZONE
+http://63.141.251.250/jamzone/isg.php?id=20000506&type=stream.m3u8
+#EXTINF:0 CUID="681" tvg-name="MLS 1" tvg-logo="https://sotv.norago.tv/img/resize/300x300/1539ba1e-39e7-4140-96bc-3e7340929f7b.png" group-title="MLS",MLS 1
+http://63.141.251.250/jamzone/isg.php?id=20003053&type=stream.m3u8
+#EXTINF:0 CUID="682" tvg-name="MLS 2" tvg-logo="https://sotv.norago.tv/img/resize/300x300/0ed332de-a62a-49d7-a36e-fe7c1a16bce8.png" group-title="MLS",MLS 2
+http://63.141.251.250/jamzone/isg.php?id=20003056&type=stream.m3u8
+#EXTINF:0 CUID="683" tvg-name="MLS 3" tvg-logo="https://sotv.norago.tv/img/resize/300x300/5d016880-2ffa-4904-ba3b-a5d9426c65cb.png" group-title="MLS",MLS 3
+http://63.141.251.250/jamzone/isg.php?id=20003059&type=stream.m3u8
+#EXTINF:0 CUID="684" tvg-name="MLS 4" tvg-logo="https://sotv.norago.tv/img/resize/300x300/2555b7c2-ddac-43b8-ac65-85c5570a83a4.png" group-title="MLS",MLS 4
+http://63.141.251.250/jamzone/isg.php?id=20003062&type=stream.m3u8
+#EXTINF:0 CUID="685" tvg-name="MLS 5" tvg-logo="https://sotv.norago.tv/img/resize/300x300/63156827-f8a6-4115-97fd-89cf63493930.png" group-title="MLS",MLS 5
+http://63.141.251.250/jamzone/isg.php?id=20003065&type=stream.m3u8
+#EXTINF:0 CUID="686" tvg-name="MLS 6" tvg-logo="https://sotv.norago.tv/img/resize/300x300/bf033c64-8536-4af2-9a18-4626241e2078.png" group-title="MLS",MLS 6
+http://63.141.251.250/jamzone/isg.php?id=20003068&type=stream.m3u8
+#EXTINF:0 CUID="687" tvg-name="MLS 7" tvg-logo="https://sotv.norago.tv/img/resize/300x300/e32a183e-0687-4e10-ae20-6c12593bb55a.png" group-title="MLS",MLS 7
+http://63.141.251.250/jamzone/isg.php?id=20003071&type=stream.m3u8
+#EXTINF:0 CUID="688" tvg-name="MLS 8" tvg-logo="https://sotv.norago.tv/img/resize/300x300/07863b59-60b8-46ab-8db0-2bcaf059dde3.png" group-title="MLS",MLS 8
+http://63.141.251.250/jamzone/isg.php?id=20003074&type=stream.m3u8
+#EXTINF:0 CUID="689" tvg-name="MLS 9" tvg-logo="https://sotv.norago.tv/img/resize/300x300/69e4b469-24b3-4cc8-8ccb-196ca534b737.png" group-title="MLS",MLS 9
+http://63.141.251.250/jamzone/isg.php?id=20003077&type=stream.m3u8
+#EXTINF:0 CUID="690" tvg-name="MLS 10" tvg-logo="https://sotv.norago.tv/img/resize/300x300/94b42e9e-631f-4d22-8da2-3daa2f4666ac.png" group-title="MLS",MLS 10
+http://63.141.251.250/jamzone/isg.php?id=20003080&type=stream.m3u8
+#EXTINF:0 CUID="691" tvg-name="NCAA 1" tvg-logo="https://sotv.norago.tv/img/300x300/7579080975020655063.jpg" group-title="NCAA",NCAA 1
+http://63.141.251.250/jamzone/isg.php?id=20002942&type=stream.m3u8
+#EXTINF:0 CUID="692" tvg-name="NCAA 2" tvg-logo="https://sotv.norago.tv/img/300x300/3570521380730868217.jpg" group-title="NCAA",NCAA 2
+http://63.141.251.250/jamzone/isg.php?id=20002943&type=stream.m3u8
+#EXTINF:0 CUID="693" tvg-name="NCAA 3" tvg-logo="https://sotv.norago.tv/img/300x300/2150846248262095230.jpg" group-title="NCAA",NCAA 3
+http://63.141.251.250/jamzone/isg.php?id=20002944&type=stream.m3u8
+#EXTINF:0 CUID="694" tvg-name="NCAA 4" tvg-logo="https://sotv.norago.tv/img/300x300/3355158491073242064.jpg" group-title="NCAA",NCAA 4
+http://63.141.251.250/jamzone/isg.php?id=20002945&type=stream.m3u8
+#EXTINF:0 CUID="695" tvg-name="NCAA 5" tvg-logo="https://sotv.norago.tv/img/300x300/3940962075229627252.jpg" group-title="NCAA",NCAA 5
+http://63.141.251.250/jamzone/isg.php?id=20002946&type=stream.m3u8
+#EXTINF:0 CUID="696" tvg-name="NCAA 6" tvg-logo="https://sotv.norago.tv/img/300x300/3671393238761299863.jpg" group-title="NCAA",NCAA 6
+http://63.141.251.250/jamzone/isg.php?id=20002947&type=stream.m3u8
+#EXTINF:0 CUID="697" tvg-name="NCAA 7" tvg-logo="https://sotv.norago.tv/img/300x300/3753866182532296538.jpg" group-title="NCAA",NCAA 7
+http://63.141.251.250/jamzone/isg.php?id=20002949&type=stream.m3u8
+#EXTINF:0 CUID="698" tvg-name="NCAA 8" tvg-logo="https://sotv.norago.tv/img/300x300/852371672013226804.jpg" group-title="NCAA",NCAA 8
+http://63.141.251.250/jamzone/isg.php?id=20002952&type=stream.m3u8
+#EXTINF:0 CUID="699" tvg-name="NCAA 9" tvg-logo="https://sotv.norago.tv/img/300x300/6759217467421582938.jpg" group-title="NCAA",NCAA 9
+http://63.141.251.250/jamzone/isg.php?id=20002954&type=stream.m3u8
+#EXTINF:0 CUID="700" tvg-name="NCAA 10" tvg-logo="https://sotv.norago.tv/img/300x300/382664882379920087.jpg" group-title="NCAA",NCAA 10
+http://63.141.251.250/jamzone/isg.php?id=20002956&type=stream.m3u8
+#EXTINF:0 CUID="701" tvg-name="NCAA 11" tvg-logo="https://sotv.norago.tv/img/300x300/4653855990491639340.jpg" group-title="NCAA",NCAA 11
+http://63.141.251.250/jamzone/isg.php?id=20002958&type=stream.m3u8
+#EXTINF:0 CUID="702" tvg-name="NCAA 12" tvg-logo="https://sotv.norago.tv/img/300x300/6050136893060978563.jpg" group-title="NCAA",NCAA 12
+http://63.141.251.250/jamzone/isg.php?id=20002972&type=stream.m3u8
+#EXTINF:0 CUID="703" tvg-name="NCAA 13" tvg-logo="https://sotv.norago.tv/img/300x300/363673907247976608.jpg" group-title="NCAA",NCAA 13
+http://63.141.251.250/jamzone/isg.php?id=20002974&type=stream.m3u8
+#EXTINF:0 CUID="704" tvg-name="NCAA 14" tvg-logo="https://sotv.norago.tv/img/300x300/2144668508313906742.jpg" group-title="NCAA",NCAA 14
+http://63.141.251.250/jamzone/isg.php?id=20002977&type=stream.m3u8
+#EXTINF:0 CUID="705" tvg-name="NCAA 15" tvg-logo="https://sotv.norago.tv/img/300x300/5535594856411369854.jpg" group-title="NCAA",NCAA 15
+http://63.141.251.250/jamzone/isg.php?id=20002975&type=stream.m3u8
+#EXTINF:0 CUID="706" tvg-name="NCAA 16" tvg-logo="https://sotv.norago.tv/img/300x300/6196359105996331432.jpg" group-title="NCAA",NCAA 16
+http://63.141.251.250/jamzone/isg.php?id=20002973&type=stream.m3u8
+#EXTINF:0 CUID="707" tvg-name="NCAA 17" tvg-logo="https://sotv.norago.tv/img/300x300/7750794581047015314.jpg" group-title="NCAA",NCAA 17
+http://63.141.251.250/jamzone/isg.php?id=20002971&type=stream.m3u8
+#EXTINF:0 CUID="708" tvg-name="NCAA 18" tvg-logo="https://sotv.norago.tv/img/300x300/1635174528146421508.jpg" group-title="NCAA",NCAA 18
+http://63.141.251.250/jamzone/isg.php?id=20002970&type=stream.m3u8
+#EXTINF:0 CUID="709" tvg-name="NCAA 19" tvg-logo="https://sotv.norago.tv/img/300x300/8789894027882738882.jpg" group-title="NCAA",NCAA 19
+http://63.141.251.250/jamzone/isg.php?id=20002969&type=stream.m3u8
+#EXTINF:0 CUID="710" tvg-name="NCAA 20" tvg-logo="https://sotv.norago.tv/img/300x300/7245535202995552683.jpg" group-title="NCAA",NCAA 20
+http://63.141.251.250/jamzone/isg.php?id=20002968&type=stream.m3u8
+#EXTINF:0 CUID="711" tvg-name="NCAA 21" tvg-logo="https://sotv.norago.tv/img/300x300/4838062575529772631.jpg" group-title="NCAA",NCAA 21
+http://63.141.251.250/jamzone/isg.php?id=20002967&type=stream.m3u8
+#EXTINF:0 CUID="712" tvg-name="NCAA 22" tvg-logo="https://sotv.norago.tv/img/300x300/2042546428706066608.jpg" group-title="NCAA",NCAA 22
+http://63.141.251.250/jamzone/isg.php?id=20002966&type=stream.m3u8
+#EXTINF:0 CUID="713" tvg-name="NCAA 23" tvg-logo="https://sotv.norago.tv/img/300x300/6363879345289823686.jpg" group-title="NCAA",NCAA 23
+http://63.141.251.250/jamzone/isg.php?id=20002965&type=stream.m3u8
+#EXTINF:0 CUID="714" tvg-name="NCAA 24" tvg-logo="https://sotv.norago.tv/img/300x300/6052083578425100545.jpg" group-title="NCAA",NCAA 24
+http://63.141.251.250/jamzone/isg.php?id=20002964&type=stream.m3u8
+#EXTINF:0 CUID="715" tvg-name="NCAA 25" tvg-logo="https://sotv.norago.tv/img/300x300/4868456293221121690.jpg" group-title="NCAA",NCAA 25
+http://63.141.251.250/jamzone/isg.php?id=20002963&type=stream.m3u8
+#EXTINF:0 CUID="716" tvg-name="NCAA 26" tvg-logo="https://sotv.norago.tv/img/300x300/2200389446579999320.jpg" group-title="NCAA",NCAA 26
+http://63.141.251.250/jamzone/isg.php?id=20002962&type=stream.m3u8
+#EXTINF:0 CUID="717" tvg-name="NCAA 27" tvg-logo="https://sotv.norago.tv/img/300x300/6228045589628534071.jpg" group-title="NCAA",NCAA 27
+http://63.141.251.250/jamzone/isg.php?id=20002961&type=stream.m3u8
+#EXTINF:0 CUID="718" tvg-name="NCAA 28" tvg-logo="https://sotv.norago.tv/img/300x300/971283546361898053.jpg" group-title="NCAA",NCAA 28
+http://63.141.251.250/jamzone/isg.php?id=20002960&type=stream.m3u8
+#EXTINF:0 CUID="719" tvg-name="NCAA 29" tvg-logo="https://sotv.norago.tv/img/300x300/6056740604985715655.jpg" group-title="NCAA",NCAA 29
+http://63.141.251.250/jamzone/isg.php?id=20002959&type=stream.m3u8
+#EXTINF:0 CUID="720" tvg-name="NCAA 30" tvg-logo="https://sotv.norago.tv/img/300x300/7783626164167034931.jpg" group-title="NCAA",NCAA 30
+http://63.141.251.250/jamzone/isg.php?id=20002957&type=stream.m3u8
+#EXTINF:0 CUID="721" tvg-name="NCAA 31" tvg-logo="https://sotv.norago.tv/img/300x300/2424962130831323354.jpg" group-title="NCAA",NCAA 31
+http://63.141.251.250/jamzone/isg.php?id=20002955&type=stream.m3u8
+#EXTINF:0 CUID="722" tvg-name="NCAA 32" tvg-logo="https://sotv.norago.tv/img/300x300/5404312497997992151.jpg" group-title="NCAA",NCAA 32
+http://63.141.251.250/jamzone/isg.php?id=20002953&type=stream.m3u8
+#EXTINF:0 CUID="723" tvg-name="NCAA 33" tvg-logo="https://sotv.norago.tv/img/300x300/5165669264337371166.jpg" group-title="NCAA",NCAA 33
+http://63.141.251.250/jamzone/isg.php?id=20002951&type=stream.m3u8
+#EXTINF:0 CUID="724" tvg-name="NCAA 34" tvg-logo="https://sotv.norago.tv/img/300x300/785878114023922753.jpg" group-title="NCAA",NCAA 34
+http://63.141.251.250/jamzone/isg.php?id=20002950&type=stream.m3u8
+#EXTINF:0 CUID="725" tvg-name="NCAA 35" tvg-logo="https://sotv.norago.tv/img/300x300/5705198406626608013.jpg" group-title="NCAA",NCAA 35
+http://63.141.251.250/jamzone/isg.php?id=20002948&type=stream.m3u8
+#EXTINF:0 CUID="726" tvg-name="ESPN PLUS 01" tvg-logo="https://sotv.norago.tv/img/300x300/2791366511132524355.png" group-title="ESPN +",ESPN PLUS 01
+http://63.141.251.250/jamzone/isg.php?id=20002462&type=stream.m3u8
+#EXTINF:0 CUID="727" tvg-name="ESPN PLUS 02" tvg-logo="https://sotv.norago.tv/img/300x300/1838415777140390117.png" group-title="ESPN +",ESPN PLUS 02
+http://63.141.251.250/jamzone/isg.php?id=20002463&type=stream.m3u8
+#EXTINF:0 CUID="728" tvg-name="ESPN PLUS 03" tvg-logo="https://sotv.norago.tv/img/300x300/4003449981908644302.png" group-title="ESPN +",ESPN PLUS 03
+http://63.141.251.250/jamzone/isg.php?id=20002464&type=stream.m3u8
+#EXTINF:0 CUID="729" tvg-name="ESPN PLUS 04" tvg-logo="https://sotv.norago.tv/img/300x300/8522638135644264379.png" group-title="ESPN +",ESPN PLUS 04
+http://63.141.251.250/jamzone/isg.php?id=20002465&type=stream.m3u8
+#EXTINF:0 CUID="730" tvg-name="ESPN PLUS 05" tvg-logo="https://sotv.norago.tv/img/300x300/7517062582913141732.png" group-title="ESPN +",ESPN PLUS 05
+http://63.141.251.250/jamzone/isg.php?id=20002466&type=stream.m3u8
+#EXTINF:0 CUID="731" tvg-name="ESPN PLUS 06" tvg-logo="https://sotv.norago.tv/img/300x300/5215332948743854446.png" group-title="ESPN +",ESPN PLUS 06
+http://63.141.251.250/jamzone/isg.php?id=20002467&type=stream.m3u8
+#EXTINF:0 CUID="732" tvg-name="ESPN PLUS 07" tvg-logo="https://sotv.norago.tv/img/300x300/1819183216393013571.png" group-title="ESPN +",ESPN PLUS 07
+http://63.141.251.250/jamzone/isg.php?id=20002468&type=stream.m3u8
+#EXTINF:0 CUID="733" tvg-name="ESPN PLUS 08" tvg-logo="https://sotv.norago.tv/img/300x300/6099169245637302988.png" group-title="ESPN +",ESPN PLUS 08
+http://63.141.251.250/jamzone/isg.php?id=20002469&type=stream.m3u8
+#EXTINF:0 CUID="734" tvg-name="ESPN PLUS 09" tvg-logo="https://sotv.norago.tv/img/300x300/8874541854476569437.png" group-title="ESPN +",ESPN PLUS 09
+http://63.141.251.250/jamzone/isg.php?id=20002470&type=stream.m3u8
+#EXTINF:0 CUID="735" tvg-name="ESPN PLUS 10" tvg-logo="https://sotv.norago.tv/img/300x300/8623611402567686894.png" group-title="ESPN +",ESPN PLUS 10
+http://63.141.251.250/jamzone/isg.php?id=20002471&type=stream.m3u8
+#EXTINF:0 CUID="736" tvg-name="ESPN PLUS 11" tvg-logo="https://sotv.norago.tv/img/300x300/1919930270862559183.png" group-title="ESPN +",ESPN PLUS 11
+http://63.141.251.250/jamzone/isg.php?id=20002472&type=stream.m3u8
+#EXTINF:0 CUID="737" tvg-name="ESPN PLUS 12" tvg-logo="https://sotv.norago.tv/img/300x300/8409164264041732380.png" group-title="ESPN +",ESPN PLUS 12
+http://63.141.251.250/jamzone/isg.php?id=20002473&type=stream.m3u8
+#EXTINF:0 CUID="738" tvg-name="ESPN PLUS 13" tvg-logo="https://sotv.norago.tv/img/300x300/3396385833451944402.png" group-title="ESPN +",ESPN PLUS 13
+http://63.141.251.250/jamzone/isg.php?id=20002474&type=stream.m3u8
+#EXTINF:0 CUID="739" tvg-name="ESPN PLUS 14" tvg-logo="https://sotv.norago.tv/img/300x300/5921744550131528124.png" group-title="ESPN +",ESPN PLUS 14
+http://63.141.251.250/jamzone/isg.php?id=20002475&type=stream.m3u8
+#EXTINF:0 CUID="740" tvg-name="ESPN PLUS 15" tvg-logo="https://sotv.norago.tv/img/300x300/4143744054926529566.png" group-title="ESPN +",ESPN PLUS 15
+http://63.141.251.250/jamzone/isg.php?id=20002476&type=stream.m3u8
+#EXTINF:0 CUID="741" tvg-name="ESPN PLUS 16" tvg-logo="https://sotv.norago.tv/img/300x300/7655163608123813490.png" group-title="ESPN +",ESPN PLUS 16
+http://63.141.251.250/jamzone/isg.php?id=20002477&type=stream.m3u8
+#EXTINF:0 CUID="742" tvg-name="ESPN PLUS 17" tvg-logo="https://sotv.norago.tv/img/300x300/1439987524936597577.png" group-title="ESPN +",ESPN PLUS 17
+http://63.141.251.250/jamzone/isg.php?id=20002478&type=stream.m3u8
+#EXTINF:0 CUID="743" tvg-name="ESPN PLUS 18" tvg-logo="https://sotv.norago.tv/img/300x300/2784226898379958420.png" group-title="ESPN +",ESPN PLUS 18
+http://63.141.251.250/jamzone/isg.php?id=20002479&type=stream.m3u8
+#EXTINF:0 CUID="744" tvg-name="ESPN PLUS 19" tvg-logo="https://sotv.norago.tv/img/300x300/2753993289144883777.png" group-title="ESPN +",ESPN PLUS 19
+http://63.141.251.250/jamzone/isg.php?id=20002480&type=stream.m3u8
+#EXTINF:0 CUID="745" tvg-name="ESPN PLUS 20" tvg-logo="https://sotv.norago.tv/img/300x300/1786993003266473930.png" group-title="ESPN +",ESPN PLUS 20
+http://63.141.251.250/jamzone/isg.php?id=20002481&type=stream.m3u8
+#EXTINF:0 CUID="746" tvg-name="ESPN PLUS 21" tvg-logo="https://sotv.norago.tv/img/300x300/6130532025652639136.png" group-title="ESPN +",ESPN PLUS 21
+http://63.141.251.250/jamzone/isg.php?id=20002482&type=stream.m3u8
+#EXTINF:0 CUID="747" tvg-name="ESPN PLUS 22" tvg-logo="https://sotv.norago.tv/img/300x300/962493802405440244.png" group-title="ESPN +",ESPN PLUS 22
+http://63.141.251.250/jamzone/isg.php?id=20002483&type=stream.m3u8
+#EXTINF:0 CUID="748" tvg-name="ESPN PLUS 23" tvg-logo="https://sotv.norago.tv/img/300x300/6624026103516278088.png" group-title="ESPN +",ESPN PLUS 23
+http://63.141.251.250/jamzone/isg.php?id=20002484&type=stream.m3u8
+#EXTINF:0 CUID="749" tvg-name="ESPN PLUS 24" tvg-logo="https://sotv.norago.tv/img/300x300/2777861043133009000.png" group-title="ESPN +",ESPN PLUS 24
+http://63.141.251.250/jamzone/isg.php?id=20002485&type=stream.m3u8
+#EXTINF:0 CUID="750" tvg-name="ESPN PLUS 25" tvg-logo="https://sotv.norago.tv/img/300x300/968491819307139571.png" group-title="ESPN +",ESPN PLUS 25
+http://63.141.251.250/jamzone/isg.php?id=20002486&type=stream.m3u8
+#EXTINF:0 CUID="751" tvg-name="ESPN PLUS 26" tvg-logo="https://sotv.norago.tv/img/300x300/930586754571890777.png" group-title="ESPN +",ESPN PLUS 26
+http://63.141.251.250/jamzone/isg.php?id=20002487&type=stream.m3u8
+#EXTINF:0 CUID="752" tvg-name="ESPN PLUS 27" tvg-logo="https://sotv.norago.tv/img/300x300/7653231693812821577.png" group-title="ESPN +",ESPN PLUS 27
+http://63.141.251.250/jamzone/isg.php?id=20002488&type=stream.m3u8
+#EXTINF:0 CUID="753" tvg-name="ESPN PLUS 28" tvg-logo="https://sotv.norago.tv/img/300x300/1579171742851311667.png" group-title="ESPN +",ESPN PLUS 28
+http://63.141.251.250/jamzone/isg.php?id=20002489&type=stream.m3u8
+#EXTINF:0 CUID="754" tvg-name="ESPN PLUS 29" tvg-logo="https://sotv.norago.tv/img/300x300/2191277830292855228.png" group-title="ESPN +",ESPN PLUS 29
+http://63.141.251.250/jamzone/isg.php?id=20002490&type=stream.m3u8
+#EXTINF:0 CUID="755" tvg-name="ESPN PLUS 30" tvg-logo="https://sotv.norago.tv/img/300x300/5339879807478669504.png" group-title="ESPN +",ESPN PLUS 30
+http://63.141.251.250/jamzone/isg.php?id=20002491&type=stream.m3u8
+#EXTINF:0 CUID="756" tvg-name="ESPN PLUS 31" tvg-logo="https://sotv.norago.tv/img/300x300/1138314924735489275.png" group-title="ESPN +",ESPN PLUS 31
+http://63.141.251.250/jamzone/isg.php?id=20002492&type=stream.m3u8
+#EXTINF:0 CUID="757" tvg-name="ESPN PLUS 32" tvg-logo="https://sotv.norago.tv/img/300x300/8350059520030107685.png" group-title="ESPN +",ESPN PLUS 32
+http://63.141.251.250/jamzone/isg.php?id=20002493&type=stream.m3u8
+#EXTINF:0 CUID="758" tvg-name="ESPN PLUS 33" tvg-logo="https://sotv.norago.tv/img/300x300/2906396387182415742.png" group-title="ESPN +",ESPN PLUS 33
+http://63.141.251.250/jamzone/isg.php?id=20002494&type=stream.m3u8
+#EXTINF:0 CUID="759" tvg-name="ESPN PLUS 34" tvg-logo="https://sotv.norago.tv/img/300x300/8331069098329725472.png" group-title="ESPN +",ESPN PLUS 34
+http://63.141.251.250/jamzone/isg.php?id=20002495&type=stream.m3u8
+#EXTINF:0 CUID="760" tvg-name="ESPN PLUS 35" tvg-logo="https://sotv.norago.tv/img/300x300/8065740907479431307.png" group-title="ESPN +",ESPN PLUS 35
+http://63.141.251.250/jamzone/isg.php?id=20002496&type=stream.m3u8
+#EXTINF:0 CUID="761" tvg-name="ESPN PLUS 36" tvg-logo="https://sotv.norago.tv/img/300x300/1530837739166327201.png" group-title="ESPN +",ESPN PLUS 36
+http://63.141.251.250/jamzone/isg.php?id=20002497&type=stream.m3u8
+#EXTINF:0 CUID="762" tvg-name="ESPN PLUS 37" tvg-logo="https://sotv.norago.tv/img/300x300/502865540566977137.png" group-title="ESPN +",ESPN PLUS 37
+http://63.141.251.250/jamzone/isg.php?id=20002498&type=stream.m3u8
+#EXTINF:0 CUID="775" tvg-name="ESPN PLUS 38" tvg-logo="https://sotv.norago.tv/img/300x300/8469947267642725590.png" group-title="ESPN +",ESPN PLUS 38
+http://63.141.251.250/jamzone/isg.php?id=20002511&type=stream.m3u8
+#EXTINF:0 CUID="763" tvg-name="ESPN PLUS 39" tvg-logo="https://sotv.norago.tv/img/300x300/7341460383055170188.png" group-title="ESPN +",ESPN PLUS 39
+http://63.141.251.250/jamzone/isg.php?id=20002499&type=stream.m3u8
+#EXTINF:0 CUID="764" tvg-name="ESPN PLUS 40" tvg-logo="https://sotv.norago.tv/img/300x300/4149102133723283379.png" group-title="ESPN +",ESPN PLUS 40
+http://63.141.251.250/jamzone/isg.php?id=20002500&type=stream.m3u8
+#EXTINF:0 CUID="765" tvg-name="ESPN PLUS 41" tvg-logo="https://sotv.norago.tv/img/300x300/8492110159972992092.png" group-title="ESPN +",ESPN PLUS 41
+http://63.141.251.250/jamzone/isg.php?id=20002501&type=stream.m3u8
+#EXTINF:0 CUID="766" tvg-name="ESPN PLUS 42" tvg-logo="https://sotv.norago.tv/img/300x300/6651708020806356752.png" group-title="ESPN +",ESPN PLUS 42
+http://63.141.251.250/jamzone/isg.php?id=20002502&type=stream.m3u8
+#EXTINF:0 CUID="767" tvg-name="ESPN PLUS 43" tvg-logo="https://sotv.norago.tv/img/300x300/1401623490557598174.png" group-title="ESPN +",ESPN PLUS 43
+http://63.141.251.250/jamzone/isg.php?id=20002503&type=stream.m3u8
+#EXTINF:0 CUID="768" tvg-name="ESPN PLUS 44" tvg-logo="https://sotv.norago.tv/img/300x300/8609075929637484309.png" group-title="ESPN +",ESPN PLUS 44
+http://63.141.251.250/jamzone/isg.php?id=20002504&type=stream.m3u8
+#EXTINF:0 CUID="769" tvg-name="ESPN PLUS 45" tvg-logo="https://sotv.norago.tv/img/300x300/1681649343186527526.png" group-title="ESPN +",ESPN PLUS 45
+http://63.141.251.250/jamzone/isg.php?id=20002505&type=stream.m3u8
+#EXTINF:0 CUID="770" tvg-name="ESPN PLUS 46" tvg-logo="https://sotv.norago.tv/img/300x300/1970444368744405782.png" group-title="ESPN +",ESPN PLUS 46
+http://63.141.251.250/jamzone/isg.php?id=20002506&type=stream.m3u8
+#EXTINF:0 CUID="771" tvg-name="ESPN PLUS 47" tvg-logo="https://sotv.norago.tv/img/300x300/6765867706635779828.png" group-title="ESPN +",ESPN PLUS 47
+http://63.141.251.250/jamzone/isg.php?id=20002507&type=stream.m3u8
+#EXTINF:0 CUID="772" tvg-name="ESPN PLUS 48" tvg-logo="https://sotv.norago.tv/img/300x300/6834644135020601010.png" group-title="ESPN +",ESPN PLUS 48
+http://63.141.251.250/jamzone/isg.php?id=20002508&type=stream.m3u8
+#EXTINF:0 CUID="773" tvg-name="ESPN PLUS 49" tvg-logo="https://sotv.norago.tv/img/300x300/3083807025102643950.png" group-title="ESPN +",ESPN PLUS 49
+http://63.141.251.250/jamzone/isg.php?id=20002509&type=stream.m3u8
+#EXTINF:0 CUID="774" tvg-name="ESPN PLUS 50" tvg-logo="https://sotv.norago.tv/img/300x300/6530050270817151365.png" group-title="ESPN +",ESPN PLUS 50
+http://63.141.251.250/jamzone/isg.php?id=20002510&type=stream.m3u8
+#EXTINF:0 CUID="776" tvg-name="ESPN College Sports Extra 1" tvg-logo="https://sotv.norago.tv/img/300x300/6927575222320993420.jpg" group-title="ESPN College Sports Extra",ESPN College Sports Extra 1
+http://63.141.251.250/jamzone/isg.php?id=20002512&type=stream.m3u8
+#EXTINF:0 CUID="777" tvg-name="ESPN College Sports Extra 2" tvg-logo="https://sotv.norago.tv/img/300x300/7038880029381474969.jpg" group-title="ESPN College Sports Extra",ESPN College Sports Extra 2
+http://63.141.251.250/jamzone/isg.php?id=20002513&type=stream.m3u8
+#EXTINF:0 CUID="778" tvg-name="ESPN College Sports Extra 3" tvg-logo="https://sotv.norago.tv/img/300x300/4313008996482832030.jpg" group-title="ESPN College Sports Extra",ESPN College Sports Extra 3
+http://63.141.251.250/jamzone/isg.php?id=20002514&type=stream.m3u8
+#EXTINF:0 CUID="779" tvg-name="ESPN College Sports Extra 4" tvg-logo="https://sotv.norago.tv/img/300x300/98529205269956482.jpg" group-title="ESPN College Sports Extra",ESPN College Sports Extra 4
+http://63.141.251.250/jamzone/isg.php?id=20002515&type=stream.m3u8
+#EXTINF:0 CUID="780" tvg-name="ESPN College Sports Extra 5" tvg-logo="https://sotv.norago.tv/img/300x300/1423218114601125258.jpg" group-title="ESPN College Sports Extra",ESPN College Sports Extra 5
+http://63.141.251.250/jamzone/isg.php?id=20002516&type=stream.m3u8
+#EXTINF:0 CUID="781" tvg-name="ESPN College Sports Extra 6" tvg-logo="https://sotv.norago.tv/img/300x300/7437203012010751200.jpg" group-title="ESPN College Sports Extra",ESPN College Sports Extra 6
+http://63.141.251.250/jamzone/isg.php?id=20002517&type=stream.m3u8
+#EXTINF:0 CUID="782" tvg-name="ESPN College Sports Extra 7" tvg-logo="https://sotv.norago.tv/img/300x300/161486938906481588.jpg" group-title="ESPN College Sports Extra",ESPN College Sports Extra 7
+http://63.141.251.250/jamzone/isg.php?id=20002518&type=stream.m3u8
+#EXTINF:0 CUID="783" tvg-name="US OPEN FEATURE GROUP 1" tvg-logo="https://sotv.norago.tv/img/300x300/6408726538412724755.jpg" group-title="US OPEN",US OPEN FEATURE GROUP 1
+http://63.141.251.250/jamzone/isg.php?id=20002553&type=stream.m3u8
+#EXTINF:0 CUID="784" tvg-name="US OPEN Featured Holes: 7 8 & 17" tvg-logo="https://sotv.norago.tv/img/300x300/6760856809903577316.jpg" group-title="US OPEN",US OPEN Featured Holes: 7 8 & 17
+http://63.141.251.250/jamzone/isg.php?id=20002556&type=stream.m3u8
+#EXTINF:0 CUID="814" tvg-name="A&E ESP" tvg-logo="https://sotv.norago.tv/img/300x300/3361182758306318853.png" group-title="SPANISH",A&E ESP
+http://63.141.251.250/jamzone/isg.php?id=20001136&type=stream.m3u8
+#EXTINF:0 CUID="815" tvg-name="AMC ESP" tvg-logo="https://sotv.norago.tv/img/300x300/5797586008821097628.png" group-title="SPANISH",AMC ESP
+http://63.141.251.250/jamzone/isg.php?id=20001135&type=stream.m3u8
+#EXTINF:0 CUID="816" tvg-name="ANIMAL PLANET ESP" tvg-logo="https://sotv.norago.tv/img/300x300/8260097350905126263.png" group-title="SPANISH",ANIMAL PLANET ESP
+http://63.141.251.250/jamzone/isg.php?id=20001140&type=stream.m3u8
+#EXTINF:0 CUID="799" tvg-name="AZTECA AMERICA SP" tvg-logo="https://mwjs.setplex.net/img/300x300/5903209912021515299.jpg" group-title="SPANISH",AZTECA AMERICA SP
+http://63.141.251.250/jamzone/isg.php?id=20000265&type=stream.m3u8
+#EXTINF:0 CUID="790" tvg-name="BEIN SPANISH" tvg-logo="https://sotv.norago.tv/img/300x300/4679934454148561598.png" group-title="SPANISH",BEIN SPANISH
+http://63.141.251.250/jamzone/isg.php?id=20000471&type=stream.m3u8
+#EXTINF:0 CUID="802" tvg-name="CARACOL TV" tvg-id="caracol.latino" tvg-logo="https://mwjs.setplex.net/img/300x300/6978429408066776045.png" group-title="SPANISH",CARACOL TV
+http://63.141.251.250/jamzone/isg.php?id=20000063&type=stream.m3u8
+#EXTINF:0 CUID="807" tvg-name="CINE ESTELAR" tvg-logo="https://mwjs.setplex.net/img/300x300/5830419718323400537.png" group-title="SPANISH",CINE ESTELAR
+http://63.141.251.250/jamzone/isg.php?id=20001574&type=stream.m3u8
+#EXTINF:0 CUID="806" tvg-name="CINE LATINO" tvg-id="cine.latino" tvg-logo="https://mwjs.setplex.net/img/300x300/7131719355306124909.png" group-title="SPANISH",CINE LATINO
+http://63.141.251.250/jamzone/isg.php?id=20001575&type=stream.m3u8
+#EXTINF:0 CUID="786" tvg-name="CINEMAX" tvg-id="cinemax.latino" tvg-logo="https://sotv.norago.tv/img/300x300/976010716119168870.png" group-title="SPANISH",CINEMAX
+http://63.141.251.250/jamzone/isg.php?id=20000339&type=stream.m3u8
+#EXTINF:0 CUID="796" tvg-name="CNN SP" tvg-logo="https://mwjs.setplex.net/img/300x300/689734286437083625.png" group-title="SPANISH",CNN SP
+http://63.141.251.250/jamzone/isg.php?id=20000190&type=stream.m3u8
+#EXTINF:0 CUID="818" tvg-name="DISCOVERY ESP" tvg-id="discovery.latino" tvg-logo="https://mwjs.setplex.net/img/300x300/8192641764155559444.png" group-title="SPANISH",DISCOVERY ESP
+http://63.141.251.250/jamzone/isg.php?id=20000374&type=stream.m3u8
+#EXTINF:0 CUID="810" tvg-name="DISNEY CHANNEL LATINO" tvg-logo="https://mwjs.setplex.net/img/300x300/6666492855062318078.jpg" group-title="SPANISH",DISNEY CHANNEL LATINO
+http://63.141.251.250/jamzone/isg.php?id=20000145&type=stream.m3u8
+#EXTINF:0 CUID="808" tvg-name="DISNEY JUNIOR ESP" tvg-logo="https://sotv.norago.tv/img/300x300/4633028914195154884.png" group-title="SPANISH",DISNEY JUNIOR ESP
+http://63.141.251.250/jamzone/isg.php?id=20000367&type=stream.m3u8
+#EXTINF:0 CUID="804" tvg-name="ECUADOR" tvg-logo="https://mwjs.setplex.net/img/300x300/6676502532224339433.jpg" group-title="SPANISH",ECUADOR
+http://63.141.251.250/jamzone/isg.php?id=20000332&type=stream.m3u8
+#EXTINF:0 CUID="803" tvg-name="ECUAVISA" tvg-logo="https://mwjs.setplex.net/img/300x300/7668549498637004288.png" group-title="SPANISH",ECUAVISA
+http://63.141.251.250/jamzone/isg.php?id=20000331&type=stream.m3u8
+#EXTINF:0 CUID="787" tvg-name="HISTORY" tvg-logo="https://sotv.norago.tv/img/300x300/5828928879061569863.jpg" group-title="SPANISH",HISTORY
+http://63.141.251.250/jamzone/isg.php?id=20000072&type=stream.m3u8
+#EXTINF:0 CUID="817" tvg-name="NAT GEO WILD ESP" tvg-logo="https://mwjs.setplex.net/img/300x300/6912011934464433361.png" group-title="SPANISH",NAT GEO WILD ESP
+http://63.141.251.250/jamzone/isg.php?id=20001115&type=stream.m3u8
+#EXTINF:0 CUID="798" tvg-name="NBC UNIVERSO SP" tvg-logo="https://mwjs.setplex.net/img/300x300/597259445835804399.png" group-title="SPANISH",NBC UNIVERSO SP
+http://63.141.251.250/jamzone/isg.php?id=20000356&type=stream.m3u8
+#EXTINF:0 CUID="809" tvg-name="NICK JR ESP" tvg-id="nickjr.latino" tvg-logo="https://mwjs.setplex.net/img/300x300/8374961076717730759.png" group-title="SPANISH",NICK JR ESP
+http://63.141.251.250/jamzone/isg.php?id=20001114&type=stream.m3u8
+#EXTINF:0 CUID="795" tvg-name="PASIONES" tvg-id="pasiones◉.latino" tvg-logo="https://mwjs.setplex.net/img/300x300/7716363954180489442.png" group-title="SPANISH",PASIONES
+http://63.141.251.250/jamzone/isg.php?id=20000136&type=stream.m3u8
+#EXTINF:0 CUID="805" tvg-name="PERU MAGICO" tvg-logo="https://mwjs.setplex.net/img/300x300/1618004268271893891.png" group-title="SPANISH",PERU MAGICO
+http://63.141.251.250/jamzone/isg.php?id=20000355&type=stream.m3u8
+#EXTINF:0 CUID="785" tvg-name="STARZ" tvg-logo="https://sotv.norago.tv/img/300x300/5946256296907456126.jpg" group-title="SPANISH",STARZ
+http://63.141.251.250/jamzone/isg.php?id=20000251&type=stream.m3u8
+#EXTINF:0 CUID="811" tvg-name="TCM ESP" tvg-logo="https://mwjs.setplex.net/img/300x300/4836375940949510339.png" group-title="SPANISH",TCM ESP
+http://63.141.251.250/jamzone/isg.php?id=20001113&type=stream.m3u8
+#EXTINF:0 CUID="791" tvg-name="TELEMUNDO" tvg-id="telemundotele.latino" tvg-logo="https://mwjs.setplex.net/img/300x300/308709627672298452.jpg" group-title="SPANISH",TELEMUNDO
+http://63.141.251.250/jamzone/isg.php?id=20000268&type=stream.m3u8
+#EXTINF:0 CUID="792" tvg-name="TELEMUNDO WEST" tvg-logo="https://mwjs.setplex.net/img/300x300/3165455376210999008.jpg" group-title="SPANISH",TELEMUNDO WEST
+http://63.141.251.250/jamzone/isg.php?id=20000016&type=stream.m3u8
+#EXTINF:0 CUID="801" tvg-name="TELENOV" tvg-logo="https://mwjs.setplex.net/img/300x300/3658467936438882102.jpg" group-title="SPANISH",TELENOV
+http://63.141.251.250/jamzone/isg.php?id=20000139&type=stream.m3u8
+#EXTINF:0 CUID="813" tvg-name="TLC ESP" tvg-logo="https://sotv.norago.tv/img/300x300/7680153366723837663.jpg" group-title="SPANISH",TLC ESP
+http://63.141.251.250/jamzone/isg.php?id=20001137&type=stream.m3u8
+#EXTINF:0 CUID="812" tvg-name="TNT SERIES ESP" group-title="SPANISH",TNT SERIES ESP
+http://63.141.251.250/jamzone/isg.php?id=20001142&type=stream.m3u8
+#EXTINF:0 CUID="797" tvg-name="TVE" tvg-logo="https://mwjs.setplex.net/img/300x300/7143578178206826544.jpg" group-title="SPANISH",TVE
+http://63.141.251.250/jamzone/isg.php?id=20000473&type=stream.m3u8
+#EXTINF:0 CUID="788" tvg-name="TYC SPORTS" tvg-id="ustycsports.latino" tvg-logo="https://mwjs.setplex.net/img/300x300/4140961913612478480.png" group-title="SPANISH",TYC SPORTS
+http://63.141.251.250/jamzone/isg.php?id=20001578&type=stream.m3u8
+#EXTINF:0 CUID="793" tvg-name="UNIMAS" tvg-logo="https://mwjs.setplex.net/img/300x300/1279511815730680416.png" group-title="SPANISH",UNIMAS
+http://63.141.251.250/jamzone/isg.php?id=20000066&type=stream.m3u8
+#EXTINF:0 CUID="794" tvg-name="UNIVISION" tvg-id="launivision.latino" tvg-logo="https://mwjs.setplex.net/img/300x300/2491806036587781293.jpg" group-title="SPANISH",UNIVISION
+http://63.141.251.250/jamzone/isg.php?id=20000143&type=stream.m3u8
+#EXTINF:0 CUID="789" tvg-name="UNIVISION TDN" tvg-id="launivision.latino" tvg-logo="https://mwjs.setplex.net/img/300x300/7189732867380109426.png" group-title="SPANISH",UNIVISION TDN
+http://63.141.251.250/jamzone/isg.php?id=20001485&type=stream.m3u8
+#EXTINF:0 CUID="800" tvg-name="WAPA AMERICA SP" tvg-id="uswapaamerica.latino" tvg-logo="https://mwjs.setplex.net/img/300x300/7208643436743734367.jpg" group-title="SPANISH",WAPA AMERICA SP
+http://63.141.251.250/jamzone/isg.php?id=20000357&type=stream.m3u8
+#EXTINF:0 CUID="821" tvg-name="ADULTS 1" tvg-logo="https://sotv.norago.tv/img/resize/300x300/2ea407dc-cbf9-4ea6-bd36-272bc4ed25f9.png" group-title="ADULT",ADULTS 1
+http://63.141.251.250/jamzone/isg.php?id=20000733&type=stream.m3u8
+#EXTINF:0 CUID="819" tvg-name="ADULTS 2" tvg-logo="https://sotv.norago.tv/img/resize/300x300/dbf99531-af54-4851-8813-31662b060e8e.png" group-title="ADULT",ADULTS 2
+http://63.141.251.250/jamzone/isg.php?id=20000271&type=stream.m3u8
+#EXTINF:0 CUID="820" tvg-name="ADULTS 3" tvg-logo="https://sotv.norago.tv/img/resize/300x300/70b7cbc6-fd70-4381-9904-c63a3081dea3.png" group-title="ADULT",ADULTS 3
+http://63.141.251.250/jamzone/isg.php?id=20000269&type=stream.m3u8
+#EXTINF:0 CUID="822" tvg-name="ADULTS 4" tvg-logo="https://sotv.norago.tv/img/resize/300x300/e3d8848d-5a32-4ec8-9d64-ab5b65ce2856.png" group-title="ADULT",ADULTS 4
+http://63.141.251.250/jamzone/isg.php?id=20000162&type=stream.m3u8
+#EXTINF:0 CUID="823" tvg-name="ADULTS 5" tvg-logo="https://sotv.norago.tv/img/resize/300x300/76d127c2-5865-4a4c-a0c6-1b12cec59847.png" group-title="ADULT",ADULTS 5
+http://63.141.251.250/jamzone/isg.php?id=20000407&type=stream.m3u8
+#EXTINF:0 CUID="824" tvg-name="ADULTS 7" tvg-logo="https://sotv.norago.tv/img/resize/300x300/863486c9-af2e-43f3-bb15-0bda2a5e286e.png" group-title="ADULT",ADULTS 7
+http://63.141.251.250/jamzone/isg.php?id=20001484&type=stream.m3u8

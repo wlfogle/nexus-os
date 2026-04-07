@@ -1,0 +1,35 @@
+# Bliss OS Boot Fix Commands
+# Run these in the debug shell if normal boot fails
+
+# 1. Check mounted filesystems
+mount
+
+# 2. Check if Android system is properly installed
+ls -la /android-*
+ls -la /system
+ls -la /data
+
+# 3. If system is there, try manual boot
+cd /android-*
+ls -la
+
+# 4. Check kernel and initrd files
+ls -la /boot
+ls -la kernel
+ls -la initrd.img
+
+# 5. Try to mount and chroot to fix boot
+# (if needed)
+mount -o remount,rw /
+mount /dev/sda1 /mnt  # adjust partition as needed
+chroot /mnt /bin/bash
+
+# 6. Alternative: Try different boot entry manually
+# From GRUB, press 'e' to edit boot entry and modify:
+# - Change 'quiet' to 'verbose'
+# - Add 'nomodeset' for graphics issues
+# - Add 'debug' for more output
+
+# 7. Quick test if system files exist
+find / -name "build.prop" 2>/dev/null
+find / -name "framework" 2>/dev/null

@@ -1,0 +1,13 @@
+---
+# TODO: Home Assistant install/config
+- name: Ensure Home Assistant is installed
+  ansible.builtin.shell: |
+    python3 -m pip install homeassistant
+  args:
+    creates: /usr/local/bin/hass
+
+- name: Start Home Assistant
+  ansible.builtin.systemd:
+    name: home-assistant
+    state: started
+    enabled: yes

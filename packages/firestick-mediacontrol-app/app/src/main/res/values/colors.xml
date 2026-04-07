@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#000000</color>
+    <color name="bg_dark">#0D1117</color>
+    <color name="fg_primary">#E6EDF3</color>
+    <color name="fg_secondary">#B1BAC4</color>
+    <color name="fg_muted">#8B949E</color>
+</resources>

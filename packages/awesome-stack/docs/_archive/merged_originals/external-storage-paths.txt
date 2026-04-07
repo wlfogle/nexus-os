@@ -1,0 +1,41 @@
+# External Storage Configuration - Updated
+
+## ✅ External Storage Now Active!
+Your containers now use the external drives:
+- Main Storage: /mnt/storage (220GB) 
+- Temp Storage: /mnt/media-temp (227GB)
+
+## 📁 Updated Directory Paths for Configuration:
+
+### qBittorrent Settings:
+- Downloads Complete: /downloads/complete/
+- Downloads Incomplete: /downloads/incomplete/ 
+- Torrent Files: /downloads/torrents/
+
+### Sonarr Settings:
+- Root Folder: /tv
+- Download Client Path: /downloads
+
+### Radarr Settings:  
+- Root Folder: /movies
+- Download Client Path: /downloads
+
+### Plex Settings:
+- TV Shows Library: /data/tv
+- Movies Library: /data/movies
+- Music Library: /data/music
+- Transcode Directory: /transcode
+
+## 🎯 Benefits:
+✅ Downloads now use 227GB temp drive (instead of 8GB container storage)
+✅ Media stored on 220GB main drive (instead of 8GB container storage)  
+✅ No more storage space issues
+✅ Proper separation of temporary and permanent files
+✅ Better performance with dedicated drives
+
+## 📊 Storage Usage:
+- Container Internal Storage: Only configs and applications (~1-2GB each)
+- External Temp Drive (227GB): Downloads, processing, transcoding
+- External Main Drive (220GB): Final media files, databases
+
+Your containers will now have virtually unlimited storage space!

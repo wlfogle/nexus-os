@@ -1,0 +1,14 @@
+---
+- name: Install dependencies for Alexa Bridge
+  ansible.builtin.apt:
+    name:
+      - openjdk-11-jre
+      - git
+    state: present
+
+- name: Clone HABridge repo
+  ansible.builtin.git:
+    repo: 'https://github.com/bwssytems/ha-bridge.git'
+    dest: /opt/ha-bridge
+
+# TODO: Add service unit, initial config for device emulation, and Home Assistant integration

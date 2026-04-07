@@ -1,0 +1,41 @@
+all:
+  hosts:
+    vm-700-openwrt:
+      ansible_host: 192.168.122.1
+      role: openwrt_router
+    ct-278-crowdsec:
+      ansible_host: 192.168.122.278
+      role: crowdsec
+    ct-279-tailscale:
+      ansible_host: 192.168.122.279
+      role: tailscale
+    ct-100-wireguard:
+      ansible_host: 192.168.122.100
+      role: wireguard
+    ct-101-gluetun:
+      ansible_host: 192.168.122.101
+      role: gluetun
+    ct-105-valkey:
+      ansible_host: 192.168.122.105
+      role: valkey
+    ct-200-alexa-bridge:
+      ansible_host: 192.168.122.200
+      role: alexa_bridge
+  children:
+    routers:
+      hosts:
+        vm-700-openwrt:
+    security:
+      hosts:
+        ct-278-crowdsec:
+    vpn:
+      hosts:
+        ct-279-tailscale:
+        ct-100-wireguard:
+        ct-101-gluetun:
+    cache:
+      hosts:
+        ct-105-valkey:
+    voice_bridge:
+      hosts:
+        ct-200-alexa-bridge:

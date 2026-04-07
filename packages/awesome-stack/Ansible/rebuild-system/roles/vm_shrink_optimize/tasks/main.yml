@@ -1,0 +1,212 @@
+---
+# VM shrinking and optimization tasks for the Proxmox VM itself
+- name: Create VM optimization log
+  file:
+    path: /var/log/vm-optimization.log
+    state: touch
+    mode: '0644'
+
+- name: Get VM disk usage before optimization
+  shell: |
+    df -h / | tail -1 | awk '{print "Root: " $3 "/" $2 " (" $5 " used)"}' 
+    df -h /var/lib/lxc | tail -1 | awk '{print "LXC: " $3 "/" $2 " (" $5 " used)"}'
+    df -h /var/lib/vz | tail -1 | awk '{print "VZ: " $3 "/" $2 " (" $5 " used)"}'
+  register: vm_usage_before
+  changed_when: false
+
+- name: Clean Proxmox-specific caches and logs
+  shell: |
+    # Clean Proxmox logs
+    find /var/log/pve* -name "*.log*" -mtime +7 -delete
+    journalctl --vacuum-time=3d --vacuum-size=100M
+    
+    # Clean apt cache
+    apt-get clean
+    apt-get autoremove -y
+    
+    # Clean Proxmox backup logs  
+    find /var/log -name "*backup*" -mtime +14 -delete
+    
+    # Clean old kernel modules
+    apt-get autoremove --purge -y
+    
+    # Clean temporary files
+    rm -rf /tmp/*
+    rm -rf /var/tmp/*
+    
+    echo "Proxmox system cleanup completed" | tee -a /var/log/vm-optimization.log
+
+- name: Optimize Proxmox storage
+  shell: |
+    # Clean old LXC templates that aren't being used
+    find /var/lib/vz/template/cache -name "*.tar.*" -mtime +30 -delete
+    
+    # Optimize LVM metadata
+    vgck 2>/dev/null || true
+    
+    # Clean vzdump backup directory if too large  
+    BACKUP_DIR="/var/lib/vz/dump"
+    if [ -d "$BACKUP_DIR" ]; then
+      # Keep only last 5 backups per container
+      for container_backups in $(ls "$BACKUP_DIR"/vzdump-lxc-*.tar.* 2>/dev/null | sed 's/.*lxc-\([0-9]*\)-.*/\1/' | sort -u); do
+        ls -t "$BACKUP_DIR"/vzdump-lxc-${container_backups}-* 2>/dev/null | tail -n +6 | xargs rm -f 2>/dev/null || true
+      done
+    fi
+    
+    echo "Proxmox storage optimization completed" | tee -a /var/log/vm-optimization.log
+
+- name: Optimize system performance settings
+  shell: |
+    # Optimize swappiness for container workloads
+    echo 'vm.swappiness = 10' > /etc/sysctl.d/99-proxmox-optimize.conf
+    
+    # Optimize dirty ratios for better I/O
+    echo 'vm.dirty_ratio = 15' >> /etc/sysctl.d/99-proxmox-optimize.conf
+    echo 'vm.dirty_background_ratio = 5' >> /etc/sysctl.d/99-proxmox-optimize.conf
+    
+    # Optimize for many small files (containers)
+    echo 'fs.file-max = 2097152' >> /etc/sysctl.d/99-proxmox-optimize.conf
+    
+    # Apply settings
+    sysctl -p /etc/sysctl.d/99-proxmox-optimize.conf
+    
+    echo "Performance optimization completed" | tee -a /var/log/vm-optimization.log
+
+- name: Zero out free space for better compression (if VM needs to be compressed)
+  shell: |
+    # This helps with VM image compression by zeroing out deleted file spaces
+    # WARNING: This can take a long time and temporarily use all available space
+    
+    echo "Starting free space zeroing..." | tee -a /var/log/vm-optimization.log
+    
+    # Zero out free space on root filesystem
+    dd if=/dev/zero of=/tmp/zero.tmp bs=1M 2>/dev/null || true
+    rm -f /tmp/zero.tmp
+    
+    # Zero out free space on LXC storage if on separate partition
+    if df /var/lib/lxc | tail -1 | grep -v "/$"; then
+      dd if=/dev/zero of=/var/lib/lxc/zero.tmp bs=1M 2>/dev/null || true
+      rm -f /var/lib/lxc/zero.tmp
+    fi
+    
+    echo "Free space zeroing completed" | tee -a /var/log/vm-optimization.log
+  when: zero_free_space | default(false)
+
+- name: Configure automatic cleanup cron jobs
+  cron:
+    name: "{{ item.name }}"
+    minute: "{{ item.minute }}"
+    hour: "{{ item.hour }}"
+    day: "{{ item.day | default('*') }}"
+    job: "{{ item.job }}"
+    user: root
+  loop:
+    - name: "Weekly Proxmox log cleanup"
+      minute: "0"
+      hour: "2"
+      day: "0"
+      job: "find /var/log -name '*.log*' -mtime +14 -delete && journalctl --vacuum-time=7d"
+    - name: "Monthly LXC template cleanup"  
+      minute: "0"
+      hour: "3"
+      day: "1"
+      job: "find /var/lib/vz/template/cache -name '*.tar.*' -mtime +60 -delete"
+    - name: "Daily temp cleanup"
+      minute: "30"
+      hour: "1"
+      job: "rm -rf /tmp/* /var/tmp/*"
+
+- name: Optimize VM for minimal footprint
+  shell: |
+    # Disable unnecessary services that might be running
+    SERVICES_TO_DISABLE="
+      postfix
+      rpcbind
+      nfs-common
+    "
+    
+    for service in $SERVICES_TO_DISABLE; do
+      if systemctl is-enabled "$service" 2>/dev/null | grep -q enabled; then
+        systemctl disable "$service" && echo "Disabled $service" | tee -a /var/log/vm-optimization.log
+      fi
+    done
+    
+    # Minimize locale files (keep only English)
+    if [ -d /usr/share/locale ]; then
+      find /usr/share/locale -mindepth 1 -maxdepth 1 -type d ! -name 'en*' ! -name 'C' -exec rm -rf {} + 2>/dev/null || true
+    fi
+    
+    # Clean documentation if requested
+    if [ "{{ remove_docs | default('false') }}" = "true" ]; then
+      rm -rf /usr/share/man/* /usr/share/doc/* /usr/share/info/* 2>/dev/null || true
+    fi
+    
+    echo "VM footprint minimization completed" | tee -a /var/log/vm-optimization.log
+
+- name: Get VM disk usage after optimization
+  shell: |
+    df -h / | tail -1 | awk '{print "Root: " $3 "/" $2 " (" $5 " used)"}' 
+    df -h /var/lib/lxc | tail -1 | awk '{print "LXC: " $3 "/" $2 " (" $5 " used)"}'
+    df -h /var/lib/vz | tail -1 | awk '{print "VZ: " $3 "/" $2 " (" $5 " used)"}'
+  register: vm_usage_after
+  changed_when: false
+
+- name: Create VM optimization report
+  copy:
+    content: |
+      Proxmox VM Optimization Report - {{ ansible_date_time.iso8601 }}
+      ==============================================================
+      
+      BEFORE OPTIMIZATION:
+      {{ vm_usage_before.stdout }}
+      
+      AFTER OPTIMIZATION:
+      {{ vm_usage_after.stdout }}
+      
+      OPTIMIZATIONS PERFORMED:
+      ✅ Proxmox logs cleaned (kept last 7 days)
+      ✅ System cache and temporary files cleaned
+      ✅ Old LXC templates removed (>30 days)
+      ✅ Backup directory optimized (kept last 5 per container)
+      ✅ Performance parameters tuned
+      ✅ Unnecessary services disabled
+      ✅ Locale files minimized
+      {{ '✅ Documentation removed' if remove_docs | default('false') == 'true' else '⏭️  Documentation preserved' }}
+      {{ '✅ Free space zeroed for compression' if zero_free_space | default(false) else '⏭️  Free space not zeroed' }}
+      ✅ Automatic cleanup cron jobs configured
+      
+      SCHEDULED MAINTENANCE:
+      - Weekly log cleanup: Sundays at 2:00 AM
+      - Monthly template cleanup: 1st of month at 3:00 AM  
+      - Daily temp cleanup: Every day at 1:30 AM
+      
+      Next step: Consider creating a compressed VM snapshot
+      Command: qm snapshot <VM_ID> optimized-$(date +%Y%m%d)
+    dest: /var/log/vm-optimization-report-{{ ansible_date_time.date }}.txt
+
+- name: Display VM optimization results
+  debug:
+    msg: |
+      🖥️ Proxmox VM Optimization Complete!
+      
+      📊 Usage Summary:
+      BEFORE: {{ vm_usage_before.stdout_lines | join(' | ') }}
+      AFTER:  {{ vm_usage_after.stdout_lines | join(' | ') }}
+      
+      ✅ Optimizations Applied:
+      - System cleanup and cache clearing
+      - Proxmox-specific log rotation
+      - Storage optimization
+      - Performance tuning
+      - Service minimization
+      - Automated maintenance scheduled
+      
+      📄 Detailed report: /var/log/vm-optimization-report-{{ ansible_date_time.date }}.txt
+      
+      💡 Recommendations:
+      1. Create VM snapshot: qm snapshot {{ vm_id | default('XXX') }} optimized-$(date +%Y%m%d)  
+      2. Consider enabling compression on VM storage
+      3. Monitor performance after optimization
+      4. Regular maintenance is now automated
+      
+      ⚠️ Important: Test all services are working correctly before proceeding!

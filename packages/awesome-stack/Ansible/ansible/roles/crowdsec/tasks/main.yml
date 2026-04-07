@@ -1,0 +1,13 @@
+---
+- name: Install CrowdSec
+  ansible.builtin.apt:
+    name: crowdsec
+    state: present
+
+- name: Ensure CrowdSec service is running
+  ansible.builtin.systemd:
+    name: crowdsec
+    state: started
+    enabled: yes
+
+# TODO: Add your custom config, bouncer setup, etc.

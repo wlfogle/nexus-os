@@ -1,0 +1,10 @@
+[Unit]
+Description=Proxmox All-Systems Snapshot
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/lou/proxmox-snapshot-all.sh
+User=root
+StandardOutput=journal
+StandardError=journal

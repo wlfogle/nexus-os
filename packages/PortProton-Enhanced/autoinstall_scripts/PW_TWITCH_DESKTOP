@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Twitch Desktop App installer for PortProton
+export PW_AUTOINSTALL_EXE="TwitchSetup.exe"
+export PW_PREFIX_NAME="TWITCH_DESKTOP"
+export PW_VULKAN_USE="1"
+PW_WINE_USE="PROTON_LG" try_download_installer \
+"https://www.twitch.tv/downloads" \
+"$PW_AUTOINSTALL_EXE" \
+"twitch_desktop_installer"

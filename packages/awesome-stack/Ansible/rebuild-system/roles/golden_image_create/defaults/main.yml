@@ -1,0 +1,24 @@
+---
+# Golden Image Configuration
+golden_container_id: 999
+golden_hostname: "golden-warp-agent"
+golden_password: "ChangeMe123!"
+golden_cores: 2
+golden_memory: 2048
+golden_disk_size: "8G"
+
+# Warp Agent Configuration
+warp_user_password: "warp123"
+warp_bridge_script_path: "{{ playbook_dir }}/../scripts/warp_agent_bridge_standalone.py"
+warp_launcher_script_path: "{{ playbook_dir }}/../scripts/start_warp_bridge.sh"
+agent_comms_path: "{{ playbook_dir }}/../agent-comms"
+
+# Display Configuration
+x11_display: ":1"
+screen_resolution: "1024x768x16"
+
+# Service Configuration
+services_to_enable:
+  - x11-display
+  - warp-agent-bridge
+  - docker

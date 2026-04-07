@@ -1,0 +1,13 @@
+---
+- name: Install Tailscale
+  ansible.builtin.shell: curl -fsSL https://tailscale.com/install.sh | sh
+  args:
+    creates: /usr/sbin/tailscaled
+
+- name: Ensure Tailscale is running
+  ansible.builtin.systemd:
+    name: tailscaled
+    state: started
+    enabled: yes
+
+# TODO: Handle auth/restart issues noted in documentation

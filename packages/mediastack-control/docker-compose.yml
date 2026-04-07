@@ -1,0 +1,13 @@
+services:
+  mediastack-control:
+    build: .
+    container_name: mediastack-control
+    ports:
+      - "9900:9900"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /:/rootfs:ro
+    pid: host
+    environment:
+      - DISK_PATH=/rootfs
+    restart: unless-stopped

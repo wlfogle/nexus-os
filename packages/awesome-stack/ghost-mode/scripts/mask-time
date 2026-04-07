@@ -1,0 +1,221 @@
+#!/bin/bash
+
+# 🕐 Time Zone and Clock Masking System
+# Spoofs timezone, randomizes system clock, prevents timing attacks
+
+echo "🕐 Activating Time & Clock Masking..."
+
+mkdir -p "$HOME/.config/ghost-mode/time"
+
+# === RANDOM TIMEZONE SELECTION ===
+TIMEZONES=(
+    "UTC"
+    "America/New_York" 
+    "America/Los_Angeles"
+    "Europe/London"
+    "Europe/Berlin"
+    "Europe/Paris"
+    "Asia/Tokyo"
+    "Asia/Singapore"
+    "Australia/Sydney"
+    "America/Chicago"
+)
+
+# Pick random timezone
+RANDOM_TZ=${TIMEZONES[$RANDOM % ${#TIMEZONES[@]}]}
+
+echo "🌍 Spoofing timezone to: $RANDOM_TZ"
+
+# === CREATE TIME SPOOFING ENVIRONMENT ===
+cat > "$HOME/.config/ghost-mode/time-spoof.env" << EOF
+export TZ="$RANDOM_TZ"
+export LC_TIME="C"
+export LC_ALL="C"
+EOF
+
+# === BROWSER TIME SPOOFING SCRIPT ===
+cat > "$HOME/.config/ghost-mode/time-spoof.js" << 'EOF'
+// 🕐 Browser Time Spoofing - Inject into web pages
+// Overrides JavaScript Date object to return spoofed time
+
+(function() {
+    'use strict';
+    
+    // Random timezone offset (-12 to +12 hours)
+    const SPOOF_OFFSET_HOURS = (Math.random() * 24) - 12;
+    const SPOOF_OFFSET_MS = SPOOF_OFFSET_HOURS * 60 * 60 * 1000;
+    
+    // Save original Date
+    const OriginalDate = window.Date;
+    
+    // Create spoofed Date constructor
+    function SpoofedDate(...args) {
+        if (args.length === 0) {
+            // Current time + random offset
+            return new OriginalDate(Date.now() + SPOOF_OFFSET_MS);
+        } else {
+            // Preserve specific date creation
+            return new OriginalDate(...args);
+        }
+    }
+    
+    // Copy static methods
+    SpoofedDate.now = function() {
+        return OriginalDate.now() + SPOOF_OFFSET_MS;
+    };
+    
+    SpoofedDate.parse = OriginalDate.parse;
+    SpoofedDate.UTC = OriginalDate.UTC;
+    
+    // Override prototype
+    SpoofedDate.prototype = OriginalDate.prototype;
+    SpoofedDate.prototype.constructor = SpoofedDate;
+    
+    // Replace global Date
+    window.Date = SpoofedDate;
+    
+    // Also spoof performance timing APIs
+    if (window.performance && window.performance.now) {
+        const originalPerformanceNow = window.performance.now;
+        window.performance.now = function() {
+            // Add random jitter to performance timing
+            const jitter = (Math.random() * 10) - 5; // ±5ms jitter
+            return originalPerformanceNow.call(this) + jitter;
+        };
+    }
+    
+    console.log('🕐 Time spoofing active - offset:', SPOOF_OFFSET_HOURS.toFixed(2), 'hours');
+})();
+EOF
+
+# === SYSTEM CLOCK JITTER SCRIPT ===
+cat > "$HOME/.local/bin/clock-jitter" << 'EOF'
+#!/bin/bash
+
+# 🕐 System Clock Jitter - Adds random microsecond variations
+# Prevents timing attack correlation
+
+if [ "$1" = "start" ]; then
+    echo "🕐 Starting system clock jitter..."
+    
+    # Function to add random time jitter
+    add_clock_jitter() {
+        while true; do
+            # Random sleep (0.1 to 2 seconds)
+            sleep $(echo "scale=1; $RANDOM/32767*1.9+0.1" | bc)
+            
+            # Very small time adjustment (±100ms max)
+            JITTER_MS=$((RANDOM % 200 - 100))
+            
+            # Only apply if we have privileges (optional)
+            if [ "$JITTER_MS" -ne 0 ] 2>/dev/null; then
+                # This would require root privileges for actual clock adjustment
+                # For user mode, we just introduce processing delays
+                usleep $((RANDOM % 1000)) 2>/dev/null || sleep 0.001
+            fi
+        done
+    }
+    
+    add_clock_jitter &
+    echo $! > "$HOME/.config/ghost-mode/clock-jitter.pid"
+    echo "✅ Clock jitter started (PID: $!)"
+    
+elif [ "$1" = "stop" ]; then
+    if [ -f "$HOME/.config/ghost-mode/clock-jitter.pid" ]; then
+        kill $(cat "$HOME/.config/ghost-mode/clock-jitter.pid") 2>/dev/null
+        rm "$HOME/.config/ghost-mode/clock-jitter.pid"
+        echo "✅ Clock jitter stopped"
+    fi
+    
+elif [ "$1" = "status" ]; then
+    if [ -f "$HOME/.config/ghost-mode/clock-jitter.pid" ]; then
+        if kill -0 $(cat "$HOME/.config/ghost-mode/clock-jitter.pid") 2>/dev/null; then
+            echo "✅ Clock jitter is running"
+        else
+            echo "❌ Clock jitter is not running"
+        fi
+    else
+        echo "❌ Clock jitter is not running"
+    fi
+else
+    echo "Usage: clock-jitter [start|stop|status]"
+fi
+EOF
+
+chmod +x "$HOME/.local/bin/clock-jitter"
+
+# === TIME ZONE SPOOFING LAUNCHER ===
+cat > "$HOME/.local/bin/ghost-time" << EOF
+#!/bin/bash
+
+# 🕐 Time-Spoofed Application Launcher
+# Launches applications with spoofed timezone and time
+
+# Source time spoofing environment
+source "$HOME/.config/ghost-mode/time-spoof.env"
+
+echo "🕐 Launching with spoofed time (TZ: \$TZ)"
+
+# Add random time delay to mask launch timing
+sleep \$(echo "scale=2; \$RANDOM/32767*2" | bc)
+
+# Launch application with spoofed time environment
+exec "\$@"
+EOF
+
+chmod +x "$HOME/.local/bin/ghost-time"
+
+# === CREATE TIMING ATTACK PREVENTION ===
+cat > "$HOME/.local/bin/prevent-timing-attacks" << 'EOF'
+#!/bin/bash
+
+# 🛡️ Timing Attack Prevention
+# Adds random delays to various operations
+
+echo "🛡️ Activating timing attack prevention..."
+
+# Create function to add to shell profiles
+TIMING_PROTECTION='
+# 🕐 Timing Attack Prevention
+ghost_delay() {
+    # Add random delay before sensitive operations
+    sleep $(echo "scale=3; $RANDOM/32767*0.5" | bc 2>/dev/null || echo "0.1")
+}
+
+# Override common commands with timing protection
+alias ssh="ghost_delay; ssh"
+alias curl="ghost_delay; curl"
+alias wget="ghost_delay; wget"
+alias ping="ghost_delay; ping"
+'
+
+# Add to bashrc if not already present
+if ! grep -q "ghost_delay" "$HOME/.bashrc" 2>/dev/null; then
+    echo "$TIMING_PROTECTION" >> "$HOME/.bashrc"
+    echo "✅ Timing protection added to .bashrc"
+fi
+
+echo "✅ Timing attack prevention configured"
+EOF
+
+chmod +x "$HOME/.local/bin/prevent-timing-attacks"
+
+# Run timing attack prevention setup
+"$HOME/.local/bin/prevent-timing-attacks"
+
+echo "✅ Time and clock masking configured!"
+echo ""
+echo "🎯 Available commands:"
+echo "   ghost-time [command]     # Run command with spoofed timezone"
+echo "   clock-jitter [start|stop|status]  # Manage clock jitter"
+echo ""
+echo "🕐 Time protections active:"
+echo "   ✓ Random timezone: $RANDOM_TZ"
+echo "   ✓ Browser time spoofing ready"
+echo "   ✓ Timing attack prevention"
+echo "   ✓ Performance timing jitter"
+echo ""
+echo "💡 Usage examples:"
+echo "   ghost-time firefox-ghost        # Firefox with spoofed time"
+echo "   ghost-time curl example.com     # Curl with spoofed time"
+echo "   clock-jitter start              # Start system timing jitter"

@@ -1,0 +1,211 @@
+---
+# ============================================================
+# Media Stack - Full Arr Suite
+# Deploy inside Proxmox LXC container
+# Copy .env.example to .env and configure before running
+# ============================================================
+
+networks:
+  media-net:
+    driver: bridge
+
+services:
+
+  # ── Jellyfin ────────────────────────────────────────────
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    networks: [media-net]
+    ports:
+      - "${JELLYFIN_PORT:-8096}:8096"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - ${APPDATA_ROOT:-/opt/appdata}/jellyfin:/config
+      - ${APPDATA_ROOT:-/opt/appdata}/jellyfin/cache:/cache
+      - ${MEDIA_ROOT:-/mnt/media}/movies:/data/movies:ro
+      - ${MEDIA_ROOT:-/mnt/media}/tv:/data/tv:ro
+      - ${MEDIA_ROOT:-/mnt/media}/music:/data/music:ro
+    devices:
+      - /dev/dri:/dev/dri  # GPU transcoding (AMD RX 580)
+
+  # ── Sonarr ──────────────────────────────────────────────
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    networks: [media-net]
+    ports:
+      - "${SONARR_PORT:-8989}:8989"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - ${APPDATA_ROOT:-/opt/appdata}/sonarr:/config
+      - ${MEDIA_ROOT:-/mnt/media}/tv:/tv
+      - ${DOWNLOADS_ROOT:-/mnt/downloads}:/downloads
+
+  # ── Radarr ──────────────────────────────────────────────
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    networks: [media-net]
+    ports:
+      - "${RADARR_PORT:-7878}:7878"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - ${APPDATA_ROOT:-/opt/appdata}/radarr:/config
+      - ${MEDIA_ROOT:-/mnt/media}/movies:/movies
+      - ${DOWNLOADS_ROOT:-/mnt/downloads}:/downloads
+
+  # ── Prowlarr (indexer manager) ──────────────────────────
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    restart: unless-stopped
+    networks: [media-net]
+    ports:
+      - "${PROWLARR_PORT:-9696}:9696"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - ${APPDATA_ROOT:-/opt/appdata}/prowlarr:/config
+
+  # ── qBittorrent ─────────────────────────────────────────
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    restart: unless-stopped
+    networks: [media-net]
+    ports:
+      - "${QBIT_WEBUI_PORT:-9090}:9090"
+      - "6881:6881"
+      - "6881:6881/udp"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/Chicago}
+      - WEBUI_PORT=${QBIT_WEBUI_PORT:-9090}
+    volumes:
+      - ${APPDATA_ROOT:-/opt/appdata}/qbittorrent:/config
+      - ${DOWNLOADS_ROOT:-/mnt/downloads}:/downloads
+
+  # ── Overseerr (media requests) ──────────────────────────
+  overseerr:
+    image: sctx/overseerr:latest
+    container_name: overseerr
+    restart: unless-stopped
+    networks: [media-net]
+    ports:
+      - "${OVERSEERR_PORT:-5055}:5055"
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=${TZ:-America/Chicago}
+      - PORT=${OVERSEERR_PORT:-5055}
+    volumes:
+      - ${APPDATA_ROOT:-/opt/appdata}/overseerr:/app/config
+
+  # ── Bazarr (subtitles) ──────────────────────────────────────────
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    restart: unless-stopped
+    networks: [media-net]
+    ports:
+      - "${BAZARR_PORT:-6767}:6767"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - ${APPDATA_ROOT:-/opt/appdata}/bazarr:/config
+      - ${MEDIA_ROOT:-/mnt/media}/movies:/movies
+      - ${MEDIA_ROOT:-/mnt/media}/tv:/tv
+
+  # ── Homarr (unified dashboard — works on laptop, Android, Fire TV) ─
+  homarr:
+    image: ghcr.io/ajnart/homarr:latest
+    container_name: homarr
+    restart: unless-stopped
+    networks: [media-net]
+    ports:
+      - "${HOMARR_PORT:-7575}:7575"
+    environment:
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${APPDATA_ROOT:-/opt/appdata}/homarr/configs:/app/data/configs
+      - ${APPDATA_ROOT:-/opt/appdata}/homarr/icons:/app/public/icons
+      - ${APPDATA_ROOT:-/opt/appdata}/homarr/data:/data
+
+  # ── MediaStack Control (container manager + logs + system stats) ─────────────────
+  mediastack-control:
+    image: ghcr.io/wlfogle/mediastack-control:latest
+    container_name: mediastack-control
+    restart: unless-stopped
+    networks: [media-net]
+    ports:
+      - "${MSC_PORT:-9900}:9900"
+    environment:
+      - TZ=${TZ:-America/Chicago}
+      - DISK_PATH=/rootfs
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /:/rootfs:ro
+    pid: host
+
+  # ── rdt-client (Real-Debrid download client) ─────────────────────────────
+  rdt-client:
+    image: rogerfar/rdtclient:latest
+    container_name: rdt-client
+    restart: unless-stopped
+    networks: [media-net]
+    ports:
+      - "${RDTCLIENT_PORT:-6500}:6500"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - ${APPDATA_ROOT:-/opt/appdata}/rdt-client:/data
+      - ${DOWNLOADS_ROOT:-/mnt/downloads}:/downloads
+
+  # ── Open WebUI (AI chat frontend → laptop Ollama RTX 4080) ───────────────
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    networks: [media-net]
+    ports:
+      - "${OPENWEBUI_PORT:-3000}:8080"
+    environment:
+      - OLLAMA_BASE_URL=${OLLAMA_HOST:-http://192.168.12.172:11434}
+      - WEBUI_AUTH=false
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - ${APPDATA_ROOT:-/opt/appdata}/open-webui:/app/backend/data
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  # ── SearXNG (private search → Open WebUI web search backend) ─────────────
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng
+    restart: unless-stopped
+    networks: [media-net]
+    ports:
+      - "${SEARXNG_PORT:-8081}:8080"
+    environment:
+      - TZ=${TZ:-America/Chicago}
+    volumes:
+      - ${APPDATA_ROOT:-/opt/appdata}/searxng:/etc/searxng

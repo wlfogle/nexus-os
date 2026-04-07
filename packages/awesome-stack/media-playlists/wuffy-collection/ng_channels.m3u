@@ -1,0 +1,1273 @@
+#EXTM3U
+#EXTINF:0 CUID="4" tvg-name="A&E" tvg-id="a&e.us" tvg-logo="https://logo.iptveditor.com/ae.png" group-title="01-USA",A&E
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003076&type=stream.m3u8
+#EXTINF:0 CUID="5" tvg-name="A&E 2" tvg-id="a&e.us" tvg-logo="https://logo.iptveditor.com/ae2.png" group-title="01-USA",A&E 2
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003236&type=stream.m3u8
+#EXTINF:0 CUID="3" tvg-name="ABC" tvg-id="abc5.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="01-USA",ABC
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003007&type=stream.m3u8
+#EXTINF:0 CUID="6" tvg-name="ABC NEWS" tvg-id="bbcnews.us" tvg-logo="https://logo.iptveditor.com/abcnews.png" group-title="01-USA",ABC NEWS
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002090&type=stream.m3u8
+#EXTINF:0 CUID="50" tvg-name="ACTIONMAX" tvg-id="actionmax.us" tvg-logo="https://logo.iptveditor.com/actionmax.png" group-title="01-USA",ACTIONMAX
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002592&type=stream.m3u8
+#EXTINF:0 CUID="493" tvg-name="Adult Swim*" tvg-id="adultswim.us" tvg-logo="https://logo.iptveditor.com/adultswim.png" group-title="01-USA",Adult Swim*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004209&type=stream.m3u8
+#EXTINF:0 CUID="26" tvg-name="AMC*" tvg-id="amc.us" tvg-logo="https://logo.iptveditor.com/amc.png" group-title="01-USA",AMC*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004266&type=stream.m3u8
+#EXTINF:0 CUID="7" tvg-name="AMERICAN HEROS" tvg-id="ahc.us" tvg-logo="https://logo.iptveditor.com/americanheroes.png" group-title="01-USA",AMERICAN HEROS
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002245&type=stream.m3u8
+#EXTINF:0 CUID="596" tvg-name="Animal Planet*" tvg-id="animalplanet.us" tvg-logo="https://logo.iptveditor.com/animalplanet.png" group-title="01-USA",Animal Planet*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004269&type=stream.m3u8
+#EXTINF:0 CUID="9" tvg-name="AXS" tvg-id="axs.us" tvg-logo="https://logo.iptveditor.com/axs.png" group-title="01-USA",AXS
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003513&type=stream.m3u8
+#EXTINF:0 CUID="8" tvg-name="Baby TV" tvg-id="babytv.us" tvg-logo="https://logo.iptveditor.com/babytv.png" group-title="01-USA",Baby TV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003510&type=stream.m3u8
+#EXTINF:0 CUID="531" tvg-name="BBC AMERICA*" tvg-id="bbcamerica.us" tvg-logo="https://logo.iptveditor.com/bbcamerica.png" group-title="01-USA",BBC AMERICA*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004278&type=stream.m3u8
+#EXTINF:0 CUID="57" tvg-name="BET HER (Backup)" tvg-id="bether.us" tvg-logo="https://logo.iptveditor.com/bether.png" group-title="01-USA",BET HER (Backup)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003240&type=stream.m3u8
+#EXTINF:0 CUID="21" tvg-name="BET HER*" tvg-id="bether.us" tvg-logo="https://logo.iptveditor.com/bether.png" group-title="01-USA",BET HER*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004344&type=stream.m3u8
+#EXTINF:0 CUID="446" tvg-name="BET Jams" tvg-id="betjams.us" tvg-logo="https://logo.iptveditor.com/betjams.png" group-title="01-USA",BET Jams
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003522&type=stream.m3u8
+#EXTINF:0 CUID="20" tvg-name="BET*" tvg-id="bet.us" tvg-logo="https://logo.iptveditor.com/bet.png" group-title="01-USA",BET*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004281&type=stream.m3u8
+#EXTINF:0 CUID="28" tvg-name="Bloomberg*" tvg-id="bloomberg.us" tvg-logo="https://logo.iptveditor.com/bloomberg.png" group-title="01-USA",Bloomberg*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004290&type=stream.m3u8
+#EXTINF:0 CUID="36" tvg-name="Boomerang*" tvg-id="boomerang.us" tvg-logo="https://logo.iptveditor.com/boomerang.png" group-title="01-USA",Boomerang*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004392&type=stream.m3u8
+#EXTINF:0 CUID="23" tvg-name="Bounce*" tvg-id="bounce.us" tvg-logo="https://logo.iptveditor.com/bounce.png" group-title="01-USA",Bounce*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004389&type=stream.m3u8
+#EXTINF:0 CUID="27" tvg-name="Bravo*" tvg-id="bravo.us" tvg-logo="https://logo.iptveditor.com/bravo.png" group-title="01-USA",Bravo*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004128&type=stream.m3u8
+#EXTINF:0 CUID="24" tvg-name="Buzzr*" tvg-id="buzzr.us" tvg-logo="https://logo.iptveditor.com/buzzr.png" group-title="01-USA",Buzzr*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004410&type=stream.m3u8
+#EXTINF:0 CUID="29" tvg-name="Cartoon Network*" tvg-id="cartoonnetwork.us" tvg-logo="https://logo.iptveditor.com/cartoonnetwork.png" group-title="01-USA",Cartoon Network*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004296&type=stream.m3u8
+#EXTINF:0 CUID="17" tvg-name="CBS News*" tvg-id="cbsnewsstreaming.us" tvg-logo="https://logo.iptveditor.com/cbsnews.png" group-title="01-USA",CBS News*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004110&type=stream.m3u8
+#EXTINF:0 CUID="333" tvg-name="CBS Test" tvg-id="cbsern.us" tvg-logo="https://logo.iptveditor.com/cbswestla.png" group-title="01-USA",CBS Test
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003037&type=stream.m3u8
+#EXTINF:0 CUID="14" tvg-name="CBS*" tvg-id="cbsern.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="01-USA",CBS*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004104&type=stream.m3u8
+#EXTINF:0 CUID="19" tvg-name="CHEDDAR*" tvg-id="cheddar.us" tvg-logo="https://logo.iptveditor.com/cheddar.png" group-title="01-USA",CHEDDAR*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004362&type=stream.m3u8
+#EXTINF:0 CUID="48" tvg-name="CINEMAX" tvg-id="cinemax.us" tvg-logo="https://logo.iptveditor.com/cinemax.png" group-title="01-USA",CINEMAX
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002591&type=stream.m3u8
+#EXTINF:0 CUID="10" tvg-name="Cinemax MovieMAX" tvg-id="moviemax.us" tvg-logo="https://logo.iptveditor.com/cinemaxmoviemax.png" group-title="01-USA",Cinemax MovieMAX
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003534&type=stream.m3u8
+#EXTINF:0 CUID="11" tvg-name="Cinemax OuterMAX" tvg-id="outermax.us" tvg-logo="https://logo.iptveditor.com/cinemaxoutermax.png" group-title="01-USA",Cinemax OuterMAX
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003537&type=stream.m3u8
+#EXTINF:0 CUID="32" tvg-name="CMT*" tvg-id="cmt.us" tvg-logo="https://logo.iptveditor.com/cmt.png" group-title="01-USA",CMT*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004311&type=stream.m3u8
+#EXTINF:0 CUID="16" tvg-name="CNBC 2*" tvg-id="cnbc.us" tvg-logo="https://logo.iptveditor.com/cnbc2.png" group-title="01-USA",CNBC 2*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004380&type=stream.m3u8
+#EXTINF:0 CUID="15" tvg-name="CNBC*" tvg-id="cnbc.us" tvg-logo="https://logo.iptveditor.com/cnbc.png" group-title="01-USA",CNBC*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004377&type=stream.m3u8
+#EXTINF:0 CUID="480" tvg-name="CNN2" tvg-id="cnn.us" tvg-logo="https://logo.iptveditor.com/cnn.png" group-title="01-USA",CNN2
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004095&type=stream.m3u8
+#EXTINF:0 CUID="30" tvg-name="Comedy Central*" tvg-id="comedycentral.us" tvg-logo="https://logo.iptveditor.com/comedycentral.png" group-title="01-USA",Comedy Central*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004299&type=stream.m3u8
+#EXTINF:0 CUID="12" tvg-name="Comet TV" tvg-id="cometwttv.us" tvg-logo="https://logo.iptveditor.com/comettv.png" group-title="01-USA",Comet TV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003540&type=stream.m3u8
+#EXTINF:0 CUID="31" tvg-name="Cooking Channel*" tvg-id="cookingchannel.us" tvg-logo="https://logo.iptveditor.com/cookingchannel.png" group-title="01-USA",Cooking Channel*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004305&type=stream.m3u8
+#EXTINF:0 CUID="541" tvg-name="COZI TV" tvg-id="cozitv.us" tvg-logo="https://logo.iptveditor.com/cozitv.png" group-title="01-USA",COZI TV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004374&type=stream.m3u8
+#EXTINF:0 CUID="33" tvg-name="CRIME INVESTIGATION NETWORK*" tvg-id="crime&investigationnetwork.us" tvg-logo="https://logo.iptveditor.com/crimeinvestigationnetwork.png" group-title="01-USA",CRIME INVESTIGATION NETWORK*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004317&type=stream.m3u8
+#EXTINF:0 CUID="25" tvg-name="CW Network*" tvg-id="network.us" tvg-logo="https://logo.iptveditor.com/wnetwork.png" group-title="01-USA",CW Network*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004125&type=stream.m3u8
+#EXTINF:0 CUID="581" tvg-name="Destination America*" tvg-id="destinationamerica.us" tvg-logo="https://logo.iptveditor.com/destinationamerica.png" group-title="01-USA",Destination America*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004122&type=stream.m3u8
+#EXTINF:0 CUID="170" tvg-name="Discovery Channel" tvg-id="discoverychannel.us" tvg-logo="https://logo.iptveditor.com/discoverychannel.png" group-title="01-USA",Discovery Channel
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002240&type=stream.m3u8
+#EXTINF:0 CUID="38" tvg-name="Discovery Science" tvg-id="discoveryscience.us" tvg-logo="https://logo.iptveditor.com/discoveryscience.png" group-title="01-USA",Discovery Science
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001946&type=stream.m3u8
+#EXTINF:0 CUID="22" tvg-name="DISNEY CHANNEL*" tvg-id="disneychannel.us" tvg-logo="https://logo.iptveditor.com/disneychannel.png" group-title="01-USA",DISNEY CHANNEL*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004413&type=stream.m3u8
+#EXTINF:0 CUID="150" tvg-name="DISNEY JR" tvg-id="disney.us" tvg-logo="https://logo.iptveditor.com/disneyjr.png" group-title="01-USA",DISNEY JR
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002104&type=stream.m3u8
+#EXTINF:0 CUID="44" tvg-name="Disney XD" tvg-id="disneyxd.us" tvg-logo="https://logo.iptveditor.com/disneyxd.png" group-title="01-USA",Disney XD
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001939&type=stream.m3u8
+#EXTINF:0 CUID="13" tvg-name="Dog TV" tvg-id="dogtv.us" tvg-logo="https://logo.iptveditor.com/dogtv.png" group-title="01-USA",Dog TV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003543&type=stream.m3u8
+#EXTINF:0 CUID="151" tvg-name="E! Backup" tvg-id="e!entertainment.us" tvg-logo="https://logo.iptveditor.com/e.png" group-title="01-USA",E! Backup
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003243&type=stream.m3u8
+#EXTINF:0 CUID="34" tvg-name="E!*" tvg-id="e!entertainment.us" tvg-logo="https://logo.iptveditor.com/e.png" group-title="01-USA",E!*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004329&type=stream.m3u8
+#EXTINF:0 CUID="35" tvg-name="FOOD NETWORK*" tvg-id="foodnetwork.us" tvg-logo="https://logo.iptveditor.com/foodnetwork.png" group-title="01-USA",FOOD NETWORK*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004335&type=stream.m3u8
+#EXTINF:0 CUID="41" tvg-name="FOX" tvg-id="fox13wtvttampabay.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="01-USA",FOX
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002168&type=stream.m3u8
+#EXTINF:0 CUID="152" tvg-name="FOX BUSINESS" tvg-id="foxbusiness.us" tvg-logo="https://logo.iptveditor.com/foxbusiness.png" group-title="01-USA",FOX BUSINESS
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002108&type=stream.m3u8
+#EXTINF:0 CUID="533" tvg-name="FOX NEWS BACKUP*" tvg-id="foxnews.us" tvg-logo="https://logo.iptveditor.com/foxnews.png" group-title="01-USA",FOX NEWS BACKUP*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004398&type=stream.m3u8
+#EXTINF:0 CUID="532" tvg-name="FOX NEWS*" tvg-id="foxnews.us" tvg-logo="https://logo.iptveditor.com/foxnews.png" group-title="01-USA",FOX NEWS*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004338&type=stream.m3u8
+#EXTINF:0 CUID="177" tvg-name="Freeform" tvg-id="freeform.us" tvg-logo="https://logo.iptveditor.com/freeform.png" group-title="01-USA",Freeform
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002179&type=stream.m3u8
+#EXTINF:0 CUID="528" tvg-name="FUSE*" tvg-id="fuse.us" tvg-logo="https://logo.iptveditor.com/fuse.png" group-title="01-USA",FUSE*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004401&type=stream.m3u8
+#EXTINF:0 CUID="514" tvg-name="FX*" tvg-id="fx.us" tvg-logo="https://logo.iptveditor.com/fx.png" group-title="01-USA",FX*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004326&type=stream.m3u8
+#EXTINF:0 CUID="515" tvg-name="FXM*" tvg-id="fxm.us" tvg-logo="https://logo.iptveditor.com/fxm.png" group-title="01-USA",FXM*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004332&type=stream.m3u8
+#EXTINF:0 CUID="513" tvg-name="FXX*" tvg-id="fxx.us" tvg-logo="https://logo.iptveditor.com/fxx.png" group-title="01-USA",FXX*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004320&type=stream.m3u8
+#EXTINF:0 CUID="562" tvg-name="FYI*" tvg-id="fyi.us" tvg-logo="https://logo.iptveditor.com/fyi.png" group-title="01-USA",FYI*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004404&type=stream.m3u8
+#EXTINF:0 CUID="449" tvg-name="Get TV" tvg-id="gettv.us" tvg-logo="https://logo.iptveditor.com/gettv.png" group-title="01-USA",Get TV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003561&type=stream.m3u8
+#EXTINF:0 CUID="517" tvg-name="Grit*" tvg-id="grit.us" tvg-logo="https://logo.iptveditor.com/grit.png" group-title="01-USA",Grit*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004407&type=stream.m3u8
+#EXTINF:0 CUID="512" tvg-name="GSN*" tvg-id="gsn.us" tvg-logo="https://logo.iptveditor.com/gsn.png" group-title="01-USA",GSN*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004314&type=stream.m3u8
+#EXTINF:0 CUID="510" tvg-name="Hallmark Channel*" tvg-id="hallmarkchannel.us" tvg-logo="https://logo.iptveditor.com/hallmarkchannel.png" group-title="01-USA",Hallmark Channel*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004302&type=stream.m3u8
+#EXTINF:0 CUID="511" tvg-name="Hallmark Movie Channel*" tvg-id="hallmarkchannel.us" tvg-logo="https://logo.iptveditor.com/hallmarkchannel.png" group-title="01-USA",Hallmark Movie Channel*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004308&type=stream.m3u8
+#EXTINF:0 CUID="519" tvg-name="HBO 2*" tvg-id="hbo2.us" tvg-logo="https://logo.iptveditor.com/hbo2.png" group-title="01-USA",HBO 2*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004422&type=stream.m3u8
+#EXTINF:0 CUID="543" tvg-name="HBO COMEDY*" tvg-id="hbocomedy.us" tvg-logo="https://logo.iptveditor.com/hbocomedy.png" group-title="01-USA",HBO COMEDY*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004434&type=stream.m3u8
+#EXTINF:0 CUID="521" tvg-name="HBO SIGNATURE*" tvg-id="hbosignature.us" tvg-logo="https://logo.iptveditor.com/hbosignature.png" group-title="01-USA",HBO SIGNATURE*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004428&type=stream.m3u8
+#EXTINF:0 CUID="518" tvg-name="HBO*" tvg-id="hbo.us" tvg-logo="https://logo.iptveditor.com/hbo.png" group-title="01-USA",HBO*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004419&type=stream.m3u8
+#EXTINF:0 CUID="520" tvg-name="HBO_FAMILY*" tvg-id="hbofamily.us" tvg-logo="https://logo.iptveditor.com/hbofamily.png" group-title="01-USA",HBO_FAMILY*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004425&type=stream.m3u8
+#EXTINF:0 CUID="523" tvg-name="HBO_ZONE*" tvg-id="hbozone.us" tvg-logo="https://logo.iptveditor.com/hbozone.png" group-title="01-USA",HBO_ZONE*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004431&type=stream.m3u8
+#EXTINF:0 CUID="56" tvg-name="HEROES AND ICONS" tvg-id="heroesandicons.us" tvg-logo="https://logo.iptveditor.com/heroesandicons.png" group-title="01-USA",HEROES AND ICONS
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002859&type=stream.m3u8
+#EXTINF:0 CUID="40" tvg-name="HGTV" tvg-id="hgtv.us" tvg-logo="https://logo.iptveditor.com/hgtv.png" group-title="01-USA",HGTV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001940&type=stream.m3u8
+#EXTINF:0 CUID="580" tvg-name="History*" tvg-id="history.us" tvg-logo="https://logo.iptveditor.com/history.png" group-title="01-USA",History*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004119&type=stream.m3u8
+#EXTINF:0 CUID="174" tvg-name="HLN" tvg-id="hln.us" tvg-logo="https://logo.iptveditor.com/hln.png" group-title="01-USA",HLN
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002264&type=stream.m3u8
+#EXTINF:0 CUID="55" tvg-name="HSN" tvg-id="hsn.us" tvg-logo="https://logo.iptveditor.com/hsn.png" group-title="01-USA",HSN
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002857&type=stream.m3u8
+#EXTINF:0 CUID="509" tvg-name="IFC*" tvg-id="ifc.us" tvg-logo="https://logo.iptveditor.com/ifc.png" group-title="01-USA",IFC*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004293&type=stream.m3u8
+#EXTINF:0 CUID="450" tvg-name="InfoWars" tvg-id="infowars.us" tvg-logo="https://logo.iptveditor.com/infowars.png" group-title="01-USA",InfoWars
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003564&type=stream.m3u8
+#EXTINF:0 CUID="508" tvg-name="Investigation Discovery*" tvg-id="investigationdiscovery.us" tvg-logo="https://logo.iptveditor.com/investigationdiscovery.png" group-title="01-USA",Investigation Discovery*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004287&type=stream.m3u8
+#EXTINF:0 CUID="37" tvg-name="iON" tvg-id="ion.us" tvg-logo="https://logo.iptveditor.com/ion.png" group-title="01-USA",iON
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001942&type=stream.m3u8
+#EXTINF:0 CUID="153" tvg-name="LIFETIME" tvg-id="lifetime.us" tvg-logo="https://logo.iptveditor.com/lifetime.png" group-title="01-USA",LIFETIME
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002120&type=stream.m3u8
+#EXTINF:0 CUID="507" tvg-name="Lifetime Movie Network*" tvg-id="lifetimemovienetwork.us" tvg-logo="https://logo.iptveditor.com/lifetimemovienetwork.png" group-title="01-USA",Lifetime Movie Network*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004284&type=stream.m3u8
+#EXTINF:0 CUID="597" tvg-name="Magnolia Network*" tvg-id="magnolianetwork.us" tvg-logo="https://logo.iptveditor.com/magnolianetwork.png" group-title="01-USA",Magnolia Network*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004323&type=stream.m3u8
+#EXTINF:0 CUID="448" tvg-name="MGM+ Drive In" tvg-id="mgm+drive.us" tvg-logo="https://logo.iptveditor.com/mgmplusdrivein.png" group-title="01-USA",MGM+ Drive In
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003549&type=stream.m3u8
+#EXTINF:0 CUID="447" tvg-name="MGM+ Hits" tvg-id="mgm+hits.us" tvg-logo="https://logo.iptveditor.com/mgmplushits.png" group-title="01-USA",MGM+ Hits
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003546&type=stream.m3u8
+#EXTINF:0 CUID="524" tvg-name="MOREMAX*" tvg-id="moremax.us" tvg-logo="https://logo.iptveditor.com/moremax.png" group-title="01-USA",MOREMAX*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004437&type=stream.m3u8
+#EXTINF:0 CUID="522" tvg-name="MSNBC 2*" tvg-id="msnbc.us" tvg-logo="https://logo.iptveditor.com/msnbc.png" group-title="01-USA",MSNBC 2*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004386&type=stream.m3u8
+#EXTINF:0 CUID="516" tvg-name="MSNBC*" tvg-id="msnbc.us" tvg-logo="https://logo.iptveditor.com/msnbc.png" group-title="01-USA",MSNBC*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004383&type=stream.m3u8
+#EXTINF:0 CUID="505" tvg-name="MTV 2*" tvg-id="mtv2.us" tvg-logo="https://logo.iptveditor.com/mtv2.png" group-title="01-USA",MTV 2*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004272&type=stream.m3u8
+#EXTINF:0 CUID="506" tvg-name="MTV*" tvg-id="mtv.us" tvg-logo="https://logo.iptveditor.com/mtv.png" group-title="01-USA",MTV*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004275&type=stream.m3u8
+#EXTINF:0 CUID="39" tvg-name="Nat Geo Wild" tvg-id="natgeowild.us" tvg-logo="https://logo.iptveditor.com/natgeowild.png" group-title="01-USA",Nat Geo Wild
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002171&type=stream.m3u8
+#EXTINF:0 CUID="591" tvg-name="National Geographic*" tvg-id="nationalgeographic.us" tvg-logo="https://logo.iptveditor.com/nationalgeographic.png" group-title="01-USA",National Geographic*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004176&type=stream.m3u8
+#EXTINF:0 CUID="504" tvg-name="NBC West*" tvg-id="nbcknbcwestknbc.us" tvg-logo="https://logo.iptveditor.com/nbcwest.png" group-title="01-USA",NBC West*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004260&type=stream.m3u8
+#EXTINF:0 CUID="503" tvg-name="NBC*" tvg-id="nbc6wtvjmiami.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="01-USA",NBC*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004254&type=stream.m3u8
+#EXTINF:0 CUID="452" tvg-name="Newsmax TV" tvg-id="newsmaxtv.us" tvg-logo="https://logo.iptveditor.com/newsmaxtv.png" group-title="01-USA",Newsmax TV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003572&type=stream.m3u8
+#EXTINF:0 CUID="154" tvg-name="NICK JR" tvg-id="nickjr.us" tvg-logo="https://logo.iptveditor.com/nickjr.png" group-title="01-USA",NICK JR
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002124&type=stream.m3u8
+#EXTINF:0 CUID="155" tvg-name="NICKELODEON" tvg-id="nickelodeon.us" tvg-logo="https://logo.iptveditor.com/nickelodeon.png" group-title="01-USA",NICKELODEON
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002125&type=stream.m3u8
+#EXTINF:0 CUID="501" tvg-name="NICKTOONS*" tvg-id="nicktoons.us" tvg-logo="https://logo.iptveditor.com/nicktoons.png" group-title="01-USA",NICKTOONS*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004242&type=stream.m3u8
+#EXTINF:0 CUID="478" tvg-name="OAN" tvg-id="One.America.News.Network.us" tvg-logo="https://logo.iptveditor.com/oneamericanews.png" group-title="01-USA",OAN
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003299&type=stream.m3u8
+#EXTINF:0 CUID="500" tvg-name="Outdoor Channel*" tvg-id="outdoorchannel.us" tvg-logo="https://logo.iptveditor.com/outdoorchannel.png" group-title="01-USA",Outdoor Channel*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004230&type=stream.m3u8
+#EXTINF:0 CUID="451" tvg-name="Outside TV" tvg-id="outsidetv.us" tvg-logo="https://logo.iptveditor.com/outsidetv.png" group-title="01-USA",Outside TV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003567&type=stream.m3u8
+#EXTINF:0 CUID="498" tvg-name="OWN 2*" tvg-id="own.us" tvg-logo="https://logo.iptveditor.com/own.png" group-title="01-USA",OWN 2*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004224&type=stream.m3u8
+#EXTINF:0 CUID="497" tvg-name="OWN*" tvg-id="own.us" tvg-logo="https://logo.iptveditor.com/own.png" group-title="01-USA",OWN*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004221&type=stream.m3u8
+#EXTINF:0 CUID="499" tvg-name="OXYGEN TV*" tvg-id="oxygen.us" tvg-logo="https://logo.iptveditor.com/oxygentv.png" group-title="01-USA",OXYGEN TV*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004227&type=stream.m3u8
+#EXTINF:0 CUID="496" tvg-name="PARAMOUNT NETWORK*" tvg-id="paramountnetwork.us" tvg-logo="https://logo.iptveditor.com/paramountnetwork.png" group-title="01-USA",PARAMOUNT NETWORK*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004218&type=stream.m3u8
+#EXTINF:0 CUID="477" tvg-name="PBS" tvg-id="wttw.us" tvg-logo="https://logo.iptveditor.com/pbs.png" group-title="01-USA",PBS
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003654&type=stream.m3u8
+#EXTINF:0 CUID="42" tvg-name="Pop" tvg-id="pop.us" tvg-logo="https://logo.iptveditor.com/pop.png" group-title="01-USA",Pop
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002174&type=stream.m3u8
+#EXTINF:0 CUID="308" tvg-name="PURSUIT" tvg-id="pursuitchannel.us" tvg-logo="https://logo.iptveditor.com/pursuit.png" group-title="01-USA",PURSUIT
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003011&type=stream.m3u8
+#EXTINF:0 CUID="495" tvg-name="QVC 2*" tvg-id="qvc2.us" tvg-logo="https://logo.iptveditor.com/qvc2.png" group-title="01-USA",QVC 2*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004215&type=stream.m3u8
+#EXTINF:0 CUID="494" tvg-name="QVC*" tvg-id="qvc.us" tvg-logo="https://logo.iptveditor.com/qvc.png" group-title="01-USA",QVC*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004212&type=stream.m3u8
+#EXTINF:0 CUID="492" tvg-name="Reelz Channel*" tvg-id="reelzchannel.us" tvg-logo="https://logo.iptveditor.com/reelzchannel.png" group-title="01-USA",Reelz Channel*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004206&type=stream.m3u8
+#EXTINF:0 CUID="583" tvg-name="Retroplex*" tvg-id="retroplex.us" tvg-logo="https://logo.iptveditor.com/retroplex.png" group-title="01-USA",Retroplex*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004146&type=stream.m3u8
+#EXTINF:0 CUID="181" tvg-name="Revolt" tvg-id="revolt.us" tvg-logo="https://logo.iptveditor.com/revolt.png" group-title="01-USA",Revolt
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002182&type=stream.m3u8
+#EXTINF:0 CUID="305" tvg-name="RT NEWS" tvg-id="rtnews.us" tvg-logo="https://logo.iptveditor.com/rtnews.png" group-title="01-USA",RT NEWS
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003174&type=stream.m3u8
+#EXTINF:0 CUID="489" tvg-name="SHOWTIME 2*" tvg-id="showtime2.us" tvg-logo="https://logo.iptveditor.com/showtime2.png" group-title="01-USA",SHOWTIME 2*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004188&type=stream.m3u8
+#EXTINF:0 CUID="491" tvg-name="Showtime Extreme*" tvg-id="showtimeextreme.us" tvg-logo="https://logo.iptveditor.com/showtimeextreme.png" group-title="01-USA",Showtime Extreme*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004200&type=stream.m3u8
+#EXTINF:0 CUID="490" tvg-name="Showtime Showcase*" tvg-id="showtimeshowcase.us" tvg-logo="https://logo.iptveditor.com/showtimeshowcase.png" group-title="01-USA",Showtime Showcase*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004194&type=stream.m3u8
+#EXTINF:0 CUID="488" tvg-name="SHOWTIME*" tvg-id="showtime.us" tvg-logo="https://logo.iptveditor.com/showtime.png" group-title="01-USA",SHOWTIME*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004179&type=stream.m3u8
+#EXTINF:0 CUID="246" tvg-name="Smithsonian Cannel" tvg-id="smithsonianchannel.us" tvg-logo="https://logo.iptveditor.com/smithsonianchannel.png" group-title="01-USA",Smithsonian Cannel
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003363&type=stream.m3u8
+#EXTINF:0 CUID="527" tvg-name="SONY MOVIE CHANNEL*" tvg-id="sonymoviechannel.us" tvg-logo="https://logo.iptveditor.com/sonymoviechannel.png" group-title="01-USA",SONY MOVIE CHANNEL*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004443&type=stream.m3u8
+#EXTINF:0 CUID="483" tvg-name="STARZ CINEMA*" tvg-id="starzcinema.us" tvg-logo="https://logo.iptveditor.com/starzcinema.png" group-title="01-USA",STARZ CINEMA*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004116&type=stream.m3u8
+#EXTINF:0 CUID="484" tvg-name="STARZ COMEDY*" tvg-id="starzcomedy.us" tvg-logo="https://logo.iptveditor.com/starzcomedy.png" group-title="01-USA",STARZ COMEDY*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004134&type=stream.m3u8
+#EXTINF:0 CUID="486" tvg-name="STARZ ENCORE WESTERNS*" tvg-id="starzencorewesterns.us" tvg-logo="https://logo.iptveditor.com/starzencorewesterns.png" group-title="01-USA",STARZ ENCORE WESTERNS*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004161&type=stream.m3u8
+#EXTINF:0 CUID="485" tvg-name="STARZ ENCORE*" tvg-id="starzencore.us" tvg-logo="https://logo.iptveditor.com/starzencore.png" group-title="01-USA",STARZ ENCORE*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004143&type=stream.m3u8
+#EXTINF:0 CUID="487" tvg-name="STARZ KIDS & FAMILY*" tvg-id="starzkids&family.us" tvg-logo="https://logo.iptveditor.com/starzkidsfamily.png" group-title="01-USA",STARZ KIDS & FAMILY*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004170&type=stream.m3u8
+#EXTINF:0 CUID="482" tvg-name="STARZ*" tvg-id="starz.us" tvg-logo="https://logo.iptveditor.com/starz.png" group-title="01-USA",STARZ*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004113&type=stream.m3u8
+#EXTINF:0 CUID="169" tvg-name="Sundance" tvg-id="sundancetv.us" tvg-logo="https://logo.iptveditor.com/sundance.png" group-title="01-USA",Sundance
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002188&type=stream.m3u8
+#EXTINF:0 CUID="534" tvg-name="SYFY*" tvg-id="syfy.us" tvg-logo="https://logo.iptveditor.com/syfy.png" group-title="01-USA",SYFY*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004446&type=stream.m3u8
+#EXTINF:0 CUID="535" tvg-name="TBS*" tvg-id="tbs.us" tvg-logo="https://logo.iptveditor.com/tbs.png" group-title="01-USA",TBS*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004449&type=stream.m3u8
+#EXTINF:0 CUID="526" tvg-name="TCM*" tvg-id="tcm.us" tvg-logo="https://logo.iptveditor.com/tcm.png" group-title="01-USA",TCM*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004452&type=stream.m3u8
+#EXTINF:0 CUID="1" tvg-name="The Weather Channel" tvg-id="theweatherchannel.us" tvg-logo="https://logo.iptveditor.com/theweatherchannel.png" group-title="01-USA",The Weather Channel
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002252&type=stream.m3u8
+#EXTINF:0 CUID="54" tvg-name="THRILLERMAX" tvg-id="thrillermax.us" tvg-logo="https://logo.iptveditor.com/thrillermax.png" group-title="01-USA",THRILLERMAX
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002593&type=stream.m3u8
+#EXTINF:0 CUID="536" tvg-name="TLC*" tvg-id="tlc.us" tvg-logo="https://logo.iptveditor.com/tlc.png" group-title="01-USA",TLC*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004455&type=stream.m3u8
+#EXTINF:0 CUID="481" tvg-name="TNT*" tvg-id="tnt.us" tvg-logo="https://logo.iptveditor.com/tnt.png" group-title="01-USA",TNT*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004098&type=stream.m3u8
+#EXTINF:0 CUID="537" tvg-name="TRAVEL CHANNEL*" tvg-id="travelchannel.us" tvg-logo="https://logo.iptveditor.com/travelchannel.png" group-title="01-USA",TRAVEL CHANNEL*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004458&type=stream.m3u8
+#EXTINF:0 CUID="538" tvg-name="TRU TV*" tvg-id="trutv.us" tvg-logo="https://logo.iptveditor.com/trutv.png" group-title="01-USA",TRU TV*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004461&type=stream.m3u8
+#EXTINF:0 CUID="156" tvg-name="TV LAND" tvg-id="tvland.us" tvg-logo="https://logo.iptveditor.com/tvland.png" group-title="01-USA",TV LAND
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002146&type=stream.m3u8
+#EXTINF:0 CUID="598" tvg-name="TV LAND*" tvg-id="tvland.us" tvg-logo="https://logo.iptveditor.com/tvland.png" group-title="01-USA",TV LAND*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004464&type=stream.m3u8
+#EXTINF:0 CUID="542" tvg-name="TV ONE*" tvg-id="tvone.us" tvg-logo="https://logo.iptveditor.com/tvone.png" group-title="01-USA",TV ONE*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004467&type=stream.m3u8
+#EXTINF:0 CUID="539" tvg-name="UNIVISION*" tvg-id="univision.us" tvg-logo="https://logo.iptveditor.com/univision.png" group-title="01-USA",UNIVISION*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004470&type=stream.m3u8
+#EXTINF:0 CUID="540" tvg-name="USA NETWORK*" tvg-id="network.us" tvg-logo="https://logo.iptveditor.com/network.png" group-title="01-USA",USA NETWORK*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004473&type=stream.m3u8
+#EXTINF:0 CUID="158" tvg-name="VH1" tvg-id="vh1.us" tvg-logo="https://logo.iptveditor.com/vh1.png" group-title="01-USA",VH1
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002150&type=stream.m3u8
+#EXTINF:0 CUID="203" tvg-name="VH-1" tvg-id="vh1.us" tvg-logo="https://logo.iptveditor.com/vh1.png" group-title="01-USA",VH-1
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003238&type=stream.m3u8
+#EXTINF:0 CUID="159" tvg-name="VICELAND" tvg-id="vicelandstatic.us" tvg-logo="https://logo.iptveditor.com/viceland.png" group-title="01-USA",VICELAND
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002151&type=stream.m3u8
+#EXTINF:0 CUID="160" tvg-name="WE TV" tvg-id="wetv.us" tvg-logo="https://logo.iptveditor.com/wetv.png" group-title="01-USA",WE TV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002152&type=stream.m3u8
+#EXTINF:0 CUID="2" tvg-name="Weather Channel" tvg-id="weatherchannel.us" tvg-logo="https://logo.iptveditor.com/weatherchannel.png" group-title="01-USA",Weather Channel
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003239&type=stream.m3u8
+#EXTINF:0 CUID="235" tvg-name="WGN 9 - Chicago" tvg-id="wgn9chicago.us" tvg-logo="https://logo.iptveditor.com/wgn9chicago.png" group-title="01-USA",WGN 9 - Chicago
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002771&type=stream.m3u8
+#EXTINF:0 CUID="161" tvg-name="WGN AMERICA" tvg-id="wgnamerica.us" tvg-logo="https://logo.iptveditor.com/wgnamerica.png" group-title="01-USA",WGN AMERICA
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002153&type=stream.m3u8
+#EXTINF:0 CUID="175" tvg-name="MGM+" tvg-id="mgm+.us" tvg-logo="https://logo.iptveditor.com/mgm.png" group-title="01-USA",MGM+
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002178&type=stream.m3u8
+#EXTINF:0 CUID="18" tvg-name="MGM+ Marquee*" tvg-id="mgm+marquee.us" tvg-logo="https://logo.iptveditor.com/mgmplusmarquee.png" group-title="01-USA",MGM+ Marquee*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004395&type=stream.m3u8
+#EXTINF:0 CUID="545" tvg-name="ABC 2 - Atlanta*" tvg-id="abc2wsbatlanta.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 2 - Atlanta*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004497&type=stream.m3u8
+#EXTINF:0 CUID="213" tvg-name="ABC 2 - Baltimore" tvg-id="abc2wmarbaltimore.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 2 - Baltimore
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002758&type=stream.m3u8
+#EXTINF:0 CUID="262" tvg-name="ABC 2 - Nashville" tvg-id="abc2wkrnnashville.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 2 - Nashville
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002811&type=stream.m3u8
+#EXTINF:0 CUID="296" tvg-name="ABC 4 - Seattle" tvg-id="abc4komoseattletacoma.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 4 - Seattle
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002847&type=stream.m3u8
+#EXTINF:0 CUID="219" tvg-name="ABC 5 - Boston" tvg-id="abc5wcvbbostonmanchester.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 5 - Boston
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002762&type=stream.m3u8
+#EXTINF:0 CUID="238" tvg-name="ABC 5 - Cleveland" tvg-id="abcwewscleveland.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 5 - Cleveland
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002774&type=stream.m3u8
+#EXTINF:0 CUID="572" tvg-name="ABC 6 - Indianapolis*" tvg-id="abc6wrtvindianapolis.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 6 - Indianapolis*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004512&type=stream.m3u8
+#EXTINF:0 CUID="275" tvg-name="ABC 6 - Philadelphia" tvg-id="abc6wpviphiladelphia.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 6 - Philadelphia
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002824&type=stream.m3u8
+#EXTINF:0 CUID="326" tvg-name="ABC 7 - Buffalo" tvg-id="abc7wkbwbuffalo.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 7 - Buffalo
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003325&type=stream.m3u8
+#EXTINF:0 CUID="233" tvg-name="ABC 7 - Chicago" tvg-id="abc7wlschicago.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 7 - Chicago
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002770&type=stream.m3u8
+#EXTINF:0 CUID="548" tvg-name="ABC 7 - Denver*" tvg-id="abc7kmghdenver.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 7 - Denver*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004500&type=stream.m3u8
+#EXTINF:0 CUID="550" tvg-name="ABC 7 - Detroit*" tvg-id="abc7wxyzdetroit.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 7 - Detroit*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004503&type=stream.m3u8
+#EXTINF:0 CUID="251" tvg-name="ABC 7 - Los Angeles" tvg-id="abc7kabcla.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 7 - Los Angeles
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002797&type=stream.m3u8
+#EXTINF:0 CUID="141" tvg-name="ABC 7 - New York" tvg-id="abcwabcny.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 7 - New York
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003077&type=stream.m3u8
+#EXTINF:0 CUID="295" tvg-name="ABC 7 - San Francisco" tvg-id="abckgosanfrancisco.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 7 - San Francisco
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002846&type=stream.m3u8
+#EXTINF:0 CUID="242" tvg-name="ABC 8 - Dallas" tvg-id="abc8wfaadallas.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 8 - Dallas
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002778&type=stream.m3u8
+#EXTINF:0 CUID="225" tvg-name="ABC 9 - Charlotte" tvg-id="abc9wsoccharlotte.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 9 - Charlotte
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002766&type=stream.m3u8
+#EXTINF:0 CUID="188" tvg-name="ABC 9 - Orlando" tvg-id="abcwftvwftvorlandofl.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 9 - Orlando
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003206&type=stream.m3u8
+#EXTINF:0 CUID="258" tvg-name="ABC 10 - Miami" tvg-id="abc10wplgmiami.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 10 - Miami
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002804&type=stream.m3u8
+#EXTINF:0 CUID="287" tvg-name="ABC 10 - Sacramento" tvg-id="abckxtvsacramento.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 10 - Sacramento
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002835&type=stream.m3u8
+#EXTINF:0 CUID="293" tvg-name="ABC 10 - San Diego" tvg-id="abc10kgtvsandiego.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 10 - San Diego
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002843&type=stream.m3u8
+#EXTINF:0 CUID="454" tvg-name="ABC 11 - Louisville" tvg-id="abc11whaslouisville.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 11 - Louisville
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003611&type=stream.m3u8
+#EXTINF:0 CUID="171" tvg-name="ABC 11 - Raleigh" tvg-id="abc11wtvdraleigh.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 11 - Raleigh
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003182&type=stream.m3u8
+#EXTINF:0 CUID="260" tvg-name="ABC 12 - Milwaukee" tvg-id="abc12wisnmilwaukee.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 12 - Milwaukee
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002807&type=stream.m3u8
+#EXTINF:0 CUID="278" tvg-name="ABC 12 - Portland" tvg-id="fox12kptvportland.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 12 - Portland
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002827&type=stream.m3u8
+#EXTINF:0 CUID="290" tvg-name="ABC 12- San Antonio" tvg-id="abc12ksatsanantonio.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 12- San Antonio
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002839&type=stream.m3u8
+#EXTINF:0 CUID="571" tvg-name="ABC 13 - Grand Rapids*" tvg-id="abc13wzzmgrandrapids.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 13 - Grand Rapids*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004506&type=stream.m3u8
+#EXTINF:0 CUID="466" tvg-name="ABC 13 - Las Vegas" tvg-id="abc13ktnvlasvegas.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 13 - Las Vegas
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003593&type=stream.m3u8
+#EXTINF:0 CUID="554" tvg-name="ABC 13- Houston*" tvg-id="abc13ktrkhouston.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 13- Houston*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004509&type=stream.m3u8
+#EXTINF:0 CUID="271" tvg-name="ABC 15 - Phoenix" tvg-id="abc15knxvphoenix.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 15 - Phoenix
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002820&type=stream.m3u8
+#EXTINF:0 CUID="168" tvg-name="ABC 22 - Savannah" tvg-id="abc22wjclsavannah.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 22 - Savannah
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003203&type=stream.m3u8
+#EXTINF:0 CUID="255" tvg-name="ABC 24 - Memphis" tvg-id="abc24watnmemphis.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 24 - Memphis
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002801&type=stream.m3u8
+#EXTINF:0 CUID="560" tvg-name="ABC 28 - Tampa*" tvg-id="abc28wftstampabay.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 28 - Tampa*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004515&type=stream.m3u8
+#EXTINF:0 CUID="453" tvg-name="ABC 30 - St Louis" tvg-id="abc30kdnlstlouis.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 30 - St Louis
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003575&type=stream.m3u8
+#EXTINF:0 CUID="330" tvg-name="ABC 45 - Winston Salem" tvg-id="abcwxlvwxlvwinstonsalem.us" tvg-logo="https://logo.iptveditor.com/abc.png" group-title="02-Local Channels",ABC 45 - Winston Salem
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003183&type=stream.m3u8
+#EXTINF:0 CUID="236" tvg-name="CBS 2 - Chicago" tvg-id="cbs2wbbmchicago.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 2 - Chicago
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002772&type=stream.m3u8
+#EXTINF:0 CUID="252" tvg-name="CBS 2 - Los Angeles" tvg-id="cbs2kcbslosangeleskcbs.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 2 - Los Angeles
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002798&type=stream.m3u8
+#EXTINF:0 CUID="269" tvg-name="CBS 2 - New York" tvg-id="cbs2wcbsnewyork.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 2 - New York
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002818&type=stream.m3u8
+#EXTINF:0 CUID="285" tvg-name="CBS 2 - Pittsburgh" tvg-id="cbs2kdkapittsburgh.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 2 - Pittsburgh
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002832&type=stream.m3u8
+#EXTINF:0 CUID="230" tvg-name="CBS 3 - Charlotte" tvg-id="cbs3wbtvcharlotte.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 3 - Charlotte
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002768&type=stream.m3u8
+#EXTINF:0 CUID="276" tvg-name="CBS 3 - Philadelphia" tvg-id="cbs3kywphiladelphia.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 3 - Philadelphia
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002825&type=stream.m3u8
+#EXTINF:0 CUID="223" tvg-name="CBS 4 - Boston" tvg-id="cbs4wbzboston.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 4 - Boston
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002764&type=stream.m3u8
+#EXTINF:0 CUID="328" tvg-name="CBS 4 - Buffalo" tvg-id="cbs4wivbbuffalo.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 4 - Buffalo
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003327&type=stream.m3u8
+#EXTINF:0 CUID="573" tvg-name="CBS 4 - Indianapolis*" tvg-id="cbs4wttvindianapolis.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 4 - Indianapolis*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004530&type=stream.m3u8
+#EXTINF:0 CUID="193" tvg-name="CBS 4 - Miami" tvg-id="cbs4wformiami.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 4 - Miami
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003228&type=stream.m3u8
+#EXTINF:0 CUID="558" tvg-name="CBS 4 - New Orleans*" tvg-id="cbs4wwlneworleans.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 4 - New Orleans*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004533&type=stream.m3u8
+#EXTINF:0 CUID="455" tvg-name="CBS 4 - St Louis" tvg-id="cbs4kmovstlouis.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 4 - St Louis
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003578&type=stream.m3u8
+#EXTINF:0 CUID="265" tvg-name="CBS 5 - Nashville" tvg-id="cbs5wtvfnashville.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 5 - Nashville
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002812&type=stream.m3u8
+#EXTINF:0 CUID="272" tvg-name="CBS 5 - Phoenix" tvg-id="cbs5kphophoenix.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 5 - Phoenix
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002821&type=stream.m3u8
+#EXTINF:0 CUID="291" tvg-name="CBS 5 - San Antonio" tvg-id="cbs5kenssanantonio.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 5 - San Antonio
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002840&type=stream.m3u8
+#EXTINF:0 CUID="187" tvg-name="CBS 6 - Orlando" tvg-id="cbs6wkmgorlando.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 6 - Orlando
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003205&type=stream.m3u8
+#EXTINF:0 CUID="297" tvg-name="CBS 7 - Seattle" tvg-id="cbs7kiroseattle.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 7 - Seattle
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002848&type=stream.m3u8
+#EXTINF:0 CUID="468" tvg-name="CBS 8 - Las Vegas" tvg-id="cbs8klaslasvegas.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 8 - Las Vegas
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003596&type=stream.m3u8
+#EXTINF:0 CUID="294" tvg-name="CBS 8 - San Diego" tvg-id="cbs8kfmbsandiego.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 8 - San Diego
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002844&type=stream.m3u8
+#EXTINF:0 CUID="304" tvg-name="CBS 9 - Washington DC" tvg-id="cbs9wusawashington.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 9 - Washington DC
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002854&type=stream.m3u8
+#EXTINF:0 CUID="300" tvg-name="CBS 10 - Tampa" tvg-id="cbs10wtspstpetersburgtampabay.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 10 - Tampa
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002852&type=stream.m3u8
+#EXTINF:0 CUID="244" tvg-name="CBS 11 - Dallas" tvg-id="cbs11ktvtdallasfortworth.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 11 - Dallas
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002780&type=stream.m3u8
+#EXTINF:0 CUID="555" tvg-name="CBS 11 - Houston*" tvg-id="cbs11khouhouston.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 11 - Houston*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004527&type=stream.m3u8
+#EXTINF:0 CUID="218" tvg-name="CBS 13 - Baltimore" tvg-id="cbs13wjzbaltimore.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 13 - Baltimore
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002761&type=stream.m3u8
+#EXTINF:0 CUID="288" tvg-name="CBS 13 - Sacramento" tvg-id="cbskovrsacramento.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 13 - Sacramento
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002836&type=stream.m3u8
+#EXTINF:0 CUID="239" tvg-name="CBS 19 - Cleveland" tvg-id="cbs19woiocleveland.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 19 - Cleveland
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002775&type=stream.m3u8
+#EXTINF:0 CUID="570" tvg-name="CBS 21 - Harrisburg*" tvg-id="cbs21whpharrisburg.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 21 - Harrisburg*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004524&type=stream.m3u8
+#EXTINF:0 CUID="460" tvg-name="CBS 32 - Louisville" tvg-id="cbs32wlkylouisville.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 32 - Louisville
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003614&type=stream.m3u8
+#EXTINF:0 CUID="437" tvg-name="CBS 42 - Austin" tvg-id="cbs42keyeaustin.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 42 - Austin
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003657&type=stream.m3u8
+#EXTINF:0 CUID="546" tvg-name="CBS 46 - Atlanta*" tvg-id="cbs46wgclatlanta.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 46 - Atlanta*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004518&type=stream.m3u8
+#EXTINF:0 CUID="248" tvg-name="CBS 47 - Jacksonville" tvg-id="cbs47wjaxjacksonville.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 47 - Jacksonville
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002794&type=stream.m3u8
+#EXTINF:0 CUID="261" tvg-name="CBS 58 - Milwaukee" tvg-id="cbs58wdjtmilwaukee.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 58 - Milwaukee
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002808&type=stream.m3u8
+#EXTINF:0 CUID="553" tvg-name="CBS 62 - Detroit*" tvg-id="cbs62wwjdetroit.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 62 - Detroit*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004521&type=stream.m3u8
+#EXTINF:0 CUID="551" tvg-name="FOX 2 - Detroit*" tvg-id="fox2wjbkdetroit.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 2 - Detroit*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004539&type=stream.m3u8
+#EXTINF:0 CUID="456" tvg-name="FOX 2 - St Louis" tvg-id="fox2ktvistlouis.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 2 - St Louis
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003581&type=stream.m3u8
+#EXTINF:0 CUID="547" tvg-name="FOX 4 - Dallas*" tvg-id="fox4kdfwdallasfortworth.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 4 - Dallas*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004536&type=stream.m3u8
+#EXTINF:0 CUID="208" tvg-name="FOX 5 - Atlanta" tvg-id="fox5wagaatlanta.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 5 - Atlanta
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002754&type=stream.m3u8
+#EXTINF:0 CUID="469" tvg-name="Fox 5 - Las Vegas" tvg-id="fox5kvvulasvegas.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",Fox 5 - Las Vegas
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003599&type=stream.m3u8
+#EXTINF:0 CUID="270" tvg-name="FOX 5 - New York" tvg-id="fox5wnywny.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 5 - New York
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002819&type=stream.m3u8
+#EXTINF:0 CUID="191" tvg-name="FOX 6  - Birmingham" tvg-id="fox6wbrcbirmingham.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 6  - Birmingham
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003209&type=stream.m3u8
+#EXTINF:0 CUID="263" tvg-name="FOX 6 - Milwaukee" tvg-id="fox6witimilwaukee.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 6 - Milwaukee
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002809&type=stream.m3u8
+#EXTINF:0 CUID="211" tvg-name="FOX 7 - Austin" tvg-id="fox7ktbcaustin.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 7 - Austin
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002757&type=stream.m3u8
+#EXTINF:0 CUID="259" tvg-name="FOX 7 - Miami" tvg-id="foxwsvnwsvnmiamifl.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 7 - Miami
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002805&type=stream.m3u8
+#EXTINF:0 CUID="240" tvg-name="FOX 8 - Cleveland" tvg-id="fox8wjwcleveland.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 8 - Cleveland
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002776&type=stream.m3u8
+#EXTINF:0 CUID="559" tvg-name="FOX 8 - New Orleans*" tvg-id="fox8wvueneworleans.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 8 - New Orleans*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004545&type=stream.m3u8
+#EXTINF:0 CUID="273" tvg-name="FOX 10 - Phoenix" tvg-id="fox10ksazphoenix.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 10 - Phoenix
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002822&type=stream.m3u8
+#EXTINF:0 CUID="253" tvg-name="FOX 11 - Los Angeles" tvg-id="fox11kttvla.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 11 - Los Angeles
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002799&type=stream.m3u8
+#EXTINF:0 CUID="281" tvg-name="FOX 12 - Portland" tvg-id="fox12kptvportland.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 12 - Portland
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002829&type=stream.m3u8
+#EXTINF:0 CUID="256" tvg-name="FOX 13 - Memphis" tvg-id="fox13whbqmemphis.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 13 - Memphis
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002802&type=stream.m3u8
+#EXTINF:0 CUID="298" tvg-name="FOX 13 - Seattle" tvg-id="fox13kzjoseattle.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 13 - Seattle
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002849&type=stream.m3u8
+#EXTINF:0 CUID="301" tvg-name="FOX 13 - Tampa" tvg-id="fox13wtvttampabay.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 13 - Tampa
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002853&type=stream.m3u8
+#EXTINF:0 CUID="266" tvg-name="FOX 17 - Nashville" tvg-id="fox17wztvnashville.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 17 - Nashville
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002813&type=stream.m3u8
+#EXTINF:0 CUID="221" tvg-name="FOX 25 - Boston" tvg-id="fox25wfxtboston.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 25 - Boston
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002763&type=stream.m3u8
+#EXTINF:0 CUID="556" tvg-name="FOX 26 - Houston*" tvg-id="fox26krivhouston.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 26 - Houston*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004542&type=stream.m3u8
+#EXTINF:0 CUID="189" tvg-name="FOX 28 - Savannah" tvg-id="fox28wtgssavannah.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 28 - Savannah
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003229&type=stream.m3u8
+#EXTINF:0 CUID="327" tvg-name="FOX 29 - Buffalo" tvg-id="fox29wutvbuffalo.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 29 - Buffalo
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003326&type=stream.m3u8
+#EXTINF:0 CUID="277" tvg-name="FOX 29 - Philadelphia" tvg-id="fox29wtxfphiladelphia.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 29 - Philadelphia
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002826&type=stream.m3u8
+#EXTINF:0 CUID="249" tvg-name="FOX 30 - Jacksonville" tvg-id="fox30wfoxjacksonville.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 30 - Jacksonville
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002795&type=stream.m3u8
+#EXTINF:0 CUID="464" tvg-name="FOX 32 - Chicago" tvg-id="fox32wfldchicago.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 32 - Chicago
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003626&type=stream.m3u8
+#EXTINF:0 CUID="186" tvg-name="FOX 35 - Orlando" tvg-id="fox35woflorlandodaytonabeachmelbourne.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 35 - Orlando
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003204&type=stream.m3u8
+#EXTINF:0 CUID="461" tvg-name="FOX 41 - Louisville" tvg-id="fox41wdrblouisville.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 41 - Louisville
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003617&type=stream.m3u8
+#EXTINF:0 CUID="463" tvg-name="FOX 43 - Virginia Beach" tvg-id="fox43wvbtvirginiabeach.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 43 - Virginia Beach
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003623&type=stream.m3u8
+#EXTINF:0 CUID="215" tvg-name="FOX 45 - Baltimore" tvg-id="fox45wbffbaltimore.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 45 - Baltimore
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002759&type=stream.m3u8
+#EXTINF:0 CUID="227" tvg-name="FOX 46 - Charlotte" tvg-id="fox46wjzycharlotte.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 46 - Charlotte
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002767&type=stream.m3u8
+#EXTINF:0 CUID="467" tvg-name="FOX 59 - Indianapolis" tvg-id="fox59wxinindianapolis.us" tvg-logo="https://logo.iptveditor.com/fox.png" group-title="02-Local Channels",FOX 59 - Indianapolis
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003588&type=stream.m3u8
+#EXTINF:0 CUID="250" tvg-name="NBC 2  - Jacksonville" tvg-id="nbcketkjacksonville.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 2  - Jacksonville
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002796&type=stream.m3u8
+#EXTINF:0 CUID="329" tvg-name="NBC 2 - Buffalo" tvg-id="nbc2wgrzbuffalo.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 2 - Buffalo
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003328&type=stream.m3u8
+#EXTINF:0 CUID="557" tvg-name="NBC 2 - Houston*" tvg-id="nbc2kprchouston.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 2 - Houston*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004554&type=stream.m3u8
+#EXTINF:0 CUID="241" tvg-name="NBC 3 - Cleveland" tvg-id="nbcwkyccleveland.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 3 - Cleveland
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002777&type=stream.m3u8
+#EXTINF:0 CUID="462" tvg-name="NBC 3 - Louisville" tvg-id="nbc3wavelouisville.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 3 - Louisville
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003620&type=stream.m3u8
+#EXTINF:0 CUID="167" tvg-name="NBC 3 - Savannah" tvg-id="nbc3wsavsavannah.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 3 - Savannah
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003202&type=stream.m3u8
+#EXTINF:0 CUID="470" tvg-name="NBC 3 -Las Vegas" tvg-id="nbc3ksnvlasvegas.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 3 -Las Vegas
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003602&type=stream.m3u8
+#EXTINF:0 CUID="254" tvg-name="NBC 4 - Los Angeles" tvg-id="nbc4knbclosangeles.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 4 - Los Angeles
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002800&type=stream.m3u8
+#EXTINF:0 CUID="267" tvg-name="NBC 4 - Nashville" tvg-id="nbc4wsmvnashville.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 4 - Nashville
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002814&type=stream.m3u8
+#EXTINF:0 CUID="292" tvg-name="NBC 4 - San Antonio" tvg-id="nbc4woaisanantonio.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 4 - San Antonio
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002842&type=stream.m3u8
+#EXTINF:0 CUID="306" tvg-name="NBC 4 - Washington DC" tvg-id="nbcwrcwashingtondc.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 4 - Washington DC
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002855&type=stream.m3u8
+#EXTINF:0 CUID="552" tvg-name="NBC 4- Detroit*" tvg-id="nbc4wdivdetroit.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 4- Detroit*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004551&type=stream.m3u8
+#EXTINF:0 CUID="237" tvg-name="NBC 5 - Chicago" tvg-id="nbc5wmaqchicago.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 5 - Chicago
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002773&type=stream.m3u8
+#EXTINF:0 CUID="245" tvg-name="NBC 5 - Dallas" tvg-id="nbckxasfortworthdallas.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 5 - Dallas
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002781&type=stream.m3u8
+#EXTINF:0 CUID="257" tvg-name="NBC 5 - Memphis" tvg-id="nbc5wmcmemphis.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 5 - Memphis
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002803&type=stream.m3u8
+#EXTINF:0 CUID="299" tvg-name="NBC 5 - Seattle" tvg-id="nbc5kingseattletacoma.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 5 - Seattle
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002850&type=stream.m3u8
+#EXTINF:0 CUID="457" tvg-name="NBC 5 - St Louis" tvg-id="nbc5ksdkstlouis.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 5 - St Louis
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003584&type=stream.m3u8
+#EXTINF:0 CUID="280" tvg-name="NBC 6 - Corpus Cristie" tvg-id="nbc6kriscorpuschristi.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 6 - Corpus Cristie
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003384&type=stream.m3u8
+#EXTINF:0 CUID="202" tvg-name="NBC 6 - Miami" tvg-id="nbc6wtvjmiami.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 6 - Miami
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003210&type=stream.m3u8
+#EXTINF:0 CUID="268" tvg-name="NBC 6- New Orleans" tvg-id="nbc6wdsuneworleans.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 6- New Orleans
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002817&type=stream.m3u8
+#EXTINF:0 CUID="282" tvg-name="NBC 8- Portland" tvg-id="nbc8kgwportland.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 8- Portland
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002830&type=stream.m3u8
+#EXTINF:0 CUID="303" tvg-name="NBC 8- TAMPA" tvg-id="nbcwflatampabay.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 8- TAMPA
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002858&type=stream.m3u8
+#EXTINF:0 CUID="549" tvg-name="NBC 9 - Denver*" tvg-id="nbc9kusadenver.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 9 - Denver*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004548&type=stream.m3u8
+#EXTINF:0 CUID="224" tvg-name="NBC 10 - Boston" tvg-id="nbc10wbtsboston.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 10 - Boston
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002765&type=stream.m3u8
+#EXTINF:0 CUID="190" tvg-name="NBC 10 Philadelphia" tvg-id="nbc10wcauphiladelphia.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 10 Philadelphia
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003002&type=stream.m3u8
+#EXTINF:0 CUID="209" tvg-name="NBC 11 - Atlanta" tvg-id="nbc11wxiaatlanta.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 11 - Atlanta
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002755&type=stream.m3u8
+#EXTINF:0 CUID="216" tvg-name="NBC 11 - Baltimore" tvg-id="nbc11wbalbaltimore.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 11 - Baltimore
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002760&type=stream.m3u8
+#EXTINF:0 CUID="286" tvg-name="NBC 11 - Pittsburgh" tvg-id="nbc11wpxipittsburgh.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 11 - Pittsburgh
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002834&type=stream.m3u8
+#EXTINF:0 CUID="264" tvg-name="NBC 12 - Milwaukee" tvg-id="abc12wisnmilwaukee.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 12 - Milwaukee
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002810&type=stream.m3u8
+#EXTINF:0 CUID="274" tvg-name="NBC 12 - Phoenix" tvg-id="nbc12kpnxphoenix.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 12 - Phoenix
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002823&type=stream.m3u8
+#EXTINF:0 CUID="247" tvg-name="NBC 13 - Indianapolis" tvg-id="nbc13wthrindianapolis.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 13 - Indianapolis
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002793&type=stream.m3u8
+#EXTINF:0 CUID="465" tvg-name="NBC 32 - Myrtle Beach" tvg-id="nbc32wmbfmyrtlebeach.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 32 - Myrtle Beach
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003632&type=stream.m3u8
+#EXTINF:0 CUID="231" tvg-name="NBC 36 - Charlotte" tvg-id="nbc36wcnccharlotte.us" tvg-logo="https://logo.iptveditor.com/nbc.png" group-title="02-Local Channels",NBC 36 - Charlotte
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002769&type=stream.m3u8
+#EXTINF:0 CUID="143" tvg-name="WPIX 11 - New York" tvg-id="wpix.us" tvg-logo="https://logo.iptveditor.com/newyorkpix11news.png" group-title="02-Local Channels",WPIX 11 - New York
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003078&type=stream.m3u8
+#EXTINF:0 CUID="164" tvg-name="CBS 11 - Savannah" tvg-id="cbs11wtocsavannah.us" tvg-logo="https://logo.iptveditor.com/cbs.png" group-title="02-Local Channels",CBS 11 - Savannah
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003200&type=stream.m3u8
+#EXTINF:0 CUID="194" tvg-name="ACC Network" tvg-id="accnetwork.us" tvg-logo="https://logo.iptveditor.com/accnetwork.png" group-title="03-Sports",ACC Network
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003246&type=stream.m3u8
+#EXTINF:0 CUID="445" tvg-name="Altitude Sports" tvg-id="altitudesports.us" tvg-logo="https://logo.iptveditor.com/altitudesports.png" group-title="03-Sports",Altitude Sports
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003519&type=stream.m3u8
+#EXTINF:0 CUID="458" tvg-name="Bally Sports Florida (N)" tvg-id="ballysportsflorida.us" tvg-logo="https://logo.iptveditor.com/ballysportsflorida.png" group-title="03-Sports",Bally Sports Florida (N)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003633&type=stream.m3u8
+#EXTINF:0 CUID="459" tvg-name="Bally Sports Florida (S)" tvg-id="ballysportsflorida.us" tvg-logo="https://logo.iptveditor.com/ballysportsflorida.png" group-title="03-Sports",Bally Sports Florida (S)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003637&type=stream.m3u8
+#EXTINF:0 CUID="70" tvg-name="beIN Sports" tvg-id="beinsports.us" tvg-logo="https://logo.iptveditor.com/beinsports.png" group-title="03-Sports",beIN Sports
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001958&type=stream.m3u8
+#EXTINF:0 CUID="582" tvg-name="Big Ten Network*" tvg-id="bigtennetwork.us" tvg-logo="https://logo.iptveditor.com/bigtennetwork.png" group-title="03-Sports",Big Ten Network*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004140&type=stream.m3u8
+#EXTINF:0 CUID="72" tvg-name="CBS Sports" tvg-id="cbssportshq.us" tvg-logo="https://logo.iptveditor.com/cbssports.png" group-title="03-Sports",CBS Sports
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001959&type=stream.m3u8
+#EXTINF:0 CUID="59" tvg-name="ESPN 2" tvg-id="espn2.us" tvg-logo="https://logo.iptveditor.com/espn2.png" group-title="03-Sports",ESPN 2
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001948&type=stream.m3u8
+#EXTINF:0 CUID="525" tvg-name="ESPN Backup*" tvg-id="espn.us" tvg-logo="https://logo.iptveditor.com/espn.png" group-title="03-Sports",ESPN Backup*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004476&type=stream.m3u8
+#EXTINF:0 CUID="184" tvg-name="ESPN NEWS" tvg-id="espnnews.us" tvg-logo="https://logo.iptveditor.com/espnnews.png" group-title="03-Sports",ESPN NEWS
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002190&type=stream.m3u8
+#EXTINF:0 CUID="182" tvg-name="ESPN U" tvg-id="espnu.us" tvg-logo="https://logo.iptveditor.com/espnu.png" group-title="03-Sports",ESPN U
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002189&type=stream.m3u8
+#EXTINF:0 CUID="58" tvg-name="ESPN*" tvg-id="espn.us" tvg-logo="https://logo.iptveditor.com/espn.png" group-title="03-Sports",ESPN*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004101&type=stream.m3u8
+#EXTINF:0 CUID="589" tvg-name="Fight Network*" tvg-id="fightnetwork.us" tvg-logo="https://logo.iptveditor.com/fightnetwork.png" group-title="03-Sports",Fight Network*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004167&type=stream.m3u8
+#EXTINF:0 CUID="74" tvg-name="Fox Sports 1" tvg-id="foxsports1.us" tvg-logo="https://logo.iptveditor.com/foxsports1.png" group-title="03-Sports",Fox Sports 1
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001960&type=stream.m3u8
+#EXTINF:0 CUID="77" tvg-name="Fox Sports 2" tvg-id="foxsports2.us" tvg-logo="https://logo.iptveditor.com/foxsports2.png" group-title="03-Sports",Fox Sports 2
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001961&type=stream.m3u8
+#EXTINF:0 CUID="173" tvg-name="Fox Sports Detroit" tvg-id="ballysportsdetroit.us" tvg-logo="https://logo.iptveditor.com/foxsportsdetroit.png" group-title="03-Sports",Fox Sports Detroit
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003266&type=stream.m3u8
+#EXTINF:0 CUID="145" tvg-name="FOX SPORTS NORTH" tvg-id="foxsports.us" tvg-logo="https://logo.iptveditor.com/foxsportsnorth.png" group-title="03-Sports",FOX SPORTS NORTH
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003265&type=stream.m3u8
+#EXTINF:0 CUID="529" tvg-name="FOX Sports South*" tvg-id="foxsportssouthplus.us" tvg-logo="https://logo.iptveditor.com/foxsportssouth.png" group-title="03-Sports",FOX Sports South*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004233&type=stream.m3u8
+#EXTINF:0 CUID="198" tvg-name="FOX SPORTS SOUTHEAST" tvg-id="foxsportssouthplus.us" tvg-logo="https://logo.iptveditor.com/foxsportssouth.png" group-title="03-Sports",FOX SPORTS SOUTHEAST
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003207&type=stream.m3u8
+#EXTINF:0 CUID="312" tvg-name="FOX SPORTS SOUTHWEST" tvg-id="foxsportssouthwestla3.us" tvg-logo="https://logo.iptveditor.com/foxsportssouthwest.png" group-title="03-Sports",FOX SPORTS SOUTHWEST
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003018&type=stream.m3u8
+#EXTINF:0 CUID="434" tvg-name="MARQUEE SPORTS NETWORK" tvg-id="marqueesportsnetwork.us" tvg-logo="https://logo.iptveditor.com/marqueesportsnetwork.png" group-title="03-Sports",MARQUEE SPORTS NETWORK
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003129&type=stream.m3u8
+#EXTINF:0 CUID="588" tvg-name="MAV TV*" tvg-id="mavtv.us" tvg-logo="https://logo.iptveditor.com/mavtv.png" group-title="03-Sports",MAV TV*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004164&type=stream.m3u8
+#EXTINF:0 CUID="148" tvg-name="MLB Network" tvg-id="mlbnetwork.us" tvg-logo="https://logo.iptveditor.com/mlbnetwork.png" group-title="03-Sports",MLB Network
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002404&type=stream.m3u8
+#EXTINF:0 CUID="157" tvg-name="MOTOR TREND (VELOCITY)" tvg-id="motortrend.us" tvg-logo="https://logo.iptveditor.com/motortrend.png" group-title="03-Sports",MOTOR TREND (VELOCITY)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002149&type=stream.m3u8
+#EXTINF:0 CUID="586" tvg-name="MSG*" tvg-id="msg.us" tvg-logo="https://logo.iptveditor.com/msg.png" group-title="03-Sports",MSG*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004155&type=stream.m3u8
+#EXTINF:0 CUID="587" tvg-name="MSG+*" tvg-logo="https://logo.iptveditor.com/msg.png" group-title="03-Sports",MSG+*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004158&type=stream.m3u8
+#EXTINF:0 CUID="88" tvg-name="NBA TV" tvg-id="nbatv.us" tvg-logo="https://logo.iptveditor.com/nbatv.png" group-title="03-Sports",NBA TV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001966&type=stream.m3u8
+#EXTINF:0 CUID="86" tvg-name="NBC GOLF" tvg-id="golfchannel.us" tvg-logo="https://logo.iptveditor.com/nbcgolf.png" group-title="03-Sports",NBC GOLF
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001964&type=stream.m3u8
+#EXTINF:0 CUID="85" tvg-name="NBCSN" tvg-id="msnbc.us" tvg-logo="https://logo.iptveditor.com/nbcsn.png" group-title="03-Sports",NBCSN
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001963&type=stream.m3u8
+#EXTINF:0 CUID="197" tvg-name="NBCSN Bay Area" tvg-id="nbcsportsbayarea.us" tvg-logo="https://logo.iptveditor.com/nbcsnbayarea.png" group-title="03-Sports",NBCSN Bay Area
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003101&type=stream.m3u8
+#EXTINF:0 CUID="196" tvg-name="NBCSN Boston" tvg-id="nbcsportsboston.us" tvg-logo="https://logo.iptveditor.com/nbcsnboston.png" group-title="03-Sports",NBCSN Boston
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003100&type=stream.m3u8
+#EXTINF:0 CUID="200" tvg-name="NBCSN California" tvg-id="nbcsportscalifornia.us" tvg-logo="https://logo.iptveditor.com/nbcsncalifornia.png" group-title="03-Sports",NBCSN California
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003103&type=stream.m3u8
+#EXTINF:0 CUID="199" tvg-name="NBCSN Chicago" tvg-id="nbcsportschicago.us" tvg-logo="https://logo.iptveditor.com/nbcsnchicago.png" group-title="03-Sports",NBCSN Chicago
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003102&type=stream.m3u8
+#EXTINF:0 CUID="201" tvg-name="NBCSN Philadelphia" tvg-id="nbcsportsphiladelphia.us" tvg-logo="https://logo.iptveditor.com/nbcsnphiladelphia.png" group-title="03-Sports",NBCSN Philadelphia
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003105&type=stream.m3u8
+#EXTINF:0 CUID="502" tvg-name="NESN*" tvg-id="nesn.us" tvg-logo="https://logo.iptveditor.com/nesn.png" group-title="03-Sports",NESN*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004245&type=stream.m3u8
+#EXTINF:0 CUID="149" tvg-name="NFL Network Backup" tvg-id="nflnetwork.us" tvg-logo="https://logo.iptveditor.com/nflnetwork.png" group-title="03-Sports",NFL Network Backup
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003244&type=stream.m3u8
+#EXTINF:0 CUID="592" tvg-name="NFL Network*" tvg-id="nflnetwork.us" tvg-logo="https://logo.iptveditor.com/nflnetwork.png" group-title="03-Sports",NFL Network*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004191&type=stream.m3u8
+#EXTINF:0 CUID="65" tvg-name="NHL Network" tvg-id="nhlnetwork.us" tvg-logo="https://logo.iptveditor.com/nhlnetwork.png" group-title="03-Sports",NHL Network
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002167&type=stream.m3u8
+#EXTINF:0 CUID="165" tvg-name="Red Bull TV" tvg-id="redbulltv.us" tvg-logo="https://logo.iptveditor.com/redbulltv.png" group-title="03-Sports",Red Bull TV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002994&type=stream.m3u8
+#EXTINF:0 CUID="90" tvg-name="SEC Network" tvg-id="secnetwork.us" tvg-logo="https://logo.iptveditor.com/secnetwork.png" group-title="03-Sports",SEC Network
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001968&type=stream.m3u8
+#EXTINF:0 CUID="444" tvg-name="SNY" tvg-id="sny.us" tvg-logo="https://logo.iptveditor.com/sny.png" group-title="03-Sports",SNY
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003357&type=stream.m3u8
+#EXTINF:0 CUID="91" tvg-name="SPORTSMAN CHANNEL" tvg-id="sportsmanchannel.us" tvg-logo="https://logo.iptveditor.com/sportsmanchannel.png" group-title="03-Sports",SPORTSMAN CHANNEL
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002507&type=stream.m3u8
+#EXTINF:0 CUID="82" tvg-name="Sportsnet 360" tvg-id="sportsnet360.ca" tvg-logo="https://logo.iptveditor.com/sportsnet360.png" group-title="03-Sports",Sportsnet 360
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002166&type=stream.m3u8
+#EXTINF:0 CUID="179" tvg-name="Sportsnet ONE" tvg-id="sportsnetone.ca" tvg-logo="https://logo.iptveditor.com/sportsnetone.png" group-title="03-Sports",Sportsnet ONE
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002195&type=stream.m3u8
+#EXTINF:0 CUID="313" tvg-name="SPORTSNET ONTARIO" tvg-id="sportsnetontario.ca" tvg-logo="https://logo.iptveditor.com/sportsnetontario.png" group-title="03-Sports",SPORTSNET ONTARIO
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003019&type=stream.m3u8
+#EXTINF:0 CUID="178" tvg-name="Sportsnet Pacific" tvg-id="sportsnetpacific.ca" tvg-logo="https://logo.iptveditor.com/sportsnetpacific.png" group-title="03-Sports",Sportsnet Pacific
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002194&type=stream.m3u8
+#EXTINF:0 CUID="183" tvg-name="Sportsnet World" tvg-id="sportsnetworld.ca" tvg-logo="https://logo.iptveditor.com/sportsnetworld.png" group-title="03-Sports",Sportsnet World
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002197&type=stream.m3u8
+#EXTINF:0 CUID="584" tvg-name="Tennis Channel*" tvg-id="tennischannel.us" tvg-logo="https://logo.iptveditor.com/tennischannel.png" group-title="03-Sports",Tennis Channel*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004149&type=stream.m3u8
+#EXTINF:0 CUID="166" tvg-name="The Cowboy Channel" tvg-id="thecowboychannel.us" tvg-logo="https://logo.iptveditor.com/thecowboychannel.png" group-title="03-Sports",The Cowboy Channel
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003247&type=stream.m3u8
+#EXTINF:0 CUID="61" tvg-name="TNT Sport 1 (UK)" tvg-id="tntsport1.uk" tvg-logo="https://logo.iptveditor.com/tntsports.png" group-title="03-Sports",TNT Sport 1 (UK)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001954&type=stream.m3u8
+#EXTINF:0 CUID="63" tvg-name="TNT Sport 2 (UK)" tvg-id="tntsports2.uk" tvg-logo="https://logo.iptveditor.com/tntsports.png" group-title="03-Sports",TNT Sport 2 (UK)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001955&type=stream.m3u8
+#EXTINF:0 CUID="67" tvg-name="TNT Sport 3 (UK)" tvg-id="TNT.Sports.3.HD.uk" tvg-logo="https://logo.iptveditor.com/tntsports.png" group-title="03-Sports",TNT Sport 3 (UK)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001956&type=stream.m3u8
+#EXTINF:0 CUID="530" tvg-name="TNT Sport 4 (UK)*" tvg-id="TNT.Sports.4.HD.uk" tvg-logo="https://logo.iptveditor.com/tntsports.png" group-title="03-Sports",TNT Sport 4 (UK)*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004263&type=stream.m3u8
+#EXTINF:0 CUID="60" tvg-name="TSN SPORT 1" tvg-id="tsn1.ca" tvg-logo="https://logo.iptveditor.com/tsnsport1.png" group-title="03-Sports",TSN SPORT 1
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001953&type=stream.m3u8
+#EXTINF:0 CUID="574" tvg-name="TSN SPORT 2*" tvg-id="tsn2.ca" tvg-logo="https://logo.iptveditor.com/tsnsport2.png" group-title="03-Sports",TSN SPORT 2*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004479&type=stream.m3u8
+#EXTINF:0 CUID="575" tvg-name="TSN SPORT 3*" tvg-id="tsn3.ca" tvg-logo="https://logo.iptveditor.com/tsnsport3.png" group-title="03-Sports",TSN SPORT 3*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004482&type=stream.m3u8
+#EXTINF:0 CUID="576" tvg-name="TSN SPORT 4*" tvg-id="tsn4.ca" tvg-logo="https://logo.iptveditor.com/tsnsport4.png" group-title="03-Sports",TSN SPORT 4*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004485&type=stream.m3u8
+#EXTINF:0 CUID="577" tvg-name="TSN SPORT 5*" tvg-id="tsn5.ca" tvg-logo="https://logo.iptveditor.com/tsnsport5.png" group-title="03-Sports",TSN SPORT 5*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004488&type=stream.m3u8
+#EXTINF:0 CUID="593" tvg-name="UFC Fight Pass*" tvg-logo="https://logo.iptveditor.com/ufcfightpass.png" group-title="03-Sports",UFC Fight Pass*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004248&type=stream.m3u8
+#EXTINF:0 CUID="220" tvg-name="UK SKY PREMIERE SPORT" tvg-id="skypremiere.uk" tvg-logo="https://logo.iptveditor.com/premieresport.png" group-title="03-Sports",UK SKY PREMIERE SPORT
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002205&type=stream.m3u8
+#EXTINF:0 CUID="222" tvg-name="UK SKY RACING" tvg-id="racing.uk" tvg-logo="https://logo.iptveditor.com/skyracing.png" group-title="03-Sports",UK SKY RACING
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002206&type=stream.m3u8
+#EXTINF:0 CUID="226" tvg-name="UK SKY SPORTS CRICKET" tvg-id="skysportscricket.uk" tvg-logo="https://logo.iptveditor.com/skysportscricket.png" group-title="03-Sports",UK SKY SPORTS CRICKET
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002209&type=stream.m3u8
+#EXTINF:0 CUID="228" tvg-name="UK SKY SPORTS F1" tvg-id="skysportsf1.uk" tvg-logo="https://logo.iptveditor.com/skysportsf1.png" group-title="03-Sports",UK SKY SPORTS F1
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002210&type=stream.m3u8
+#EXTINF:0 CUID="232" tvg-name="UK SKY SPORTS MIX" tvg-id="skysportsmix.uk" tvg-logo="https://logo.iptveditor.com/skysportsmix.png" group-title="03-Sports",UK SKY SPORTS MIX
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002212&type=stream.m3u8
+#EXTINF:0 CUID="234" tvg-name="UK SKY SPORTS NEWS" tvg-id="skysportsnews.uk" tvg-logo="https://logo.iptveditor.com/skysportsnews.png" group-title="03-Sports",UK SKY SPORTS NEWS
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002213&type=stream.m3u8
+#EXTINF:0 CUID="185" tvg-name="UK: SKY SPORTS ACTION" tvg-id="skysportsaction.uk" tvg-logo="https://logo.iptveditor.com/skysportsaction.png" group-title="03-Sports",UK: SKY SPORTS ACTION
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002562&type=stream.m3u8
+#EXTINF:0 CUID="310" tvg-name="WORLD FISHING CHANNEL" tvg-id="worldfishingnetwork(us).us" tvg-logo="https://logo.iptveditor.com/worldfishingnet.png" group-title="03-Sports",WORLD FISHING CHANNEL
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003016&type=stream.m3u8
+#EXTINF:0 CUID="590" tvg-name="WWE Network*" tvg-id="wwenetwork.us" tvg-logo="https://logo.iptveditor.com/wwenetwork.png" group-title="03-Sports",WWE Network*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004173&type=stream.m3u8
+#EXTINF:0 CUID="585" tvg-name="Yes Network*" tvg-id="yesnetwork.us" tvg-logo="https://logo.iptveditor.com/yesnetwork.png" group-title="03-Sports",Yes Network*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004152&type=stream.m3u8
+#EXTINF:0 CUID="43" tvg-name="PPV 1 - WWE Summer Slam 2025 (6:00 PM ET)" tvg-logo="https://logo.iptveditor.com/ppv1.png" group-title="04-PPV",PPV 1 - WWE Summer Slam 2025 (6:00 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002574&type=stream.m3u8
+#EXTINF:0 CUID="45" tvg-name="PPV 2 - WWE Summer Slam 2025 (6:00 PM ET)" tvg-logo="https://logo.iptveditor.com/ppv1.png" group-title="04-PPV",PPV 2 - WWE Summer Slam 2025 (6:00 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001982&type=stream.m3u8
+#EXTINF:0 CUID="49" tvg-name="PPV 3 - UFC FN: Taira vs. Park (6:00 PM ET)" tvg-logo="https://logo.iptveditor.com/ppv1.png" group-title="04-PPV",PPV 3 - UFC FN: Taira vs. Park (6:00 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002692&type=stream.m3u8
+#EXTINF:0 CUID="52" tvg-name="PPV 4 - UFC FN: Taira vs. Park (6:00 PM ET)" tvg-logo="https://logo.iptveditor.com/ppv1.png" group-title="04-PPV",PPV 4 - UFC FN: Taira vs. Park (6:00 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002133&type=stream.m3u8
+#EXTINF:0 CUID="332" tvg-name="PPV 5 - BKFC Sturgis (8:30 PM ET)" tvg-logo="https://logo.iptveditor.com/ppv1.png" group-title="04-PPV",PPV 5 - BKFC Sturgis (8:30 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003329&type=stream.m3u8
+#EXTINF:0 CUID="334" tvg-name="PPV 6 - Duarte vs. Sims Jr. (8:00 PM ET)" tvg-logo="https://logo.iptveditor.com/ppv1.png" group-title="04-PPV",PPV 6 - Duarte vs. Sims Jr. (8:00 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003330&type=stream.m3u8
+#EXTINF:0 CUID="403" tvg-name="NBA 1" tvg-logo="https://logo.iptveditor.com/nba.png" group-title="05-NBA",NBA 1
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002445&type=stream.m3u8
+#EXTINF:0 CUID="404" tvg-name="NBA 2" tvg-logo="https://logo.iptveditor.com/nba.png" group-title="05-NBA",NBA 2
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002446&type=stream.m3u8
+#EXTINF:0 CUID="405" tvg-name="NBA 3" tvg-logo="https://logo.iptveditor.com/nba.png" group-title="05-NBA",NBA 3
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002447&type=stream.m3u8
+#EXTINF:0 CUID="406" tvg-name="NBA 4" tvg-logo="https://logo.iptveditor.com/nba.png" group-title="05-NBA",NBA 4
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002448&type=stream.m3u8
+#EXTINF:0 CUID="407" tvg-name="NBA 5" tvg-logo="https://logo.iptveditor.com/nba.png" group-title="05-NBA",NBA 5
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002449&type=stream.m3u8
+#EXTINF:0 CUID="408" tvg-name="NBA 6" tvg-logo="https://logo.iptveditor.com/nba.png" group-title="05-NBA",NBA 6
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002450&type=stream.m3u8
+#EXTINF:0 CUID="409" tvg-name="NBA 7" tvg-logo="https://logo.iptveditor.com/nba.png" group-title="05-NBA",NBA 7
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002451&type=stream.m3u8
+#EXTINF:0 CUID="410" tvg-name="NBA 8" tvg-logo="https://logo.iptveditor.com/nba.png" group-title="05-NBA",NBA 8
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002452&type=stream.m3u8
+#EXTINF:0 CUID="411" tvg-name="NBA 9" tvg-logo="https://logo.iptveditor.com/nba.png" group-title="05-NBA",NBA 9
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002453&type=stream.m3u8
+#EXTINF:0 CUID="412" tvg-name="NBA 10" tvg-logo="https://logo.iptveditor.com/nba.png" group-title="05-NBA",NBA 10
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002454&type=stream.m3u8
+#EXTINF:0 CUID="413" tvg-name="NBA 11" tvg-logo="https://logo.iptveditor.com/nba.png" group-title="05-NBA",NBA 11
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003033&type=stream.m3u8
+#EXTINF:0 CUID="414" tvg-name="NBA 12" tvg-logo="https://logo.iptveditor.com/nba.png" group-title="05-NBA",NBA 12
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002575&type=stream.m3u8
+#EXTINF:0 CUID="415" tvg-name="NBA 13" tvg-logo="https://logo.iptveditor.com/nba.png" group-title="05-NBA",NBA 13
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002576&type=stream.m3u8
+#EXTINF:0 CUID="416" tvg-name="NBA 14" tvg-logo="https://logo.iptveditor.com/nba.png" group-title="05-NBA",NBA 14
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002577&type=stream.m3u8
+#EXTINF:0 CUID="417" tvg-name="NBA 15" tvg-logo="https://logo.iptveditor.com/nba.png" group-title="05-NBA",NBA 15
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002578&type=stream.m3u8
+#EXTINF:0 CUID="92" tvg-name="MLB 1 - Dodgers @ Rays (1:10 PM ET)" tvg-logo="https://logo.iptveditor.com/mlb.png" group-title="06-MLB",MLB 1 - Dodgers @ Rays (1:10 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003640&type=stream.m3u8
+#EXTINF:0 CUID="93" tvg-name="MLB 2 - Orioles @ Cubs (2:20 PM ET)" tvg-logo="https://logo.iptveditor.com/mlb.png" group-title="06-MLB",MLB 2 - Orioles @ Cubs (2:20 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003644&type=stream.m3u8
+#EXTINF:0 CUID="94" tvg-name="MLB 3 - Royals @ Jays (3:07 PM ET)" tvg-logo="https://logo.iptveditor.com/mlb.png" group-title="06-MLB",MLB 3 - Royals @ Jays (3:07 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003648&type=stream.m3u8
+#EXTINF:0 CUID="95" tvg-name="MLB 4 - Pirates @ Rockies (3:10 PM ET)" tvg-logo="https://logo.iptveditor.com/mlb.png" group-title="06-MLB",MLB 4 - Pirates @ Rockies (3:10 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003652&type=stream.m3u8
+#EXTINF:0 CUID="96" tvg-name="MLB 5 - Tigers @ Phillies (4:05 PM ET)" tvg-logo="https://logo.iptveditor.com/mlb.png" group-title="06-MLB",MLB 5 - Tigers @ Phillies (4:05 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001980&type=stream.m3u8
+#EXTINF:0 CUID="97" tvg-name="MLB 6 - Brewers @ Nationals (4:05 PM ET)" tvg-logo="https://logo.iptveditor.com/mlb.png" group-title="06-MLB",MLB 6 - Brewers @ Nationals (4:05 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001981&type=stream.m3u8
+#EXTINF:0 CUID="98" tvg-name="MLB 7 - Astros @ Red Sox (4:10 PM ET)" tvg-logo="https://logo.iptveditor.com/mlb.png" group-title="06-MLB",MLB 7 - Astros @ Red Sox (4:10 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002155&type=stream.m3u8
+#EXTINF:0 CUID="100" tvg-name="MLB 8 - Twins @ Guardians (4:10 PM ET)" tvg-logo="https://logo.iptveditor.com/mlb.png" group-title="06-MLB",MLB 8 - Twins @ Guardians (4:10 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002156&type=stream.m3u8
+#EXTINF:0 CUID="99" tvg-name="MLB 9 - Yankees @ Marlins (4:10 PM ET)" tvg-logo="https://logo.iptveditor.com/mlb.png" group-title="06-MLB",MLB 9 - Yankees @ Marlins (4:10 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002157&type=stream.m3u8
+#EXTINF:0 CUID="101" tvg-name="MLB 10 - Giants @ Mets (4:10 PM ET)" tvg-logo="https://logo.iptveditor.com/mlb.png" group-title="06-MLB",MLB 10 - Giants @ Mets (4:10 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002900&type=stream.m3u8
+#EXTINF:0 CUID="102" tvg-name="MLB 11 - Rangers @ Mariners (4:10 PM ET)" tvg-logo="https://logo.iptveditor.com/mlb.png" group-title="06-MLB",MLB 11 - Rangers @ Mariners (4:10 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002158&type=stream.m3u8
+#EXTINF:0 CUID="103" tvg-name="MLB 12 - Braves @ Reds (7:15 PM ET)" tvg-logo="https://logo.iptveditor.com/mlb.png" group-title="06-MLB",MLB 12 - Braves @ Reds (7:15 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002159&type=stream.m3u8
+#EXTINF:0 CUID="104" tvg-name="MLB 13 - D-backs @ A's (10:05 PM ET)" tvg-logo="https://logo.iptveditor.com/mlb.png" group-title="06-MLB",MLB 13 - D-backs @ A's (10:05 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002889&type=stream.m3u8
+#EXTINF:0 CUID="105" tvg-name="MLB 14 - White Sox @ Angels (10:07 PM ET)" tvg-logo="https://logo.iptveditor.com/mlb.png" group-title="06-MLB",MLB 14 - White Sox @ Angels (10:07 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002160&type=stream.m3u8
+#EXTINF:0 CUID="106" tvg-name="MLB 15 - Cardinals @ Padres (10:10 PM ET)" tvg-logo="https://logo.iptveditor.com/mlb.png" group-title="06-MLB",MLB 15 - Cardinals @ Padres (10:10 PM ET)
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002890&type=stream.m3u8
+#EXTINF:0 CUID="62" tvg-name="NFL 1" tvg-logo="https://logo.iptveditor.com/nfl.png" group-title="07-NFL",NFL 1
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001983&type=stream.m3u8
+#EXTINF:0 CUID="66" tvg-name="NFL 2" tvg-logo="https://logo.iptveditor.com/nfl.png" group-title="07-NFL",NFL 2
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002040&type=stream.m3u8
+#EXTINF:0 CUID="68" tvg-name="NFL 3" tvg-logo="https://logo.iptveditor.com/nfl.png" group-title="07-NFL",NFL 3
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002041&type=stream.m3u8
+#EXTINF:0 CUID="69" tvg-name="NFL 4" tvg-logo="https://logo.iptveditor.com/nfl.png" group-title="07-NFL",NFL 4
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002042&type=stream.m3u8
+#EXTINF:0 CUID="71" tvg-name="NFL 5" tvg-logo="https://logo.iptveditor.com/nfl.png" group-title="07-NFL",NFL 5
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002043&type=stream.m3u8
+#EXTINF:0 CUID="73" tvg-name="NFL 6" tvg-logo="https://logo.iptveditor.com/nfl.png" group-title="07-NFL",NFL 6
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002044&type=stream.m3u8
+#EXTINF:0 CUID="76" tvg-name="NFL 7" tvg-logo="https://logo.iptveditor.com/nfl.png" group-title="07-NFL",NFL 7
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002045&type=stream.m3u8
+#EXTINF:0 CUID="75" tvg-name="NFL 8" tvg-logo="https://logo.iptveditor.com/nfl.png" group-title="07-NFL",NFL 8
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002046&type=stream.m3u8
+#EXTINF:0 CUID="78" tvg-name="NFL 9" tvg-logo="https://logo.iptveditor.com/nfl.png" group-title="07-NFL",NFL 9
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002047&type=stream.m3u8
+#EXTINF:0 CUID="79" tvg-name="NFL 10" tvg-logo="https://logo.iptveditor.com/nfl.png" group-title="07-NFL",NFL 10
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002048&type=stream.m3u8
+#EXTINF:0 CUID="80" tvg-name="NFL 11" tvg-logo="https://logo.iptveditor.com/nfl.png" group-title="07-NFL",NFL 11
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002049&type=stream.m3u8
+#EXTINF:0 CUID="81" tvg-name="NFL 12" tvg-logo="https://logo.iptveditor.com/nfl.png" group-title="07-NFL",NFL 12
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002050&type=stream.m3u8
+#EXTINF:0 CUID="83" tvg-name="NFL 13" tvg-logo="https://logo.iptveditor.com/nfl.png" group-title="07-NFL",NFL 13
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002750&type=stream.m3u8
+#EXTINF:0 CUID="84" tvg-name="NFL 14" tvg-logo="https://logo.iptveditor.com/nfl.png" group-title="07-NFL",NFL 14
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002751&type=stream.m3u8
+#EXTINF:0 CUID="87" tvg-name="NFL 15" tvg-logo="https://logo.iptveditor.com/nfl.png" group-title="07-NFL",NFL 15
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002051&type=stream.m3u8
+#EXTINF:0 CUID="89" tvg-name="NFL Red Zone" tvg-logo="https://logo.iptveditor.com/nflredzone.png" group-title="07-NFL",NFL Red Zone
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003234&type=stream.m3u8
+#EXTINF:0 CUID="64" tvg-name="NFL Red Zone 2" tvg-logo="https://logo.iptveditor.com/nflredzone.png" group-title="07-NFL",NFL Red Zone 2
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002039&type=stream.m3u8
+#EXTINF:0 CUID="418" tvg-name="NHL 1" tvg-logo="https://logo.iptveditor.com/nhl.png" group-title="08--NHL",NHL 1
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002432&type=stream.m3u8
+#EXTINF:0 CUID="419" tvg-name="NHL 2" tvg-logo="https://logo.iptveditor.com/nhl.png" group-title="08--NHL",NHL 2
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002433&type=stream.m3u8
+#EXTINF:0 CUID="420" tvg-name="NHL 3" tvg-logo="https://logo.iptveditor.com/nhl.png" group-title="08--NHL",NHL 3
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002434&type=stream.m3u8
+#EXTINF:0 CUID="421" tvg-name="NHL 4" tvg-logo="https://logo.iptveditor.com/nhl.png" group-title="08--NHL",NHL 4
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002435&type=stream.m3u8
+#EXTINF:0 CUID="422" tvg-name="NHL 5" tvg-logo="https://logo.iptveditor.com/nhl.png" group-title="08--NHL",NHL 5
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002436&type=stream.m3u8
+#EXTINF:0 CUID="423" tvg-name="NHL 6" tvg-logo="https://logo.iptveditor.com/nhl.png" group-title="08--NHL",NHL 6
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002437&type=stream.m3u8
+#EXTINF:0 CUID="424" tvg-name="NHL 7" tvg-logo="https://logo.iptveditor.com/nhl.png" group-title="08--NHL",NHL 7
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002438&type=stream.m3u8
+#EXTINF:0 CUID="425" tvg-name="NHL 8" tvg-logo="https://logo.iptveditor.com/nhl.png" group-title="08--NHL",NHL 8
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002439&type=stream.m3u8
+#EXTINF:0 CUID="426" tvg-name="NHL 9" tvg-logo="https://logo.iptveditor.com/nhl.png" group-title="08--NHL",NHL 9
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002440&type=stream.m3u8
+#EXTINF:0 CUID="427" tvg-name="NHL 10" tvg-logo="https://logo.iptveditor.com/nhl.png" group-title="08--NHL",NHL 10
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002441&type=stream.m3u8
+#EXTINF:0 CUID="428" tvg-name="NHL 11" tvg-logo="https://logo.iptveditor.com/nhl.png" group-title="08--NHL",NHL 11
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002442&type=stream.m3u8
+#EXTINF:0 CUID="429" tvg-name="NHL 12" tvg-logo="https://logo.iptveditor.com/nhl.png" group-title="08--NHL",NHL 12
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002443&type=stream.m3u8
+#EXTINF:0 CUID="430" tvg-name="NHL 13" tvg-logo="https://logo.iptveditor.com/nhl.png" group-title="08--NHL",NHL 13
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003020&type=stream.m3u8
+#EXTINF:0 CUID="431" tvg-name="NHL 14" tvg-logo="https://logo.iptveditor.com/nhl.png" group-title="08--NHL",NHL 14
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002583&type=stream.m3u8
+#EXTINF:0 CUID="432" tvg-name="NHL 15" tvg-logo="https://logo.iptveditor.com/nhl.png" group-title="08--NHL",NHL 15
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002584&type=stream.m3u8
+#EXTINF:0 CUID="433" tvg-name="NHL 16" tvg-logo="https://logo.iptveditor.com/nhl.png" group-title="08--NHL",NHL 16
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003660&type=stream.m3u8
+#EXTINF:0 CUID="346" tvg-name="NCAA 1" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAA 1
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003003&type=stream.m3u8
+#EXTINF:0 CUID="349" tvg-name="NCAA 2" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAA 2
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002458&type=stream.m3u8
+#EXTINF:0 CUID="351" tvg-name="NCAA 3" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAA 3
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002459&type=stream.m3u8
+#EXTINF:0 CUID="352" tvg-name="NCAA 4" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAA 4
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002460&type=stream.m3u8
+#EXTINF:0 CUID="354" tvg-name="NCAA 5" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAA 5
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002461&type=stream.m3u8
+#EXTINF:0 CUID="355" tvg-name="NCAA 6" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAA 6
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002462&type=stream.m3u8
+#EXTINF:0 CUID="357" tvg-name="NCAA 7" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAA 7
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002463&type=stream.m3u8
+#EXTINF:0 CUID="359" tvg-name="NCAA 8" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAA 8
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002464&type=stream.m3u8
+#EXTINF:0 CUID="361" tvg-name="NCAA 9" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAA 9
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002465&type=stream.m3u8
+#EXTINF:0 CUID="363" tvg-name="NCAA 10" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAA 10
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002467&type=stream.m3u8
+#EXTINF:0 CUID="364" tvg-name="NCAA 11" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAA 11
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002466&type=stream.m3u8
+#EXTINF:0 CUID="366" tvg-name="NCAA 12" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAA 12
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002468&type=stream.m3u8
+#EXTINF:0 CUID="368" tvg-name="NCAA 13" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAA 13
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002469&type=stream.m3u8
+#EXTINF:0 CUID="370" tvg-name="NCAA 14" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAA 14
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002470&type=stream.m3u8
+#EXTINF:0 CUID="372" tvg-name="NCAA 15" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAA 15
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002471&type=stream.m3u8
+#EXTINF:0 CUID="374" tvg-name="NCAA 16" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAA 16
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003004&type=stream.m3u8
+#EXTINF:0 CUID="376" tvg-name="NCAAF 17" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 17
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002473&type=stream.m3u8
+#EXTINF:0 CUID="379" tvg-name="NCAAF 18" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 18
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002474&type=stream.m3u8
+#EXTINF:0 CUID="380" tvg-name="NCAAF 19" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 19
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002475&type=stream.m3u8
+#EXTINF:0 CUID="381" tvg-name="NCAAF 20" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 20
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002476&type=stream.m3u8
+#EXTINF:0 CUID="382" tvg-name="NCAAF 21" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 21
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002477&type=stream.m3u8
+#EXTINF:0 CUID="384" tvg-name="NCAAF 22" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 22
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002478&type=stream.m3u8
+#EXTINF:0 CUID="385" tvg-name="NCAAF 23" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 23
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002479&type=stream.m3u8
+#EXTINF:0 CUID="386" tvg-name="NCAAF 24" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 24
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002480&type=stream.m3u8
+#EXTINF:0 CUID="387" tvg-name="NCAAF 25" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 25
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002481&type=stream.m3u8
+#EXTINF:0 CUID="388" tvg-name="NCAAF 26" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 26
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002482&type=stream.m3u8
+#EXTINF:0 CUID="389" tvg-name="NCAAF 27" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 27
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002483&type=stream.m3u8
+#EXTINF:0 CUID="390" tvg-name="NCAAF 28" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 28
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002484&type=stream.m3u8
+#EXTINF:0 CUID="391" tvg-name="NCAAF 29" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 29
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002485&type=stream.m3u8
+#EXTINF:0 CUID="392" tvg-name="NCAAF 30" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 30
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002486&type=stream.m3u8
+#EXTINF:0 CUID="393" tvg-name="NCAAF 31" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 31
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002487&type=stream.m3u8
+#EXTINF:0 CUID="394" tvg-name="NCAAF 32" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 32
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002488&type=stream.m3u8
+#EXTINF:0 CUID="395" tvg-name="NCAAF 33" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 33
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002489&type=stream.m3u8
+#EXTINF:0 CUID="396" tvg-name="NCAAF 34" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 34
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002490&type=stream.m3u8
+#EXTINF:0 CUID="397" tvg-name="NCAAF 35" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 35
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002491&type=stream.m3u8
+#EXTINF:0 CUID="398" tvg-name="NCAAF 36" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 36
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002492&type=stream.m3u8
+#EXTINF:0 CUID="399" tvg-name="NCAAF 37" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 37
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002493&type=stream.m3u8
+#EXTINF:0 CUID="400" tvg-name="NCAAF 38" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 38
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002494&type=stream.m3u8
+#EXTINF:0 CUID="401" tvg-name="NCAAF 39" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 39
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002495&type=stream.m3u8
+#EXTINF:0 CUID="402" tvg-name="NCAAF 40" tvg-logo="https://tinyurl.com/23jsnrm5" group-title="09--NCAA",NCAAF 40
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002496&type=stream.m3u8
+#EXTINF:0 CUID="646" tvg-name="ES: ANTENA 3" tvg-id="antena3.latino" tvg-logo="https://logo.iptveditor.com/antena3.png" group-title="10-Latino",ES: ANTENA 3
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002542&type=stream.m3u8
+#EXTINF:0 CUID="644" tvg-name="ES: MOVIESTAR DEPORTES 1" tvg-logo="https://logo.iptveditor.com/moviestardeportes1.png" group-title="10-Latino",ES: MOVIESTAR DEPORTES 1
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002535&type=stream.m3u8
+#EXTINF:0 CUID="647" tvg-name="ES: NEOX" tvg-logo="https://logo.iptveditor.com/neox.png" group-title="10-Latino",ES: NEOX
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002546&type=stream.m3u8
+#EXTINF:0 CUID="640" tvg-name="ES: Pasiones" tvg-id="I444.61776.schedulesdirect.org" tvg-logo="https://logo.iptveditor.com/pasiones.png" group-title="10-Latino",ES: Pasiones
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003378&type=stream.m3u8
+#EXTINF:0 CUID="637" tvg-name="ES: Telemundo East" tvg-id="telemundo.latino" tvg-logo="https://logo.iptveditor.com/telemundo.png" group-title="10-Latino",ES: Telemundo East
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003366&type=stream.m3u8
+#EXTINF:0 CUID="638" tvg-name="ES: Telemundo West" tvg-id="telemundo.latino" tvg-logo="https://logo.iptveditor.com/telemundowest.png" group-title="10-Latino",ES: Telemundo West
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003369&type=stream.m3u8
+#EXTINF:0 CUID="639" tvg-name="ES: Unimas TV" tvg-id="I684.29058.schedulesdirect.org" tvg-logo="https://logo.iptveditor.com/imastv.png" group-title="10-Latino",ES: Unimas TV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003372&type=stream.m3u8
+#EXTINF:0 CUID="162" tvg-name="Latino: A Tres Series" tvg-id="atresseries.latino" tvg-logo="https://logo.iptveditor.com/atreseries.png" group-title="10-Latino",Latino: A Tres Series
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003150&type=stream.m3u8
+#EXTINF:0 CUID="599" tvg-name="Latino: A&E" tvg-id="I6.18955.schedulesdirect.org" tvg-logo="https://logo.iptveditor.com/ae.png" group-title="10-Latino",Latino: A&E
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001987&type=stream.m3u8
+#EXTINF:0 CUID="643" tvg-name="Latino: AMC" tvg-id="I19.90653.schedulesdirect.org" tvg-logo="https://logo.iptveditor.com/amc.png" group-title="10-Latino",Latino: AMC
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002526&type=stream.m3u8
+#EXTINF:0 CUID="626" tvg-name="Latino: Azteca 7" tvg-id="aztecauno.latino" tvg-logo="https://logo.iptveditor.com/azteca7.png" group-title="10-Latino",Latino: Azteca 7
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002364&type=stream.m3u8
+#EXTINF:0 CUID="627" tvg-name="Latino: Bein Sports" tvg-id="I873.76943.gracenote.com" tvg-logo="https://logo.iptveditor.com/beinsports.png" group-title="10-Latino",Latino: Bein Sports
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002366&type=stream.m3u8
+#EXTINF:0 CUID="628" tvg-name="Latino: Cable Noticas" tvg-logo="https://logo.iptveditor.com/cablenoticias.png" group-title="10-Latino",Latino: Cable Noticas
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002367&type=stream.m3u8
+#EXTINF:0 CUID="613" tvg-name="Latino: Canal Estrellas" tvg-id="I1003.16461.schedulesdirect.org" tvg-logo="https://logo.iptveditor.com/canalestrellas.png" group-title="10-Latino",Latino: Canal Estrellas
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002355&type=stream.m3u8
+#EXTINF:0 CUID="620" tvg-name="Latino: Caracol" tvg-id="usacaracoltv.latino" tvg-logo="https://logo.iptveditor.com/caracol.png" group-title="10-Latino",Latino: Caracol
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002356&type=stream.m3u8
+#EXTINF:0 CUID="635" tvg-name="LATINO: Cartoon Network" tvg-id="I114.16141.schedulesdirect.org" tvg-logo="https://logo.iptveditor.com/cartoonnetwork.png" group-title="10-Latino",LATINO: Cartoon Network
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003040&type=stream.m3u8
+#EXTINF:0 CUID="122" tvg-name="Latino: CNN" tvg-id="I419.17054.gracenote.com" tvg-logo="https://logo.iptveditor.com/cnn.png" group-title="10-Latino",Latino: CNN
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002371&type=stream.m3u8
+#EXTINF:0 CUID="600" tvg-name="Latino: Comedy Central" tvg-id="comedycentral.latino" tvg-logo="https://logo.iptveditor.com/comedycentral.png" group-title="10-Latino",Latino: Comedy Central
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001996&type=stream.m3u8
+#EXTINF:0 CUID="601" tvg-name="Latino: De Pelicula" tvg-logo="https://logo.iptveditor.com/pelicula.png" group-title="10-Latino",Latino: De Pelicula
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001997&type=stream.m3u8
+#EXTINF:0 CUID="602" tvg-name="Latino: Discovery Channel" tvg-id="discoverychannel.latino" tvg-logo="https://logo.iptveditor.com/discoverychannel.png" group-title="10-Latino",Latino: Discovery Channel
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001998&type=stream.m3u8
+#EXTINF:0 CUID="605" tvg-name="Latino: Discovery Home & Health" tvg-id="discoveryhomehealth.latino" tvg-logo="https://logo.iptveditor.com/discoveryhomehealth.png" group-title="10-Latino",Latino: Discovery Home & Health
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002342&type=stream.m3u8
+#EXTINF:0 CUID="636" tvg-name="Latino: Disney" tvg-id="I196.19234.schedulesdirect.org" tvg-logo="https://logo.iptveditor.com/disney.png" group-title="10-Latino",Latino: Disney
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003042&type=stream.m3u8
+#EXTINF:0 CUID="623" tvg-name="Latino: Distrito Comedia" tvg-id="I201.55980.schedulesdirect.org" tvg-logo="https://logo.iptveditor.com/distritocomedia.png" group-title="10-Latino",Latino: Distrito Comedia
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002359&type=stream.m3u8
+#EXTINF:0 CUID="625" tvg-name="Latino: El Gourmet" tvg-id="usaelgourmet.latino" tvg-logo="https://logo.iptveditor.com/elgourmet.png" group-title="10-Latino",Latino: El Gourmet
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002360&type=stream.m3u8
+#EXTINF:0 CUID="603" tvg-name="Latino: ESPN" tvg-id="espn4.latino" tvg-logo="https://logo.iptveditor.com/espn.png" group-title="10-Latino",Latino: ESPN
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002000&type=stream.m3u8
+#EXTINF:0 CUID="604" tvg-name="Latino: ESPN 2" tvg-id="espn4.latino" tvg-logo="https://logo.iptveditor.com/espn2.png" group-title="10-Latino",Latino: ESPN 2
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002001&type=stream.m3u8
+#EXTINF:0 CUID="630" tvg-name="Latino: ESPN Deportes" tvg-id="espndeportes.latino" tvg-logo="https://logo.iptveditor.com/espndeportes.png" group-title="10-Latino",Latino: ESPN Deportes
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002376&type=stream.m3u8
+#EXTINF:0 CUID="631" tvg-name="Latino: Formula 1" tvg-logo="https://logo.iptveditor.com/formula1.png" group-title="10-Latino",Latino: Formula 1
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002378&type=stream.m3u8
+#EXTINF:0 CUID="629" tvg-name="Latino: Fox Life" tvg-logo="https://logo.iptveditor.com/foxlife.png" group-title="10-Latino",Latino: Fox Life
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003151&type=stream.m3u8
+#EXTINF:0 CUID="606" tvg-name="Latino: Fox Movies" tvg-logo="https://logo.iptveditor.com/foxmovies.png" group-title="10-Latino",Latino: Fox Movies
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002004&type=stream.m3u8
+#EXTINF:0 CUID="607" tvg-name="Latino: Fox Sports" tvg-logo="https://logo.iptveditor.com/foxsports.png" group-title="10-Latino",Latino: Fox Sports
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002005&type=stream.m3u8
+#EXTINF:0 CUID="615" tvg-name="Latino: Fox Sports 2" tvg-id="I306.66365.schedulesdirect.org" tvg-logo="https://logo.iptveditor.com/foxsports2.png" group-title="10-Latino",Latino: Fox Sports 2
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002349&type=stream.m3u8
+#EXTINF:0 CUID="632" tvg-name="Latino: Fox Sports 3" tvg-id="I309.105006.schedulesdirect.org" tvg-logo="https://logo.iptveditor.com/foxsports3.png" group-title="10-Latino",Latino: Fox Sports 3
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003044&type=stream.m3u8
+#EXTINF:0 CUID="608" tvg-name="Latino: Gala Tv" tvg-logo="https://logo.iptveditor.com/galatv.png" group-title="10-Latino",Latino: Gala Tv
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002006&type=stream.m3u8
+#EXTINF:0 CUID="47" tvg-name="Latino: HBO" tvg-id="hbo.latino" tvg-logo="https://logo.iptveditor.com/hbo.png" group-title="10-Latino",Latino: HBO
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002594&type=stream.m3u8
+#EXTINF:0 CUID="46" tvg-name="Latino: HBO 2" tvg-id="hbo.latino" tvg-logo="https://logo.iptveditor.com/hbo2.png" group-title="10-Latino",Latino: HBO 2
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002595&type=stream.m3u8
+#EXTINF:0 CUID="51" tvg-name="Latino: HBO Family" tvg-id="hbofamilyhd.latino" tvg-logo="https://logo.iptveditor.com/hbofamily.png" group-title="10-Latino",Latino: HBO Family
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002596&type=stream.m3u8
+#EXTINF:0 CUID="53" tvg-name="Latino: HBO Plus" tvg-logo="https://logo.iptveditor.com/hboplus.png" group-title="10-Latino",Latino: HBO Plus
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002597&type=stream.m3u8
+#EXTINF:0 CUID="609" tvg-name="Latino: Milenio TV" tvg-id="I424.61719.schedulesdirect.org" tvg-logo="https://logo.iptveditor.com/mileniotv.png" group-title="10-Latino",Latino: Milenio TV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002008&type=stream.m3u8
+#EXTINF:0 CUID="634" tvg-name="Latino: Moviestar Cine" tvg-logo="https://logo.iptveditor.com/moviestarcinen.png" group-title="10-Latino",Latino: Moviestar Cine
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003146&type=stream.m3u8
+#EXTINF:0 CUID="633" tvg-name="Latino: MTV" tvg-id="mtv.latino" tvg-logo="https://logo.iptveditor.com/mtv.png" group-title="10-Latino",Latino: MTV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002390&type=stream.m3u8
+#EXTINF:0 CUID="611" tvg-name="Latino: Nat Geo" tvg-logo="https://logo.iptveditor.com/natgeo.png" group-title="10-Latino",Latino: Nat Geo
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002351&type=stream.m3u8
+#EXTINF:0 CUID="610" tvg-name="Latino: Nat Geo Wild" tvg-logo="https://logo.iptveditor.com/natgeowild.png" group-title="10-Latino",Latino: Nat Geo Wild
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002009&type=stream.m3u8
+#EXTINF:0 CUID="641" tvg-name="Latino: NBC Universo" tvg-id="I410.14791.gracenote.com" tvg-logo="https://logo.iptveditor.com/nbcuniverso.png" group-title="10-Latino",Latino: NBC Universo
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002517&type=stream.m3u8
+#EXTINF:0 CUID="649" tvg-name="Latino: Nick Jr*" tvg-logo="https://logo.iptveditor.com/nickjr.png" group-title="10-Latino",Latino: Nick Jr*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004203&type=stream.m3u8
+#EXTINF:0 CUID="648" tvg-name="Latino: Nickelodeon*" tvg-id="I466.101731.schedulesdirect.org" tvg-logo="https://logo.iptveditor.com/nickelodeon.png" group-title="10-Latino",Latino: Nickelodeon*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004197&type=stream.m3u8
+#EXTINF:0 CUID="612" tvg-name="Latino: NTN 24" tvg-id="usantn24.latino" tvg-logo="https://logo.iptveditor.com/ntn24.png" group-title="10-Latino",Latino: NTN 24
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002010&type=stream.m3u8
+#EXTINF:0 CUID="617" tvg-name="Latino: Space" tvg-id="I527.60801.schedulesdirect.org" tvg-logo="https://logo.iptveditor.com/space.png" group-title="10-Latino",Latino: Space
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002352&type=stream.m3u8
+#EXTINF:0 CUID="642" tvg-name="Latino: TCM" tvg-logo="https://logo.iptveditor.com/tcm.png" group-title="10-Latino",Latino: TCM
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002525&type=stream.m3u8
+#EXTINF:0 CUID="614" tvg-name="Latino: Telemundo" tvg-id="telemundo.latino" tvg-logo="https://logo.iptveditor.com/telemundo.png" group-title="10-Latino",Latino: Telemundo
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002012&type=stream.m3u8
+#EXTINF:0 CUID="616" tvg-name="Latino: Telpin TV Canal 2" tvg-logo="https://logo.iptveditor.com/telpintvcanal2.png" group-title="10-Latino",Latino: Telpin TV Canal 2
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002013&type=stream.m3u8
+#EXTINF:0 CUID="618" tvg-name="Latino: TNT" tvg-id="I610.19384.schedulesdirect.org" tvg-logo="https://logo.iptveditor.com/tnt.png" group-title="10-Latino",Latino: TNT
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002014&type=stream.m3u8
+#EXTINF:0 CUID="619" tvg-name="Latino: TRU TV" tvg-id="I658.10153.schedulesdirect.org" tvg-logo="https://logo.iptveditor.com/trutv.png" group-title="10-Latino",Latino: TRU TV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002015&type=stream.m3u8
+#EXTINF:0 CUID="650" tvg-name="Latino: TV Uno*" tvg-logo="https://logo.iptveditor.com/tvuno.png" group-title="10-Latino",Latino: TV Uno*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004236&type=stream.m3u8
+#EXTINF:0 CUID="621" tvg-name="Latino: Unicable" tvg-id="I682.84425.schedulesdirect.org" tvg-logo="https://logo.iptveditor.com/unicable.png" group-title="10-Latino",Latino: Unicable
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002018&type=stream.m3u8
+#EXTINF:0 CUID="622" tvg-name="Latino: Univision" tvg-id="launivision.latino" tvg-logo="https://logo.iptveditor.com/univision.png" group-title="10-Latino",Latino: Univision
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002019&type=stream.m3u8
+#EXTINF:0 CUID="624" tvg-name="Latino: Univision Deportes" tvg-id="I464.75176.gracenote.com" tvg-logo="https://logo.iptveditor.com/univisiondeportes.png" group-title="10-Latino",Latino: Univision Deportes
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003175&type=stream.m3u8
+#EXTINF:0 CUID="651" tvg-name="Latino: Winsports*" tvg-logo="https://logo.iptveditor.com/winsports.png" group-title="10-Latino",Latino: Winsports*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004239&type=stream.m3u8
+#EXTINF:0 CUID="192" tvg-name="UK NICK JR" tvg-id="nickjr.uk" tvg-logo="https://logo.iptveditor.com/nickjr.png" group-title="11-United Kingdom",UK NICK JR
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002192&type=stream.m3u8
+#EXTINF:0 CUID="205" tvg-name="UK SKY ACTION" tvg-id="skyaction.uk" tvg-logo="https://logo.iptveditor.com/skyaction.png" group-title="11-United Kingdom",UK SKY ACTION
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002196&type=stream.m3u8
+#EXTINF:0 CUID="217" tvg-name="UK SKY CRIME & THRILLER" tvg-id="skycrime.uk" tvg-logo="https://logo.iptveditor.com/skymoviescrimethriller7.png" group-title="11-United Kingdom",UK SKY CRIME & THRILLER
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002203&type=stream.m3u8
+#EXTINF:0 CUID="210" tvg-name="UK SKY FAMILY" tvg-id="skyfamily.uk" tvg-logo="https://logo.iptveditor.com/skyfamily.png" group-title="11-United Kingdom",UK SKY FAMILY
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002200&type=stream.m3u8
+#EXTINF:0 CUID="212" tvg-name="UK SKY PREMIERE" tvg-id="skypremiere.uk" tvg-logo="https://logo.iptveditor.com/skypremiere.png" group-title="11-United Kingdom",UK SKY PREMIERE
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002201&type=stream.m3u8
+#EXTINF:0 CUID="214" tvg-name="UK SKY SCI-FI & HORROR" tvg-id="skysci&horror.uk" tvg-logo="https://logo.iptveditor.com/skyscifihorror.png" group-title="11-United Kingdom",UK SKY SCI-FI & HORROR
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002202&type=stream.m3u8
+#EXTINF:0 CUID="110" tvg-name="UK: 4SEVEN" tvg-id="4seven.uk" tvg-logo="https://logo.iptveditor.com/4seven.png" group-title="11-United Kingdom",UK: 4SEVEN
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002905&type=stream.m3u8
+#EXTINF:0 CUID="111" tvg-name="UK: ALIBI" tvg-id="alibi.uk" tvg-logo="https://logo.iptveditor.com/alibi.png" group-title="11-United Kingdom",UK: ALIBI
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002907&type=stream.m3u8
+#EXTINF:0 CUID="435" tvg-name="UK: ANIMAL PLANET" tvg-id="animalplanet.uk" tvg-logo="https://logo.iptveditor.com/animalplanet.png" group-title="11-United Kingdom",UK: ANIMAL PLANET
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003133&type=stream.m3u8
+#EXTINF:0 CUID="114" tvg-name="UK: BABY TV" tvg-id="babytv.uk" tvg-logo="https://logo.iptveditor.com/babytv.png" group-title="11-United Kingdom",UK: BABY TV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002910&type=stream.m3u8
+#EXTINF:0 CUID="115" tvg-name="Uk: BBC Four" tvg-id="bbcfour.uk" tvg-logo="https://logo.iptveditor.com/bbcfour.png" group-title="11-United Kingdom",Uk: BBC Four
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002024&type=stream.m3u8
+#EXTINF:0 CUID="243" tvg-name="UK: BBC NEWS" tvg-id="bbcnews.uk" tvg-logo="https://logo.iptveditor.com/bbcnews.png" group-title="11-United Kingdom",UK: BBC NEWS
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003227&type=stream.m3u8
+#EXTINF:0 CUID="112" tvg-name="Uk: BBC One" tvg-id="bbcone.uk" tvg-logo="https://logo.iptveditor.com/bbcone.png" group-title="11-United Kingdom",Uk: BBC One
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002021&type=stream.m3u8
+#EXTINF:0 CUID="113" tvg-name="Uk: BBC Two" tvg-id="bbctwo.uk" tvg-logo="https://logo.iptveditor.com/bbctwo.png" group-title="11-United Kingdom",Uk: BBC Two
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002022&type=stream.m3u8
+#EXTINF:0 CUID="118" tvg-name="Uk: BET" tvg-logo="https://logo.iptveditor.com/bet.png" group-title="11-United Kingdom",Uk: BET
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002026&type=stream.m3u8
+#EXTINF:0 CUID="116" tvg-name="UK: CARTOON NETWORK" tvg-id="cartoonnetwork.uk" tvg-logo="https://logo.iptveditor.com/cartoonnetwork.png" group-title="11-United Kingdom",UK: CARTOON NETWORK
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002911&type=stream.m3u8
+#EXTINF:0 CUID="121" tvg-name="Uk: CBS.Drama" tvg-id="drama.uk" tvg-logo="https://logo.iptveditor.com/cbsdrama.png" group-title="11-United Kingdom",Uk: CBS.Drama
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002029&type=stream.m3u8
+#EXTINF:0 CUID="109" tvg-name="UK: CHALLENGE" tvg-id="challenge.uk" tvg-logo="https://logo.iptveditor.com/challenge.png" group-title="11-United Kingdom",UK: CHALLENGE
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002903&type=stream.m3u8
+#EXTINF:0 CUID="107" tvg-name="UK: CHANNEL 4" tvg-id="channel4.uk" tvg-logo="https://logo.iptveditor.com/channel4.png" group-title="11-United Kingdom",UK: CHANNEL 4
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002901&type=stream.m3u8
+#EXTINF:0 CUID="108" tvg-name="UK: CHANNEL 5" tvg-id="channel5.uk" tvg-logo="https://logo.iptveditor.com/channel5.png" group-title="11-United Kingdom",UK: CHANNEL 5
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002902&type=stream.m3u8
+#EXTINF:0 CUID="147" tvg-name="UK: CNN" tvg-id="cnn.uk" tvg-logo="https://logo.iptveditor.com/cnn.png" group-title="11-United Kingdom",UK: CNN
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002957&type=stream.m3u8
+#EXTINF:0 CUID="126" tvg-name="Uk: Comedy Central" tvg-id="comedycentral.uk" tvg-logo="https://logo.iptveditor.com/comedycentral.png" group-title="11-United Kingdom",Uk: Comedy Central
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002031&type=stream.m3u8
+#EXTINF:0 CUID="117" tvg-name="UK: DAVE" tvg-id="dave.uk" tvg-logo="https://logo.iptveditor.com/dave.png" group-title="11-United Kingdom",UK: DAVE
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002913&type=stream.m3u8
+#EXTINF:0 CUID="120" tvg-name="UK: DAVE VA JU" tvg-logo="https://logo.iptveditor.com/dave.png" group-title="11-United Kingdom",UK: DAVE VA JU
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002914&type=stream.m3u8
+#EXTINF:0 CUID="123" tvg-name="UK: DISCOVERY" tvg-id="discovery.uk" tvg-logo="https://logo.iptveditor.com/discovery.png" group-title="11-United Kingdom",UK: DISCOVERY
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002916&type=stream.m3u8
+#EXTINF:0 CUID="124" tvg-name="UK: DISCOVERY SCIENCE" tvg-id="discoveryscience.uk" tvg-logo="https://logo.iptveditor.com/discoveryscience.png" group-title="11-United Kingdom",UK: DISCOVERY SCIENCE
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002917&type=stream.m3u8
+#EXTINF:0 CUID="125" tvg-name="UK: DISNEY" tvg-id="disneychannel.uk" tvg-logo="https://logo.iptveditor.com/disney.png" group-title="11-United Kingdom",UK: DISNEY
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002922&type=stream.m3u8
+#EXTINF:0 CUID="128" tvg-name="UK: DISNEY JR" tvg-logo="https://logo.iptveditor.com/disneyjr.png" group-title="11-United Kingdom",UK: DISNEY JR
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002923&type=stream.m3u8
+#EXTINF:0 CUID="130" tvg-name="UK: DISNEY XD" tvg-logo="https://logo.iptveditor.com/disneyxd.png" group-title="11-United Kingdom",UK: DISNEY XD
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002924&type=stream.m3u8
+#EXTINF:0 CUID="119" tvg-name="UK: DRAMA" tvg-id="drama.uk" tvg-logo="https://logo.iptveditor.com/drama.png" group-title="11-United Kingdom",UK: DRAMA
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002915&type=stream.m3u8
+#EXTINF:0 CUID="129" tvg-name="Uk: E!ntertainment" tvg-id="bbcentertainment.uk" tvg-logo="https://logo.iptveditor.com/entertainment.png" group-title="11-United Kingdom",Uk: E!ntertainment
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002032&type=stream.m3u8
+#EXTINF:0 CUID="594" tvg-name="UK: EIR Sports 1*" tvg-logo="https://logo.iptveditor.com/eirsports1.png" group-title="11-United Kingdom",UK: EIR Sports 1*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004251&type=stream.m3u8
+#EXTINF:0 CUID="595" tvg-name="UK: EIR Sports 2*" tvg-logo="https://logo.iptveditor.com/eirsports2.png" group-title="11-United Kingdom",UK: EIR Sports 2*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004257&type=stream.m3u8
+#EXTINF:0 CUID="127" tvg-name="UK: FILM 4" tvg-id="film4.uk" tvg-logo="https://logo.iptveditor.com/film4.png" group-title="11-United Kingdom",UK: FILM 4
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002925&type=stream.m3u8
+#EXTINF:0 CUID="135" tvg-name="UK: FOOD NETWORK" tvg-id="foodnetwork.uk" tvg-logo="https://logo.iptveditor.com/foodnetwork.png" group-title="11-United Kingdom",UK: FOOD NETWORK
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002927&type=stream.m3u8
+#EXTINF:0 CUID="136" tvg-name="UK: HISTORY" tvg-id="history2.uk" tvg-logo="https://logo.iptveditor.com/history.png" group-title="11-United Kingdom",UK: HISTORY
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002930&type=stream.m3u8
+#EXTINF:0 CUID="131" tvg-name="Uk: itv.1" tvg-id="itv1.uk" tvg-logo="https://logo.iptveditor.com/itv1.png" group-title="11-United Kingdom",Uk: itv.1
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002033&type=stream.m3u8
+#EXTINF:0 CUID="133" tvg-name="Uk: itv.2" tvg-id="itv2.uk" tvg-logo="https://logo.iptveditor.com/itv2.png" group-title="11-United Kingdom",Uk: itv.2
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002034&type=stream.m3u8
+#EXTINF:0 CUID="134" tvg-name="Uk: itv.3" tvg-id="itv3.uk" tvg-logo="https://logo.iptveditor.com/itv3.png" group-title="11-United Kingdom",Uk: itv.3
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002035&type=stream.m3u8
+#EXTINF:0 CUID="137" tvg-name="Uk: itv.4" tvg-id="itv4.uk" tvg-logo="https://logo.iptveditor.com/itv4.png" group-title="11-United Kingdom",Uk: itv.4
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002036&type=stream.m3u8
+#EXTINF:0 CUID="142" tvg-name="UK: MTV" tvg-id="mtv.uk" tvg-logo="https://logo.iptveditor.com/mtv.png" group-title="11-United Kingdom",UK: MTV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002938&type=stream.m3u8
+#EXTINF:0 CUID="132" tvg-name="UK: NAT GEO" tvg-id="natgeo.uk" tvg-logo="https://logo.iptveditor.com/natgeo.png" group-title="11-United Kingdom",UK: NAT GEO
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002939&type=stream.m3u8
+#EXTINF:0 CUID="436" tvg-name="UK: NICKTOONS" tvg-id="nicktoons.uk" tvg-logo="https://logo.iptveditor.com/nicktoons.png" group-title="11-United Kingdom",UK: NICKTOONS
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003136&type=stream.m3u8
+#EXTINF:0 CUID="207" tvg-name="UK: SKY ARTS" tvg-id="skyarts.uk" tvg-logo="https://logo.iptveditor.com/skyarts.png" group-title="11-United Kingdom",UK: SKY ARTS
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002949&type=stream.m3u8
+#EXTINF:0 CUID="206" tvg-name="UK: SKY NEWS" tvg-id="skynews.uk" tvg-logo="https://logo.iptveditor.com/skynews.png" group-title="11-United Kingdom",UK: SKY NEWS
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002942&type=stream.m3u8
+#EXTINF:0 CUID="229" tvg-name="UK: SKY SPORTS GOLF" tvg-id="skysportsgolf.uk" tvg-logo="https://logo.iptveditor.com/skysportsgolf.png" group-title="11-United Kingdom",UK: SKY SPORTS GOLF
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20001965&type=stream.m3u8
+#EXTINF:0 CUID="139" tvg-name="UK: SYFY" tvg-id="syfy.uk" tvg-logo="https://logo.iptveditor.com/syfy.png" group-title="11-United Kingdom",UK: SYFY
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002943&type=stream.m3u8
+#EXTINF:0 CUID="138" tvg-name="Uk: T.L.C" tvg-id="tlc.uk" tvg-logo="https://logo.iptveditor.com/tlc.png" group-title="11-United Kingdom",Uk: T.L.C
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002037&type=stream.m3u8
+#EXTINF:0 CUID="140" tvg-name="UK: TCM" tvg-id="tcm.uk" tvg-logo="https://logo.iptveditor.com/tcm.png" group-title="11-United Kingdom",UK: TCM
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002944&type=stream.m3u8
+#EXTINF:0 CUID="144" tvg-name="UK: TLC" tvg-id="tlc.uk" tvg-logo="https://logo.iptveditor.com/tlc.png" group-title="11-United Kingdom",UK: TLC
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002947&type=stream.m3u8
+#EXTINF:0 CUID="146" tvg-name="UK: VH1" tvg-logo="https://logo.iptveditor.com/vh1.png" group-title="11-United Kingdom",UK: VH1
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002951&type=stream.m3u8
+#EXTINF:0 CUID="309" tvg-name="CA (FR) CASA TV" tvg-id="casatv.ca" tvg-logo="https://logo.iptveditor.com/casatv.png" group-title="12-Canada",CA (FR) CASA TV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003014&type=stream.m3u8
+#EXTINF:0 CUID="320" tvg-name="CA (FR) EVASION" tvg-id="évasion.ca" tvg-logo="https://logo.iptveditor.com/evasion.png" group-title="12-Canada",CA (FR) EVASION
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002984&type=stream.m3u8
+#EXTINF:0 CUID="176" tvg-name="CA (FR) FRANCE 24" tvg-id="france24.ca" tvg-logo="https://logo.iptveditor.com/24.png" group-title="12-Canada",CA (FR) FRANCE 24
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003169&type=stream.m3u8
+#EXTINF:0 CUID="321" tvg-name="CA (FR) FRISSON" tvg-id="frissonstv.ca" tvg-logo="https://logo.iptveditor.com/frissonstv.png" group-title="12-Canada",CA (FR) FRISSON
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002985&type=stream.m3u8
+#EXTINF:0 CUID="302" tvg-name="CA A&E" tvg-id="a&e.ca" tvg-logo="https://logo.iptveditor.com/ae.png" group-title="12-Canada",CA A&E
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003006&type=stream.m3u8
+#EXTINF:0 CUID="307" tvg-name="CA ANIMAL PLANET" tvg-id="animalplanet.ca" tvg-logo="https://logo.iptveditor.com/animalplanet.png" group-title="12-Canada",CA ANIMAL PLANET
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002218&type=stream.m3u8
+#EXTINF:0 CUID="561" tvg-name="CA BBC WORLD*" tvg-id="bbcworld.ca" tvg-logo="https://logo.iptveditor.com/bbcworld.png" group-title="12-Canada",CA BBC WORLD*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004347&type=stream.m3u8
+#EXTINF:0 CUID="564" tvg-name="CA CBC NEWS*" tvg-id="cbcnews.ca" tvg-logo="https://logo.iptveditor.com/cbcnews.png" group-title="12-Canada",CA CBC NEWS*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004353&type=stream.m3u8
+#EXTINF:0 CUID="471" tvg-name="CA CBC VANCOUVER" tvg-id="cbcvancouver.ca" tvg-logo="https://logo.iptveditor.com/cbcvancouver.png" group-title="12-Canada",CA CBC VANCOUVER
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003292&type=stream.m3u8
+#EXTINF:0 CUID="563" tvg-name="CA CBC*" tvg-id="cbccalgary.ca" tvg-logo="https://logo.iptveditor.com/cbc.png" group-title="12-Canada",CA CBC*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004350&type=stream.m3u8
+#EXTINF:0 CUID="565" tvg-name="CA CHCH*" tvg-id="chch.ca" tvg-logo="https://logo.iptveditor.com/chch.png" group-title="12-Canada",CA CHCH*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004356&type=stream.m3u8
+#EXTINF:0 CUID="566" tvg-name="CA CITY*" tvg-id="citytv.ca" tvg-logo="https://logo.iptveditor.com/city.png" group-title="12-Canada",CA CITY*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004359&type=stream.m3u8
+#EXTINF:0 CUID="544" tvg-name="CA CNN INTERNATIONAL*" tvg-id="cnninternational.ca" tvg-logo="https://logo.iptveditor.com/cnninternational.png" group-title="12-Canada",CA CNN INTERNATIONAL*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004368&type=stream.m3u8
+#EXTINF:0 CUID="567" tvg-name="CA CNN*" tvg-id="cnn.ca" tvg-logo="https://logo.iptveditor.com/cnn.png" group-title="12-Canada",CA CNN*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004365&type=stream.m3u8
+#EXTINF:0 CUID="568" tvg-name="CA CP24*" tvg-id="cp24.ca" tvg-logo="https://logo.iptveditor.com/cp24.png" group-title="12-Canada",CA CP24*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004371&type=stream.m3u8
+#EXTINF:0 CUID="311" tvg-name="CA CTV2" tvg-id="ctv2toronto.ca" tvg-logo="https://logo.iptveditor.com/ctv2.png" group-title="12-Canada",CA CTV2
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002228&type=stream.m3u8
+#EXTINF:0 CUID="475" tvg-name="CA CTV COMEDY" tvg-id="ctvcomedy.ca" tvg-logo="https://logo.iptveditor.com/ctvcomedy.png" group-title="12-Canada",CA CTV COMEDY
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003296&type=stream.m3u8
+#EXTINF:0 CUID="474" tvg-name="CA CTV DRAMA" tvg-id="ctvdrama.ca" tvg-logo="https://logo.iptveditor.com/ctvdrama.png" group-title="12-Canada",CA CTV DRAMA
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003295&type=stream.m3u8
+#EXTINF:0 CUID="473" tvg-name="CA CTV LIFE" tvg-id="ctvlife.ca" tvg-logo="https://logo.iptveditor.com/ctvlife.png" group-title="12-Canada",CA CTV LIFE
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003294&type=stream.m3u8
+#EXTINF:0 CUID="476" tvg-name="CA CTV SCI-FI" tvg-id="ctvsci-fichannel.ca" tvg-logo="https://logo.iptveditor.com/ctvsci.png" group-title="12-Canada",CA CTV SCI-FI
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003297&type=stream.m3u8
+#EXTINF:0 CUID="172" tvg-name="CA CTV TORONTO" tvg-id="ctvtoronto.ca" tvg-logo="https://logo.iptveditor.com/ctvtoronto.png" group-title="12-Canada",CA CTV TORONTO
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003166&type=stream.m3u8
+#EXTINF:0 CUID="314" tvg-name="CA D TOUR" tvg-id="dtour.ca" tvg-logo="https://logo.iptveditor.com/dtour.png" group-title="12-Canada",CA D TOUR
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002230&type=stream.m3u8
+#EXTINF:0 CUID="315" tvg-name="CA FAMILY" tvg-id="familyjr.ca" tvg-logo="https://logo.iptveditor.com/family.png" group-title="12-Canada",CA FAMILY
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002231&type=stream.m3u8
+#EXTINF:0 CUID="317" tvg-name="CA FAMILY CHARGED" tvg-id="familychrgd.ca" tvg-logo="https://logo.iptveditor.com/familychrgd.png" group-title="12-Canada",CA FAMILY CHARGED
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002975&type=stream.m3u8
+#EXTINF:0 CUID="316" tvg-name="CA FAMILY JR" tvg-id="familyjr.ca" tvg-logo="https://logo.iptveditor.com/familyjr.png" group-title="12-Canada",CA FAMILY JR
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002974&type=stream.m3u8
+#EXTINF:0 CUID="472" tvg-name="CA GLOBAL VANCOUVER" tvg-id="globalvancouver.ca" tvg-logo="https://logo.iptveditor.com/globalvancouver.png" group-title="12-Canada",CA GLOBAL VANCOUVER
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003293&type=stream.m3u8
+#EXTINF:0 CUID="163" tvg-name="CA LOVE NATURE" tvg-id="lovenature.ca" tvg-logo="https://logo.iptveditor.com/lovenature.png" group-title="12-Canada",CA LOVE NATURE
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003160&type=stream.m3u8
+#EXTINF:0 CUID="180" tvg-name="CA OMNI" tvg-id="omni.ca" tvg-logo="https://logo.iptveditor.com/omni.png" group-title="12-Canada",CA OMNI
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002234&type=stream.m3u8
+#EXTINF:0 CUID="318" tvg-name="CA PEACHTREE" tvg-id="peachtreetv.ca" tvg-logo="https://logo.iptveditor.com/peachtree.png" group-title="12-Canada",CA PEACHTREE
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002235&type=stream.m3u8
+#EXTINF:0 CUID="569" tvg-name="CA SLICE*" tvg-id="slice.ca" tvg-logo="https://logo.iptveditor.com/slice.png" group-title="12-Canada",CA SLICE*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004440&type=stream.m3u8
+#EXTINF:0 CUID="319" tvg-name="CA TELETOON" tvg-id="teletoon.ca" tvg-logo="https://logo.iptveditor.com/teletoon.png" group-title="12-Canada",CA TELETOON
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002241&type=stream.m3u8
+#EXTINF:0 CUID="322" tvg-name="CA TREEHOUSE" tvg-id="treehouse.ca" tvg-logo="https://logo.iptveditor.com/treehouse.png" group-title="12-Canada",CA TREEHOUSE
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002242&type=stream.m3u8
+#EXTINF:0 CUID="195" tvg-name="CA VISION TV" tvg-id="visiontv.ca" tvg-logo="https://logo.iptveditor.com/visiontv.png" group-title="12-Canada",CA VISION TV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003161&type=stream.m3u8
+#EXTINF:0 CUID="323" tvg-name="CA WEATHER" tvg-id="10170theweathernetwork.ca" tvg-logo="https://logo.iptveditor.com/theweathernetwork.png" group-title="12-Canada",CA WEATHER
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002246&type=stream.m3u8
+#EXTINF:0 CUID="324" tvg-name="CA YES" tvg-id="yestv.ca" tvg-logo="https://logo.iptveditor.com/yes.png" group-title="12-Canada",CA YES
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002249&type=stream.m3u8
+#EXTINF:0 CUID="325" tvg-name="CA YTV" tvg-id="ytv.ca" tvg-logo="https://logo.iptveditor.com/ytv.png" group-title="12-Canada",CA YTV
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002250&type=stream.m3u8
+#EXTINF:0 CUID="342" tvg-name="24/7 Family Guy" tvg-logo="https://logo.iptveditor.com/247familyguy.png" group-title="13-24/7",24/7 Family Guy
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003414&type=stream.m3u8
+#EXTINF:0 CUID="336" tvg-name="24/7 Game of Thrones" tvg-logo="https://logo.iptveditor.com/247gameofthrones.png" group-title="13-24/7",24/7 Game of Thrones
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003390&type=stream.m3u8
+#EXTINF:0 CUID="343" tvg-name="24/7 Harry Potter" tvg-logo="https://logo.iptveditor.com/247harrypotter.png" group-title="13-24/7",24/7 Harry Potter
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003417&type=stream.m3u8
+#EXTINF:0 CUID="344" tvg-name="24/7 Hell's Kitchen" tvg-logo="https://logo.iptveditor.com/hell'skitchen.png" group-title="13-24/7",24/7 Hell's Kitchen
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003426&type=stream.m3u8
+#EXTINF:0 CUID="345" tvg-name="24/7 Home Improvement" tvg-logo="https://logo.iptveditor.com/247homeimprovement.png" group-title="13-24/7",24/7 Home Improvement
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003420&type=stream.m3u8
+#EXTINF:0 CUID="348" tvg-name="24/7 Ink Master" tvg-logo="https://logo.iptveditor.com/247inkmaster.png" group-title="13-24/7",24/7 Ink Master
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003429&type=stream.m3u8
+#EXTINF:0 CUID="341" tvg-name="24/7 Its Always Sunny in Philadelphia" tvg-logo="https://logo.iptveditor.com/itsalwayssunnyphiladelphia.png" group-title="13-24/7",24/7 Its Always Sunny in Philadelphia
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003411&type=stream.m3u8
+#EXTINF:0 CUID="350" tvg-name="24/7 Law & Order" tvg-logo="https://logo.iptveditor.com/law&order.png" group-title="13-24/7",24/7 Law & Order
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003432&type=stream.m3u8
+#EXTINF:0 CUID="353" tvg-name="24/7 Looney Tunes" tvg-logo="https://logo.iptveditor.com/247looneytunes.png" group-title="13-24/7",24/7 Looney Tunes
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003435&type=stream.m3u8
+#EXTINF:0 CUID="347" tvg-name="24/7 Lucifer" tvg-logo="https://tinyurl.com/2y3otbha" group-title="13-24/7",24/7 Lucifer
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003423&type=stream.m3u8
+#EXTINF:0 CUID="339" tvg-name="24/7 Ridiculousness" tvg-logo="https://logo.iptveditor.com/247ridiculousness.png" group-title="13-24/7",24/7 Ridiculousness
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003402&type=stream.m3u8
+#EXTINF:0 CUID="335" tvg-name="24/7 South Park" tvg-logo="https://logo.iptveditor.com/247southpark.png" group-title="13-24/7",24/7 South Park
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003387&type=stream.m3u8
+#EXTINF:0 CUID="338" tvg-name="24/7 Star Wars" tvg-logo="https://logo.iptveditor.com/247starwars.png" group-title="13-24/7",24/7 Star Wars
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003399&type=stream.m3u8
+#EXTINF:0 CUID="337" tvg-name="24/7 TMNT" tvg-logo="https://tinyurl.com/2bt5lgdx" group-title="13-24/7",24/7 TMNT
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003393&type=stream.m3u8
+#EXTINF:0 CUID="340" tvg-name="24/7 Yellowstone" tvg-logo="https://tinyurl.com/233brqyo" group-title="13-24/7",24/7 Yellowstone
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003408&type=stream.m3u8
+#EXTINF:0 CUID="438" tvg-name="Music Choice - 90's" tvg-id="musicchoice90's.us" tvg-logo="https://logo.iptveditor.com/musicchoice90s.png" group-title="14-Music Choice",Music Choice - 90's
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003477&type=stream.m3u8
+#EXTINF:0 CUID="439" tvg-name="Music Choice - Alternative" tvg-id="musicchoicealternative.us" tvg-logo="https://logo.iptveditor.com/musicchoicealternative.png" group-title="14-Music Choice",Music Choice - Alternative
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003480&type=stream.m3u8
+#EXTINF:0 CUID="440" tvg-name="Music Choice - Hip Hop/R&B" tvg-id="musicchoicehiphop&r&b.us" tvg-logo="https://logo.iptveditor.com/musicchoicehiphopandr&b.png" group-title="14-Music Choice",Music Choice - Hip Hop/R&B
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003486&type=stream.m3u8
+#EXTINF:0 CUID="441" tvg-name="Music Choice - Kidz Bop" tvg-id="musicchoicekidzonly.us" tvg-logo="https://logo.iptveditor.com/musicchoicekidzonly!.png" group-title="14-Music Choice",Music Choice - Kidz Bop
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003492&type=stream.m3u8
+#EXTINF:0 CUID="442" tvg-name="Music Choice - Rap" tvg-id="musicchoicerap.us" tvg-logo="https://logo.iptveditor.com/musicchoicerap.png" group-title="14-Music Choice",Music Choice - Rap
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003501&type=stream.m3u8
+#EXTINF:0 CUID="443" tvg-name="Music Choice - Rock" tvg-id="musicchoicerock.us" tvg-logo="https://logo.iptveditor.com/musicchoicerock.png" group-title="14-Music Choice",Music Choice - Rock
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003504&type=stream.m3u8
+#EXTINF:0 CUID="289" tvg-name="FR CINE FRISSON" group-title="15-Uncategorized",FR CINE FRISSON
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003224&type=stream.m3u8
+#EXTINF:0 CUID="283" tvg-name="FR FRANCE INFO" group-title="15-Uncategorized",FR FRANCE INFO
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003215&type=stream.m3u8
+#EXTINF:0 CUID="284" tvg-name="FR NICK" group-title="15-Uncategorized",FR NICK
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003216&type=stream.m3u8
+#EXTINF:0 CUID="331" tvg-name="FR PARIS PREMIERE" group-title="15-Uncategorized",FR PARIS PREMIERE
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002325&type=stream.m3u8
+#EXTINF:0 CUID="578" tvg-name="IE - RTE 1*" group-title="15-Uncategorized",IE - RTE 1*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004491&type=stream.m3u8
+#EXTINF:0 CUID="579" tvg-name="IE - RTE 2*" group-title="15-Uncategorized",IE - RTE 2*
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20004494&type=stream.m3u8
+#EXTINF:0 CUID="204" tvg-name="PH: GMA LIFE" group-title="15-Uncategorized",PH: GMA LIFE
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20002407&type=stream.m3u8
+#EXTINF:0 CUID="479" tvg-name="Test Channel" group-title="15-Uncategorized",Test Channel
+https://1pixmedia.better-than.tv/keeptrying/get.php?id=20003249&type=stream.m3u8

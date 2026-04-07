@@ -1,0 +1,15 @@
+---
+# TODO: Ollama container/endpoint management
+- name: Pull latest Ollama Docker image
+  community.docker.docker_image:
+    name: ollama/ollama
+    source: pull
+
+- name: Run Ollama container
+  community.docker.docker_container:
+    name: ollama
+    image: ollama/ollama
+    state: started
+    restart_policy: unless-stopped
+    published_ports:
+      - "11434:11434"

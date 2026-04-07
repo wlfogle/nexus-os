@@ -1,0 +1,448 @@
+#!/usr/bin/env python3
+
+"""
+🥷 Ghost Mode System Tray Widget
+Interactive toolbar widget for complete online anonymity control
+"""
+
+import sys
+import os
+import subprocess
+import time
+import threading
+from PyQt5.QtWidgets import (QApplication, QSystemTrayIcon, QMenu, QAction, 
+                             QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
+                             QPushButton, QTextEdit, QCheckBox, QGroupBox)
+from PyQt5.QtCore import QTimer, pyqtSignal, QObject, QThread
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont
+
+class GhostModeMonitor(QObject):
+    """Background monitoring thread"""
+    statusChanged = pyqtSignal(dict)
+    
+    def __init__(self):
+        super().__init__()
+        self.running = False
+        
+    def start_monitoring(self):
+        self.running = True
+        self.check_status()
+        
+    def stop_monitoring(self):
+        self.running = False
+        
+    def check_status(self):
+        """Check ghost mode status"""
+        if not self.running:
+            return
+            
+        try:
+            status = {
+                'ghost_active': self.is_ghost_active(),
+                'vpn_active': self.is_vpn_active(),
+                'ipv6_disabled': self.is_ipv6_disabled(),
+                'traffic_obfuscation': self.is_traffic_obfuscation_active(),
+                'monitoring': self.is_monitoring_active()
+            }
+            
+            self.statusChanged.emit(status)
+            
+        except Exception as e:
+            print(f"Status check error: {e}")
+        
+        # Schedule next check
+        if self.running:
+            QTimer.singleShot(5000, self.check_status)  # Check every 5 seconds
+    
+    def is_ghost_active(self):
+        status_file = os.path.expanduser("~/.config/ghost-mode/status")
+        try:
+            with open(status_file, 'r') as f:
+                return f.read().strip() == 'active'
+        except:
+            return False
+    
+    def is_vpn_active(self):
+        try:
+            result = subprocess.run(['ip', 'link', 'show', 'wg0'], 
+                                  capture_output=True, text=True)
+            return result.returncode == 0
+        except:
+            return False
+    
+    def is_ipv6_disabled(self):
+        try:
+            result = subprocess.run(['sysctl', 'net.ipv6.conf.all.disable_ipv6'], 
+                                  capture_output=True, text=True)
+            return '= 1' in result.stdout
+        except:
+            return False
+    
+    def is_traffic_obfuscation_active(self):
+        try:
+            result = subprocess.run(['pgrep', '-f', 'traffic-obfuscation'], 
+                                  capture_output=True)
+            return result.returncode == 0
+        except:
+            return False
+    
+    def is_monitoring_active(self):
+        try:
+            pid_file = os.path.expanduser("~/.config/ghost-mode/monitor.pid")
+            if os.path.exists(pid_file):
+                with open(pid_file, 'r') as f:
+                    pid = int(f.read().strip())
+                os.kill(pid, 0)  # Check if process exists
+                return True
+        except:
+            pass
+        return False
+
+class GhostModeDialog(QDialog):
+    """Ghost Mode control dialog"""
+    
+    def __init__(self, tray_icon):
+        super().__init__()
+        self.tray_icon = tray_icon
+        self.init_ui()
+    
+    def init_ui(self):
+        self.setWindowTitle("🥷 Ghost Mode Control Panel")
+        self.setFixedSize(400, 500)
+        
+        layout = QVBoxLayout()
+        
+        # Title
+        title = QLabel("🥷 GHOST MODE CONTROL")
+        title.setFont(QFont("Arial", 14, QFont.Bold))
+        title.setStyleSheet("color: #8b5cf6; margin: 10px;")
+        layout.addWidget(title)
+        
+        # Status group
+        status_group = QGroupBox("📊 Current Status")
+        status_layout = QVBoxLayout()
+        
+        self.status_labels = {
+            'ghost': QLabel("🥷 Ghost Mode: Checking..."),
+            'vpn': QLabel("🔒 VPN: Checking..."),
+            'ipv6': QLabel("🚫 IPv6: Checking..."),
+            'traffic': QLabel("🌪️ Traffic Obfuscation: Checking..."),
+            'monitoring': QLabel("👁️ Monitoring: Checking...")
+        }
+        
+        for label in self.status_labels.values():
+            status_layout.addWidget(label)
+        
+        status_group.setLayout(status_layout)
+        layout.addWidget(status_group)
+        
+        # Control buttons
+        control_group = QGroupBox("🎯 Controls")
+        control_layout = QVBoxLayout()
+        
+        # Toggle button
+        self.toggle_btn = QPushButton("🔄 Toggle Ghost Mode")
+        self.toggle_btn.clicked.connect(self.toggle_ghost_mode)
+        self.toggle_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #8b5cf6;
+                color: white;
+                border: none;
+                padding: 8px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #7c3aed;
+            }
+        """)
+        control_layout.addWidget(self.toggle_btn)
+        
+        # Quick actions
+        btn_layout = QHBoxLayout()
+        
+        self.browser_btn = QPushButton("🌐 Ghost Browser")
+        self.browser_btn.clicked.connect(self.launch_ghost_browser)
+        
+        self.test_btn = QPushButton("🧪 Test Leaks")
+        self.test_btn.clicked.connect(self.test_anonymity)
+        
+        btn_layout.addWidget(self.browser_btn)
+        btn_layout.addWidget(self.test_btn)
+        control_layout.addLayout(btn_layout)
+        
+        control_group.setLayout(control_layout)
+        layout.addWidget(control_group)
+        
+        # Logs section
+        logs_group = QGroupBox("📋 Recent Activity")
+        logs_layout = QVBoxLayout()
+        
+        self.logs_text = QTextEdit()
+        self.logs_text.setMaximumHeight(120)
+        self.logs_text.setReadOnly(True)
+        self.logs_text.setStyleSheet("background-color: #1a1a1a; color: #00ff00; font-family: monospace;")
+        
+        logs_layout.addWidget(self.logs_text)
+        logs_group.setLayout(logs_layout)
+        layout.addWidget(logs_group)
+        
+        # Close button
+        close_btn = QPushButton("✖ Close")
+        close_btn.clicked.connect(self.close)
+        layout.addWidget(close_btn)
+        
+        self.setLayout(layout)
+        
+        # Update logs
+        self.update_logs()
+    
+    def update_status(self, status):
+        """Update status labels"""
+        # Ghost Mode
+        if status['ghost_active']:
+            self.status_labels['ghost'].setText("🥷 Ghost Mode: 🟢 ACTIVE (Invisible)")
+            self.status_labels['ghost'].setStyleSheet("color: #10b981;")
+        else:
+            self.status_labels['ghost'].setText("🥷 Ghost Mode: 🔴 INACTIVE (Visible)")
+            self.status_labels['ghost'].setStyleSheet("color: #ef4444;")
+        
+        # VPN
+        if status['vpn_active']:
+            self.status_labels['vpn'].setText("🔒 VPN: 🟢 ACTIVE")
+            self.status_labels['vpn'].setStyleSheet("color: #10b981;")
+        else:
+            self.status_labels['vpn'].setText("🔒 VPN: 🔴 INACTIVE")
+            self.status_labels['vpn'].setStyleSheet("color: #ef4444;")
+        
+        # IPv6
+        if status['ipv6_disabled']:
+            self.status_labels['ipv6'].setText("🚫 IPv6: 🟢 DISABLED")
+            self.status_labels['ipv6'].setStyleSheet("color: #10b981;")
+        else:
+            self.status_labels['ipv6'].setText("🚫 IPv6: 🟡 ENABLED (Leak Risk)")
+            self.status_labels['ipv6'].setStyleSheet("color: #f59e0b;")
+        
+        # Traffic Obfuscation
+        if status['traffic_obfuscation']:
+            self.status_labels['traffic'].setText("🌪️ Traffic Obfuscation: 🟢 ACTIVE")
+            self.status_labels['traffic'].setStyleSheet("color: #10b981;")
+        else:
+            self.status_labels['traffic'].setText("🌪️ Traffic Obfuscation: 🟡 INACTIVE")
+            self.status_labels['traffic'].setStyleSheet("color: #f59e0b;")
+        
+        # Monitoring
+        if status['monitoring']:
+            self.status_labels['monitoring'].setText("👁️ Monitoring: 🟢 ACTIVE")
+            self.status_labels['monitoring'].setStyleSheet("color: #10b981;")
+        else:
+            self.status_labels['monitoring'].setText("👁️ Monitoring: 🟡 INACTIVE")
+            self.status_labels['monitoring'].setStyleSheet("color: #f59e0b;")
+    
+    def toggle_ghost_mode(self):
+        """Toggle ghost mode"""
+        try:
+            subprocess.run([os.path.expanduser("~/.local/bin/ghost-toggle")], 
+                          check=True)
+            self.update_logs()
+        except subprocess.CalledProcessError as e:
+            print(f"Toggle error: {e}")
+    
+    def launch_ghost_browser(self):
+        """Launch ghost browser"""
+        try:
+            subprocess.Popen([os.path.expanduser("~/.local/bin/ghost-browser")])
+        except Exception as e:
+            print(f"Browser launch error: {e}")
+    
+    def test_anonymity(self):
+        """Test anonymity"""
+        try:
+            subprocess.Popen([os.path.expanduser("~/.local/bin/ghost-mode"), "test"])
+        except Exception as e:
+            print(f"Test error: {e}")
+    
+    def update_logs(self):
+        """Update logs display"""
+        try:
+            log_file = os.path.expanduser("~/.config/ghost-mode/ghost-mode.log")
+            if os.path.exists(log_file):
+                with open(log_file, 'r') as f:
+                    lines = f.readlines()
+                    recent_lines = lines[-10:]  # Last 10 lines
+                    self.logs_text.setPlainText(''.join(recent_lines))
+        except Exception as e:
+            self.logs_text.setPlainText(f"Error reading logs: {e}")
+
+class GhostModeTrayIcon(QSystemTrayIcon):
+    """System tray icon for Ghost Mode"""
+    
+    def __init__(self):
+        super().__init__()
+        
+        # Create icons
+        self.create_icons()
+        
+        # Set initial icon
+        self.setIcon(self.inactive_icon)
+        
+        # Create context menu
+        self.create_menu()
+        
+        # Create control dialog
+        self.dialog = GhostModeDialog(self)
+        
+        # Start monitoring
+        self.monitor = GhostModeMonitor()
+        self.monitor.statusChanged.connect(self.update_status)
+        
+        # Set up status checking
+        self.status = {'ghost_active': False}
+        
+        # Show tray icon
+        self.show()
+        
+        # Start monitoring
+        QTimer.singleShot(1000, self.monitor.start_monitoring)
+        
+        # Set tooltip
+        self.setToolTip("🥷 Ghost Mode - Click to toggle")
+    
+    def create_icons(self):
+        """Create tray icons"""
+        # Create simple colored icons
+        self.active_icon = self.create_colored_icon("#10b981")    # Green
+        self.inactive_icon = self.create_colored_icon("#ef4444")  # Red
+        self.warning_icon = self.create_colored_icon("#f59e0b")   # Yellow
+    
+    def create_colored_icon(self, color):
+        """Create a colored circle icon"""
+        pixmap = QPixmap(32, 32)
+        pixmap.fill("transparent")
+        
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setBrush(color)
+        painter.setPen("black")
+        painter.drawEllipse(4, 4, 24, 24)
+        painter.end()
+        
+        return QIcon(pixmap)
+    
+    def create_menu(self):
+        """Create context menu"""
+        menu = QMenu()
+        
+        # Toggle action
+        self.toggle_action = QAction("🔄 Toggle Ghost Mode", self)
+        self.toggle_action.triggered.connect(self.toggle_ghost_mode)
+        menu.addAction(self.toggle_action)
+        
+        menu.addSeparator()
+        
+        # Quick actions
+        browser_action = QAction("🌐 Launch Ghost Browser", self)
+        browser_action.triggered.connect(self.launch_ghost_browser)
+        menu.addAction(browser_action)
+        
+        test_action = QAction("🧪 Test Anonymity", self)
+        test_action.triggered.connect(self.test_anonymity)
+        menu.addAction(test_action)
+        
+        menu.addSeparator()
+        
+        # Control panel
+        panel_action = QAction("⚙️ Control Panel", self)
+        panel_action.triggered.connect(self.show_control_panel)
+        menu.addAction(panel_action)
+        
+        menu.addSeparator()
+        
+        # Exit
+        exit_action = QAction("❌ Exit", self)
+        exit_action.triggered.connect(QApplication.quit)
+        menu.addAction(exit_action)
+        
+        self.setContextMenu(menu)
+    
+    def update_status(self, status):
+        """Update icon and tooltip based on status"""
+        self.status = status
+        
+        if status['ghost_active']:
+            if status['vpn_active'] and status['ipv6_disabled']:
+                # Fully active and secure
+                self.setIcon(self.active_icon)
+                self.setToolTip("🥷 Ghost Mode: ACTIVE - You are invisible")
+                self.toggle_action.setText("🛑 Deactivate Ghost Mode")
+            else:
+                # Active but with warnings
+                self.setIcon(self.warning_icon)
+                self.setToolTip("🥷 Ghost Mode: ACTIVE - Some protections need attention")
+                self.toggle_action.setText("🛑 Deactivate Ghost Mode")
+        else:
+            # Inactive
+            self.setIcon(self.inactive_icon)
+            self.setToolTip("❌ Ghost Mode: INACTIVE - You are visible online")
+            self.toggle_action.setText("🥷 Activate Ghost Mode")
+        
+        # Update dialog if open
+        if self.dialog.isVisible():
+            self.dialog.update_status(status)
+    
+    def toggle_ghost_mode(self):
+        """Toggle ghost mode"""
+        try:
+            subprocess.run([os.path.expanduser("~/.local/bin/ghost-toggle")], 
+                          check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Toggle error: {e}")
+    
+    def launch_ghost_browser(self):
+        """Launch ghost browser"""
+        try:
+            subprocess.Popen([os.path.expanduser("~/.local/bin/ghost-browser")])
+        except Exception as e:
+            print(f"Browser launch error: {e}")
+    
+    def test_anonymity(self):
+        """Test anonymity"""
+        try:
+            subprocess.Popen([os.path.expanduser("~/.local/bin/ghost-mode"), "test"])
+        except Exception as e:
+            print(f"Test error: {e}")
+    
+    def show_control_panel(self):
+        """Show control panel dialog"""
+        if not self.dialog.isVisible():
+            self.dialog.show()
+            self.dialog.update_status(self.status)
+        else:
+            self.dialog.raise_()
+            self.dialog.activateWindow()
+    
+    def activated(self, reason):
+        """Handle tray icon activation"""
+        if reason == QSystemTrayIcon.Trigger:
+            # Left click - toggle
+            self.toggle_ghost_mode()
+        elif reason == QSystemTrayIcon.DoubleClick:
+            # Double click - show control panel
+            self.show_control_panel()
+
+def main():
+    app = QApplication(sys.argv)
+    
+    # Check if system tray is available
+    if not QSystemTrayIcon.isSystemTrayAvailable():
+        print("System tray not available")
+        return 1
+    
+    # Create tray icon
+    tray_icon = GhostModeTrayIcon()
+    
+    # Run application
+    return app.exec_()
+
+if __name__ == "__main__":
+    sys.exit(main())

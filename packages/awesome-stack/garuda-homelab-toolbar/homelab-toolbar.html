@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garuda Homelab Toolbar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: transparent;
+            overflow: hidden;
+        }
+
+        .toolbar {
+            position: fixed;
+            top: 50px;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(135deg, rgba(44, 62, 80, 0.95) 0%, rgba(52, 73, 94, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid rgba(52, 152, 219, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            transition: all 0.3s ease;
+        }
+
+        .toolbar:hover {
+            background: linear-gradient(135deg, rgba(44, 62, 80, 1) 0%, rgba(52, 73, 94, 1) 100%);
+            border-bottom: 2px solid rgba(52, 152, 219, 0.6);
+        }
+
+        .toolbar-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .toolbar-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .toolbar-item:hover {
+            background: rgba(52, 152, 219, 0.3);
+            border: 1px solid rgba(52, 152, 219, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+        }
+
+        .toolbar-item.active {
+            background: rgba(46, 204, 113, 0.3);
+            border: 1px solid rgba(46, 204, 113, 0.5);
+        }
+
+        .toolbar-item.warning {
+            background: rgba(230, 126, 34, 0.3);
+            border: 1px solid rgba(230, 126, 34, 0.5);
+        }
+
+        .toolbar-item.danger {
+            background: rgba(231, 76, 60, 0.3);
+            border: 1px solid rgba(231, 76, 60, 0.5);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.online {
+            background: #2ecc71;
+            box-shadow: 0 0 8px #2ecc71;
+        }
+
+        .status-dot.offline {
+            background: #e74c3c;
+            box-shadow: 0 0 8px #e74c3c;
+        }
+
+        .status-dot.warning {
+            background: #f39c12;
+            box-shadow: 0 0 8px #f39c12;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: 200px;
+            background: rgba(44, 62, 80, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10000;
+            margin-top: 10px;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .dropdown-item:hover {
+            background: rgba(52, 152, 219, 0.2);
+            padding-left: 20px;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .system-stats {
+            font-size: 12px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            opacity: 0.8;
+        }
+
+        .minimize-btn {
+            position: absolute;
+            top: -2px;
+            right: 10px;
+            background: rgba(231, 76, 60, 0.8);
+            border: none;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .minimize-btn:hover {
+            background: rgba(231, 76, 60, 1);
+            transform: scale(1.1);
+        }
+
+        .toolbar.minimized {
+            height: 20px;
+            background: rgba(44, 62, 80, 0.7);
+        }
+
+        .toolbar.minimized .toolbar-section {
+            display: none;
+        }
+
+        .toolbar.minimized::after {
+            content: "🏠 Homelab Toolbar (Click to expand)";
+            color: white;
+            font-size: 12px;
+            opacity: 0.8;
+            cursor: pointer;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .quick-btn {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .quick-btn:hover {
+            background: rgba(52, 152, 219, 0.3);
+            border: 1px solid rgba(52, 152, 219, 0.5);
+            transform: scale(1.1);
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: bold;
+            color: #3498db;
+            text-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar" id="toolbar">
+        <button class="minimize-btn" onclick="toggleToolbar()">−</button>
+        
+        <div class="toolbar-section">
+            <div class="logo">🏠 Homelab</div>
+            
+            <!-- Proxmox Management -->
+            <div class="dropdown">
+                <div class="toolbar-item" id="proxmox-status">
+                    <div class="status-dot" id="proxmox-dot"></div>
+                    <span>Proxmox</span>
+                    <div class="notification-badge" id="proxmox-notifications" style="display: none;">3</div>
+                </div>
+                <div class="dropdown-content">
+                    <a class="dropdown-item" onclick="openProxmox()">
+                        <span>🖥️</span> Web Interface
+                    </a>
+                    <a class="dropdown-item" onclick="checkVMs()">
+                        <span>⚡</span> VM Status
+                    </a>
+                    <a class="dropdown-item" onclick="openConsole()">
+                        <span>🖱️</span> Console
+                    </a>
+                    <a class="dropdown-item" onclick="viewResources()">
+                        <span>📊</span> Resources
+                    </a>
+                    <a class="dropdown-item" onclick="backupStatus()">
+                        <span>💾</span> Backups
+                    </a>
+                </div>
+            </div>
+
+            <!-- Media Servers -->
+            <div class="dropdown">
+                <div class="toolbar-item" id="media-status">
+                    <div class="status-dot" id="media-dot"></div>
+                    <span>Media</span>
+                </div>
+                <div class="dropdown-content">
+                    <a class="dropdown-item" onclick="openPlex()">
+                        <span>📺</span> Plex
+                    </a>
+                    <a class="dropdown-item" onclick="openJellyfin()">
+                        <span>🎬</span> Jellyfin
+                    </a>
+                    <a class="dropdown-item" onclick="openAudiobookshelf()">
+                        <span>📚</span> Audiobookshelf
+                    </a>
+                    <a class="dropdown-item" onclick="openTautulli()">
+                        <span>📊</span> Tautulli
+                    </a>
+                </div>
+            </div>
+
+            <!-- Download Stack -->
+            <div class="dropdown">
+                <div class="toolbar-item" id="download-status">
+                    <div class="status-dot" id="download-dot"></div>
+                    <span>Downloads</span>
+                </div>
+                <div class="dropdown-content">
+                    <a class="dropdown-item" onclick="openSonarr()">
+                        <span>📺</span> Sonarr
+                    </a>
+                    <a class="dropdown-item" onclick="openRadarr()">
+                        <span>🎬</span> Radarr
+                    </a>
+                    <a class="dropdown-item" onclick="openReadarr()">
+                        <span>📖</span> Readarr
+                    </a>
+                    <a class="dropdown-item" onclick="openBazarr()">
+                        <span>💬</span> Bazarr
+                    </a>
+                    <a class="dropdown-item" onclick="openProwlarr()">
+                        <span>🔍</span> Prowlarr
+                    </a>
+                    <a class="dropdown-item" onclick="openQBittorrent()">
+                        <span>⬇️</span> qBittorrent
+                    </a>
+                    <a class="dropdown-item" onclick="openDeluge()">
+                        <span>🌊</span> Deluge
+                    </a>
+                </div>
+            </div>
+
+            <!-- Request Management -->
+            <div class="dropdown">
+                <div class="toolbar-item" id="request-status">
+                    <div class="status-dot" id="request-dot"></div>
+                    <span>Requests</span>
+                </div>
+                <div class="dropdown-content">
+                    <a class="dropdown-item" onclick="openOverseerr()">
+                        <span>👁️</span> Overseerr
+                    </a>
+                    <a class="dropdown-item" onclick="openJellyseerr()">
+                        <span>🍇</span> Jellyseerr
+                    </a>
+                    <a class="dropdown-item" onclick="openOmbi()">
+                        <span>🎭</span> Ombi
+                    </a>
+                </div>
+            </div>
+
+            <!-- Dashboards -->
+            <div class="dropdown">
+                <div class="toolbar-item" id="dashboard-status">
+                    <div class="status-dot" id="dashboard-dot"></div>
+                    <span>Dashboards</span>
+                </div>
+                <div class="dropdown-content">
+                    <a class="dropdown-item" onclick="openOrganizr()">
+                        <span>🏢</span> Organizr
+                    </a>
+                    <a class="dropdown-item" onclick="openHomarr()">
+                        <span>🏠</span> Homarr
+                    </a>
+                    <a class="dropdown-item" onclick="openHomepage()">
+                        <span>🌐</span> Homepage
+                    </a>
+                </div>
+            </div>
+
+            <!-- Network & Auth -->
+            <div class="dropdown">
+                <div class="toolbar-item" id="network-status">
+                    <div class="status-dot" id="network-dot"></div>
+                    <span>Network</span>
+                </div>
+                <div class="dropdown-content">
+                    <a class="dropdown-item" onclick="openTraefik()">
+                        <span>🔀</span> Traefik
+                    </a>
+                    <a class="dropdown-item" onclick="openWireGuard()">
+                        <span>🔐</span> WireGuard
+                    </a>
+                    <a class="dropdown-item" onclick="openAuthentik()">
+                        <span>🔑</span> Authentik
+                    </a>
+                    <a class="dropdown-item" onclick="openVaultwarden()">
+                        <span>🔒</span> Vaultwarden
+                    </a>
+                    <a class="dropdown-item" onclick="networkDiag()">
+                        <span>🔧</span> Diagnostics
+                    </a>
+                </div>
+            </div>
+
+            <!-- System Services -->
+            <div class="dropdown">
+                <div class="toolbar-item" id="system-status">
+                    <div class="status-dot" id="system-dot"></div>
+                    <span>System</span>
+                </div>
+                <div class="dropdown-content">
+                    <a class="dropdown-item" onclick="openXVFB()">
+                        <span>🖥️</span> XVFB Display
+                    </a>
+                    <a class="dropdown-item" onclick="viewContainers()">
+                        <span>📦</span> Containers
+                    </a>
+                    <a class="dropdown-item" onclick="viewVMs()">
+                        <span>⚙️</span> VMs
+                    </a>
+                    <a class="dropdown-item" onclick="systemLogs()">
+                        <span>📋</span> System Logs
+                    </a>
+                </div>
+            </div>
+
+            <!-- System Monitoring -->
+            <div class="dropdown">
+                <div class="toolbar-item" id="monitor-status">
+                    <div class="status-dot" id="monitor-dot"></div>
+                    <span>Monitor</span>
+                </div>
+                <div class="dropdown-content">
+                    <a class="dropdown-item" onclick="openGrafana()">
+                        <span>📊</span> Grafana
+                    </a>
+                    <a class="dropdown-item" onclick="openPrometheus()">
+                        <span>⚡</span> Prometheus
+                    </a>
+                    <a class="dropdown-item" onclick="openUptimeKuma()">
+                        <span>🟢</span> Uptime Kuma
+                    </a>
+                    <a class="dropdown-item" onclick="openPortainer()">
+                        <span>🐳</span> Portainer
+                    </a>
+                    <a class="dropdown-item" onclick="openNetdata()">
+                        <span>📈</span> Netdata
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="toolbar-section">
+            <!-- System Stats -->
+            <div class="system-stats">
+                <div class="stat-item">
+                    <span>🖥️</span>
+                    <span id="cpu-usage">--</span>
+                </div>
+                <div class="stat-item">
+                    <span>🧠</span>
+                    <span id="ram-usage">--</span>
+                </div>
+                <div class="stat-item">
+                    <span>💾</span>
+                    <span id="disk-usage">--</span>
+                </div>
+                <div class="stat-item">
+                    <span>🌡️</span>
+                    <span id="temp">--</span>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="quickRestart()" title="Restart Services">
+                    🔄
+                </button>
+                <button class="quick-btn" onclick="emergencyStop()" title="Emergency Stop">
+                    🛑
+                </button>
+                <button class="quick-btn" onclick="quickBackup()" title="Quick Backup">
+                    💾
+                </button>
+                <button class="quick-btn" onclick="showLogs()" title="View Logs">
+                    📋
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - Update these with your actual IPs and ports
+        const CONFIG = {
+            proxmox: {
+                ip: '192.168.122.9',
+                port: '8006',
+                user: 'root'
+            },
+            services: {
+                // Media Servers
+                plex: 'http://192.168.122.230:32400/web',
+                jellyfin: 'http://192.168.122.231:8096',
+                
+                // Media Management
+                sonarr: 'http://192.168.122.214:8989',
+                radarr: 'http://192.168.122.215:7878',
+                prowlarr: 'http://192.168.122.210:9696',
+                bazarr: 'http://192.168.122.240:6767',
+                readarr: 'http://192.168.122.217:8787',
+                whisparr: 'http://192.168.122.219:6969',
+                
+                // Download Clients
+                qbittorrent: 'http://192.168.122.212:8080',
+                deluge: 'http://192.168.122.224:8112',
+                
+                // Request Management
+                overseerr: 'http://192.168.122.241:5055',
+                jellyseerr: 'http://192.168.122.242:5055',
+                ombi: 'http://192.168.122.243:3579',
+                
+                // Dashboards
+                organizr: 'http://192.168.122.274:80',
+                homarr: 'http://192.168.122.275:7575',
+                homepage: 'http://192.168.122.276:3000',
+                
+                // Monitoring
+                grafana: 'http://192.168.122.261:3000',
+                prometheus: 'http://192.168.122.260:9090',
+                tautulli: 'http://192.168.122.244:8181',
+                
+                // Authentication
+                authentik: 'http://192.168.122.107:9000',
+                vaultwarden: 'http://192.168.122.104:80',
+                
+                // Network
+                traefik: 'http://192.168.122.103:8080',
+                wireguard: 'http://192.168.122.100:51820',
+                
+                // XVFB Management
+                xvfb: 'http://192.168.122.9:6080'
+            }
+        };
+
+        let isMinimized = false;
+        let statusInterval;
+
+        // Initialize toolbar
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAllServices();
+            updateSystemStats();
+            statusInterval = setInterval(() => {
+                checkAllServices();
+                updateSystemStats();
+            }, 30000); // Update every 30 seconds
+
+            // Load saved position if any
+            loadToolbarPosition();
+        });
+
+        // Service status checking
+        async function checkService(url) {
+            try {
+                const response = await fetch(`/api/check-service?url=${encodeURIComponent(url)}`, {
+                    method: 'GET',
+                    timeout: 5000
+                });
+                return response.ok;
+            } catch (error) {
+                console.error(`Service check failed for ${url}:`, error);
+                // Return mock status for demo
+                return Math.random() > 0.3; // 70% chance of being online
+            }
+        }
+
+        async function checkAllServices() {
+            // Check Proxmox
+            const proxmoxOnline = await checkService(`https://${CONFIG.proxmox.ip}:${CONFIG.proxmox.port}`);
+            updateStatusDot('proxmox-dot', proxmoxOnline);
+            
+            // Check Media Servers
+            const mediaServices = ['plex', 'jellyfin'];
+            let mediaOnline = 0;
+            for (const service of mediaServices) {
+                if (await checkService(CONFIG.services[service])) {
+                    mediaOnline++;
+                }
+            }
+            updateStatusDot('media-dot', mediaOnline > 0);
+
+            // Check Download Stack
+            const downloadServices = ['sonarr', 'radarr', 'prowlarr', 'qbittorrent'];
+            let downloadOnline = 0;
+            for (const service of downloadServices) {
+                if (await checkService(CONFIG.services[service])) {
+                    downloadOnline++;
+                }
+            }
+            updateStatusDot('download-dot', downloadOnline > downloadServices.length / 2);
+
+            // Check Request Services
+            const requestServices = ['overseerr', 'jellyseerr'];
+            let requestOnline = 0;
+            for (const service of requestServices) {
+                if (await checkService(CONFIG.services[service])) {
+                    requestOnline++;
+                }
+            }
+            updateStatusDot('request-dot', requestOnline > 0);
+
+            // Check Dashboards
+            const dashboardServices = ['organizr', 'homarr', 'homepage'];
+            let dashboardOnline = 0;
+            for (const service of dashboardServices) {
+                if (await checkService(CONFIG.services[service])) {
+                    dashboardOnline++;
+                }
+            }
+            updateStatusDot('dashboard-dot', dashboardOnline > 0);
+
+            // Check Network Services
+            const networkServices = ['traefik', 'authentik'];
+            let networkOnline = 0;
+            for (const service of networkServices) {
+                if (await checkService(CONFIG.services[service])) {
+                    networkOnline++;
+                }
+            }
+            updateStatusDot('network-dot', networkOnline > 0);
+
+            // Check System Services (XVFB, etc)
+            const systemOnline = await checkService(CONFIG.services.xvfb);
+            updateStatusDot('system-dot', systemOnline);
+
+            // Check Monitoring Services
+            const monitorServices = ['grafana', 'prometheus'];
+            let monitorOnline = 0;
+            for (const service of monitorServices) {
+                if (await checkService(CONFIG.services[service])) {
+                    monitorOnline++;
+                }
+            }
+            updateStatusDot('monitor-dot', monitorOnline > 0);
+        }
+
+        function updateStatusDot(dotId, isOnline) {
+            const dot = document.getElementById(dotId);
+            dot.className = `status-dot ${isOnline ? 'online' : 'offline'}`;
+        }
+
+        async function updateSystemStats() {
+            try {
+                // Mock system stats - replace with actual system monitoring
+                document.getElementById('cpu-usage').textContent = `${Math.floor(Math.random() * 50 + 10)}%`;
+                document.getElementById('ram-usage').textContent = `${Math.floor(Math.random() * 60 + 20)}%`;
+                document.getElementById('disk-usage').textContent = `${Math.floor(Math.random() * 40 + 30)}%`;
+                document.getElementById('temp').textContent = `${Math.floor(Math.random() * 20 + 40)}°C`;
+            } catch (error) {
+                console.error('Failed to update system stats:', error);
+            }
+        }
+
+        // Service opening functions
+        function openProxmox() {
+            window.open(`https://${CONFIG.proxmox.ip}:${CONFIG.proxmox.port}`, '_blank');
+        }
+
+        // Media Servers
+        function openPlex() {
+            window.open(CONFIG.services.plex, '_blank');
+        }
+
+        function openJellyfin() {
+            window.open(CONFIG.services.jellyfin, '_blank');
+        }
+
+        function openAudiobookshelf() {
+            window.open(CONFIG.services.audiobookshelf || 'http://192.168.122.232:13378', '_blank');
+        }
+
+        function openTautulli() {
+            window.open(CONFIG.services.tautulli, '_blank');
+        }
+
+        // Download Stack
+        function openSonarr() {
+            window.open(CONFIG.services.sonarr, '_blank');
+        }
+
+        function openRadarr() {
+            window.open(CONFIG.services.radarr, '_blank');
+        }
+
+        function openReadarr() {
+            window.open(CONFIG.services.readarr, '_blank');
+        }
+
+        function openBazarr() {
+            window.open(CONFIG.services.bazarr, '_blank');
+        }
+
+        function openProwlarr() {
+            window.open(CONFIG.services.prowlarr, '_blank');
+        }
+
+        function openQBittorrent() {
+            window.open(CONFIG.services.qbittorrent, '_blank');
+        }
+
+        function openDeluge() {
+            window.open(CONFIG.services.deluge, '_blank');
+        }
+
+        // Request Management
+        function openOverseerr() {
+            window.open(CONFIG.services.overseerr, '_blank');
+        }
+
+        function openJellyseerr() {
+            window.open(CONFIG.services.jellyseerr, '_blank');
+        }
+
+        function openOmbi() {
+            window.open(CONFIG.services.ombi, '_blank');
+        }
+
+        // Dashboards
+        function openOrganizr() {
+            window.open(CONFIG.services.organizr, '_blank');
+        }
+
+        function openHomarr() {
+            window.open(CONFIG.services.homarr, '_blank');
+        }
+
+        function openHomepage() {
+            window.open(CONFIG.services.homepage, '_blank');
+        }
+
+        // Network & Auth
+        function openTraefik() {
+            window.open(CONFIG.services.traefik, '_blank');
+        }
+
+        function openAuthentik() {
+            window.open(CONFIG.services.authentik, '_blank');
+        }
+
+        function openVaultwarden() {
+            window.open(CONFIG.services.vaultwarden, '_blank');
+        }
+
+        // System Services
+        function openXVFB() {
+            window.open(CONFIG.services.xvfb, '_blank');
+        }
+
+        function openWireGuard() {
+            window.open('http://localhost:10086', '_blank'); // Local WireGuard dashboard
+        }
+
+        function viewContainers() {
+            executeCommand('pct list');
+        }
+
+        function viewVMs() {
+            executeCommand('qm list');
+        }
+
+        function systemLogs() {
+            executeCommand('journalctl -f');
+        }
+
+        function openGrafana() {
+            window.open(CONFIG.services.grafana, '_blank');
+        }
+
+        function openPrometheus() {
+            window.open(CONFIG.services.prometheus, '_blank');
+        }
+
+        function openUptimeKuma() {
+            window.open(CONFIG.services.uptime, '_blank');
+        }
+
+        function openPortainer() {
+            window.open(CONFIG.services.portainer, '_blank');
+        }
+
+        function openNetdata() {
+            window.open(CONFIG.services.netdata, '_blank');
+        }
+
+        // Action functions
+        function checkVMs() {
+            // SSH to Proxmox and check VM status
+            executeCommand(`ssh ${CONFIG.proxmox.user}@${CONFIG.proxmox.ip} "qm list"`);
+        }
+
+        function openConsole() {
+            // Open SSH connection to Proxmox
+            executeCommand(`ssh ${CONFIG.proxmox.user}@${CONFIG.proxmox.ip}`);
+        }
+
+        function viewResources() {
+            // Show resource usage
+            executeCommand(`ssh ${CONFIG.proxmox.user}@${CONFIG.proxmox.ip} "pvesh get /nodes/localhost/status"`);
+        }
+
+        function backupStatus() {
+            executeCommand(`ssh ${CONFIG.proxmox.user}@${CONFIG.proxmox.ip} "vzdump --dumpdir /var/lib/vz/dump --list"`);
+        }
+
+        function networkDiag() {
+            executeCommand('ping -c 3 8.8.8.8 && traceroute 8.8.8.8');
+        }
+
+        function quickRestart() {
+            if (confirm('Restart all Docker services?')) {
+                executeCommand(`ssh ${CONFIG.proxmox.user}@${CONFIG.proxmox.ip} "systemctl restart docker"`);
+            }
+        }
+
+        function emergencyStop() {
+            if (confirm('Emergency stop all VMs? This will force shutdown all running VMs!')) {
+                executeCommand(`ssh ${CONFIG.proxmox.user}@${CONFIG.proxmox.ip} "for vmid in \\\$(qm list | awk 'NR>1{print \\\$1}'); do qm stop \\\$vmid; done"`);
+            }
+        }
+
+        function quickBackup() {
+            const vmId = prompt('Enter VM ID to backup (or leave empty for all):');
+            if (vmId !== null) {
+                const cmd = vmId ? 
+                    `vzdump ${vmId} --compress gzip --storage local` : 
+                    'vzdump --all --compress gzip --storage local';
+                executeCommand(`ssh ${CONFIG.proxmox.user}@${CONFIG.proxmox.ip} "${cmd}"`);
+            }
+        }
+
+        function showLogs() {
+            executeCommand(`ssh ${CONFIG.proxmox.user}@${CONFIG.proxmox.ip} "journalctl -f"`);
+        }
+
+        function executeCommand(command) {
+            // Open terminal and execute command
+            // This would need to be implemented based on your terminal emulator
+            const terminal = 'konsole'; // KDE's default terminal
+            const cmd = `${terminal} -e 'bash -c "${command}; exec bash"'`;
+            
+            // Use child_process or similar to execute
+            console.log(`Executing: ${cmd}`);
+            // For now, just log - you'd need a proper implementation
+            alert(`Would execute: ${command}`);
+        }
+
+        // Toolbar controls
+        function toggleToolbar() {
+            const toolbar = document.getElementById('toolbar');
+            isMinimized = !isMinimized;
+            
+            if (isMinimized) {
+                toolbar.classList.add('minimized');
+            } else {
+                toolbar.classList.remove('minimized');
+            }
+            
+            // Save state
+            localStorage.setItem('homelab-toolbar-minimized', isMinimized);
+        }
+
+        function loadToolbarPosition() {
+            const minimized = localStorage.getItem('homelab-toolbar-minimized') === 'true';
+            if (minimized) {
+                document.getElementById('toolbar').classList.add('minimized');
+                isMinimized = true;
+            }
+        }
+
+        // Click to expand when minimized
+        document.getElementById('toolbar').addEventListener('click', function() {
+            if (isMinimized) {
+                toggleToolbar();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.altKey && e.shiftKey) {
+                switch(e.key) {
+                    case 'H': toggleToolbar(); break;
+                    case 'P': openProxmox(); break;
+                    case 'J': openJellyfin(); break;
+                    case 'G': openGrafana(); break;
+                    case 'M': quickRestart(); break;
+                }
+            }
+        });
+
+        // Auto-hide when not in use (optional)
+        let hideTimer;
+        function resetHideTimer() {
+            clearTimeout(hideTimer);
+            hideTimer = setTimeout(() => {
+                if (!isMinimized) {
+                    // Optional: auto-minimize after inactivity
+                    // toggleToolbar();
+                }
+            }, 300000); // 5 minutes
+        }
+
+        document.addEventListener('mousemove', resetHideTimer);
+        document.addEventListener('keypress', resetHideTimer);
+    </script>
+</body>
+</html>

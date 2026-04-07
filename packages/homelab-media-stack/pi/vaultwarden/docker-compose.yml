@@ -1,0 +1,32 @@
+---
+# Vaultwarden — Self-hosted Bitwarden password manager
+# Caddy provides automatic HTTPS (required by Vaultwarden)
+
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    volumes:
+      - /opt/appdata/vaultwarden:/data
+    environment:
+      - DOMAIN=https://192.168.12.20   # or https://vault.yourdomain.com if using real domain
+      - SIGNUPS_ALLOWED=true            # Set to false after creating your account
+      - ADMIN_TOKEN=CHANGE_ME           # Generate: openssl rand -base64 48
+      - WEBSOCKET_ENABLED=true
+      - LOG_LEVEL=warn
+    expose:
+      - "80"
+      - "3012"   # WebSocket
+
+  caddy:
+    image: caddy:alpine
+    container_name: caddy
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - /opt/appdata/caddy/data:/data
+      - /opt/appdata/caddy/config:/config
+    depends_on:
+      - vaultwarden

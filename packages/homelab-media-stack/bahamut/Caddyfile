@@ -1,0 +1,26 @@
+{
+    email loufogle@gmail.com
+    acme_dns duckdns 32106606-1a70-4e0b-8bac-12ef5f2a7d5e
+}
+
+*.lou-fogle-media-stack.duckdns.org lou-fogle-media-stack.duckdns.org {
+    tls {
+        dns duckdns 32106606-1a70-4e0b-8bac-12ef5f2a7d5e
+        resolvers 8.8.8.8:53 1.1.1.1:53
+    }
+
+    @vaultwarden host vaultwarden.lou-fogle-media-stack.duckdns.org
+    handle @vaultwarden {
+        reverse_proxy localhost:8080
+    }
+
+    @wg host wg.lou-fogle-media-stack.duckdns.org
+    handle @wg {
+        reverse_proxy localhost:51821
+    }
+
+    @adguard host adguard.lou-fogle-media-stack.duckdns.org
+    handle @adguard {
+        reverse_proxy localhost:8081
+    }
+}

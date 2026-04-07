@@ -1,0 +1,19 @@
+---
+- name: Deploy and check media stack
+  hosts: all
+  tasks:
+    - name: Ensure Plex is running
+      ansible.builtin.systemd:
+        name: plexmediaserver
+        state: started
+      become: yes
+
+    - name: Ensure Sonarr is healthy
+      ansible.builtin.uri:
+        url: "http://localhost:8989/api/v3/system/status?apikey={{ sonarr_api_key }}"
+        method: GET
+      register: sonarr_status
+
+    - name: Print Sonarr status
+      ansible.builtin.debug:
+        var: sonarr_status.json

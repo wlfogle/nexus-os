@@ -1,0 +1,55 @@
+/* NUCLEAR SCROLLBAR OVERRIDE - LOADS FIRST */
+* {
+  scrollbar-width: auto !important;
+  scrollbar-color: #6B7280 #374151 !important;
+}
+
+*::-webkit-scrollbar {
+  width: 16px !important;
+  height: 16px !important;
+  display: block !important;
+  background: #374151 !important;
+}
+
+*::-webkit-scrollbar-track {
+  background: #374151 !important;
+  border-radius: 8px !important;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #6B7280 !important;
+  border-radius: 8px !important;
+  border: 2px solid #374151 !important;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF !important;
+}
+
+*::-webkit-scrollbar-corner {
+  background: #374151 !important;
+}
+
+/* KILL ALL OVERFLOW HIDDEN */
+.overflow-hidden,
+div[style*="overflow: hidden"],
+div[style*="overflow:hidden"] {
+  overflow: auto !important;
+}
+
+/* FORCE SCROLL ON FLEX CONTAINERS */
+.flex-1 {
+  overflow: auto !important;
+}
+
+.h-full {
+  overflow: auto !important;
+}
+
+/* SPECIFIC AI CONVERSATION FIXES */
+.conversation-area,
+.ai-messages-container,
+.messages-container {
+  overflow-y: auto !important;
+  scrollbar-width: auto !important;
+}

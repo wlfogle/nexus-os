@@ -1,0 +1,32 @@
+[Unit]
+Description=API Masking Proxy Service
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/root
+ExecStart=/usr/bin/python3 /root/api-mask-proxy.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/root
+
+# Network settings
+IPAddressDeny=any
+IPAddressAllow=localhost
+IPAddressAllow=127.0.0.0/8
+IPAddressAllow=192.168.0.0/16
+IPAddressAllow=10.0.0.0/8
+
+[Install]
+WantedBy=multi-user.target

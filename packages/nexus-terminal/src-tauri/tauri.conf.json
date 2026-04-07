@@ -1,0 +1,86 @@
+{
+  "$schema": "https://schema.tauri.app/config/2.0.0-beta",
+  "productName": "NexusTerminal",
+  "version": "1.0.0-alpha.4",
+  "identifier": "com.nexus.terminal",
+  "build": {
+    "beforeBuildCommand": "",
+    "frontendDist": "../dist"
+  },
+  "plugins": {
+    "dialog": {
+      "all": true,
+      "ask": true,
+      "confirm": true,
+      "message": true,
+      "open": true,
+      "save": true
+    },
+    "fs": {
+      "all": true,
+      "readFile": true,
+      "writeFile": true,
+      "readDir": true,
+      "copyFile": true,
+      "createDir": true,
+      "removeDir": true,
+      "removeFile": true,
+      "renameFile": true,
+      "exists": true
+    },
+    "shell": {
+      "all": true,
+      "execute": true,
+      "sidecar": true,
+      "open": true
+    },
+    "os": {
+      "all": true
+    },
+    "process": {
+      "all": true
+    },
+    "http": {
+      "all": true,
+      "request": true
+    },
+    "notification": {
+      "all": true
+    },
+    "clipboard-manager": {
+      "all": true
+    }
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "NexusTerminal",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "center": true,
+        "resizable": true,
+        "maximizable": true,
+        "minimizable": true,
+        "closable": true,
+        "decorations": true,
+        "devtools": true
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "category": "DeveloperTool",
+    "copyright": "© 2025 NexusTerminal",
+    "shortDescription": "The intelligent terminal experience",
+    "longDescription": "NexusTerminal - Where AI meets the command line. Multi-agent AI coordination, system diagnostics, and intelligent assistance.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png", 
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

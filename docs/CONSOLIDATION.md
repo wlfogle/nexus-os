@@ -1,59 +1,90 @@
 # NexusOS Repository Consolidation
 
-Consolidated on 2026-04-07. Loose scripts, docs, and project dirs from `~/` were organized into the nexus-os monorepo.
+Consolidated on 2026-04-07. All NexusOS-related repos, scripts, docs, and config from the laptop are now in this monorepo.
 
-## Scripts (`scripts/`)
+## Monorepo Structure
 
-| Destination | Source | Description |
-|---|---|---|
-| `scripts/hardware/gpu-vfio-check.sh` | `~/gpu.sh` | VFIO/IOMMU GPU passthrough sanity check |
-| `scripts/optimization/optimize-system.sh` | `~/optimize-system.sh` | System performance tuning (BBR, scheduler, NVIDIA) |
-| `scripts/networking/wireguard-killswitch.sh` | `~/wireguard-killswitch.sh` | VPN killswitch script |
-| `scripts/networking/wireguard-tools/` | `~/wireguard-tools/` | Full WireGuard toolkit: client manager, server rotation, tray widget, web dashboard, API masking proxy |
-| `scripts/vm/spice-setup.sh` | `~/do this.txt` | Win11 VM SPICE display + clipboard setup |
-| `scripts/vm/streaming/` | `~/vm-streaming/` | Sunshine VM streaming (PS1 installer + Windows exe) |
-| `scripts/gaming/` | `~/bin/` | Gaming scripts: clevo-kbd-rgb, game-add-vm, game-add-native, game-list, game-run, qemu-seamless, vortex-moonlight, vortex-on/off/status/stream-status |
+```
+nexus-os/
+├── boot/, bootloader/, kernel/, lib/, include/   (OS core)
+├── core/                                          (14 subsystems)
+├── userland/, userspace/                          (user-facing apps)
+├── drivers/                                       (display, input, network, storage)
+├── installer/                                     (Calamares installer)
+├── build/, tests/
+│
+├── packages/                  ← All consolidated repos (22 packages)
+│   ├── ai-powerhouse-setup/        AI/ML dev environment setup
+│   ├── ai-sysadmin-supreme/        Autonomous AI sysadmin
+│   ├── awesome-stack/              Self-hosting infrastructure (65+ services)
+│   ├── awesome-stack-optimization-suite/  Infrastructure optimization
+│   ├── eartrumpet-linux/           Audio per-app volume control
+│   ├── firestick-mediacontrol-app/ Android Fire TV remote
+│   ├── garuda-hello/               Biometric authentication
+│   ├── homelab-media-stack/        Media server + clients
+│   ├── Hyperion/                   Linux power utilities
+│   ├── i9-13900hx-optimizations/   Hardware-specific tuning
+│   ├── kvm-manager/                KVM/QEMU VM manager (Rust/Tauri)
+│   ├── linux-gaming-vm-toolkit/    GPU passthrough + VFIO
+│   ├── media-stack-admin-scripts/  Production media scripts
+│   ├── mediastack-control/         Docker container control panel
+│   ├── mediastack-control-popos/   Pop!_OS media control variant
+│   ├── mobalivecd-linux/           Portable Linux LiveCD
+│   ├── nexus-terminal/             AI-powered terminal
+│   ├── ollama-code-checker/        AI code analysis
+│   ├── ollama-manager-gui/         Ollama model manager
+│   ├── OmnioSearch/                AI file search
+│   ├── PortProton-Enhanced/        Gaming/Proton launcher
+│   └── universal-zfs-installer/    ZFS root installer
+│
+├── scripts/                   ← Consolidated from ~/
+│   ├── hardware/                   gpu-vfio-check.sh
+│   ├── optimization/               optimize-system.sh
+│   ├── networking/                 wireguard-killswitch.sh + wireguard-tools/
+│   ├── vm/                         spice-setup.sh + streaming/ (Sunshine)
+│   └── gaming/                     11 scripts (vortex, qemu-seamless, clevo-kbd-rgb, game-*)
+│
+├── docs/                      ← Consolidated from ~/
+│   ├── security-audit.md           Lynis audit results
+│   ├── proxmox-wifi-setup.md       Proxmox Wi-Fi CLI guide
+│   ├── media-center-plan.md        Media architecture plan
+│   ├── mount-qcow.md               QEMU qcow2 mount guide
+│   ├── notes/                      controller-question.txt
+│   ├── setup/                      Pop!_OS config, starship, bluetooth, bashrc aliases
+│   ├── AI_NATIVE_ARCHITECTURE.md
+│   └── CONSOLIDATION.md           (this file)
+```
 
-## Docs (`docs/`)
+## Source Mapping
 
-| Destination | Source | Description |
-|---|---|---|
-| `docs/security-audit.md` | `~/security audit.md` | Lynis 3.1.4 security audit results |
-| `docs/proxmox-wifi-setup.md` | `~/Connecting Proxmox to Wi-Fi via Command Line.md` | Proxmox Wi-Fi CLI configuration guide |
-| `docs/media-center-plan.md` | `~/Media center plan` | Media center architecture using desktop as server |
-| `docs/notes/controller-question.txt` | `~/controller uestion` | Gaming controller + FireTV streaming question |
+### From ~/  (loose files)
+- `~/gpu.sh` → `scripts/hardware/gpu-vfio-check.sh`
+- `~/optimize-system.sh` → `scripts/optimization/optimize-system.sh`
+- `~/wireguard-killswitch.sh` → `scripts/networking/wireguard-killswitch.sh`
+- `~/wireguard-tools/` → `scripts/networking/wireguard-tools/`
+- `~/do this.txt` → `scripts/vm/spice-setup.sh`
+- `~/vm-streaming/` → `scripts/vm/streaming/`
+- `~/bin/` → `scripts/gaming/`
+- `~/security audit.md` → `docs/security-audit.md`
+- `~/Connecting Proxmox to Wi-Fi via Command Line.md` → `docs/proxmox-wifi-setup.md`
+- `~/Media center plan` → `docs/media-center-plan.md`
+- `~/controller uestion` → `docs/notes/controller-question.txt`
+- `~/Documents/Mount Qcow file.md` → `docs/mount-qcow.md`
+- `~/Documents/Pop OS scripts/` → `docs/setup/`
+- `~/.bashrc` homelab aliases → `docs/setup/bashrc-homelab-aliases.sh`
 
-## Reference Repos (`reference/` — gitignored, local only)
-
-Local copies for cross-referencing. Not committed to git.
-
-### Already present
-ai-powerhouse-setup, ai-sysadmin-supreme, awesome-stack, eartrumpet-linux, garuda-hello, Hyperion, i9-13900hx-optimizations, kvm-manager, linux-gaming-vm-toolkit, mobalivecd-linux, nexus-terminal, ollama-code-checker, ollama-manager-gui, OmnioSearch, PortProton-Enhanced, universal-zfs-installer
-
-### Added this consolidation
-- `reference/firestick-mediacontrol-app/` — Android Fire TV media remote app
-- `reference/mediastack-control-popos/` — Pop!_OS variant of mediastack-control
-
-## Related GitHub Repos
-- https://github.com/wlfogle/nexus-terminal — Terminal/CLI component
-- https://github.com/wlfogle/eartrumpet-linux — Audio management
-- https://github.com/wlfogle/kvm-manager — KVM virtualization manager
-- https://github.com/wlfogle/mobalivecd-linux — Bootable LiveCD support
-- https://github.com/wlfogle/Hyperion — Linux power utilities
-- https://github.com/wlfogle/OmnioSearch — AI-enhanced file search
-- https://github.com/wlfogle/homelab-media-stack — Media stack
-- https://github.com/wlfogle/mediastack-control — Media control panel
-- https://github.com/wlfogle/media-stack-admin-scripts — Media admin scripts
-- https://github.com/wlfogle/awesome-stack-optimization-suite — Optimization utilities
+### From GitHub repos → `packages/`
+All 22 repos copied in with build artifacts stripped (.git, node_modules, target, dist, legacy, .gradle).
+Original repos remain on GitHub for independent history.
 
 ## Not Consolidated (intentionally excluded)
 
 - `~/HomeDockOS/` — Docker container UI, unrelated to NexusOS
-- `~/w3se/` — Wasteland 3 save editor (third-party)
-- `~/WinBoat/` — Windows boot tool (third-party)
-- `~/quickshare/` — File sharing tool (third-party)
-- `~/ubuntu2204-setup/` — Third-party Ubuntu setup scripts
+- `~/w3se/` — Wasteland 3 save editor (third-party, stolinator/w3se)
+- `~/WinBoat/` — Windows boot tool (third-party, TibixDev/WinBoat)
+- `~/quickshare/` — File sharing tool (third-party, ihexxa/quickshare)
+- `~/ubuntu2204-setup/` — Third-party Ubuntu setup (edueo/ubuntu2204-setup)
 - `~/qemu-build/`, `~/qemu-src/` — QEMU build artifacts (too large)
-- `~/popos-setup/` — Pop!_OS setup, separate concern
+- `~/popos-setup/` — Pop!_OS setup (minimal, separate concern)
 - `~/arr_passwords` — Sensitive credentials, never commit
-- Personal files: `Burgers and Fries.txt`, gaming launchers (`diablo4_launch.sh`, `xcom2_run`, etc.), `remap.ps1`
+- Personal files: `Burgers and Fries.txt`, gaming launchers, `remap.ps1`

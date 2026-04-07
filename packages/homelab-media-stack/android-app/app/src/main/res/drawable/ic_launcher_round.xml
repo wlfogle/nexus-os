@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Round launcher icon for TiamatsStack -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Circular dark background -->
+    <path android:fillColor="#1A1A2E"
+        android:pathData="M54,54 m-54,0 a54,54 0 1,0 108,0 a54,54 0 1,0 -108,0"/>
+    <!-- Server icon centred -->
+    <path android:fillColor="#E94560"
+        android:pathData="M22,32 L86,32 L86,76 L22,76 Z"/>
+    <path android:fillColor="#1A1A2E"
+        android:pathData="M22,32 L86,32 L86,44 L22,44 Z
+                          M22,44 L86,44 L86,56 L22,56 Z
+                          M22,56 L86,56 L86,68 L22,68 Z"/>
+    <path android:fillColor="#00A8CC"
+        android:pathData="M78,37 A3,3 0 1,1 78.001,37 Z
+                          M78,49 A3,3 0 1,1 78.001,49 Z
+                          M78,61 A3,3 0 1,1 78.001,61 Z"/>
+</vector>

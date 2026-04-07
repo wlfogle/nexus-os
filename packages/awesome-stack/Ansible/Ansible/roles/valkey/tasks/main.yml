@@ -1,0 +1,13 @@
+---
+- name: Install Valkey (Redis-compatible)
+  ansible.builtin.apt:
+    name: valkey-server
+    state: present
+
+- name: Ensure Valkey is running
+  ansible.builtin.systemd:
+    name: valkey-server
+    state: started
+    enabled: yes
+
+# TODO: Include persistent storage config

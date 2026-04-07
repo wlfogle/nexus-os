@@ -1,0 +1,12 @@
+---
+# TODO: Automate pulling Git repo and fine-tuning LLM
+- name: Pull repo for LLM training
+  ansible.builtin.git:
+    repo: "{{ git_repo_url }}"
+    dest: /opt/llm-data
+
+- name: Trigger fine-tuning (placeholder)
+  ansible.builtin.shell: |
+    ollama run --fine-tune /opt/llm-data
+  args:
+    chdir: /opt/llm-data

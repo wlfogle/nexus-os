@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# 🥷 Ghost Mode Toggle Script
+# Simple on/off toggle for complete anonymity
+
+GHOST_CONFIG="$HOME/.config/ghost-mode"
+STATUS_FILE="$GHOST_CONFIG/status"
+
+# Create config directory
+mkdir -p "$GHOST_CONFIG"
+
+# Check current status
+get_status() {
+    if [ -f "$STATUS_FILE" ] && [ "$(cat "$STATUS_FILE")" = "active" ]; then
+        return 0  # Active
+    else
+        return 1  # Inactive
+    fi
+}
+
+# Toggle ghost mode
+toggle_ghost_mode() {
+    if get_status; then
+        # Currently active, turn off
+        echo "🛑 Deactivating Ghost Mode..."
+        ghost-mode stop
+        echo "inactive" > "$STATUS_FILE"
+        notify-send "🛑 Ghost Mode" "Anonymity DISABLED" --icon=security-low
+        echo "✅ Ghost Mode deactivated"
+    else
+        # Currently inactive, turn on
+        echo "🥷 Activating Ghost Mode..."
+        ghost-mode start > /dev/null 2>&1
+        echo "active" > "$STATUS_FILE"
+        notify-send "🥷 Ghost Mode" "Complete Invisibility ACTIVE" --icon=security-high
+        echo "✅ Ghost Mode activated"
+    fi
+}
+
+# Show current status
+show_status() {
+    if get_status; then
+        echo "🥷 Ghost Mode: ACTIVE (You are invisible)"
+        echo "   🔒 VPN: $(ip link show wg0 >/dev/null 2>&1 && echo "ACTIVE" || echo "INACTIVE")"
+        echo "   🚫 IPv6: $(sysctl net.ipv6.conf.all.disable_ipv6 2>/dev/null | grep -q "= 1" && echo "DISABLED" || echo "ENABLED")"
+        echo "   🌪️ Traffic Obfuscation: $(pgrep -f "traffic-obfuscation" >/dev/null && echo "ACTIVE" || echo "INACTIVE")"
+        echo "   👁️ Monitoring: $([ -f "$GHOST_CONFIG/monitor.pid" ] && kill -0 $(cat "$GHOST_CONFIG/monitor.pid") 2>/dev/null && echo "ACTIVE" || echo "INACTIVE")"
+    else
+        echo "❌ Ghost Mode: INACTIVE (You are visible)"
+        echo "   Run 'ghost-toggle' to activate complete invisibility"
+    fi
+}
+
+# Handle arguments
+case "${1:-toggle}" in
+    "on"|"start"|"activate")
+        if ! get_status; then
+            toggle_ghost_mode
+        else
+            echo "🥷 Ghost Mode already active"
+        fi
+        ;;
+    "off"|"stop"|"deactivate")
+        if get_status; then
+            toggle_ghost_mode
+        else
+            echo "❌ Ghost Mode already inactive"
+        fi
+        ;;
+    "toggle")
+        toggle_ghost_mode
+        ;;
+    "status")
+        show_status
+        ;;
+    *)
+        echo "Usage: ghost-toggle [on|off|toggle|status]"
+        echo ""
+        echo "🥷 Ghost Mode Toggle - Complete Online Invisibility"
+        echo "   on/start      - Activate ghost mode"
+        echo "   off/stop      - Deactivate ghost mode"  
+        echo "   toggle        - Switch current state"
+        echo "   status        - Show current status"
+        ;;
+esac

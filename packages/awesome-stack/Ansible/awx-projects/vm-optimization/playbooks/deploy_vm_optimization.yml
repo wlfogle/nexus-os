@@ -1,0 +1,213 @@
+---
+# AWX Playbook: Deploy VM Optimization for Warp Agent Architecture
+# Integrates with existing Awesome Stack AWX workflow
+# Target: ProxMox-Stack VM optimization for high-density container workloads
+
+- name: Deploy Enhanced VM Optimization for Warp Agent Architecture
+  hosts: proxmox_vms
+  become: yes
+  gather_facts: yes
+  vars:
+    optimization_script_enhanced: "/tmp/optimize-proxmox-vm-enhanced.sh"
+    optimization_script_standard: "/tmp/optimize-proxmox-vm.sh" 
+    health_check_script: "/usr/local/bin/warp-agent-health-check.sh"
+    performance_monitor_script: "/usr/local/bin/warp-agent-performance-monitor.sh"
+    expected_containers: 50
+    warp_agent_port: 8080
+    message_broker_port: 8080
+    
+  tasks:
+    - name: Detect system resources
+      ansible.builtin.setup:
+        filter: 
+          - 'ansible_memtotal_mb'
+          - 'ansible_processor_vcpus'
+          - 'ansible_hostname'
+      
+    - name: Display system information
+      ansible.builtin.debug:
+        msg: 
+          - "Hostname: {{ ansible_hostname }}"
+          - "RAM: {{ ansible_memtotal_mb }}MB"
+          - "CPU Cores: {{ ansible_processor_vcpus }}"
+          - "Target: {{ expected_containers }}+ containers with Warp agents"
+      
+    - name: Check if VM is ProxMox-Stack target
+      ansible.builtin.assert:
+        that:
+          - ansible_memtotal_mb >= 16000
+          - ansible_processor_vcpus >= 8
+        fail_msg: "System does not meet minimum requirements for Warp agent optimization"
+        success_msg: "System meets requirements for enhanced optimization"
+      
+    - name: Create backup directory
+      ansible.builtin.file:
+        path: /root/optimization-backups
+        state: directory
+        mode: '0755'
+      
+    - name: Backup critical configuration files
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "/root/optimization-backups/{{ item | basename }}.backup"
+        backup: yes
+        remote_src: yes
+      loop:
+        - /etc/sysctl.conf
+        - /etc/security/limits.conf
+        - /etc/docker/daemon.json
+      ignore_errors: yes
+      
+    - name: Transfer enhanced optimization script
+      ansible.builtin.copy:
+        content: |
+          {{ lookup('file', '/usr/local/bin/optimize-proxmox-vm-enhanced.sh') }}
+        dest: "{{ optimization_script_enhanced }}"
+        mode: '0755'
+      when: ansible_memtotal_mb >= 24000  # Use enhanced for systems with 24GB+ RAM
+      
+    - name: Transfer standard optimization script  
+      ansible.builtin.copy:
+        content: |
+          {{ lookup('file', '/usr/local/bin/optimize-proxmox-vm.sh') }}
+        dest: "{{ optimization_script_standard }}"
+        mode: '0755'
+      when: ansible_memtotal_mb < 24000   # Use standard for systems with less RAM
+      
+    - name: Execute enhanced VM optimization
+      ansible.builtin.command: "{{ optimization_script_enhanced }}"
+      register: optimization_result_enhanced
+      when: ansible_memtotal_mb >= 24000
+      changed_when: optimization_result_enhanced.rc == 0
+      
+    - name: Execute standard VM optimization
+      ansible.builtin.command: "{{ optimization_script_standard }}"
+      register: optimization_result_standard
+      when: ansible_memtotal_mb < 24000
+      changed_when: optimization_result_standard.rc == 0
+      
+    - name: Display optimization results
+      ansible.builtin.debug:
+        var: optimization_result_enhanced.stdout_lines
+      when: ansible_memtotal_mb >= 24000 and optimization_result_enhanced is defined
+      
+    - name: Display optimization results (standard)
+      ansible.builtin.debug:
+        var: optimization_result_standard.stdout_lines  
+      when: ansible_memtotal_mb < 24000 and optimization_result_standard is defined
+      
+    - name: Verify optimization files were created
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: optimization_files
+      loop:
+        - /etc/sysctl.d/99-proxmox-warp-optimization.conf
+        - /etc/security/limits.d/99-proxmox-warp-optimization.conf
+        - /etc/docker/daemon.json
+        - /usr/local/bin/warp-agent-health-check.sh
+        - /usr/local/bin/warp-agent-performance-monitor.sh
+      
+    - name: Report optimization status
+      ansible.builtin.debug:
+        msg: "{{ item.item }}: {{ 'EXISTS' if item.stat.exists else 'MISSING' }}"
+      loop: "{{ optimization_files.results }}"
+      
+    - name: Check critical services status
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+      register: service_status
+      loop:
+        - docker
+        - qemu-guest-agent
+        - tuned
+      ignore_errors: yes
+      
+    - name: Display service status
+      ansible.builtin.debug:
+        msg: "{{ item.item }}: {{ item.status.ActiveState | default('unknown') }}"
+      loop: "{{ service_status.results }}"
+      when: item.status is defined
+      
+    - name: Test Warp agent ports
+      ansible.builtin.wait_for:
+        port: "{{ item }}"
+        host: "{{ ansible_default_ipv4.address }}"
+        timeout: 5
+      register: port_check
+      loop:
+        - "{{ warp_agent_port }}"
+        - "{{ message_broker_port }}"
+      ignore_errors: yes
+      
+    - name: Display port status
+      ansible.builtin.debug:
+        msg: "Port {{ item.item }}: {{ 'OPEN' if item.failed == false else 'CLOSED' }}"
+      loop: "{{ port_check.results }}"
+      
+    - name: Run health check (if available)
+      ansible.builtin.command: "{{ health_check_script }}"
+      register: health_check_result
+      ignore_errors: yes
+      when: optimization_files.results[3].stat.exists
+      
+    - name: Display health check results
+      ansible.builtin.debug:
+        var: health_check_result.stdout_lines
+      when: health_check_result is defined and health_check_result.stdout_lines is defined
+      
+    - name: Check if reboot is required
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+      
+    - name: Schedule performance monitoring
+      ansible.builtin.systemd:
+        name: warp-agent-performance-monitor.timer
+        enabled: yes
+        state: started
+      ignore_errors: yes
+      
+    - name: Create optimization summary
+      ansible.builtin.template:
+        src: optimization_summary.j2
+        dest: /root/optimization_summary.txt
+        mode: '0644'
+      vars:
+        timestamp: "{{ ansible_date_time.iso8601 }}"
+        total_ram: "{{ ansible_memtotal_mb }}"
+        cpu_cores: "{{ ansible_processor_vcpus }}"
+        optimization_type: "{{ 'Enhanced' if ansible_memtotal_mb >= 24000 else 'Standard' }}"
+        
+  post_tasks:
+    - name: Optimization deployment summary
+      ansible.builtin.debug:
+        msg:
+          - "=== VM OPTIMIZATION DEPLOYMENT COMPLETE ==="
+          - "Hostname: {{ ansible_hostname }}"
+          - "Optimization Type: {{ 'Enhanced' if ansible_memtotal_mb >= 24000 else 'Standard' }}"
+          - "System Resources: {{ ansible_memtotal_mb }}MB RAM, {{ ansible_processor_vcpus }} cores"
+          - "Reboot Required: {{ 'YES' if reboot_required.stat.exists else 'NO' }}"
+          - "Health Check Available: {{ 'YES' if optimization_files.results[3].stat.exists else 'NO' }}"
+          - "Performance Monitor: {{ 'ACTIVE' if service_status.results[0].status.ActiveState == 'active' else 'CHECK MANUALLY' }}"
+          - ""
+          - "Next Steps:"
+          - "1. Reboot VM if required: sudo reboot"
+          - "2. Verify with: {{ health_check_script }}"
+          - "3. Monitor logs: tail -f /var/log/warp-agent-performance.log"
+          - ""
+          - "Your Warp Agent architecture is now optimized! 🚀"
+
+    - name: Trigger notification to message broker
+      ansible.builtin.uri:
+        url: "http://{{ message_broker_host | default('192.168.122.86') }}:{{ message_broker_port }}/api/messages"
+        method: POST
+        body_format: json
+        body:
+          from: "ansible-optimization"
+          to: "warp-agents"
+          message: "VM optimization completed on {{ ansible_hostname }}"
+          timestamp: "{{ ansible_date_time.iso8601 }}"
+          status: "success"
+        headers:
+          Content-Type: "application/json"
+      ignore_errors: yes

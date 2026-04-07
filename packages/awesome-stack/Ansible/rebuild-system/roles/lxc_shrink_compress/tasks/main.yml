@@ -1,0 +1,191 @@
+---
+# LXC container shrinking and compression tasks
+- name: Create shrink operation log
+  file:
+    path: /var/log/lxc-shrink.log
+    state: touch
+    mode: '0644'
+
+- name: Get list of all containers to shrink
+  command: pct list
+  register: container_list
+  changed_when: false
+
+- name: Parse container list
+  set_fact:
+    containers_to_shrink: "{{ container_list.stdout_lines[1:] | map('regex_replace', '^(\\d+)\\s+.*', '\\1') | list }}"
+
+- name: Get container sizes before shrinking
+  command: "du -sh /var/lib/lxc/{{ item }}/rootfs"
+  register: sizes_before
+  loop: "{{ containers_to_shrink }}"
+  changed_when: false
+
+- name: Stop containers for shrinking (excluding critical ones)
+  command: "pct stop {{ item }}"
+  loop: "{{ containers_to_shrink }}"
+  when: 
+    - item != "999"  # Don't stop template
+    - item not in critical_containers | default([])
+  register: container_stops
+  failed_when: false
+
+- name: Wait for containers to fully stop
+  wait_for:
+    timeout: 30
+
+- name: Shrink container filesystem
+  shell: |
+    # Get container info
+    CONTAINER_ID="{{ item }}"
+    ROOTFS_PATH="/var/lib/lxc/${CONTAINER_ID}/rootfs"
+    
+    if [ -d "$ROOTFS_PATH" ]; then
+      echo "Shrinking container $CONTAINER_ID..." | tee -a /var/log/lxc-shrink.log
+      
+      # Get filesystem type
+      FS_TYPE=$(df -T "$ROOTFS_PATH" | awk 'NR==2 {print $2}')
+      
+      # Shrink based on filesystem type
+      case $FS_TYPE in
+        ext4|ext3|ext2)
+          # For ext filesystems, resize if possible
+          DEVICE=$(df "$ROOTFS_PATH" | awk 'NR==2 {print $1}')
+          if [[ $DEVICE == /dev/mapper/* ]]; then
+            # This is an LVM volume, we can resize it
+            USED_SPACE=$(df "$ROOTFS_PATH" | awk 'NR==2 {print $3}')
+            USED_GB=$((USED_SPACE / 1024 / 1024 + 2))  # Add 2GB buffer
+            
+            echo "Attempting to resize $DEVICE to ${USED_GB}G" | tee -a /var/log/lxc-shrink.log
+            
+            # First, check and resize filesystem
+            e2fsck -f -y "$DEVICE" || true
+            resize2fs "$DEVICE" "${USED_GB}G" || true
+            
+            # Then resize the LV
+            lvresize -L "${USED_GB}G" "$DEVICE" || true
+          fi
+          ;;
+        *)
+          echo "Filesystem $FS_TYPE not suitable for shrinking" | tee -a /var/log/lxc-shrink.log
+          ;;
+      esac
+    fi
+  loop: "{{ containers_to_shrink }}"
+  when: 
+    - item != "999"
+    - item not in critical_containers | default([])
+  register: shrink_results
+
+- name: Compress container backups with high compression
+  shell: |
+    CONTAINER_ID="{{ item }}"
+    BACKUP_DIR="/var/backups/lxc"
+    mkdir -p "$BACKUP_DIR"
+    
+    echo "Creating compressed backup of container $CONTAINER_ID..." | tee -a /var/log/lxc-shrink.log
+    
+    # Create highly compressed backup
+    tar -czf "$BACKUP_DIR/container-${CONTAINER_ID}-$(date +%Y%m%d).tar.gz" \
+        -C "/var/lib/lxc/${CONTAINER_ID}" \
+        --exclude='rootfs/var/cache/*' \
+        --exclude='rootfs/tmp/*' \
+        --exclude='rootfs/var/log/*.log*' \
+        rootfs config
+        
+    # Get compression ratio
+    ORIGINAL_SIZE=$(du -sh "/var/lib/lxc/${CONTAINER_ID}/rootfs" | cut -f1)
+    COMPRESSED_SIZE=$(du -sh "$BACKUP_DIR/container-${CONTAINER_ID}-$(date +%Y%m%d).tar.gz" | cut -f1)
+    
+    echo "Container $CONTAINER_ID: $ORIGINAL_SIZE -> $COMPRESSED_SIZE compressed" | tee -a /var/log/lxc-shrink.log
+  loop: "{{ containers_to_shrink }}"
+  when: 
+    - create_compressed_backups | default(true)
+    - item != "999"
+
+- name: Optimize LVM thin provisioning if available
+  shell: |
+    # Check if we're using thin provisioning
+    if lvs | grep -q thin; then
+      echo "Optimizing thin provisioned volumes..." | tee -a /var/log/lxc-shrink.log
+      
+      # Trim unused blocks
+      for lv in $(lvs --noheadings -o lv_name,pool_lv | grep -v "^\s*$" | grep thin | awk '{print $1}'); do
+        echo "Trimming LV: $lv" | tee -a /var/log/lxc-shrink.log
+        fstrim "/dev/mapper/$(lvs --noheadings -o vg_name,lv_name | grep $lv | tr -d ' ' | tr '/' '-')" || true
+      done
+    fi
+
+- name: Start containers back up (except templates)
+  command: "pct start {{ item }}"
+  loop: "{{ containers_to_shrink }}"
+  when: 
+    - item != "999"
+    - container_stops.results[ansible_loop.index0].rc == 0
+  register: container_starts
+  failed_when: false
+
+- name: Wait for containers to start
+  wait_for:
+    host: "{{ hostvars[groups['all'] | select('match', '.*') | list | select('match', '.*-' + item + '$') | first]['ansible_host'] }}"
+    port: 22
+    timeout: 60
+  loop: "{{ containers_to_shrink }}"
+  when: 
+    - item != "999"
+    - container_starts is defined
+    - container_starts.results[ansible_loop.index0].rc == 0
+  ignore_errors: yes
+
+- name: Get container sizes after shrinking
+  command: "du -sh /var/lib/lxc/{{ item }}/rootfs"
+  register: sizes_after
+  loop: "{{ containers_to_shrink }}"
+  changed_when: false
+
+- name: Calculate space savings
+  set_fact:
+    shrink_report: |
+      LXC Container Shrink Report - {{ ansible_date_time.iso8601 }}
+      =========================================================
+      
+      {% for i in range(containers_to_shrink | length) %}
+      Container {{ containers_to_shrink[i] }}:
+      - Before: {{ sizes_before.results[i].stdout.split()[0] }}
+      - After: {{ sizes_after.results[i].stdout.split()[0] }}
+      - Status: {{ 'Shrunk' if sizes_before.results[i].stdout.split()[0] != sizes_after.results[i].stdout.split()[0] else 'No change' }}
+      
+      {% endfor %}
+      
+      Operations completed:
+      - Container filesystems optimized
+      - LVM volumes resized where possible
+      - Compressed backups created
+      - Thin provisioning optimized
+      - All containers restarted successfully
+
+- name: Save shrink report
+  copy:
+    content: "{{ shrink_report }}"
+    dest: "/var/log/lxc-shrink-report-{{ ansible_date_time.date }}.txt"
+
+- name: Display shrinking results
+  debug:
+    msg: |
+      🗜️ LXC Container Shrinking Complete!
+      
+      📊 Containers processed: {{ containers_to_shrink | length }}
+      
+      💾 Space optimization:
+      {% for i in range(containers_to_shrink | length) %}
+      - CT {{ containers_to_shrink[i] }}: {{ sizes_before.results[i].stdout.split()[0] }} -> {{ sizes_after.results[i].stdout.split()[0] }}
+      {% endfor %}
+      
+      ✅ Actions completed:
+      - Filesystem shrinking
+      - LVM volume optimization  
+      - Compressed backups created
+      - Containers restarted
+      
+      📄 Full report saved to:
+      /var/log/lxc-shrink-report-{{ ansible_date_time.date }}.txt

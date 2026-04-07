@@ -1,0 +1,419 @@
+# Extended Traefik Routing Configuration for Planned Media Stack Containers
+# This configuration should be added to Container 103 (Traefik) when containers are created
+
+http:
+  routers:
+    # Media Servers (230-239)
+    plex:
+      rule: "Host(`plex.local`) || PathPrefix(`/plex`)"
+      entrypoints:
+        - web
+      service: plex-service
+      middlewares:
+        - compression
+        
+    jellyfin:
+      rule: "Host(`jellyfin.local`) || PathPrefix(`/jellyfin`)"
+      entrypoints:
+        - web
+      service: jellyfin-service
+      middlewares:
+        - compression
+        
+    audiobookshelf:
+      rule: "Host(`audiobookshelf.local`) || PathPrefix(`/audiobookshelf`)"
+      entrypoints:
+        - web
+      service: audiobookshelf-service
+      middlewares:
+        - compression
+        
+    calibre-web:
+      rule: "Host(`calibre.local`) || PathPrefix(`/calibre`)"
+      entrypoints:
+        - web
+      service: calibre-service
+      middlewares:
+        - compression
+        
+    iptv-proxy:
+      rule: "Host(`iptv.local`) || PathPrefix(`/iptv`)"
+      entrypoints:
+        - web
+      service: iptv-service
+      middlewares:
+        - compression
+        
+    tvheadend:
+      rule: "Host(`tvheadend.local`) || PathPrefix(`/tvheadend`)"
+      entrypoints:
+        - web
+      service: tvheadend-service
+      middlewares:
+        - compression
+        
+    tdarr-server:
+      rule: "Host(`tdarr.local`) || PathPrefix(`/tdarr`)"
+      entrypoints:
+        - web
+      service: tdarr-service
+      middlewares:
+        - compression
+
+    # Enhancement Services (240-249)
+    bazarr:
+      rule: "Host(`bazarr.local`) || PathPrefix(`/bazarr`)"
+      entrypoints:
+        - web
+      service: bazarr-service
+      middlewares:
+        - compression
+        
+    overseerr:
+      rule: "Host(`overseerr.local`) || PathPrefix(`/overseerr`)"
+      entrypoints:
+        - web
+      service: overseerr-service
+      middlewares:
+        - compression
+        
+    jellyseerr:
+      rule: "Host(`jellyseerr.local`) || PathPrefix(`/jellyseerr`)"
+      entrypoints:
+        - web
+      service: jellyseerr-service
+      middlewares:
+        - compression
+        
+    ombi:
+      rule: "Host(`ombi.local`) || PathPrefix(`/ombi`)"
+      entrypoints:
+        - web
+      service: ombi-service
+      middlewares:
+        - compression
+        
+    tautulli:
+      rule: "Host(`tautulli.local`) || PathPrefix(`/tautulli`)"
+      entrypoints:
+        - web
+      service: tautulli-service
+      middlewares:
+        - compression
+        
+    kometa:
+      rule: "Host(`kometa.local`) || PathPrefix(`/kometa`)"
+      entrypoints:
+        - web
+      service: kometa-service
+      middlewares:
+        - compression
+        
+    gaps:
+      rule: "Host(`gaps.local`) || PathPrefix(`/gaps`)"
+      entrypoints:
+        - web
+      service: gaps-service
+      middlewares:
+        - compression
+        
+    janitorr:
+      rule: "Host(`janitorr.local`) || PathPrefix(`/janitorr`)"
+      entrypoints:
+        - web
+      service: janitorr-service
+      middlewares:
+        - compression
+
+    # Monitoring & Analytics (260-269)
+    prometheus:
+      rule: "Host(`prometheus.local`) || PathPrefix(`/prometheus`)"
+      entrypoints:
+        - web
+      service: prometheus-service
+      middlewares:
+        - compression
+        - admin-auth
+        
+    grafana:
+      rule: "Host(`grafana.local`) || PathPrefix(`/grafana`)"
+      entrypoints:
+        - web
+      service: grafana-service
+      middlewares:
+        - compression
+        
+    checkrr:
+      rule: "Host(`checkrr.local`) || PathPrefix(`/checkrr`)"
+      entrypoints:
+        - web
+      service: checkrr-service
+      middlewares:
+        - compression
+
+    # Management & Utilities (270-279)
+    organizr:
+      rule: "Host(`organizr.local`) || PathPrefix(`/organizr`)"
+      entrypoints:
+        - web
+      service: organizr-service
+      middlewares:
+        - compression
+        
+    homarr:
+      rule: "Host(`homarr.local`) || PathPrefix(`/homarr`)"
+      entrypoints:
+        - web
+      service: homarr-service
+      middlewares:
+        - compression
+        
+    homepage:
+      rule: "Host(`homepage.local`) || PathPrefix(`/homepage`)"
+      entrypoints:
+        - web
+      service: homepage-service
+      middlewares:
+        - compression
+        
+    crowdsec:
+      rule: "Host(`crowdsec.local`) || PathPrefix(`/crowdsec`)"
+      entrypoints:
+        - web
+      service: crowdsec-service
+      middlewares:
+        - compression
+        - admin-auth
+        
+    # Home Assistant - External HTTPS Access for Alexa Integration
+    homeassistant-external:
+      rule: "Host(`lou-fogle-media-stack.duckdns.org`)"
+      entrypoints:
+        - websecure
+      service: homeassistant-service
+      tls:
+        certResolver: letsencrypt
+      middlewares:
+        - compression
+        
+    # Home Assistant - Internal Access
+    homeassistant-internal:
+      rule: "Host(`homeassistant.local`) || PathPrefix(`/homeassistant`)"
+      entrypoints:
+        - web
+      service: homeassistant-service
+      middlewares:
+        - compression
+
+  services:
+    # Media Servers (230-239)
+    plex-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.230:32400"
+        healthCheck:
+          path: "/web/index.html"
+          interval: "30s"
+          timeout: "10s"
+          
+    jellyfin-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.231:8096"
+        healthCheck:
+          path: "/System/Ping"
+          interval: "30s"
+          timeout: "10s"
+          
+    audiobookshelf-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.232:13378"
+        healthCheck:
+          path: "/ping"
+          interval: "30s"
+          timeout: "10s"
+          
+    calibre-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.233:8083"
+        healthCheck:
+          path: "/"
+          interval: "30s"
+          timeout: "10s"
+          
+    iptv-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.234:8555"
+        healthCheck:
+          path: "/"
+          interval: "30s"
+          timeout: "10s"
+          
+    tvheadend-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.235:9981"
+        healthCheck:
+          path: "/"
+          interval: "30s"
+          timeout: "10s"
+          
+    tdarr-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.236:8265"
+        healthCheck:
+          path: "/"
+          interval: "30s"
+          timeout: "10s"
+
+    # Enhancement Services (240-249)
+    bazarr-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.240:6767"
+        healthCheck:
+          path: "/api/system/status"
+          interval: "30s"
+          timeout: "10s"
+          
+    overseerr-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.241:5055"
+        healthCheck:
+          path: "/api/v1/status"
+          interval: "30s"
+          timeout: "10s"
+          
+    jellyseerr-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.242:5055"
+        healthCheck:
+          path: "/api/v1/status"
+          interval: "30s"
+          timeout: "10s"
+          
+    ombi-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.243:3579"
+        healthCheck:
+          path: "/api/v1/Status"
+          interval: "30s"
+          timeout: "10s"
+          
+    tautulli-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.244:8181"
+        healthCheck:
+          path: "/status"
+          interval: "30s"
+          timeout: "10s"
+          
+    kometa-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.245:5432"
+        healthCheck:
+          path: "/"
+          interval: "30s"
+          timeout: "10s"
+          
+    gaps-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.246:8484"
+        healthCheck:
+          path: "/"
+          interval: "30s"
+          timeout: "10s"
+          
+    janitorr-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.247:8200"
+        healthCheck:
+          path: "/"
+          interval: "30s"
+          timeout: "10s"
+
+    # Monitoring & Analytics (260-269)
+    prometheus-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.260:9090"
+        healthCheck:
+          path: "/-/healthy"
+          interval: "30s"
+          timeout: "10s"
+          
+    grafana-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.261:3000"
+        healthCheck:
+          path: "/api/health"
+          interval: "30s"
+          timeout: "10s"
+          
+    checkrr-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.262:8080"
+        healthCheck:
+          path: "/"
+          interval: "30s"
+          timeout: "10s"
+
+    # Management & Utilities (270-279)
+    organizr-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.274:80"
+        healthCheck:
+          path: "/"
+          interval: "30s"
+          timeout: "10s"
+          
+    homarr-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.275:7575"
+        healthCheck:
+          path: "/"
+          interval: "30s"
+          timeout: "10s"
+          
+    homepage-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.276:3000"
+        healthCheck:
+          path: "/"
+          interval: "30s"
+          timeout: "10s"
+          
+    crowdsec-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.278:8080"
+        healthCheck:
+          path: "/"
+          interval: "30s"
+          timeout: "10s"
+          
+    # Home Assistant Service
+    homeassistant-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.122.113:8123"
+        healthCheck:
+          path: "/api/"
+          interval: "30s"
+          timeout: "15s"

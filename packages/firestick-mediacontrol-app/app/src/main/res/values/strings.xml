@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Media Control Center</string>
+    <string name="server_label">Server: %1$s</string>
+    <string name="stats_line">Running: %1$d • Stopped: %2$d • Total: %3$d</string>
+    <string name="system_line">CPU %1$s%% • MEM %2$s%% • DISK %3$s%%</string>
+</resources>

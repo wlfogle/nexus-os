@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>M3U Stream Tester</title>
+    <script type="module" src="/main.js" defer></script>
+  </head>
+
+  <body>
+    <main class="container">
+      <h1>M3U Stream Tester</h1>
+      <p>Test M3U streams from a folder and output working streams to M3U8</p>
+
+      <div class="form-section">
+        <h2>Configuration</h2>
+        
+        <div class="row">
+          <label for="folder-input">Input Folder (M3U files):</label>
+          <div class="input-group">
+            <input id="folder-input" type="text" placeholder="Select folder containing M3U files" readonly />
+            <button id="folder-button" type="button">Browse</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <label for="output-input">Output M3U8 File:</label>
+          <div class="input-group">
+            <input id="output-input" type="text" placeholder="working_streams.m3u8" />
+            <button id="output-button" type="button">Browse</button>
+          </div>
+        </div>
+
+        <div class="settings-row">
+          <div class="setting">
+            <label for="timeout-input">Timeout (seconds):</label>
+            <input id="timeout-input" type="number" value="10" min="1" max="60" />
+          </div>
+          <div class="setting">
+            <label for="concurrent-input">Max Concurrent:</label>
+            <input id="concurrent-input" type="number" value="10" min="1" max="50" />
+          </div>
+        </div>
+      </div>
+
+      <div class="control-section">
+        <button id="start-button" type="button">Start Testing</button>
+        <button id="stop-button" type="button" disabled>Stop</button>
+        <button id="clear-button" type="button">Clear Log</button>
+      </div>
+
+      <div class="progress-section">
+        <div class="progress-info">
+          <span id="progress-text">Ready</span>
+        </div>
+        <div class="progress-bar">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="results-section">
+        <h2>Results</h2>
+        <div class="stats">
+          <span class="stat">Total: <span id="total-streams">0</span></span>
+          <span class="stat">Tested: <span id="tested-streams">0</span></span>
+          <span class="stat working">Working: <span id="working-streams">0</span></span>
+          <span class="stat failed">Failed: <span id="failed-streams">0</span></span>
+        </div>
+      </div>
+
+      <div class="categories-section">
+        <h2>Categories</h2>
+        <div id="categories-container">
+          <p class="no-categories">No categories available yet. Start testing to see category breakdown.</p>
+        </div>
+        <div class="category-actions">
+          <button id="save-by-category" type="button" disabled>Save by Category</button>
+        </div>
+      </div>
+
+      <div class="log-section">
+        <h2>Log</h2>
+        <div id="log-container" class="log-container">
+          <div id="log-content"></div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

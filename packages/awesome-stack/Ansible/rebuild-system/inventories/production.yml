@@ -1,0 +1,94 @@
+---
+all:
+  vars:
+    # Global configuration
+    proxmox_host: "192.168.122.9"
+    proxmox_api_user: "ansible@pve"
+    proxmox_node: "garuda"
+    bridge_interface: "vmbr0"
+    storage_pool: "local-lvm"
+    
+    # Network ranges
+    lxc_network: "192.168.122.0/24"
+    vm_network: "192.168.122.0/24"
+    
+    # Warp Agent Configuration
+    warp_bridge_port: 8080
+    warp_agent_port: 7777
+    agent_comms_port: 8080
+    
+  children:
+    proxmox_hosts:
+      hosts:
+        proxmox-vm:
+          ansible_host: "192.168.122.9"
+          ansible_user: root
+          
+    # Core Infrastructure
+    core_services:
+      hosts:
+        traefik-lb:
+          container_id: 103
+          ansible_host: "192.168.122.103"
+          service_type: "load_balancer"
+          ports: [8080, 9080]
+          
+        ollama-ai:
+          container_id: 900
+          ansible_host: "192.168.122.86"
+          service_type: "ai_service"
+          ports: [11434]
+          
+        agent-comms:
+          container_id: 950
+          ansible_host: "192.168.122.86"
+          service_type: "message_broker"
+          ports: [8080]
+          
+    # Media Stack
+    media_services:
+      hosts:
+        plex-server:
+          container_id: 230
+          ansible_host: "192.168.122.230"
+          service_type: "media"
+          ports: [32400]
+          
+        jellyfin-server:
+          container_id: 231
+          ansible_host: "192.168.122.231"
+          service_type: "media"
+          ports: [8096]
+          
+    # Monitoring & Management
+    monitoring:
+      hosts:
+        grafana-dash:
+          container_id: 240
+          ansible_host: "192.168.122.240"
+          service_type: "monitoring"
+          ports: [3000]
+          
+        prometheus:
+          container_id: 241
+          ansible_host: "192.168.122.241"
+          service_type: "monitoring"
+          ports: [9090]
+          
+    # Virtual Machines
+    virtual_machines:
+      hosts:
+        home-assistant:
+          vm_id: 500
+          ansible_host: "192.168.122.230"
+          service_type: "automation"
+          ports: [8123]
+          
+    # Golden Image Template
+    templates:
+      hosts:
+        golden-image:
+          container_id: 999
+          ansible_host: "192.168.122.999"
+          service_type: "template"
+          template_name: "golden-warp-agent"

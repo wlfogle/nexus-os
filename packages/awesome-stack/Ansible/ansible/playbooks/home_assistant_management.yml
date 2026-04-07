@@ -1,0 +1,6 @@
+---
+- name: Configure Home Assistant VM
+  hosts: home-assistant-vm
+  become: yes
+  roles:
+    - home_assistant

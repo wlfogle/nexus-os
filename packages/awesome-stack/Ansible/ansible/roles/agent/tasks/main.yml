@@ -1,0 +1,13 @@
+---
+# TODO: Agent installation and orchestration steps
+- name: Ensure agent-comms is running
+  ansible.builtin.systemd:
+    name: agent-comms
+    state: started
+    enabled: yes
+
+- name: Ensure warp_agent_bridge is running
+  ansible.builtin.systemd:
+    name: warp-agent-bridge
+    state: started
+    enabled: yes

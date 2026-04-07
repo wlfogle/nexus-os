@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Amazon Games App installer for PortProton
+export PW_AUTOINSTALL_EXE="AmazonGamesSetup.exe"
+export PW_PREFIX_NAME="AMAZON_GAMES"
+export PW_VULKAN_USE="1"
+PW_WINE_USE="PROTON_LG" try_download_installer \
+"https://gaming.amazon.com/download" \
+"$PW_AUTOINSTALL_EXE" \
+"amazon_games_installer"

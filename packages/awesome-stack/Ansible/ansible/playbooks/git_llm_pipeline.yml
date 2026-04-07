@@ -1,0 +1,6 @@
+---
+- name: Git repo → LLM pipeline automation
+  hosts: ollama-ct
+  become: yes
+  roles:
+    - git_llm

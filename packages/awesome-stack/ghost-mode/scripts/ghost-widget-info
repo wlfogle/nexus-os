@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# 🥷 Ghost Mode Widget Information
+# Installation summary and usage guide
+
+echo "🥷 GHOST MODE SYSTEM TRAY WIDGET"
+echo "================================="
+echo ""
+
+echo "✅ INSTALLATION COMPLETE!"
+echo ""
+
+echo "🎯 AVAILABLE CONTROLS:"
+echo ""
+echo "1️⃣ System Tray Widget:"
+echo "   • Look for colored circle icon in your system tray"
+echo "   • 🟢 Green = Ghost Mode Active & Secure"
+echo "   • 🟡 Yellow = Ghost Mode Active but needs attention"
+echo "   • 🔴 Red = Ghost Mode Inactive (you're visible)"
+echo ""
+
+echo "2️⃣ Quick Actions:"
+echo "   • LEFT CLICK tray icon = Toggle Ghost Mode on/off"
+echo "   • RIGHT CLICK tray icon = Context menu with options"
+echo "   • DOUBLE CLICK tray icon = Open Control Panel"
+echo ""
+
+echo "3️⃣ Context Menu Options:"
+echo "   🔄 Toggle Ghost Mode"
+echo "   🌐 Launch Ghost Browser"
+echo "   🧪 Test Anonymity"
+echo "   ⚙️ Control Panel (detailed view)"
+echo "   ❌ Exit"
+echo ""
+
+echo "4️⃣ Control Panel Features:"
+echo "   📊 Real-time status of all protections"
+echo "   🎯 Quick control buttons"
+echo "   📋 Live activity logs"
+echo "   🌐 Launch Ghost Browser"
+echo "   🧪 Run anonymity tests"
+echo ""
+
+echo "🚀 AUTO-START:"
+echo "   ✅ Widget will auto-start on login"
+echo "   ✅ Desktop shortcut created: ~/Desktop/Ghost-Mode.desktop"
+echo ""
+
+echo "💻 COMMAND LINE ACCESS:"
+echo "   ghost-toggle           # Simple on/off toggle"
+echo "   ghost-toggle status    # Check current status"
+echo "   ghost-toggle on        # Activate ghost mode"
+echo "   ghost-toggle off       # Deactivate ghost mode"
+echo ""
+
+echo "🔍 CURRENT STATUS:"
+if pgrep -f "ghost-tray-widget" >/dev/null; then
+    echo "   🟢 Tray widget is RUNNING"
+else
+    echo "   🔴 Tray widget is NOT running"
+    echo "   💡 Run: ghost-tray-widget &"
+fi
+
+if [ -f "$HOME/.config/ghost-mode/status" ] && [ "$(cat "$HOME/.config/ghost-mode/status")" = "active" ]; then
+    echo "   🥷 Ghost Mode is ACTIVE (you are invisible)"
+else
+    echo "   ❌ Ghost Mode is INACTIVE (you are visible)"
+    echo "   💡 Click tray icon or run: ghost-toggle"
+fi
+
+echo ""
+echo "🎨 VISUAL INDICATORS:"
+echo "   System Tray Icon Colors:"
+echo "   🟢 Green Circle = Fully protected and invisible"
+echo "   🟡 Yellow Circle = Active but some protections need attention"
+echo "   🔴 Red Circle = Not protected (visible online)"
+echo ""
+
+echo "🛠️ TROUBLESHOOTING:"
+echo "   • If no tray icon visible: Run 'ghost-tray-widget &'"
+echo "   • If widget crashes: Check PyQt5 installation"
+echo "   • If toggle doesn't work: Check ghost-mode scripts"
+echo "   • If notifications don't show: Install libnotify"
+echo ""
+
+echo "💡 PRO TIPS:"
+echo "   • Keep the tray widget running for constant monitoring"
+echo "   • Green icon means you're completely invisible online"
+echo "   • Use Control Panel for detailed status and logs"
+echo "   • Test your anonymity regularly with the Test button"
+echo ""
+
+echo "🎯 Quick Test:"
+echo "   1. Click the tray icon to activate Ghost Mode"
+echo "   2. Wait for icon to turn green"
+echo "   3. Right-click → Test Anonymity"
+echo "   4. Visit: https://browserleaks.com"
+echo ""
+
+echo "🔥 YOU NOW HAVE ONE-CLICK INVISIBILITY! 🔥"
