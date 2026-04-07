@@ -26,6 +26,12 @@ Apply:
 sudo exportfs -ra
 sudo systemctl enable --now nfs-kernel-server
 ```
+## Laptop IPs
+- `192.168.12.205` — Ethernet (enp4s0) ✅ USE THIS
+- `192.168.12.172` — WiFi (wlp0s20f3) ❌ blocked by AP isolation
+
+Always use the Ethernet IP (.205) for NFS mounts. WiFi is unreachable from Tiamat due to router AP isolation.
+
 ## Tiamat Setup
 Install NFS client tools:
 ```bash
@@ -34,15 +40,19 @@ apt install -y nfs-common
 ```
 Create mountpoints:
 ```bash
-mkdir -p /mnt/laptop/{calibre,cookbooks,videos,isos,roms}
+mkdir -p /mnt/laptop/{calibre,cookbooks,videos,isos,roms,iptv}
 ```
-Add to `/etc/fstab`:
+Add to `/etc/fstab` (already configured on Tiamat):
 ```bash
-192.168.12.172:/media/loufogle/Data/Calibre\040Library /mnt/laptop/calibre nfs defaults,_netdev 0 0
-192.168.12.172:/media/loufogle/Data/Cookbooks /mnt/laptop/cookbooks nfs defaults,_netdev 0 0
-192.168.12.172:/media/loufogle/SystemBackup/Videos /mnt/laptop/videos nfs defaults,_netdev 0 0
-192.168.12.172:/media/loufogle/ISOs1 /mnt/laptop/isos nfs defaults,_netdev 0 0
-192.168.12.172:/media/loufogle/Games/roms /mnt/laptop/roms nfs defaults,_netdev 0 0
+192.168.12.205:/media/loufogle/Data/Calibre\040Library /mnt/laptop/calibre  nfs vers=3,soft,timeo=30,retrans=2,_netdev 0 0
+192.168.12.205:/media/loufogle/Data/Cookbooks          /mnt/laptop/cookbooks nfs vers=3,soft,timeo=30,retrans=2,_netdev 0 0
+192.168.12.205:/media/loufogle/SystemBackup/Videos     /mnt/laptop/videos    nfs vers=3,soft,timeo=30,retrans=2,_netdev 0 0
+192.168.12.205:/media/loufogle/ISOs1                   /mnt/laptop/isos      nfs vers=3,soft,timeo=30,retrans=2,_netdev 0 0
+192.168.12.205:/media/loufogle/Games/roms               /mnt/laptop/roms      nfs vers=3,soft,timeo=30,retrans=2,_netdev 0 0
+```
+Mount when laptop is online:
+```bash
+for mp in calibre cookbooks videos isos roms; do mount /mnt/laptop/$mp && echo "✓ $mp" || echo "✗ $mp"; done
 ```
 Mount:
 ```bash

@@ -37,7 +37,7 @@ BASE_PKGS=(
   curl wget git ca-certificates gnupg lsb-release
   ufw avahi-daemon dbus-x11 x11-xserver-utils xfonts-base
   python3 python3-pip
-  openbox lxpanel xterm
+  lxde xterm
   tigervnc-standalone-server tigervnc-common
   novnc websockify
 )

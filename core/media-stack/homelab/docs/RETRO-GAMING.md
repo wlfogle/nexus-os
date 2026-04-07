@@ -1,26 +1,27 @@
 # RetroArch on Fire TV
 
-Play retro games on Fire TV using ROMs from the laptop NFS share.
+Play retro games on Fire TV using ROMs from Tiamat.
 
 ## Prerequisites
-- Laptop NFS server running (see `docs/NFS.md`)
-- ROMs at `/media/loufogle/Games/roms` exported to Tiamat
+- ROMs on Tiamat at `/mnt/hdd/media/roms/` (94GB, 12 systems — see `docs/GAMING.md`)
 - Fire TV on same LAN (`192.168.12.x`)
+- Bluetooth controller paired (8BitDo, Xbox, PS5)
 
 ## Install RetroArch
 1. **Fire TV App Store**: Search "RetroArch" and install
 2. Or **sideload** via Downloader app if not in your region
 
-## Configure ROM Access via NFS
+## Option A: RetroPie on Tiamat (CT-280)
+RetroPie + EmulationStation running on Tiamat LXC.
+- Access via VNC or Moonlight streaming from Fire TV
+- All ROMs pre-loaded at `/home/pi/RetroPie/roms/`
+
+## Option B: RetroArch Native + NFS (standalone on Fire TV)
 RetroArch supports NFS natively:
 1. Open RetroArch → **Settings** → **Network**
-2. Under NFS, add server: `192.168.12.172` (laptop IP)
-3. Mount path: `/media/loufogle/Games/roms`
+2. Under NFS, add server: `192.168.12.242` (Tiamat)
+3. Mount path: `/mnt/hdd/media/roms`
 4. Go to **Load Content** → browse the NFS mount
-
-Alternatively, if ROMs are mounted on Tiamat:
-- NFS server: `192.168.12.242`
-- Mount path: `/mnt/laptop/roms`
 
 ## Controller Setup
 1. RetroArch → **Settings** → **Input** → **Port 1 Controls**

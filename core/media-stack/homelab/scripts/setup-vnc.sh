@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # =============================================================================
 # setup-vnc.sh — Tiamat (Proxmox host) VNC + noVNC Desktop Setup
-# Installs OpenBox + LXPanel + TigerVNC 1.15+ + noVNC web interface
-# Desktop: OpenBox session + LXPanel (lightweight, per awesome-stack protocol)
+# Installs LXDE + TigerVNC 1.15+ + noVNC web interface
+# Desktop: LXDE (lightweight, matches Bahamut)
 # TigerVNC 1.15+: config in ~/.config/tigervnc, built-in systemd service
 # View from: native VNC client, any browser, Android, Fire TV (Silk browser)
 # =============================================================================
@@ -35,11 +35,10 @@ if [[ ${#VNC_PASS} -lt 6 ]]; then
 fi
 
 # ── Install dependencies ─────────────────────────────────────────────────────
-echo "[1/6] Installing OpenBox + LXPanel + TigerVNC + noVNC + Warp + Opera..."
+echo "[1/6] Installing LXDE + TigerVNC + noVNC + Warp + Opera..."
 apt-get update -y
 apt-get install -y \
-    openbox \
-    lxpanel \
+    lxde \
     xterm \
     tigervnc-standalone-server \
     tigervnc-common \
@@ -90,16 +89,12 @@ PYEOF
 unset VNC_PASS VNC_PASS2
 
 # ── Write xstartup ───────────────────────────────────────────────────────────
-echo "[3/6] Writing VNC xstartup for XFCE4..."
+echo "[3/6] Writing VNC xstartup for LXDE..."
 cat > "${VNC_CFG}/xstartup" << 'EOF'
 #!/bin/bash
 xrdb $HOME/.Xresources 2>/dev/null || true
-# Start OpenBox window manager + LXDE panel
-openbox-session &
-lxpanel &
-# Start terminal for Warp login
-xterm &
-wait
+# Start LXDE desktop environment (matches Bahamut)
+exec startlxde
 EOF
 chmod +x "${VNC_CFG}/xstartup"
 

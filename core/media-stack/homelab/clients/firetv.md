@@ -45,6 +45,42 @@ nzb360 is an Android app — it can be sideloaded onto Fire TV for native Sonarr
 
 > API keys are in each service under Settings → General → Security.
 
+## Game Streaming (Moonlight)
+Stream games from the laptop's RTX 4080 directly to your TV.
+
+### Install Moonlight
+1. Open Fire TV app store → search **Moonlight Game Streaming** → Install
+   - If not found: open **Downloader** app → enter `https://moonlight-stream.org/apk`
+2. Open Moonlight → **Add Host manually**
+3. Enter laptop IP:
+   - Home (LAN): `192.168.12.172`
+   - Away (Tailscale): `100.66.87.38`
+4. A PIN appears on screen — go to `https://localhost:47990` on the laptop → **PIN** → enter it
+5. Done — Fire TV now shows available streaming apps: Desktop, Switch (Ryubing), Steam Big Picture
+
+### Controller Setup
+The controller plugs into the **Fire TV**, not the laptop. Moonlight forwards your input to the game.
+
+**Bluetooth (recommended — no cables):**
+1. Fire TV Settings → Controllers & Bluetooth Devices → Other Bluetooth Devices → Add Bluetooth Devices
+2. Put controller in pairing mode:
+   - **Xbox Wireless**: hold Xbox + Share until light flashes
+   - **PS5 DualSense**: hold Create + PS until light flashes
+   - **PS4 DualShock 4**: hold Share + PS until light bar flashes
+   - **Amazon Luna**: hold Luna button until light pulses
+3. Select controller from the list
+
+**USB (wired):**
+- Fire TV Stick (1st–4th gen): **Micro-USB OTG** adapter → USB-A controller
+- Fire TV Stick 4K Max / Cube: **USB-C OTG** adapter → USB-A controller
+
+### Playing Switch games
+1. In Moonlight, select **Switch (Ryubing)**
+2. Ryubing launches on the laptop, streams to your TV
+3. Controller input from Fire TV is forwarded automatically
+
+> Full guide: `docs/SUNSHINE-MOONLIGHT.md`
+
 ## Paid Streaming Services
 All paid services work natively — unaffected by the homelab setup:
 - Amazon Prime Video — pre-installed

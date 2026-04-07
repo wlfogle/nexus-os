@@ -1,0 +1,8 @@
+[Unit]
+Description=Media Pipeline Watchdog
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/media-pipeline-watchdog.py /etc/media-pipeline-watchdog.json

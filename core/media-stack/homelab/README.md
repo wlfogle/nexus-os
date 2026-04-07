@@ -22,12 +22,12 @@ Tiamat (Proxmox) - 192.168.12.242
 │   ├── CT-230 plex           192.168.12.230  :32400
 │   └── CT-231 jellyfin       192.168.12.231  :8096
 ├── Media Management
-│   ├── CT-240 bazarr         DHCP            :6767
-│   └── CT-242 jellyseerr     DHCP            :5055 (Jellyfin requests)
+│   ├── CT-240 bazarr         DHCP ~12.188    :6767
+│   └── CT-242 jellyseerr     DHCP ~12.151    :5055  ← first-run setup pending
 └── AI
     └── CT-900 ziggy          DHCP            Open WebUI :3000 + SearXNG :8081
 
-Tiamat Desktop: Openbox + tint2 + Opera (via x11vnc :5900)
+Tiamat Desktop: LXDE + Opera (via TigerVNC :5901 / noVNC :6080)
 Traefik local DNS: *.tiamat.local → per-service routing
 Backups: daily 3 AM via scripts/backup.sh → /mnt/hdd/backups
 
@@ -40,6 +40,10 @@ Ziggy Pi - 192.168.12.20
 ├── wg-easy
 └── Vaultwarden + Caddy
 ```
+
+## 🌐 Traefik Routes (CT-103)
+All services reachable via `*.tiamat.local` — see `docs/NETWORKING.md` for full table.
+Traefik dashboard: `http://traefik.tiamat.local` (or `http://192.168.12.103:8080`)
 
 ## 🔐 Download VPN Path
 `qBittorrent/Prowlarr -> CT-101 TinyProxy :8888 -> WG tunnel -> CT-100 -> internet`

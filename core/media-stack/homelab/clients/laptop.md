@@ -92,3 +92,24 @@ cd /opt/homelab-media-stack/android-app && ./build-app.sh install-firetv
 2. Open wg-easy at `http://192.168.12.20:51821`
 3. Create client → download config
 4. `sudo wg-quick up /path/to/config.conf`
+
+## Game Streaming (Sunshine + Moonlight)
+Sunshine is running on this laptop and exposes RTX 4080 GPU streaming.
+
+| Item | Value |
+|------|-------|
+| Web UI | https://localhost:47990 |
+| Service | `systemctl --user status sunshine-appimage` |
+| Apps | Desktop, Switch (Ryubing), Steam Big Picture |
+
+**Client setup** (phone / Fire TV / another PC):
+1. Install **Moonlight** app
+2. Add host: laptop LAN IP or Tailscale IP
+3. Enter PIN from Sunshine web UI to pair
+4. Launch desired app
+
+**Service control**:
+```bash
+systemctl --user start|stop|restart sunshine-appimage
+journalctl --user -u sunshine-appimage -f   # live logs
+```

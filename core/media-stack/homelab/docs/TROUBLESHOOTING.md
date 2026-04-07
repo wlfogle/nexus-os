@@ -1,4 +1,11 @@
-# Troubleshooting Guide
+# Troubleshooting
+
+## Seerr Login (2026-04-05)
+Use local login: click **"Sign in with Seerr"** on the login page.
+- Email: `seerr@local` | Password: `seerr`
+- Jellyfin login returns 500 when Jellyfin is actively streaming (DbUpdateConcurrencyException). Use local login instead.
+- Note: Prowlarr/Radarr SQLite DB locks periodically under heavy search load — restart the service if it stops responding.
+  Fix: `pct exec <CT_ID> -- systemctl restart <service>` then `sync && echo 3 > /proc/sys/vm/drop_caches` on Proxmox host if still stuck.
 
 Troubleshooting for the Tiamat Proxmox media stack (192.168.12.242).
 All commands run via SSH: `ssh root@192.168.12.242`
@@ -78,3 +85,24 @@ cat /var/log/pve/tasks/active
 
 ## TiVo ARP Poisoning (Fixed)
 Static ARP entries added in `/etc/network/interfaces` for .231, .215, .230 to prevent TiVo (00:11:d9:b8:80:a7) from claiming media stack IPs.
+
+## FlareSolverr Docker inside LXC (2026-04-06)
+Chrome hangs at "Testing web browser installation" inside Docker-in-LXC without SYS_ADMIN cap.
+Correct docker run command:
+```
+pct exec 102 -- docker rm -f flaresolverr
+pct exec 102 -- docker run -d --name flaresolverr --restart unless-stopped \
+  -p 8191:8191 -e LOG_LEVEL=info \
+  --shm-size=2g --cap-add=SYS_ADMIN \
+  ghcr.io/flaresolverr/flaresolverr:latest
+```
+
+## Radarr wrong IP in Prowlarr + Traefik (2026-04-06)
+Radarr moved from 192.168.12.215 to 192.168.12.225 (HDHR conflict).
+Both Traefik dynamic/download-stack.yml and Prowlarr Applications must use .225.
+Already fixed via API. If it recurs:
+```
+# Traefik (CT-103)
+sed -i "s|192.168.12.215:7878|192.168.12.225:7878|g" /etc/traefik/dynamic/download-stack.yml
+# Prowlarr — update via Settings > Apps > Radarr > baseUrl to http://192.168.12.225:7878
+```

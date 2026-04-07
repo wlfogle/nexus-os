@@ -1,0 +1,10 @@
+[Unit]
+Description=Tiamat Media Stack Self-Healing Watchdog
+After=network-online.target pve-guests.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/stack-watchdog.sh
+TimeoutStartSec=300
+

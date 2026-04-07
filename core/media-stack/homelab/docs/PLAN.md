@@ -19,7 +19,7 @@ Download stack (static IPs 192.168.12.210–224)
 ├── CT-212 qbittorrent    192.168.12.212   qBittorrent :8080  ← proxied via CT-101
 ├── CT-213 rdt-client     192.168.12.213   rdt-client :6500   ← Real-Debrid download client
 ├── CT-214 sonarr         192.168.12.214   Sonarr :8989
-├── CT-215 radarr         192.168.12.215   Radarr :7878
+├── CT-215 radarr         192.168.12.225   Radarr :7878  ← moved from .215 (HDHR conflict)
 ├── CT-216 proxarr        192.168.12.216   Proxarr (proxy routing for *arr)
 ├── CT-217 readarr        192.168.12.217   Readarr :8787
 ├── CT-219 whisparr       192.168.12.219   Whisparr :6969
@@ -125,7 +125,7 @@ Client Devices
 | CT-212 | qbittorrent | 192.168.12.212 | 2GB | 8080 |
 | CT-213 | rdt-client | 192.168.12.213 | 1GB | 6500 |
 | CT-214 | sonarr | 192.168.12.214 | 1GB | 8989 |
-| CT-215 | radarr | 192.168.12.215 | 1GB | 7878 |
+| CT-215 | radarr | 192.168.12.225 | 1GB | 7878 |
 | CT-216 | proxarr | 192.168.12.216 | 512MB | — |
 | CT-217 | readarr | 192.168.12.217 | 512MB | 8787 |
 | CT-219 | whisparr | 192.168.12.219 | 512MB | 6969 |
@@ -137,8 +137,8 @@ Client Devices
 |----|----------|----|-----|------|
 | CT-230 | plex | 192.168.12.230 | 8GB | 32400 |
 | CT-231 | jellyfin | 192.168.12.231 | 4GB | 8096 |
-| CT-232 | audiobookshelf | DHCP | 2GB | 13378 |
-| CT-233 | calibre-web | DHCP | 2GB | 8083 |
+| CT-232 | audiobookshelf | 192.168.12.232 | 2GB | 13378 |
+| CT-233 | calibre-web | 192.168.12.233 | 2GB | 8083 |
 | CT-234 | iptv-proxy | DHCP | 512MB | — |
 | CT-235 | tvheadend | DHCP | 2GB | 9981 |
 | CT-236 | tdarr-server | DHCP | 4GB | 8265 |
@@ -169,6 +169,121 @@ Client Devices
 | CT-277 | recyclarr | Recyclarr (*arr quality sync) |
 | CT-278 | crowdsec | CrowdSec (IDS/IPS) |
 | CT-279 | tailscale | Tailscale mesh VPN |
+## Current Deployment Status
+> Last updated: 2026-03-27 — reflects live state of Tiamat
+
+### Running containers (27 total)
+All containers below are running and passing HTTP health checks.
+
+| CT | Service | Status | Notes |
+|----|---------|--------|-------|
+| CT-100 | wireguard | ✅ running | |
+| CT-101 | wg-proxy | ✅ running | |
+| CT-102 | flaresolverr | ✅ running | Docker v3.4.6 (switched from native) |
+| CT-103 | traefik | ✅ running | 13 routes configured via file provider |
+| CT-104 | vaultwarden | ✅ running | |
+| CT-105 | valkey | ✅ running | |
+| CT-106 | postgresql | ✅ running | |
+| CT-107 | authentik | ✅ running | |
+| CT-210 | prowlarr | ✅ running | Sonarr + Radarr + Readarr + Lidarr synced |
+| CT-212 | qbittorrent | ✅ running | categories: sonarr/radarr/readarr/lidarr |
+| CT-214 | sonarr | ✅ running | HTTP 200 |
+| CT-215 | radarr | ✅ running | HTTP 200 |
+| CT-217 | readarr | ✅ running | :8787 — root folder + qBit + Prowlarr configured |
+| CT-218 | lidarr | ✅ running | :8686 — root folder + qBit + Prowlarr configured |
+| CT-230 | plex | ✅ running | HTTP 401 (auth required, normal) |
+| CT-231 | jellyfin | ✅ running | jellyfin/jellyfin |
+| CT-232 | audiobookshelf | ✅ running | :13378, /audiobooks bound |
+| CT-233 | calibre-web | ✅ running | calibre/calibre — DB path pending laptop NFS (set /calibre at /admin/dbconfig) |
+| CT-240 | bazarr | ✅ running | HTTP 200 |
+| CT-242 | jellyseerr | ✅ running | configured: Jellyfin + Sonarr + Radarr, library scan triggered |
+| CT-244 | tautulli | ✅ running | :8181 connected=True (Plex 192.168.12.230:32400) |
+| CT-245 | kometa | ⚠ needs config | restart-loops until config.yml added — see below |
+| CT-275 | homarr | ✅ running | :7575 — ready for dashboard configuration |
+| CT-276 | homepage | ✅ running | :3000 — ready for dashboard configuration |
+| CT-277 | recyclarr | ✅ running | needs recyclarr.yml with Sonarr/Radarr keys |
+| CT-900 | ziggy | ✅ running | Open WebUI + SearXNG |
+
+### Kometa (CT-245) — needs config.yml
+Container is deployed but will restart-loop until configured.
+Create `/opt/appdata/kometa/config.yml` on CT-245 with Plex URL and token:
+```
+pct exec 245 -- bash -c 'mkdir -p /opt/appdata/kometa'
+# Copy/write your config.yml to /opt/appdata/kometa/config.yml
+# Then: pct exec 245 -- docker restart kometa
+```
+See https://kometa.wiki/en/latest/config/configuration/ for full config reference.
+
+### Recyclarr (CT-277) — needs recyclarr.yml
+Sync won't run until `/opt/appdata/recyclarr/recyclarr.yml` is configured.
+```
+pct exec 277 -- docker exec recyclarr recyclarr config create
+# Edit the generated config, then: pct exec 277 -- docker restart recyclarr
+```
+
+### Traefik (CT-103) — routes live
+All `*.tiamat.local` routes configured and hot-loaded. See `docs/NETWORKING.md` for full table.
+To add a new route: drop a YAML file in `/etc/traefik/dynamic/` on CT-103 — no restart needed.
+
+### Jellyseerr (CT-242) — first-run pending
+Docker container deployed (`fallenbagel/jellyseerr:2.7.3`), port 5055 responding.
+Complete setup at `http://192.168.12.151:5055` (or `http://jellyseerr.tiamat.local`):
+- Connect to Jellyfin: `http://192.168.12.231:8096`
+- Connect to Sonarr: `http://192.168.12.214:8989`
+- Connect to Radarr: `http://192.168.12.215:7878`
+
+### Stale ARP issue — router
+Several static-IP CTs experience stale ARP entries causing connectivity failures until the host ARP cache is flushed.
+Symptom: `HTTP:000` from host but CT-to-CT works fine. Fix: `arp -d <IP>` on the Proxmox host.
+New static-IP CTs should get internet via DHCP first (so the router registers the MAC), then switch to static.
+See `/etc/pve/lxc/<ctid>.conf` — change `ip=dhcp` ↔ `ip=192.168.12.X/24` as needed.
+
+### NFS laptop mounts — pending
+All 5 laptop NFS shares are configured in `/etc/fstab` using `192.168.12.205` (laptop Ethernet).
+Mounts fail when laptop is off (expected — `soft,_netdev` prevents boot hang).
+WiFi (.172) is blocked by AP isolation — always use Ethernet (.205).
+When laptop comes online: `mount -a` or `for mp in calibre cookbooks videos isos roms; do mount /mnt/laptop/$mp; done`
+CT-233 calibre-web needs `mp1` added to `/etc/pve/lxc/233.conf` once calibre mounts:
+```
+echo 'mp1: /mnt/laptop/calibre,mp=/calibre' >> /etc/pve/lxc/233.conf
+echo 'mp2: /mnt/laptop/cookbooks,mp=/cookbooks' >> /etc/pve/lxc/233.conf
+pct restart 233
+```
+
+### Backup cron — active
+Vzdump of all 27 CTs runs daily at 03:00 → `/mnt/hdd/backups/`.
+See `docs/BACKUPS.md` for full scope and restore instructions.
+
+### Tiamat desktop (LXDE)
+TigerVNC on `:1` (port 5901) with noVNC web interface on `:6080`.
+DE: LXDE (same as Bahamut).
+Opera launches on session start with 5 service tabs (Traefik dashboard, Jellyfin, Sonarr, Radarr, Prowlarr).
+Config: `~/.config/tigervnc/xstartup`
+
+### IP conflict note — .231
+MAC `00:11:d9:b8:80:a7` (TiVo OUI) was previously flagged squatting on `.231`.
+Device is currently offline. CT-231 properly owns `.231`.
+If TiVo comes back online and conflicts, add a DHCP reservation on the router to push it elsewhere.
+
+## Container Boot Order (Proxmox startup= settings)
+
+All CTs have `onboot: 1`. The `startup` parameter enforces dependency ordering on every Proxmox boot:
+
+| Tier | Order | CTs | up delay | Reason |
+|------|-------|-----|----------|--------|
+| 1 | 1 | CT-100 wireguard | 30s | VPN server — everything depends on this |
+| 2 | 2 | CT-101 wg-proxy | 30s | TinyProxy kill-switch — qBit needs it up |
+| 3 | 3 | CT-102 flaresolverr | 20s | Prowlarr Cloudflare bypass |
+| 4 | 4 | CT-105 valkey, CT-106 postgresql | 15s | DB/cache infra for Authentik |
+| 5 | 5 | CT-103 traefik, CT-104 vaultwarden, CT-107 authentik | 15–20s | Reverse proxy + SSO |
+| 6 | 6 | CT-212 qbittorrent, CT-210 prowlarr | 20s | Download stack core |
+| 7 | 7 | CT-214 sonarr, CT-215 radarr, CT-217 readarr, CT-218 lidarr | 15s | *arr apps |
+| 8 | 8 | CT-231 jellyfin, CT-230 plex, CT-232 audiobookshelf, CT-233 calibre-web | 10–15s | Media servers |
+| 9 | 9 | CT-242 jellyseerr, CT-240 bazarr, CT-241 overseerr, CT-244 tautulli, CT-245 kometa | 10s | Media management |
+| 10 | 10 | CT-275–280 dashboards, CT-277 recyclarr, CT-278 crowdsec, CT-279 tailscale, CT-900 ziggy | 5s | Tools / monitoring |
+
+To change order: `pct set <CTID> --startup order=N,up=S,down=S`
+
 ## Deployment Order
 ### Phase 1 — Proxmox Host
 1. Boot Tiamat from USB → Proxmox VE 9.0 ISO
@@ -239,6 +354,12 @@ Client Devices
 35. Configure HA integrations: Plex, Jellyfin, AdGuard, Alexa, WireGuard
 36. Set up VM-200 Alexa media bridge for voice control
     - See awesome-stack repo homeassistant-configs/
+Status:
+- Home Assistant currently running at `http://192.168.12.123:8123`
+- Traefik route `http://ha.tiamat.local` is live
+- SSH add-on (`core_ssh`) is installed and running
+- HACS files are installed
+- Remaining manual work is in `docs/TIAMAT-PHASE10.md` (static IP, HACS UI onboarding, AdGuard/Alexa integrations)
 ## VPN Kill Switch Verification
 ```bash
 # Confirm traffic exits through CT-100 VPN, not home IP

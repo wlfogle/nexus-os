@@ -1,0 +1,49 @@
+{
+  "stale_hours": 24,
+  "qbittorrent": {
+    "host": "192.168.12.212",
+    "port": 8080,
+    "use_ssl": false,
+    "url_base": "",
+    "username": "admin",
+    "password": "CHANGE_ME",
+    "categories": {
+      "tv": "tv-sonarr",
+      "movie": "radarr",
+      "book": "readarr",
+      "music": "lidarr",
+      "adult": "whisparr"
+    }
+  },
+  "apps": [
+    {
+      "name": "Sonarr",
+      "url": "http://192.168.12.214:8989",
+      "api_version": "v3",
+      "api_key": "CHANGE_ME",
+      "media_kind": "tv"
+    },
+    {
+      "name": "Radarr",
+      "url": "http://192.168.12.225:7878",
+      "api_version": "v3",
+      "api_key": "CHANGE_ME",
+      "media_kind": "movie"
+    },
+    {
+      "name": "Readarr",
+      "url": "http://192.168.12.217:8787",
+      "api_version": "v1",
+      "api_key": "CHANGE_ME",
+      "media_kind": "book"
+    },
+    {
+      "name": "Lidarr",
+      "url": "http://192.168.12.218:8686",
+      "api_version": "v1",
+      "api_key": "CHANGE_ME",
+      "media_kind": "music"
+    }
+  ],
+  "hooks": []
+}

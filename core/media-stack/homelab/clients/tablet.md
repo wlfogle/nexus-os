@@ -7,6 +7,7 @@
 | Jellyfin | Media playback | Play Store |
 | TiamatsStack | All-in-one dashboard (custom APK) | Sideload — see android-app/README.md |
 | nzb360 | Unified arr control (Sonarr, Radarr, qBit) | Play Store ($5) |
+| Moonlight | Game streaming from laptop | Play Store (free) |
 | Bitwarden | Password manager (Vaultwarden) | Play Store |
 | WireGuard | Remote VPN access | Play Store |
 
@@ -55,6 +56,23 @@ nzb360 is a unified controller for the entire arr stack — add shows, movies, m
 1. Install **Bitwarden** from Play Store
 2. Settings → Self-hosted → Server URL: `https://192.168.12.20`
 3. Create account and start saving passwords
+
+## Game Streaming (Moonlight)
+Stream games from the laptop's RTX 4080 to your phone or tablet.
+
+1. Install **Moonlight Game Streaming** from Play Store (free)
+2. Open → tap **+** → enter laptop IP:
+   - Home (LAN): `192.168.12.172`
+   - Away (Tailscale): `100.66.87.38`
+3. Enter the PIN shown → go to `https://localhost:47990` on the laptop → **PIN** → type it
+4. Available apps: Desktop, Switch (Ryubing), Steam Big Picture
+
+### Controller
+- **Bluetooth**: pair Xbox / PS4 / PS5 / 8BitDo via Android Settings → Bluetooth
+- **USB-C OTG**: USB-C to USB-A adapter → wired controller
+- **Touch**: Moonlight Settings → **On-Screen Controls** → enable overlay
+
+> Full guide: `docs/SUNSHINE-MOONLIGHT.md`
 
 ## Remote Access (WireGuard)
 1. Install **WireGuard** from Play Store

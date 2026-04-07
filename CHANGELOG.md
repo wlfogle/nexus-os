@@ -5,6 +5,45 @@ All notable changes to NexusOS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1-dev] - 2026-04-07
+
+### 📺 Media Stack Updates (homelab-media-stack sync)
+Full sync of homelab-media-stack submodule into `core/media-stack/homelab/`.
+
+### ✨ Added
+- **CT-211 Jackett** — legacy fallback indexer (native, hdd-ct storage) at 192.168.12.211:9117
+- **CT-213 Deluge fallback** — fallback download client (native, hdd-ct storage) at 192.168.12.213:8112
+- **Traefik routes** for Jackett (`jackett.tiamat.local`) and Deluge (`deluge.tiamat.local`)
+- **Media pipeline watchdog** — self-healing Python watchdog for Sonarr/Radarr/Readarr/Lidarr download queues; removes poisoned releases, clears stale items, ensures qBit connectivity (`scripts/media-pipeline-watchdog.py`)
+- **Stack watchdog** — systemd timer-driven health check for all media stack containers (`scripts/stack-watchdog.sh`)
+- **Sunshine + Moonlight game streaming** — Sunshine AppImage on laptop (RTX 4080), Moonlight clients on Fire TV/phone (`docs/SUNSHINE-MOONLIGHT.md`)
+- **Phase 10: Home Assistant** — VM-500 (HAOS) at 192.168.12.123, Traefik route `ha.tiamat.local`, SSH add-on, HACS installed (`docs/TIAMAT-PHASE10.md`)
+- **Credentials cheatsheet** — all service URLs, API keys, logins in one doc (`docs/CREDENTIALS.md`)
+- **Container boot order** — Proxmox `startup=` settings enforce 10-tier dependency chain across all 27+ CTs
+- **Docker-in-LXC privileged conversion scripts** (`scripts/convert-docker-lxc-to-privileged.sh`, `scripts/convert-ct242-to-privileged.sh`)
+- **Seerr native install** on privileged CT-242 replacing Docker Jellyseerr (`scripts/install-seerr-ct242.sh`)
+- **Retro gaming** — 7,575 retro ROMs + 13 Switch NSPs on Tiamat HDD (`docs/RETRO-GAMING.md`, `docs/GAMING.md`)
+- **Client docs** — updated laptop, Fire TV, and tablet setup guides with Moonlight streaming
+
+### 🐛 Fixed
+- **Radarr IP conflict** — moved from .215 to .225 (HDHomeRun was on .215); updated Prowlarr, Traefik, all docs
+- **Seerr login** — replaced Docker Jellyseerr with native Seerr on CT-242; local login `seerr@local/seerr`
+- **FlareSolverr Docker-in-LXC** — Chrome hangs without `--cap-add=SYS_ADMIN` and `--shm-size=2g`
+- **Radarr quality profile** — set to "Any" with SQLite WAL tuning for stability
+- **Vaultwarden DOMAIN** — corrected to subdomain URL with Caddy build context
+- **Stack watchdog timeout** — made timeout-safe to prevent systemd kills
+- **Tiamat DE** — updated references from tint2 to LXPanel (matches Bahamut)
+- **Stale ARP** — documented workaround for static-IP CT connectivity failures
+
+### 📚 Documentation
+- `docs/PLAN.md` — full container reference updated with all 27+ running CTs, boot order, VM configs
+- `docs/NETWORKING.md` — complete Traefik route table, NFS exports, VPN architecture
+- `docs/TROUBLESHOOTING.md` — FlareSolverr Docker fix, Radarr IP correction, Seerr login
+- `docs/MEDIA-PIPELINE-WATCHDOG.md` — watchdog deployment and config guide
+- `docs/TIAMAT-AGENT-FIXES.md` — agent-applied fixes log
+
+---
+
 ## [1.0.0-dev] - 2026-03-09
 
 ### 🚀 Working ISO Build - "Universal Foundation"

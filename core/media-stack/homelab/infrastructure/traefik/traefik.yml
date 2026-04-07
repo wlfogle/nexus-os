@@ -1,30 +1,29 @@
-# Traefik v3 Static Configuration
+# Traefik Static Configuration — CT-103 (Alpine, 192.168.12.103)
+# Live config at /etc/traefik/traefik.yml inside CT-103
+# Dynamic routes in /etc/traefik/dynamic/ (see infrastructure/traefik/dynamic/)
+
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
 
 api:
   dashboard: true
-  insecure: true   # OK for LAN-only; disable if exposing externally
+  insecure: true   # LAN-only; lock down with Authentik when exposing externally
 
 entryPoints:
   web:
     address: ":80"
-    http:
-      redirections:
-        entryPoint:
-          to: websecure
-          scheme: https
   websecure:
     address: ":443"
 
+# No docker provider — CT-103 is Alpine with no Docker socket.
+# All routes are defined as static files in /etc/traefik/dynamic/
 providers:
-  docker:
-    endpoint: "unix:///var/run/docker.sock"
-    exposedByDefault: false
-    network: media-net
   file:
     directory: /etc/traefik/dynamic
     watch: true
 
-# Uncomment for real domain + Let's Encrypt
+# Uncomment + configure when real domain + Let's Encrypt is ready:
 # certificatesResolvers:
 #   letsencrypt:
 #     acme:
@@ -35,7 +34,7 @@ providers:
 
 log:
   level: INFO
-  filePath: /logs/traefik.log
+  filePath: /var/log/traefik/traefik.log
 
 accessLog:
-  filePath: /logs/access.log
+  filePath: /var/log/traefik/access.log
