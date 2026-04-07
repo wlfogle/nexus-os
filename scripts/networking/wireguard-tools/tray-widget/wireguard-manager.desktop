@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=WireGuard Manager
+Comment=WireGuard VPN and API masking system tray widget
+Exec=python3 /home/loufogle/wireguard-tools/tray-widget/wireguard-tray-widget.py
+Icon=network-vpn
+Type=Application
+StartupNotify=false
+Terminal=false
+Hidden=false
+Categories=Network;Security;
+X-GNOME-Autostart-enabled=true

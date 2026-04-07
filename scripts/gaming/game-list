@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+CFG="$HOME/.config/game-router/games.tsv"
+[[ -f "$CFG" ]] || { echo "No games configured"; exit 0; }
+awk -F'\t' 'BEGIN{printf "%-28s %-8s %s\n","NAME","TARGET","PAYLOAD"} $1!~/^#/ && NF>=3 {printf "%-28s %-8s %s\n",$1,$2,$3}' "$CFG"

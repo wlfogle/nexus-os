@@ -1,0 +1,28 @@
+[Unit]
+Description=API Masking Proxy Service
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=loufogle
+Group=loufogle
+WorkingDirectory=/home/loufogle/wireguard-tools
+ExecStart=/usr/bin/python3 /home/loufogle/wireguard-tools/api-masking/api-mask-proxy.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+NoNewPrivileges=true
+PrivateTmp=true
+
+IPAddressDeny=any
+IPAddressAllow=localhost
+IPAddressAllow=127.0.0.0/8
+IPAddressAllow=192.168.0.0/16
+IPAddressAllow=10.0.0.0/8
+IPAddressAllow=99.99.99.0/24
+
+[Install]
+WantedBy=multi-user.target

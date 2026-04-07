@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SAFE_VM="VortexApps"
+GPU_VM="Vortex"
+SUNSHINE_PORT="47984"
+USE_GPU_MODE="0"
+
+if [[ "${1:-}" == "--gpu" ]]; then
+  USE_GPU_MODE="1"
+fi
+
+if ! flatpak list --columns=application | grep -q '^com.moonlight_stream.Moonlight$'; then
+  echo "Moonlight flatpak is not installed."
+  echo "Install with: flatpak install flathub com.moonlight_stream.Moonlight"
+  exit 1
+fi
+
+if [[ "$USE_GPU_MODE" == "1" ]]; then
+  TARGET_VM="$GPU_VM"
+  OTHER_VM="$SAFE_VM"
+  echo "GPU mode enabled (--gpu): this will hand off GPU and interrupt host display."
+else
+  TARGET_VM="$SAFE_VM"
+  OTHER_VM="$GPU_VM"
+fi
+
+other_state="$(virsh domstate "$OTHER_VM" 2>/dev/null || true)"
+if [[ "$other_state" == "running" || "$other_state" == "paused" ]]; then
+  echo "Shutting down $OTHER_VM to avoid disk contention..."
+  if [[ "$other_state" == "paused" ]]; then
+    virsh resume "$OTHER_VM" >/dev/null 2>&1 || true
+  fi
+  virsh shutdown "$OTHER_VM" >/dev/null || true
+  for _ in $(seq 1 60); do
+    other_state="$(virsh domstate "$OTHER_VM" 2>/dev/null || true)"
+    [[ "$other_state" == "shut off" ]] && break
+    sleep 1
+  done
+  if [[ "$other_state" != "shut off" ]]; then
+    echo "$OTHER_VM did not shut down gracefully. Forcing power off..."
+    virsh destroy "$OTHER_VM" >/dev/null 2>&1 || true
+  fi
+fi
+
+target_state="$(virsh domstate "$TARGET_VM" 2>/dev/null || true)"
+if [[ "$target_state" != "running" ]]; then
+  echo "Starting $TARGET_VM..."
+  virsh start "$TARGET_VM" >/dev/null
+fi
+
+echo "Waiting for $TARGET_VM network..."
+for _ in $(seq 1 30); do
+  IP="$(virsh domifaddr "$TARGET_VM" 2>/dev/null | awk '/ipv4/ {print $4}' | cut -d/ -f1 | head -n1)"
+  if [[ -n "${IP:-}" ]]; then
+    break
+  fi
+  sleep 1
+done
+
+if [[ -z "${IP:-}" ]]; then
+  echo "Could not determine $TARGET_VM IP."
+  exit 1
+fi
+if ! nc -z -w1 "$IP" "$SUNSHINE_PORT" >/dev/null 2>&1; then
+  echo "Sunshine is not reachable on $TARGET_VM ($IP:$SUNSHINE_PORT)."
+  echo "Tip: if Sunshine is only installed in Vortex, run: $0 --gpu"
+  echo "If not paired yet, run: flatpak run com.moonlight_stream.Moonlight pair \"$IP\""
+  exit 1
+fi
+
+echo "Launching Moonlight to $IP..."
+exec flatpak run com.moonlight_stream.Moonlight stream "$IP" "Desktop"

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+VM="Vortex"
+state=$(virsh domstate "$VM" 2>/dev/null || true)
+
+if [[ "$state" == "running" ]]; then
+  echo "Shutting down $VM..."
+  virsh shutdown "$VM" >/dev/null
+  for i in $(seq 1 60); do
+    state=$(virsh domstate "$VM" 2>/dev/null || true)
+    [[ "$state" == "shut off" ]] && break
+    sleep 1
+  done
+fi
+
+echo "$VM state: $(virsh domstate "$VM" 2>/dev/null || true)"
+echo "GPU should be restored to host by release hook."

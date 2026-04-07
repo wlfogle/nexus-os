@@ -1,0 +1,8 @@
+# WireGuard IP/Key Rotation Schedule
+# Rotate every 6 hours to prevent tracking
+0 */6 * * * /home/loufogle/wireguard-tools/server/wireguard-rotate.sh auto >> /home/loufogle/wireguard-tools/wg-rotation.log 2>&1
+
+# Alternative schedules (uncomment one):
+# Every 4 hours: 0 */4 * * * /home/loufogle/wireguard-tools/server/wireguard-rotate.sh auto >> /home/loufogle/wireguard-tools/wg-rotation.log 2>&1
+# Every 2 hours: 0 */2 * * * /home/loufogle/wireguard-tools/server/wireguard-rotate.sh auto >> /home/loufogle/wireguard-tools/wg-rotation.log 2>&1
+# Every hour:    0 * * * *   /home/loufogle/wireguard-tools/server/wireguard-rotate.sh auto >> /home/loufogle/wireguard-tools/wg-rotation.log 2>&1

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+echo "VM: $(virsh domstate Vortex 2>/dev/null || echo unknown)"
+echo "GPU bindings:"
+lspci -nnk -d 10de: 2>/dev/null | awk '/02:00.0|02:00.1|Kernel driver in use/{print}'

@@ -1,0 +1,226 @@
+#!/usr/bin/env python3
+"""
+Clevo/ITE 8910 Keyboard RGB Controller
+OriginPC EON17-X (Clevo-based) — ITE Device 048d:8910
+
+Protocol: 0xCC 0x01 <key_id> <R> <G> <B> (per-key addressable)
+Key map from: nexus-os/reference/awesome-stack/legacy/Coding/python-projects/originpc-control/
+
+Usage:
+  clevo-kbd-rgb color <hex>          Set all keys to one color (e.g. ff0000)
+  clevo-kbd-rgb brightness <0-4>     Set brightness (0=off, 4=max)
+  clevo-kbd-rgb off                  Turn off keyboard backlight
+  clevo-kbd-rgb on                   White at full brightness
+  clevo-kbd-rgb preset <name>        gaming|work|rainbow|ocean|off
+  clevo-kbd-rgb group <name> <hex>   Set key group (wasd, arrows, function, etc)
+  clevo-kbd-rgb scan                 Light keys one at a time for mapping
+
+Requires: sudo (or udev rule for non-root access)
+"""
+
+import sys
+import time
+
+try:
+    import hid
+except ImportError:
+    print("Install hidapi: sudo pip3 install hidapi")
+    sys.exit(1)
+
+VENDOR_ID = 0x048d
+PRODUCT_ID = 0x8910
+
+
+# Complete key map from OriginPC Control Center v5.1
+# Source: nexus-os/reference/awesome-stack/legacy/Coding/python-projects/originpc-control/
+KEYBOARD_MAP = {
+    'esc': 0x00,
+    'f1': 0x01, 'f2': 0x02, 'f3': 0x03, 'f4': 0x04,
+    'f5': 0x05, 'f6': 0x06, 'f7': 0x07, 'f8': 0x08,
+    'f9': 0x09, 'f10': 0x0A, 'f11': 0x0B, 'f12': 0x0C,
+    'prtsc': 0x0D, 'scroll': 0x0E, 'pause': 0x0F,
+    'home': 0x10, 'ins': 0x11, 'pgup': 0x12, 'pgdn': 0x13, 'del': 0x14, 'end': 0x15,
+    '`': 0x20, '1': 0x21, '2': 0x22, '3': 0x23, '4': 0x24, '5': 0x25,
+    '6': 0x26, '7': 0x27, '8': 0x28, '9': 0x29, '0': 0x2A,
+    '-': 0x2B, '=': 0x2D, 'backspace': 0x2E,
+    'numlock': 0x30, 'kp_divide': 0x31, 'kp_multiply': 0x32, 'kp_minus': 0x33,
+    'tab': 0x40, 'q': 0x42, 'w': 0x43, 'e': 0x44, 'r': 0x45,
+    't': 0x46, 'y': 0x47, 'u': 0x48, 'i': 0x49, 'o': 0x4A,
+    'p': 0x4B, '[': 0x4C, ']': 0x4D, '\\': 0x4E,
+    'kp_7': 0x50, 'kp_8': 0x51, 'kp_9': 0x52, 'kp_plus': 0x53,
+    'caps': 0x60, 'a': 0x62, 's': 0x63, 'd': 0x64,
+    'f': 0x65, 'g': 0x66, 'h': 0x67, 'j': 0x68, 'k': 0x69,
+    'l': 0x6A, ';': 0x6B, "'": 0x6C, 'enter': 0x6E,
+    'kp_4': 0x70, 'kp_5': 0x71, 'kp_6': 0x72,
+    'lshift': 0x80, 'z': 0x83, 'x': 0x84, 'c': 0x85,
+    'v': 0x86, 'b': 0x87, 'n': 0x88, 'm': 0x89, ',': 0x8A,
+    '.': 0x8B, '/': 0x8C, 'rshift': 0x8D, 'up': 0x8F,
+    'kp_1': 0x90, 'kp_2': 0x91, 'kp_3': 0x92, 'kp_enter': 0x93,
+    'lctrl': 0xA0, 'fn': 0xA2, 'super': 0xA3, 'lalt': 0xA4,
+    'space_left': 0xA5, 'space_center': 0xA6, 'space': 0xA8, 'space_far_right': 0xA9,
+    'ralt': 0xAA, 'menu': 0xAB, 'rctrl': 0xAC,
+    'left': 0xAE, 'down': 0xAF, 'right': 0xB0,
+    'kp_0': 0xB1, 'kp_period': 0xB2,
+}
+
+KEY_GROUPS = {
+    'wasd': ['w', 'a', 's', 'd'],
+    'arrows': ['up', 'left', 'down', 'right'],
+    'function': [f'f{i}' for i in range(1, 13)],
+    'numbers': ['`'] + [str(i) for i in range(10)] + ['-', '='],
+    'letters': list('qwertyuiopasdfghjklzxcvbnm'),
+    'keypad': ['numlock', 'kp_divide', 'kp_multiply', 'kp_minus', 'kp_7', 'kp_8', 'kp_9',
+              'kp_plus', 'kp_4', 'kp_5', 'kp_6', 'kp_1', 'kp_2', 'kp_3', 'kp_enter', 'kp_0', 'kp_period'],
+    'modifiers': ['lshift', 'rshift', 'lctrl', 'rctrl', 'lalt', 'ralt', 'fn', 'super', 'menu', 'caps'],
+    'spacebar': ['space_left', 'space_center', 'space', 'space_far_right'],
+    'navigation': ['ins', 'home', 'pgup', 'del', 'end', 'pgdn'],
+}
+
+
+def find_device():
+    dev = hid.device()
+    try:
+        dev.open(VENDOR_ID, PRODUCT_ID)
+    except Exception:
+        print("Error: ITE 8910 keyboard not found. Run with sudo.")
+        sys.exit(1)
+    return dev
+
+
+def send_key_command(dev, key_index, r, g, b):
+    """Send RGB command for a specific key via HID feature report.
+    Protocol: 0xCC 0x01 key_index R G B + padding"""
+    dev.send_feature_report([0xCC, 0x01, key_index, r, g, b, 0x00, 0x00])
+
+
+def set_all_keys(dev, r, g, b):
+    """Set all mapped keys to a color."""
+    done = set()
+    for key_id in KEYBOARD_MAP.values():
+        if key_id not in done:
+            send_key_command(dev, key_id, r, g, b)
+            done.add(key_id)
+
+
+def set_brightness(dev, level):
+    """Set brightness (0-4). Protocol: 0xCC 0x09 0x02 level"""
+    level = max(0, min(4, int(level)))
+    dev.send_feature_report([0xCC, 0x09, 0x02, level, 0x00, 0x00, 0x00, 0x00])
+
+
+def hex_to_rgb(h):
+    h = h.lstrip("#")
+    if len(h) != 6:
+        print(f"Invalid hex color: {h}")
+        sys.exit(1)
+    return tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))
+
+
+def main():
+    if len(sys.argv) < 2:
+        print(__doc__)
+        sys.exit(0)
+
+    cmd = sys.argv[1].lower()
+    dev = find_device()
+
+    if cmd == "color":
+        if len(sys.argv) != 3:
+            print("Usage: clevo-kbd-rgb color <hex>")
+            sys.exit(1)
+        r, g, b = hex_to_rgb(sys.argv[2])
+        set_all_keys(dev, r, g, b)
+        print(f"All keys set to #{sys.argv[2]}")
+
+    elif cmd == "brightness":
+        if len(sys.argv) != 3:
+            print("Usage: clevo-kbd-rgb brightness <0-4>")
+            sys.exit(1)
+        set_brightness(dev, int(sys.argv[2]))
+        print(f"Brightness set to {sys.argv[2]}")
+
+    elif cmd == "off":
+        set_all_keys(dev, 0, 0, 0)
+        set_brightness(dev, 0)
+        print("Keyboard backlight off")
+
+    elif cmd == "on":
+        set_brightness(dev, 4)
+        set_all_keys(dev, 255, 255, 255)
+        print("Keyboard backlight on (white)")
+
+    elif cmd == "group":
+        if len(sys.argv) != 4:
+            print(f"Usage: clevo-kbd-rgb group <name> <hex>")
+            print(f"Groups: {', '.join(KEY_GROUPS.keys())}")
+            sys.exit(1)
+        group = sys.argv[2].lower()
+        if group not in KEY_GROUPS:
+            print(f"Unknown group. Available: {', '.join(KEY_GROUPS.keys())}")
+            sys.exit(1)
+        r, g, b = hex_to_rgb(sys.argv[3])
+        for key in KEY_GROUPS[group]:
+            if key in KEYBOARD_MAP:
+                send_key_command(dev, KEYBOARD_MAP[key], r, g, b)
+        print(f"Group '{group}' set to #{sys.argv[3]}")
+
+    elif cmd == "preset":
+        if len(sys.argv) != 3:
+            print("Presets: gaming, work, rainbow, ocean, off")
+            sys.exit(1)
+        preset = sys.argv[2].lower()
+        set_brightness(dev, 4)
+        if preset == "gaming":
+            set_all_keys(dev, 20, 0, 40)
+            for key in KEY_GROUPS['wasd']:
+                send_key_command(dev, KEYBOARD_MAP[key], 255, 0, 0)
+            for key in KEY_GROUPS['arrows']:
+                send_key_command(dev, KEYBOARD_MAP[key], 0, 255, 0)
+            for key in KEY_GROUPS['function']:
+                send_key_command(dev, KEYBOARD_MAP[key], 0, 0, 255)
+            for key in KEY_GROUPS['spacebar']:
+                send_key_command(dev, KEYBOARD_MAP[key], 255, 255, 0)
+        elif preset == "work":
+            set_all_keys(dev, 255, 255, 255)
+        elif preset == "rainbow":
+            colors = [(255,0,0),(255,127,0),(255,255,0),(0,255,0),(0,0,255),(75,0,130),(148,0,211)]
+            keys = sorted(KEYBOARD_MAP.items(), key=lambda x: x[1])
+            for i, (name, kid) in enumerate(keys):
+                c = colors[i % len(colors)]
+                send_key_command(dev, kid, *c)
+        elif preset == "ocean":
+            set_all_keys(dev, 0, 50, 120)
+            for key in KEY_GROUPS['letters']:
+                send_key_command(dev, KEYBOARD_MAP[key], 0, 100, 200)
+            for key in KEY_GROUPS['spacebar']:
+                send_key_command(dev, KEYBOARD_MAP[key], 0, 200, 255)
+        elif preset == "off":
+            set_all_keys(dev, 0, 0, 0)
+            set_brightness(dev, 0)
+        else:
+            print(f"Unknown preset. Available: gaming, work, rainbow, ocean, off")
+            sys.exit(1)
+        print(f"Preset '{preset}' applied")
+
+    elif cmd == "scan":
+        print("Scanning all key IDs — press Ctrl+C to stop")
+        print("Each key lights RED for 0.5s, then OFF")
+        try:
+            for name, kid in sorted(KEYBOARD_MAP.items(), key=lambda x: x[1]):
+                send_key_command(dev, kid, 255, 0, 0)
+                print(f"  0x{kid:02X} = {name}", flush=True)
+                time.sleep(0.5)
+                send_key_command(dev, kid, 0, 0, 0)
+        except KeyboardInterrupt:
+            print("\nScan stopped")
+
+    else:
+        print(f"Unknown command: {cmd}")
+        print(__doc__)
+        sys.exit(1)
+
+    dev.close()
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+CFG="$HOME/.config/game-router/games.tsv"
+name="$*"
+if [[ -z "$name" ]]; then
+  echo "Usage: game-run <game name>"
+  exit 1
+fi
+if [[ ! -f "$CFG" ]]; then
+  echo "No config at $CFG"
+  exit 1
+fi
+line=$(awk -F'\t' -v n="$name" '$1==n && $1!~/^#/ {print; exit}' "$CFG")
+if [[ -z "$line" ]]; then
+  echo "Game not found: $name"
+  echo "Use: game-add-native or game-add-vm"
+  exit 1
+fi
+target=$(printf '%s' "$line" | awk -F'\t' '{print $2}')
+payload=$(printf '%s' "$line" | awk -F'\t' '{print $3}')
+
+if [[ "$target" == "native" ]]; then
+  echo "Launching native: $name"
+  nohup bash -lc "$payload" >/dev/null 2>&1 &
+  exit 0
+fi
+
+if [[ "$target" == "vm" ]]; then
+  echo "Launching VM game: $name"
+  "$HOME/bin/vortex-on" || { echo "VM start failed"; exit 1; }
+  IP=$(virsh domifaddr Vortex 2>/dev/null | awk '/ipv4/ {print $4}' | cut -d/ -f1 | head -n1)
+  if [[ -z "$IP" ]]; then
+    echo "Could not detect VM IP"
+    exit 1
+  fi
+  if [[ "$payload" == "DESKTOP" ]]; then
+    flatpak run com.moonlight_stream.Moonlight stream "$IP"
+  else
+    flatpak run com.moonlight_stream.Moonlight stream "$IP" "$payload"
+  fi
+  exit 0
+fi
+
+echo "Invalid target '$target' for $name"
+exit 1

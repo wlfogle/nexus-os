@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set +e
+GAME_VM="Vortex"
+APPS_VM="VortexApps"
+SUNSHINE_PORT="47984"
+
+echo "$GAME_VM: $(virsh domstate "$GAME_VM" 2>/dev/null || echo unknown)"
+echo "$APPS_VM: $(virsh domstate "$APPS_VM" 2>/dev/null || echo unknown)"
+echo "Moonlight flatpak: $(flatpak list --columns=application | grep -q '^com.moonlight_stream.Moonlight$' && echo installed || echo missing)"
+
+IP=$(virsh domifaddr "$GAME_VM" 2>/dev/null | awk '/ipv4/ {print $4}' | cut -d/ -f1 | head -n1)
+if [[ -n "$IP" ]]; then
+  echo "$GAME_VM IP: $IP"
+  nc -z -w1 "$IP" "$SUNSHINE_PORT" >/dev/null 2>&1 \
+    && echo "Sunshine port $SUNSHINE_PORT: open" \
+    || echo "Sunshine port $SUNSHINE_PORT: closed"
+else
+  echo "$GAME_VM IP: unavailable"
+fi

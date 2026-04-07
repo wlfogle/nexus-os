@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+VM="Vortex"
+
+state=$(virsh domstate "$VM" 2>/dev/null || true)
+if [[ "$state" == "running" ]]; then
+  echo "$VM is already running"
+  exit 0
+fi
+
+echo "Stopping display manager (gdm) for safe GPU handoff..."
+sudo systemctl stop display-manager
+
+echo "Starting $VM..."
+if ! virsh start "$VM"; then
+  echo "Failed to start $VM"
+  sudo systemctl start display-manager
+  exit 1
+fi
+
+for i in $(seq 1 40); do
+  state=$(virsh domstate "$VM" 2>/dev/null || true)
+  [[ "$state" == "running" ]] && break
+  sleep 1
+done
+
+echo "Restarting display manager..."
+sudo systemctl start display-manager
+
+echo "$VM state: $(virsh domstate "$VM" 2>/dev/null || true)"
+echo "Done. Use WinApps/RDP/Parsec/Moonlight from host to connect."

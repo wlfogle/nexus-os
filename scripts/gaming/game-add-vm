@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+CFG="$HOME/.config/game-router/games.tsv"
+name="$1"; shift
+app="$*"
+if [[ -z "$name" || -z "$app" ]]; then
+  echo "Usage: game-add-vm <name> <sunshine-app-name|DESKTOP>"
+  exit 1
+fi
+mkdir -p "$(dirname "$CFG")"
+touch "$CFG"
+grep -v -F "${name}	" "$CFG" > "${CFG}.tmp" || true
+printf "%s\tvm\t%s\n" "$name" "$app" >> "${CFG}.tmp"
+mv "${CFG}.tmp" "$CFG"
+echo "Added VM game: $name"

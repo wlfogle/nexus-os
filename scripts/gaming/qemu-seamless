@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+VM="${QEMU_SEAMLESS_VM:-VortexApps}"
+PORT="${QEMU_SEAMLESS_PORT:-47984}"
+
+usage() {
+  echo "Usage:"
+  echo "  qemu-seamless <SunshineAppName>"
+  echo "  qemu-seamless --desktop"
+  echo
+  echo "Examples:"
+  echo "  qemu-seamless Notepad"
+  echo "  qemu-seamless --desktop"
+}
+
+if [[ "${1:-}" == "" ]]; then
+  usage
+  exit 1
+fi
+
+if [[ "${1:-}" == "--desktop" ]]; then
+  APP_NAME="Desktop"
+else
+  APP_NAME="$1"
+fi
+
+state="$(virsh domstate "$VM" 2>/dev/null || true)"
+if [[ "$state" != "running" ]]; then
+  echo "Starting $VM..."
+  virsh start "$VM" >/dev/null
+fi
+
+echo "Waiting for $VM network..."
+IP=""
+for _ in $(seq 1 45); do
+  IP="$(virsh domifaddr "$VM" 2>/dev/null | awk '/ipv4/ {print $4}' | cut -d/ -f1 | head -n1)"
+  [[ -n "${IP:-}" ]] && break
+  sleep 1
+done
+
+if [[ -z "${IP:-}" ]]; then
+  echo "Could not determine $VM IP."
+  exit 1
+fi
+
+if ! nc -z -w1 "$IP" "$PORT" >/dev/null 2>&1; then
+  echo "Sunshine is not reachable on $IP:$PORT"
+  echo "Open Sunshine in Windows and ensure it is running."
+  exit 1
+fi
+
+echo "Launching app '$APP_NAME' from $VM ($IP)..."
+exec flatpak run com.moonlight_stream.Moonlight \
+  --display-mode windowed \
+  stream "$IP" "$APP_NAME"
