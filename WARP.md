@@ -1,126 +1,192 @@
 # WARP.md
 
-This file provides guidance to WARP (warp.dev) when working with code in this repository.
+This file provides guidance to WARP (warp.dev) when working with code in
+this repository.
 
 ## Project Overview
 
-NexusOS is the world's first **AI-Native Operating System** - built from scratch with AI/ML workloads as first-class citizens. Unlike traditional OS designs that treat AI as user-space applications, NexusOS integrates AI capabilities directly into the kernel.
+NexusOS is a **standalone Linux distribution bootstrapped from Ubuntu
+Jammy (22.04) via `debootstrap`**. It ships KDE Plasma X11 + SDDM, NVIDIA
+PRIME render offload (Intel iGPU + NVIDIA dGPU), every major Linux
+package manager compiled from source (via `nexuspkg`), and two AI
+companions — Stella (security) and Max Jr. (performance) — implemented
+as systemd-managed FastAPI services.
 
-**AI-Powerhouse Architecture**: Based on the comprehensive AI development environment, NexusOS brings AI/ML capabilities, GPU acceleration, container orchestration, and self-hosting services to the kernel level.
+The repository is a monorepo: first-party components (CLIs, services,
+branding, installer, media stack), vendored consolidated packages, and
+scripts all live in one tree. See `README.md` for the user-facing
+overview and `docs/CONSOLIDATION.md` for the monorepo source map.
 
-**Pop!_OS Optimized**: This build is specifically tuned for Pop!_OS 22.04 LTS NVIDIA running on Intel i9-13900HX + RTX 4080 with native CUDA acceleration and 64GB DDR5 optimization. Uses `nala` (not `apt`) as the preferred package manager.
+**Preferred long-term direction (not the current implementation)** is a
+from-scratch AI-native kernel. That work is archived in `docs/vision/`
+and is still the project's eventual destination — it is simply not
+feasible to ship today. The legacy from-scratch kernel source tree
+(`kernel/`, `boot/`, `linker.ld`, `Makefile`, `CMakeLists.txt`,
+`config.mk`, `create_phase1.sh`, `create_phase2.sh`, `grub.cfg`) is
+preserved for the same reason. None of it is invoked by the current
+distro build.
+
+**Host environment.** The active build target is Pop!_OS 22.04 LTS on
+Intel i9-13900HX + RTX 4080 + 64 GB DDR5. Uses `nala` (not raw `apt`) as
+the preferred package manager per project rules.
 
 ## Common Commands
 
-### Dependencies (Pop!_OS/Ubuntu)
+### Build the live ISO
+
 ```bash
-make install-deps      # Show manual installation commands
-make install-deps-auto # Auto-install via nala (requires sudo)
+sudo ./scripts/build-iso.sh                        # default (~70 min)
+sudo ./scripts/build-iso.sh --no-nvidia            # skip NVIDIA stack
+sudo ./scripts/build-iso.sh --output ~/iso         # custom output dir
+sudo ./scripts/build-iso.sh --mirror http://...    # alternate APT mirror
 ```
 
-### Building (x86_64 default, Alderlake-optimized)
+Output lands in `build/nexusos-1.0-YYYY.MM.DD-x86_64.iso`. The builder
+debootstraps a fresh Jammy root, configures APT + NVIDIA PPA, installs
+KDE + AI services + the media stack, builds a squashfs, and packs a
+hybrid ISO (UEFI + BIOS).
+
+### Patch an existing ISO (faster iteration)
+
 ```bash
-make all           # Build the complete kernel (x86_64, O2, Alderlake-tuned)
-make kernel        # Build only the kernel binary
-make iso           # Create bootable ISO image
-make clean         # Clean build artifacts
+sudo ./scripts/patch-iso.sh                        # auto-find latest ISO
+sudo ./scripts/patch-iso.sh path/to/nexusos.iso    # specific ISO
 ```
 
-### Performance Optimization Levels
+Used to apply fixes without a full rebuild.
+
+### Test in QEMU
+
 ```bash
-make OPTIMIZE=0 all    # No optimization (-O0)
-make OPTIMIZE=1 all    # Basic optimization (-O1)
-make OPTIMIZE=2 all    # Standard optimization (-O2, Alderlake-tuned) [DEFAULT]
-make OPTIMIZE=3 all    # Aggressive optimization (-O3, LTO, Alderlake-tuned)
-make OPTIMIZE=s all    # Size optimization (-Os, Alderlake-tuned)
+qemu-system-x86_64 -m 4G -enable-kvm \
+    -cdrom build/nexusos-1.0-*.iso
 ```
 
-### Running and Testing
+### Write to USB
+
 ```bash
-make run           # Run in QEMU (KVM-accelerated, 128MB RAM, host CPU)
-make run-debug     # Run with GDB debugging support (-s -S flags)
+sudo dd if=build/nexusos-1.0-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
 ```
 
-### Debugging
+### Installer (overlay on existing Pop!_OS, or fresh ZFS-on-root)
+
 ```bash
-make DEBUG=1 all   # Debug build (disables optimizations, adds -g)
+sudo ./installer/nexus-install.sh                  # overlay mode
+sudo INSTALL_MODE=fresh TARGET_DISK=/dev/sdX \
+    ./installer/nexus-install.sh                   # ZFS fresh install
 ```
 
-### Architecture Override
+See `installer/README.md` and `installer/WARP.md` for installer
+internals.
+
+### Daily runtime commands (inside a running NexusOS system)
+
 ```bash
-make ARCH=i386 all     # Build for i386 (legacy mode)
-make ARCH=x86_64 all   # Build for x86_64 [DEFAULT]
+nexus-control status | health | gpu | services
+sudo nexus-control update
+
+stella --status | --scan
+sudo stella --digital-fortress
+
+maxjr --monitor | --temperature
+sudo maxjr --optimize | --gaming-mode
+
+nexuspkg install <pkg>               # auto-detect best backend
+nexuspkg install --backend flatpak discord
+nexuspkg search <term>               # search all backends
+nexuspkg repos                       # list backends
 ```
 
 ## Code Architecture
 
-### Core Structure
-- **Kernel**: Lives in `kernel/` - currently minimal with just `main.c` containing the kernel entry point
-- **Bootloader**: `boot/boot.s` contains multiboot-compliant assembly bootloader with 32KB stack
-- **Memory Layout**: Defined in `linker.ld` - architecture-aware load addresses
-- **Configuration**: Build settings in `config.mk` (Pop!_OS-optimized) and main `Makefile`
+Repo layout (abbreviated — see `README.md` for the full tree):
 
-### Build System (Pop!_OS Optimized)
-- **Native Toolchain**: Uses system GCC/binutils, falls back to cross-compiler if available
-- **Intel Optimization**: Alderlake-specific tuning (-march=alderlake -mtune=alderlake)
-- **Smart Architecture Detection**: Automatically detects and configures for x86_64 vs i386
-- **KVM Integration**: QEMU runs with KVM acceleration and host CPU passthrough
-- **Nala Integration**: Native nala/apt package management for dependencies
+```
+nexus-os/
+├── scripts/                # ISO builder, patcher, livecd, rescue-usb
+├── core/
+│   ├── bin/                # nexus-control, nexuspkg, stella, maxjr, first-run
+│   ├── services/           # orchestrator (8600), stella (8601), maxjr (8602)
+│   ├── config/             # sysctl, modprobe, udev, limits, hw/, optimization/
+│   ├── branding/ desktop/ shell/ security/ gaming/
+│   ├── ai/                 # ollama, powerhouse, sysadmin, ollama-checker
+│   ├── installer/          # calamares modules, zfs support
+│   └── media-stack/        # docker-compose.yml, homelab/, admin-scripts/
+├── userspace/
+│   └── apps/               # nexus-terminal, kvm-manager, mediastack-control, ...
+├── packages/               # 22 consolidated sibling-repo packages
+├── installer/              # nexus-install.sh (overlay + ZFS fresh)
+├── docs/
+│   ├── vision/             # Archived from-scratch-kernel vision (not current)
+│   ├── CONSOLIDATION.md    # Monorepo source map
+│   ├── setup/ notes/
+│   └── security-audit.md media-center-plan.md mount-qcow.md ...
+└── build/                  # ISO output
+```
 
-### Memory Management (Architecture-Aware)
-**x86_64 Mode (Default)**:
-- Kernel virtual base: `0xFFFFFFFF80000000` (canonical higher-half)
-- Kernel load address: `0x200000` (2MB, optimized for large pages)
-- Large page alignment (2MB boundaries)
-- 32KB stack reserved in BSS section
+Legacy from-scratch source (`boot/`, `kernel/`, `include/`, `lib/`,
+`drivers/`, `linker.ld`, `Makefile`, `CMakeLists.txt`, `config.mk`,
+`create_phase1.sh`, `create_phase2.sh`, `grub.cfg`) is retained for the
+vision direction but is **not** exercised by `scripts/build-iso.sh` or
+the installer. Do not modify it unless you are intentionally working on
+the vision track — and if you are, update `docs/vision/` in the same
+change.
 
-**i386 Mode (Legacy)**:
-- Kernel virtual base: `0xC0000000` (3GB)
-- Kernel load address: `0x100000` (1MB)
-- 4K page alignment
-- 32KB stack reserved in BSS section
+### AI services (runtime)
 
-### Development Pattern
-The codebase follows a traditional monolithic kernel architecture:
-1. **Boot Phase**: Assembly bootstrap (`boot.s`) sets up stack and calls kernel
-2. **Kernel Phase**: C kernel entry point (`kernel_main`) in `main.c`
-3. **Modular Design**: Directory structure prepared for:
-   - Memory management (`kernel/mm/`)
-   - File systems (`kernel/fs/`)
-   - Process management (`kernel/proc/`)
-   - Device drivers (`drivers/`)
-   - User space programs (`userland/`)
+| Service      | Port | Purpose                                                    |
+|--------------|------|------------------------------------------------------------|
+| Orchestrator | 8600 | Central coordinator / API gateway                          |
+| Stella       | 8601 | Security scanning, firewall, login monitoring             |
+| Max Jr.      | 8602 | CPU/GPU/memory metrics, gaming detection                   |
 
-### Build Requirements (Pop!_OS/Ubuntu)
-**Required Packages** (install via nala):
-- `gcc` and `binutils` (native toolchain)
-- `nasm` (assembler)
-- `qemu-system-x86` (emulation with KVM support)
-- `grub-common`, `grub-pc-bin` and `xorriso` (bootloader tools)
-- `mtools` (disk utilities)
-- `gdb` and `make` (development tools)
+### GPU configuration
 
-**Install all at once**:
+PRIME render offload — Intel iGPU drives the desktop, NVIDIA activates
+on demand via `prime-run`. Config lives in `core/config/`:
+
+- `10-intel-primary.conf`
+- `11-nvidia-prime-offload.conf`
+- `nvidia-prime.conf`
+- `modprobe-nvidia.conf` (`nvidia-drm modeset=1` required for PRIME)
+
+## Build Dependencies
+
+Installed automatically by `scripts/build-iso.sh` via `nala`:
+
+```
+debootstrap squashfs-tools xorriso mtools
+grub-efi-amd64-bin grub-efi-amd64-signed shim-signed
+grub-pc-bin rsync dosfstools isolinux syslinux-common
+```
+
+Install manually if needed:
+
 ```bash
-sudo nala install gcc binutils nasm qemu-system-x86 grub-common grub-pc-bin xorriso mtools gdb make
+sudo nala install debootstrap squashfs-tools xorriso mtools \
+    grub-efi-amd64-bin grub-efi-amd64-signed shim-signed \
+    grub-pc-bin rsync dosfstools isolinux syslinux-common
 ```
 
 ## File Organization
 
-### Critical Files
-- `linker.ld`: Defines memory layout and section placement
-- `config.mk`: Build configuration and toolchain settings
-- `boot/boot.s`: Multiboot-compliant bootloader
-- `kernel/main.c`: Kernel entry point
+### Critical files (active distro)
 
-### Build Artifacts
-All build outputs go to `build/` directory:
-- `build/kernel.bin`: Final kernel binary
-- `build/nexus-os.iso`: Bootable ISO image
-- `build/*.o`: Object files
+- `scripts/build-iso.sh` — the ISO builder; every step (debootstrap →
+  APT → base → KDE → NVIDIA → AI services → media stack → squashfs →
+  xorriso) lives here.
+- `scripts/patch-iso.sh` — delta patcher for an existing ISO.
+- `installer/nexus-install.sh` — overlay install on existing Pop!_OS or
+  fresh ZFS-on-root install.
+- `core/bin/nexuspkg`, `core/bin/nexus-control`, `core/bin/stella`,
+  `core/bin/maxjr` — user-facing CLIs.
+- `core/services/*.service` + `*.timer` — systemd units for the AI
+  services.
 
-### Empty Structure
-Many directories (`docs/`, `tests/`, `scripts/`, `include/kernel/`, `include/libc/`) exist but are currently empty, indicating this is an early-stage project with planned expansion.
+### Build artifacts (`build/`)
+
+- `build/nexusos-1.0-YYYY.MM.DD-x86_64.iso` — hybrid UEFI/BIOS ISO
+  (typically ~4.8 GB).
 
 ## Code Quality Standards
 

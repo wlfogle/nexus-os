@@ -1,40 +1,49 @@
-# NexusOS 1.0.0-alpha Release Checklist
+# NexusOS 1.0.1-dev Release Checklist
+
+Scoped to the active Ubuntu Jammy distro track. Vision-track milestones
+live in `docs/vision/ROADMAP-KERNEL.md` and are not part of this
+checklist.
 
 ## 🎯 Pre-Release Checklist
 
 ### ✅ Documentation Complete
-- [x] **README.md** - Comprehensive project overview with features, installation, usage
-- [x] **CHANGELOG.md** - Detailed changelog for v1.0.0-alpha release
-- [x] **DISTROWATCH_SUBMISSION.md** - Complete DistroWatch submission package
-- [x] **LICENSE** - GPL v3.0 license file
-- [ ] **CONTRIBUTING.md** - Contributor guidelines (optional)
+- [x] **README.md** — Project overview with features, install, usage
+- [x] **CHANGELOG.md** — 1.0.0-dev and 1.0.1-dev entries
+- [x] **DISTROWATCH_SUBMISSION.md** — refreshed for 1.0.1-dev
+- [x] **ROADMAP.md** — active-track milestones, vision reference
+- [x] **WARP.md** — reflects current Ubuntu Jammy debootstrap build
+- [x] **CONTRIBUTING.md** — contributor guidelines
+- [x] **LICENSE** — GPL v3.0
 
 ### ✅ Core Components Ready
-- [x] **nexuspkg** - Universal package manager implementation
-- [x] **OmnioSearch** - Cross-repository search functionality  
-- [x] **AI Companions** - Stella & Max Jr. framework
-- [x] **Package Format Support** - 15+ formats implemented
-- [x] **Repository Detection** - Auto-detection of optimal sources
+- [x] **nexuspkg** — universal package manager, 15+ backends compiled
+- [x] **OmnioSearch** — cross-repository search
+- [x] **AI Companions** — Stella (8601) & Max Jr. (8602) FastAPI services
+- [x] **Orchestrator** — central coordinator on 8600
+- [x] **Package Format Support** — 15+ formats end-to-end
+- [x] **Repository Detection** — auto-detect best source per package
+- [x] **Media stack integration** — `core/media-stack/homelab/` synced with `homelab-media-stack`
 
 ### ✅ Distribution Infrastructure
-- [x] **ISO Builder** - `scripts/build-iso.sh` automated ISO creation
-- [x] **Repository Setup** - `scripts/setup-repo.sh` package repository infrastructure
-- [x] **Distribution Metadata** - `distro/os-release` system identification
-- [x] **Installation System** - nexus-install.sh (overlay + fresh ZFS-on-root)
-- [x] **Package Signing** - GPG key generation and package signing
+- [x] **ISO Builder** — `scripts/build-iso.sh` builds 4.8 GB hybrid ISO
+- [x] **Delta patcher** — `scripts/patch-iso.sh` applies fixes without full rebuild
+- [x] **Installation System** — `installer/nexus-install.sh` (overlay + fresh ZFS-on-root)
+- [x] **Calamares modules** — live installer modules in `core/installer/`
+- [x] **Distribution Metadata** — `distro/os-release`
+- [ ] **Package Signing** — GPG infrastructure planned for 1.0.2-dev
 
-### 🔄 Testing & Validation (In Progress)
-- [ ] **Build Test** - Test ISO creation process
-- [ ] **VM Testing** - Test ISO in virtual machine
-- [ ] **Hardware Testing** - Test on real hardware
-- [ ] **Package Installation** - Test universal package management
-- [ ] **AI Services** - Test Stella & Max Jr. functionality
+### 🔄 Testing & Validation (in progress)
+- [x] **VM Testing** — ISO boots in QEMU
+- [ ] **Hardware Testing** — reference i9-13900HX + RTX 4080 + second no-NVIDIA box
+- [ ] **Fresh-install test** — ZFS-on-root on a spare disk
+- [ ] **nexuspkg end-to-end** — 15+ backends verified search→install→upgrade→remove
+- [ ] **AI Services** — systemd timers + self-recovery validated
 
-### 🌐 Infrastructure Setup (Planned)
-- [ ] **Domain Registration** - nexusos.org domain setup
-- [ ] **Repository Hosting** - repo.nexusos.org server setup
-- [ ] **Documentation Site** - docs.nexusos.org setup
-- [ ] **Community Platforms** - Discord, forum, social media
+### 🌐 Infrastructure Setup (planned)
+- [ ] **Domain registration** — nexusos.org
+- [ ] **Repository hosting** — signed APT repo on Bahamut or dedicated CT
+- [ ] **Documentation Site** — docs.nexusos.org
+- [ ] **Community Platforms** — Discord/forum
 
 ---
 
@@ -42,32 +51,27 @@
 
 ### Step 1: Final Preparation
 ```bash
-# Ensure repository is clean and up-to-date
-git status
+git status                            # clean tree
 git add .
-git commit -m "Release v1.0.0-alpha - Universal Foundation"
-git tag -a v1.0.0-alpha -m "NexusOS Alpha Release - Universal Foundation"
+git commit -m "Release v1.0.1-dev"
+git tag -a v1.0.1-dev -m "NexusOS 1.0.1-dev"
 git push origin main --tags
 ```
 
 ### Step 2: Build Release ISO
 ```bash
-# Build the distribution ISO
-cd scripts
-sudo ./build-iso.sh ../build
-
-# Verify ISO was created successfully
-ls -la ../build/nexusos-1.0.0-alpha-x86_64.iso*
+sudo ./scripts/build-iso.sh           # default output dir: build/
+ls -la build/nexusos-1.0-*.iso*
 ```
 
 ### Step 3: Create GitHub Release
-1. Go to https://github.com/nexusos/nexus-os/releases/new
-2. Tag: `v1.0.0-alpha`
-3. Title: `NexusOS 1.0.0-alpha - Universal Foundation`
-4. Description: Use content from CHANGELOG.md
-5. Upload ISO file and checksums
-6. Mark as "Pre-release" (Alpha status)
-7. Publish release
+1. Go to https://github.com/wlfogle/nexus-os/releases/new
+2. Tag: `v1.0.1-dev`
+3. Title: `NexusOS 1.0.1-dev`
+4. Description: extract from `CHANGELOG.md`
+5. Upload ISO + SHA256 + signature
+6. Mark as "Pre-release"
+7. Publish
 
 ### Step 4: DistroWatch Submission
 1. Visit https://distrowatch.com/dwres.php?resource=submit
@@ -87,12 +91,12 @@ ls -la ../build/nexusos-1.0.0-alpha-x86_64.iso*
 
 ### Required Information
 - [x] **Distribution Name**: NexusOS
-- [x] **Version**: 1.0.0-alpha  
-- [x] **Release Date**: January 7, 2025
+- [x] **Version**: 1.0.1-dev
+- [x] **Release Date**: 2026-04-07 (1.0.1-dev); 2026-03-09 (1.0.0-dev first boot)
 - [x] **Architecture**: x86_64
-- [x] **Base Distribution**: Pop!_OS 22.04 NVIDIA (Ubuntu/Debian-based)
-- [x] **Desktop Environment**: NexusDE (KDE Plasma 6)
-- [x] **Package Manager**: nexuspkg (universal)
+- [x] **Base Distribution**: Ubuntu Jammy 22.04 LTS (debootstrap)
+- [x] **Desktop Environment**: KDE Plasma X11 + SDDM
+- [x] **Package Manager**: nexuspkg (universal) + nala (native)
 - [x] **Category**: Desktop, Gaming, Media Center
 
 ### Required Materials
@@ -218,8 +222,8 @@ ls -la ../build/nexusos-1.0.0-alpha-x86_64.iso*
 
 ---
 
-**Release Status**: 🔄 Ready for Alpha Release  
-**Next Milestone**: Beta 1.0.0 (Q1 2025)  
+**Release Status**: 🔄 1.0.1-dev (active Ubuntu-track)  
+**Next Milestone**: 1.0.2-dev — hardware validation + installer polish (see `ROADMAP.md`)  
 **Target Audience**: Linux enthusiasts, developers, early adopters  
 
 ---

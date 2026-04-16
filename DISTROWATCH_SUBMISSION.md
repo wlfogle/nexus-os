@@ -3,11 +3,11 @@
 ## Distribution Information
 
 **Distribution Name**: NexusOS  
-**Version**: 1.0.0-dev  
-**Release Date**: March 9, 2026  
+**Version**: 1.0.1-dev  
+**Release Date**: 2026-04-07 (1.0.1-dev); 2026-03-09 (1.0.0-dev first boot)  
 **Category**: Desktop, Gaming, Media Center  
 **Architecture**: x86_64  
-**Status**: Development Build (ISO boots in QEMU, hardware testing pending)
+**Status**: Development Build (ISO boots in QEMU; hardware validation in progress for 1.0.2-dev)
 
 ---
 
@@ -206,18 +206,19 @@ These AI companions provide interactive system management, security monitoring, 
 
 ## Release Status & Roadmap
 
-### Current Status: Alpha 1.0.0
-- Core universal package manager functional
-- AI companions implemented
-- Media stack deployment ready
-- Desktop environment customized
-- Installation system working
+### Current Status: 1.0.1-dev
+- Core universal package manager functional (`nexuspkg`, 15+ backends)
+- Stella (8601) and Max Jr. (8602) running as systemd FastAPI services
+- Media stack synced from `homelab-media-stack` into `core/media-stack/homelab/`
+- KDE Plasma X11 + SDDM desktop shipping on the live ISO
+- `installer/nexus-install.sh` covers overlay install and ZFS-on-root fresh install; Calamares modules live in `core/installer/`
 
 ### Upcoming Milestones
-- **Hardware boot testing**: Validate on real hardware
-- **Calamares installer**: Install-to-disk support
-- **nexuspkg GUI**: Graphical package manager frontend
-- **Stable 1.0.0**: Production-ready release
+- **1.0.2-dev**: hardware validation on reference laptop + no-NVIDIA box; installer and `patch-iso.sh` polish
+- **1.0.3-dev**: every `nexuspkg` backend verified end-to-end
+- **1.0.4-dev**: AI companion hardening (auth, self-recovery, reversibility)
+- **Mid-term**: signed APT repo, ARM64 ISO, in-place upgrade via ZFS snapshots
+- **Long-term vision track**: from-scratch AI-native kernel (archived in `docs/vision/`)
 
 ---
 
@@ -244,4 +245,4 @@ These AI companions provide interactive system management, security monitoring, 
 
 ---
 
-*This submission represents NexusOS Alpha 1.0.0 - a revolutionary approach to Linux distribution design that eliminates package format barriers and introduces AI-assisted system management.*
+*This submission represents NexusOS 1.0.1-dev on the active Ubuntu-Jammy distribution track. The from-scratch AI-native kernel remains the project's preferred long-term direction and is preserved under `docs/vision/`.*

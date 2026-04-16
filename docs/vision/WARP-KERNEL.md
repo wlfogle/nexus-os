@@ -1,0 +1,211 @@
+# WARP.md
+
+This file provides guidance to WARP (warp.dev) when working with code in this repository.
+
+## Project Overview
+
+NexusOS is the world's first **AI-Native Operating System** - built from scratch with AI/ML workloads as first-class citizens. Unlike traditional OS designs that treat AI as user-space applications, NexusOS integrates AI capabilities directly into the kernel.
+
+**AI-Powerhouse Architecture**: Based on the comprehensive AI development environment, NexusOS brings AI/ML capabilities, GPU acceleration, container orchestration, and self-hosting services to the kernel level.
+
+**Pop!_OS Optimized**: This build is specifically tuned for Pop!_OS 22.04 LTS NVIDIA running on Intel i9-13900HX + RTX 4080 with native CUDA acceleration and 64GB DDR5 optimization. Uses `nala` (not `apt`) as the preferred package manager.
+
+## Common Commands
+
+### Dependencies (Pop!_OS/Ubuntu)
+```bash
+make install-deps      # Show manual installation commands
+make install-deps-auto # Auto-install via nala (requires sudo)
+```
+
+### Building (x86_64 default, Alderlake-optimized)
+```bash
+make all           # Build the complete kernel (x86_64, O2, Alderlake-tuned)
+make kernel        # Build only the kernel binary
+make iso           # Create bootable ISO image
+make clean         # Clean build artifacts
+```
+
+### Performance Optimization Levels
+```bash
+make OPTIMIZE=0 all    # No optimization (-O0)
+make OPTIMIZE=1 all    # Basic optimization (-O1)
+make OPTIMIZE=2 all    # Standard optimization (-O2, Alderlake-tuned) [DEFAULT]
+make OPTIMIZE=3 all    # Aggressive optimization (-O3, LTO, Alderlake-tuned)
+make OPTIMIZE=s all    # Size optimization (-Os, Alderlake-tuned)
+```
+
+### Running and Testing
+```bash
+make run           # Run in QEMU (KVM-accelerated, 128MB RAM, host CPU)
+make run-debug     # Run with GDB debugging support (-s -S flags)
+```
+
+### Debugging
+```bash
+make DEBUG=1 all   # Debug build (disables optimizations, adds -g)
+```
+
+### Architecture Override
+```bash
+make ARCH=i386 all     # Build for i386 (legacy mode)
+make ARCH=x86_64 all   # Build for x86_64 [DEFAULT]
+```
+
+## Code Architecture
+
+### Core Structure
+- **Kernel**: Lives in `kernel/` - currently minimal with just `main.c` containing the kernel entry point
+- **Bootloader**: `boot/boot.s` contains multiboot-compliant assembly bootloader with 32KB stack
+- **Memory Layout**: Defined in `linker.ld` - architecture-aware load addresses
+- **Configuration**: Build settings in `config.mk` (Pop!_OS-optimized) and main `Makefile`
+
+### Build System (Pop!_OS Optimized)
+- **Native Toolchain**: Uses system GCC/binutils, falls back to cross-compiler if available
+- **Intel Optimization**: Alderlake-specific tuning (-march=alderlake -mtune=alderlake)
+- **Smart Architecture Detection**: Automatically detects and configures for x86_64 vs i386
+- **KVM Integration**: QEMU runs with KVM acceleration and host CPU passthrough
+- **Nala Integration**: Native nala/apt package management for dependencies
+
+### Memory Management (Architecture-Aware)
+**x86_64 Mode (Default)**:
+- Kernel virtual base: `0xFFFFFFFF80000000` (canonical higher-half)
+- Kernel load address: `0x200000` (2MB, optimized for large pages)
+- Large page alignment (2MB boundaries)
+- 32KB stack reserved in BSS section
+
+**i386 Mode (Legacy)**:
+- Kernel virtual base: `0xC0000000` (3GB)
+- Kernel load address: `0x100000` (1MB)
+- 4K page alignment
+- 32KB stack reserved in BSS section
+
+### Development Pattern
+The codebase follows a traditional monolithic kernel architecture:
+1. **Boot Phase**: Assembly bootstrap (`boot.s`) sets up stack and calls kernel
+2. **Kernel Phase**: C kernel entry point (`kernel_main`) in `main.c`
+3. **Modular Design**: Directory structure prepared for:
+   - Memory management (`kernel/mm/`)
+   - File systems (`kernel/fs/`)
+   - Process management (`kernel/proc/`)
+   - Device drivers (`drivers/`)
+   - User space programs (`userland/`)
+
+### Build Requirements (Pop!_OS/Ubuntu)
+**Required Packages** (install via nala):
+- `gcc` and `binutils` (native toolchain)
+- `nasm` (assembler)
+- `qemu-system-x86` (emulation with KVM support)
+- `grub-common`, `grub-pc-bin` and `xorriso` (bootloader tools)
+- `mtools` (disk utilities)
+- `gdb` and `make` (development tools)
+
+**Install all at once**:
+```bash
+sudo nala install gcc binutils nasm qemu-system-x86 grub-common grub-pc-bin xorriso mtools gdb make
+```
+
+## File Organization
+
+### Critical Files
+- `linker.ld`: Defines memory layout and section placement
+- `config.mk`: Build configuration and toolchain settings
+- `boot/boot.s`: Multiboot-compliant bootloader
+- `kernel/main.c`: Kernel entry point
+
+### Build Artifacts
+All build outputs go to `build/` directory:
+- `build/kernel.bin`: Final kernel binary
+- `build/nexus-os.iso`: Bootable ISO image
+- `build/*.o`: Object files
+
+### Empty Structure
+Many directories (`docs/`, `tests/`, `scripts/`, `include/kernel/`, `include/libc/`) exist but are currently empty, indicating this is an early-stage project with planned expansion.
+
+## Code Quality Standards
+
+### ABSOLUTE REQUIREMENT: Zero Stub Code
+
+**This is non-negotiable. Every piece of code committed to this repository must be 100% complete and functional.**
+
+- **NO TODO comments** - No TODO, FIXME, unimplemented, or similar markers
+- **NO incomplete functions** - Every function must have a complete, working implementation
+- **NO zombie code** - No dead code paths, incomplete logic, or placeholder implementations
+- **NO stubs** - Assembly stubs must be complete with proper error handling
+- **NO partial features** - Features are either fully working or not included
+
+### Verification Checklist Before Any Commit
+
+1. **No incomplete code patterns**:
+   - Search codebase for: `TODO`, `FIXME`, `XXX`, `HACK`, `stub`, `unimplemented`
+   - All must return ZERO matches
+
+2. **All functions fully implemented**:
+   - Every function body is complete
+   - All error paths handled
+   - All parameters validated
+   - All edge cases covered
+
+3. **Code tested and verified**:
+   - Code compiles without errors
+   - Code runs and produces correct output
+   - No infinite loops or hangs (unless intentional)
+   - No memory leaks or buffer overflows
+
+4. **Assembly stubs are production quality**:
+   - All exception/interrupt handlers complete
+   - Proper register saving/restoring
+   - Correct calling conventions
+   - No placeholder implementations
+
+### Enforcement
+
+- **Before merging**: All code is audited for stubs/TODOs
+- **During development**: Incomplete work stays in branches, never merged to master
+- **Commit messages**: Must clearly state what's implemented and verified
+
+### Example of Unacceptable Code
+
+```c
+// ❌ REJECTED - Incomplete
+int process_file(const char *path) {
+    // TODO: implement file reading
+    return -1;
+}
+
+// ❌ REJECTED - Stub
+void handle_interrupt() {
+    // stub
+}
+```
+
+### Example of Acceptable Code
+
+```c
+// ✅ ACCEPTED - Complete
+int process_file(const char *path) {
+    if (!path) return -EINVAL;
+    
+    int fd = open(path, O_RDONLY);
+    if (fd < 0) return fd;
+    
+    char buffer[4096];
+    int bytes = read(fd, buffer, sizeof(buffer));
+    if (bytes < 0) {
+        close(fd);
+        return bytes;
+    }
+    
+    // Process buffer...
+    close(fd);
+    return bytes;
+}
+
+// ✅ ACCEPTED - Production ISR
+.globl isr42
+isr42:
+    pushl $0              /* error code */
+    pushl $42             /* exception number */
+    jmp isr_common
+    /* Complete handler in common code */
+```
