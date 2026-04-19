@@ -5,6 +5,9 @@
 [![AI](https://img.shields.io/badge/AI-Stella%20%26%20Max%20Jr.-purple)](https://github.com/wlfogle/nexus-os)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Build](https://img.shields.io/badge/ISO-4.8G%20Bootable-green)](https://github.com/wlfogle/nexus-os)
+[![Contributors Welcome](https://img.shields.io/badge/Contributors-WANTED-red)](https://github.com/wlfogle/nexus-os/issues/1)
+
+> **🆘 We need contributors.** NexusOS is built by one developer + a Warp AI agent. A working bootable ISO exists with KDE Plasma, 15+ package managers, and two AI companions — but we need humans to finish it. If you can run QEMU, know Python/Bash/Rust, or want to test backends — **[see issue #1](https://github.com/wlfogle/nexus-os/issues/1)**. Check **[good first issues](https://github.com/wlfogle/nexus-os/labels/good%20first%20issue)** to start immediately.
 
 NexusOS is a standalone Linux distribution bootstrapped from Ubuntu Jammy (22.04) via debootstrap with AI at its core. It features KDE Plasma X11, NVIDIA PRIME render offload (Intel iGPU + NVIDIA dGPU), every major Linux package manager compiled from source, and two AI companions that keep your system secure and fast.
 
