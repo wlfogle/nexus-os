@@ -3,6 +3,7 @@
 pub mod gdt;
 pub mod idt;
 pub mod interrupts;
+pub mod timer_isr;
 
 /// Load GDT → load IDT → done.
 /// Interrupts remain disabled until `arch::enable_interrupts()` is called.

@@ -5,7 +5,8 @@
 use spin::Lazy;
 use x86_64::structures::idt::InterruptDescriptorTable;
 
-use super::{gdt::DOUBLE_FAULT_IST, interrupts};
+use super::{gdt::DOUBLE_FAULT_IST, interrupts, timer_isr};
+use crate::timer::pic::PIC1_OFFSET;
 
 static IDT: Lazy<InterruptDescriptorTable> = Lazy::new(|| {
     let mut idt = InterruptDescriptorTable::new();
@@ -40,6 +41,11 @@ static IDT: Lazy<InterruptDescriptorTable> = Lazy::new(|| {
 
     idt.alignment_check
         .set_handler_fn(interrupts::alignment_check_handler);
+
+    // ── Hardware IRQs (remapped by PIC to 0x20-0x2F) ─────────────────────────
+    // IRQ0 = Timer (INT 0x20)
+    idt[PIC1_OFFSET as usize]
+        .set_handler_fn(timer_isr::timer_isr_naked);
 
     idt
 });

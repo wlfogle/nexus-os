@@ -19,6 +19,9 @@ pub mod arch;
 pub mod io;
 pub mod memory;
 pub mod panic;
+pub mod process;
+pub mod scheduler;
+pub mod timer;
 
 // ─── Limine boot protocol requests ───────────────────────────────────────────
 // These static variables are scanned by the Limine bootloader before handing
@@ -149,12 +152,24 @@ pub extern "C" fn _start() -> ! {
         kprintln!("[srv]  Server mode: headless, service management hooks active");
     }
 
-    // ── 9. Enable interrupts and idle ────────────────────────────────────────
-    arch::enable_interrupts();
-    kprintln!("[arch] Interrupts enabled");
-    kprintln!();
-    kprintln!("NexusOS kernel idle — waiting for scheduler (Phase 2).");
+    // ── 9. Phase 2: PIC + PIT + Scheduler ───────────────────────────────
+    timer::init();                          // PIC remap + PIT 100 Hz
+    kprintln!("[timer] PIC remapped, PIT running at {} Hz", timer::TIMER_HZ);
 
+    scheduler::init();                      // register idle process
+
+    // Spawn demo kernel task
+    scheduler::spawn(b"task-demo", task_demo)
+        .expect("failed to spawn demo task");
+    kprintln!("[sched] demo task spawned");
+
+    // Enable hardware interrupts — timer fires immediately
+    arch::enable_interrupts();
+    kprintln!("[arch] Interrupts enabled — scheduler is LIVE");
+    kprintln!();
+    kprintln!("NexusOS Phase 2 running — preemptive multitasking active.");
+
+    // Idle loop — preempted every 10 ms
     loop {
         arch::halt();
     }
@@ -189,6 +204,24 @@ macro_rules! kprint {
 macro_rules! kprintln {
     ()              => ($crate::kprint!("\n"));
     ($($arg:tt)*)   => ($crate::kprint!("{}\n", format_args!($($arg)*)));
+}
+
+// ─── Kernel tasks ────────────────────────────────────────────────────────────
+
+/// Demo kernel task — prints a heartbeat once per second to prove preemption.
+extern "C" fn task_demo() -> ! {
+    let mut last_tick = 0u64;
+    loop {
+        let t = timer::ticks();
+        // Print once per second (100 ticks = 1 second at 100 Hz)
+        if t.wrapping_sub(last_tick) >= 100 {
+            last_tick = t;
+            kprintln!("[task-demo] alive at {}s (tick={})",
+                      t / timer::TIMER_HZ as u64, t);
+        }
+        // Yield to scheduler via hlt (timer will preempt us)
+        unsafe { core::arch::asm!("hlt", options(nomem, nostack)); }
+    }
 }
 
 // ─── Global allocator error handler ──────────────────────────────────────────
