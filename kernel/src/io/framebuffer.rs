@@ -94,7 +94,7 @@ impl FbConsole {
                 let bg = self.pack(self.bg_r, self.bg_g, self.bg_b);
                 for (gy, &row_bits) in glyph.iter().enumerate() {
                     for gx in 0..8u64 {
-                        let bit = (row_bits >> (7 - gx)) & 1;
+                        let bit = (row_bits >> gx) & 1; // LSB = leftmost pixel
                         let colour = if bit != 0 { fg } else { bg };
                         // Draw SCALE×SCALE block per font pixel
                         for sy in 0..Self::SCALE {
