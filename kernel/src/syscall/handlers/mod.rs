@@ -1,0 +1,1 @@
+/// Phase 5 syscall handlers for AI Core and system services\npub mod syscall_ipc_query;\npub mod syscall_ipc_timeout;\npub mod syscall_gpu_mmap;\n\npub use syscall_ipc_query::handle_ipc_query;\npub use syscall_ipc_timeout::handle_ipc_timeout;\npub use syscall_gpu_mmap::handle_gpu_mmap;\n
