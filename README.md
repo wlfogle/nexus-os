@@ -3,6 +3,8 @@
 > **The world's first AI-native operating system.**  
 > Built from scratch. No Linux. No glibc. No distro assumptions.
 
+**Current version: v0.4.0** — Phases 1–4 complete and verified on bare metal.
+
 ## Architecture
 
 NexusOS is a **Rust microkernel** that boots via the [Limine](https://github.com/limine-bootloader/limine) protocol.
@@ -69,55 +71,100 @@ kernel/
 ├── nexus-x86_64.ld          higher-half linker script (x86_64)
 ├── nexus-aarch64.ld         higher-half linker script (AArch64)
 └── src/
-    ├── main.rs              entry point, Limine requests, kprintln!
+    ├── main.rs              entry point, boot sequence, kernel tasks
     ├── panic.rs             kernel panic handler
     ├── arch/
     │   ├── x86_64/
-    │   │   ├── gdt.rs       GDT + TSS (IST for double fault stack)
-    │   │   ├── idt.rs       IDT, 256 entries
-    │   │   └── interrupts.rs  #BP #DF #PF #GP #DE #UD #SS #AC
+    │   │   ├── gdt.rs       GDT + TSS (RSP0 for ring-3 interrupts, IST for #DF)
+    │   │   ├── idt.rs       IDT 256 entries + IRQ0 timer wired
+    │   │   ├── interrupts.rs  CPU exception handlers
+    │   │   └── timer_isr.rs  naked timer ISR — context switch heart
     │   └── aarch64/
     │       └── exceptions.rs  vector table (2KB aligned), VBAR_EL1
     ├── memory/
-    │   ├── physical.rs      bitmap frame allocator from Limine mmap
-    │   ├── paging.rs        4-level page tables, map_page, HHDM
+    │   ├── physical.rs      bitmap frame allocator (huge-page aware)
+    │   ├── paging.rs        4-level page tables, HHDM, user page mapping
     │   └── heap.rs          64 MB / 16 MB kernel heap, global allocator
-    └── io/
-        ├── serial.rs        COM1 serial, direct port I/O (x86_64)
-        ├── uart.rs          PL011 UART MMIO at 0x09000000 (AArch64)
-        ├── framebuffer.rs   8x8 bitmap font console (laptop feature)
-        └── font8x8.rs       public domain ASCII bitmap font
+    ├── io/
+    │   ├── serial.rs        COM1 serial, direct port I/O (x86_64)
+    │   ├── uart.rs          PL011 UART MMIO (AArch64)
+    │   ├── framebuffer.rs   2x-scaled 8×8 bitmap console (laptop)
+    │   └── font8x8.rs       public domain ASCII bitmap font
+    ├── timer/
+    │   ├── pic.rs           8259A PIC — remaps IRQs to 0x20–0x2F
+    │   └── pit.rs           8253 PIT — 100 Hz tick counter
+    ├── process/             PCB, kernel stack, ring-3 spawn, state machine
+    ├── scheduler/           round-robin preemptive scheduler + PERCPU update
+    ├── ipc/
+    │   ├── mod.rs           Message, inbox queues, blocking send/recv
+    │   └── ports.rs         named port registry (nexus.ai, nexus.fs, ...)
+    ├── syscall/             STAR/LSTAR/FMASK/EFER + GS-relative entry stub
+    └── userspace/           ring-3 process spawn, page mapping, init code
 ```
 
 ## Boot Sequence
 
 ```
 UEFI or BIOS firmware
-  └── Limine (built from source)
+  └── Limine v12 (built from source, UEFI + BIOS hybrid)
         ├── 64-bit long mode (x86_64) | EL1 (AArch64)
-        ├── HHDM: all physical memory mapped at a fixed offset
-        ├── Passes: memory map, framebuffer info, kernel load addresses
+        ├── HHDM: all physical memory mapped at HHDM_OFFSET
+        ├── Passes: memory map, framebuffer, kernel load addresses
         └── Jumps to kernel _start()
-              1. Serial / UART init     (banner printed immediately)
-              2. GDT + IDT             (x86_64) | VBAR_EL1 (AArch64)
-              3. Physical frame allocator (bitmap over usable regions)
-              4. Paging               (HHDM offset stored, map_page ready)
-              5. Kernel heap          (N frames mapped, LockedHeap init)
-              6. Framebuffer console  (laptop only)
-              7. HLT / WFI idle loop
+
+              Phase 1 — Foundation
+              1. Serial / UART init     (banner immediately)
+              2. GDT + IDT + TSS.RSP0  (x86_64) | VBAR_EL1 (AArch64)
+              3. Physical frame allocator (bitmap, huge-page aware)
+              4. 4-level paging        (HHDM stored, map_page ready)
+              5. Kernel heap           (64 MB / 16 MB LockedHeap)
+              6. Framebuffer console   (laptop, 2x scaled 8×8 font)
+
+              Phase 2 — Preemptive Scheduler
+              7. PIC remap + PIT 100 Hz
+              8. Process table + kernel stacks
+              9. Round-robin scheduler (timer ISR context switch)
+
+              Phase 3 — IPC
+             10. Per-process inbox queues + blocking send/recv
+             11. Named port registry (service discovery)
+
+              Phase 4 — Syscall + User Space
+             12. STAR/LSTAR/FMASK/EFER + swapgs PERCPU entry
+             13. First ring-3 process (nexus-init via IRETQ)
+             14. SYS_WRITE, SYS_SLEEP, SYS_GETPID, SYS_IPC_* live
+             15. Idle loop (preempted every 10 ms)
 ```
 
 ## Phase Roadmap
 
-| Phase | Status | Scope |
-|-------|--------|-------|
-| 1 | In progress | Boot, memory management, CPU exceptions |
-| 2 | Planned | Preemptive scheduler, timer, process table |
-| 3 | Planned | IPC — message passing (microkernel core) |
-| 4 | Planned | Syscall interface, ring-3 / EL0 user processes |
-| 5 | Planned | **AI Core server** — user-space service, Ollama IPC |
+| Phase | Status | Scope | Verified |
+|-------|--------|-------|----------|
+| 1 | **Done** | Boot, GDT/IDT, physical memory, paging, heap, framebuffer | `[pmem] 4090 MiB usable` |
+| 2 | **Done** | Preemptive scheduler, 8259A PIC, 8253 PIT, round-robin | `[task-demo] alive at 9s` |
+| 3 | **Done** | IPC ring-buffers, blocking send/recv, named port registry | `ping#00007 round-trip OK` |
+| 4 | **Done** | `syscall`/`sysretq`, ring-3 user process, SYS_WRITE/SLEEP/IPC | `Hello from ring 3!` |
+| 5 | Planned | **AI Core server** — user-space Ollama IPC, `nexus.ai` port |
 | 6 | Planned | NexusTerminal ↔ AI Core via IPC |
-| 7 | Planned | VFS, network stack |
+| 7 | Planned | VFS, network stack, NexusOS installer |
+
+## Test VM
+
+A QEMU + KVM test VM is pre-configured under `scripts/vm/`:
+
+```bash
+# Quick ISO test (no GPU rebinding)
+./scripts/vm/nexusos-vm-test.sh
+
+# RTX 4080 GPU passthrough (IOMMU Group 16, isolated)
+sudo ./scripts/vm/vfio-bind.sh
+./scripts/vm/nexusos-vm-gpu.sh --cdrom   # install
+./scripts/vm/nexusos-vm-gpu.sh           # boot installed
+sudo ./scripts/vm/vfio-unbind.sh
+```
+
+VM disk image lives at `/media/loufogle/Data/vms/nexusos/nexusos.qcow2` (40 GB).
+A `libvirt` domain `nexusos` is registered in virt-manager for GUI access.
 
 ## Legacy Code
 

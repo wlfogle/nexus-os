@@ -5,273 +5,84 @@ this repository.
 
 ## Project Overview
 
-NexusOS is a **standalone Linux distribution bootstrapped from Ubuntu
-Jammy (22.04) via `debootstrap`**. It ships KDE Plasma X11 + SDDM, NVIDIA
-PRIME render offload (Intel iGPU + NVIDIA dGPU), every major Linux
-package manager compiled from source (via `nexuspkg`), and two AI
-companions — Stella (security) and Max Jr. (performance) — implemented
-as systemd-managed FastAPI services.
+NexusOS is a **from-scratch Rust microkernel** — the world's first AI-native
+operating system.  No Linux.  No glibc.  No distro assumptions.
 
-The repository is a monorepo: first-party components (CLIs, services,
-branding, installer, media stack), vendored consolidated packages, and
-scripts all live in one tree. See `README.md` for the user-facing
-overview and `docs/CONSOLIDATION.md` for the monorepo source map.
+**Current state: v0.4.0 — Phases 1–4 verified on bare metal (QEMU + KVM).**
 
-**Preferred long-term direction (not the current implementation)** is a
-from-scratch AI-native kernel. That work is archived in `docs/vision/`
-and is still the project's eventual destination — it is simply not
-feasible to ship today. The legacy from-scratch kernel source tree
-(`kernel/`, `boot/`, `linker.ld`, `Makefile`, `CMakeLists.txt`,
-`config.mk`, `create_phase1.sh`, `create_phase2.sh`, `grub.cfg`) is
-preserved for the same reason. None of it is invoked by the current
-distro build.
+The old Ubuntu/distro material is preserved under `legacy/` but is never built.
 
-**Host environment.** The active build target is Pop!_OS 22.04 LTS on
-Intel i9-13900HX + RTX 4080 + 64 GB DDR5. Uses `nala` (not raw `apt`) as
-the preferred package manager per project rules.
+---
 
-## Common Commands
+<!-- Legacy description preserved below for historical reference only -->
 
-### Build the live ISO
+_ORIGINAL (pre-kernel) WARP.md content has been superseded._
+_All active kernel work is in `kernel/`.  See README.md for build instructions._
+_See below for kernel-specific guidance._
+
+---
+
+## Kernel Build
+
+### Prerequisites (one-time)
 
 ```bash
-sudo ./scripts/build-iso.sh                        # default (~70 min)
-sudo ./scripts/build-iso.sh --no-nvidia            # skip NVIDIA stack
-sudo ./scripts/build-iso.sh --output ~/iso         # custom output dir
-sudo ./scripts/build-iso.sh --mirror http://...    # alternate APT mirror
+make setup          # installs Rust nightly, adds targets, builds Limine
 ```
 
-Output lands in `build/nexusos-1.0-YYYY.MM.DD-x86_64.iso`. The builder
-debootstraps a fresh Jammy root, configures APT + NVIDIA PPA, installs
-KDE + AI services + the media stack, builds a squashfs, and packs a
-hybrid ISO (UEFI + BIOS).
+Requires only: `rustup`, `make`, `xorriso`.  No distro packages.
 
-### Patch an existing ISO (faster iteration)
+### Build + run
 
 ```bash
-sudo ./scripts/patch-iso.sh                        # auto-find latest ISO
-sudo ./scripts/patch-iso.sh path/to/nexusos.iso    # specific ISO
+make laptop && make iso-laptop && make run-laptop   # x86_64 full
+make tiamat && make iso-tiamat                     # x86_64 server
+make bahamut && make iso-bahamut                   # AArch64
 ```
 
-Used to apply fixes without a full rebuild.
+## Active Kernel Modules
 
-### Test in QEMU
+| Module | Phase | Description |
+|--------|-------|-------------|
+| `arch/x86_64/{gdt,idt,interrupts,timer_isr}` | 1 | CPU structures, naked timer ISR |
+| `arch/aarch64/exceptions` | 1 | AArch64 vector table, VBAR_EL1 |
+| `memory/{physical,paging,heap}` | 1 | Bitmap allocator (huge-page aware), 4-level paging, heap |
+| `io/{serial,uart,framebuffer}` | 1 | Serial/UART, 2x-scaled framebuffer console |
+| `timer/{pic,pit}` | 2 | 8259A PIC remap, 8253 PIT 100 Hz |
+| `process` | 2 | PCB, ring-0/ring-3 spawn, BlockedOnRecv/Send states |
+| `scheduler` | 2 | Round-robin preemptive, TSS.RSP0 + PERCPU updates |
+| `ipc/{mod,ports}` | 3 | Message queues (depth=8), blocking send/recv, named ports |
+| `syscall` | 4 | STAR/LSTAR/FMASK/EFER, GS-relative naked entry, 9 syscalls |
+| `userspace` | 4 | Ring-3 page mapping in PML4[1], nexus-init machine code |
 
-```bash
-qemu-system-x86_64 -m 4G -enable-kvm \
-    -cdrom build/nexusos-1.0-*.iso
-```
+## Key Gotchas
 
-### Write to USB
+1. **Limine huge pages** — `map_page` must detect 1 GB/2 MB huge-page entries
+   (HUGE flag) and refuse to walk through them.  User addresses must be in
+   PML4[1] (512 GB+) where Limine has no identity-map entries.
 
-```bash
-sudo dd if=build/nexusos-1.0-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
-```
+2. **Limine v12 config syntax** — `key: value` (colon-space), NOT `key=value`.
+   Entry headers are `/Name`, NOT `:Name`.
 
-### Installer (overlay on existing Pop!_OS, or fresh ZFS-on-root)
+3. **TSS.RSP0** — must be updated to each process’s kernel stack top on every
+   context switch so timer interrupts from ring 3 land on the right stack.
 
-```bash
-sudo ./installer/nexus-install.sh                  # overlay mode
-sudo INSTALL_MODE=fresh TARGET_DISK=/dev/sdX \
-    ./installer/nexus-install.sh                   # ZFS fresh install
-```
+4. **Syscall PERCPU** — use `gs:[0]` / `gs:[8]` (GS-relative addressing) in
+   the naked syscall entry stub, not `[PERCPU+N]` absolute symbol references.
 
-See `installer/README.md` and `installer/WARP.md` for installer
-internals.
+5. **VM** — Test VM at `/media/loufogle/Data/vms/nexusos/`, scripts in
+   `scripts/vm/`.  RTX 4080 is in IOMMU Group 16 (isolated), passthrough
+   ready via `scripts/vm/vfio-bind.sh`.
 
-### Daily runtime commands (inside a running NexusOS system)
+## Host Environment
 
-```bash
-nexus-control status | health | gpu | services
-sudo nexus-control update
-
-stella --status | --scan
-sudo stella --digital-fortress
-
-maxjr --monitor | --temperature
-sudo maxjr --optimize | --gaming-mode
-
-nexuspkg install <pkg>               # auto-detect best backend
-nexuspkg install --backend flatpak discord
-nexuspkg search <term>               # search all backends
-nexuspkg repos                       # list backends
-```
-
-## Code Architecture
-
-Repo layout (abbreviated — see `README.md` for the full tree):
-
-```
-nexus-os/
-├── scripts/                # ISO builder, patcher, livecd, rescue-usb
-├── core/
-│   ├── bin/                # nexus-control, nexuspkg, stella, maxjr, first-run
-│   ├── services/           # orchestrator (8600), stella (8601), maxjr (8602)
-│   ├── config/             # sysctl, modprobe, udev, limits, hw/, optimization/
-│   ├── branding/ desktop/ shell/ security/ gaming/
-│   ├── ai/                 # ollama, powerhouse, sysadmin, ollama-checker
-│   ├── installer/          # calamares modules, zfs support
-│   └── media-stack/        # docker-compose.yml, homelab/, admin-scripts/
-├── userspace/
-│   └── apps/               # nexus-terminal, kvm-manager, mediastack-control, ...
-├── packages/               # 22 consolidated sibling-repo packages
-├── installer/              # nexus-install.sh (overlay + ZFS fresh)
-├── docs/
-│   ├── vision/             # Archived from-scratch-kernel vision (not current)
-│   ├── CONSOLIDATION.md    # Monorepo source map
-│   ├── setup/ notes/
-│   └── security-audit.md media-center-plan.md mount-qcow.md ...
-└── build/                  # ISO output
-```
-
-Legacy from-scratch source (`boot/`, `kernel/`, `include/`, `lib/`,
-`drivers/`, `linker.ld`, `Makefile`, `CMakeLists.txt`, `config.mk`,
-`create_phase1.sh`, `create_phase2.sh`, `grub.cfg`) is retained for the
-vision direction but is **not** exercised by `scripts/build-iso.sh` or
-the installer. Do not modify it unless you are intentionally working on
-the vision track — and if you are, update `docs/vision/` in the same
-change.
-
-### AI services (runtime)
-
-| Service      | Port | Purpose                                                    |
-|--------------|------|------------------------------------------------------------|
-| Orchestrator | 8600 | Central coordinator / API gateway                          |
-| Stella       | 8601 | Security scanning, firewall, login monitoring             |
-| Max Jr.      | 8602 | CPU/GPU/memory metrics, gaming detection                   |
-
-### GPU configuration
-
-PRIME render offload — Intel iGPU drives the desktop, NVIDIA activates
-on demand via `prime-run`. Config lives in `core/config/`:
-
-- `10-intel-primary.conf`
-- `11-nvidia-prime-offload.conf`
-- `nvidia-prime.conf`
-- `modprobe-nvidia.conf` (`nvidia-drm modeset=1` required for PRIME)
-
-## Build Dependencies
-
-Installed automatically by `scripts/build-iso.sh` via `nala`:
-
-```
-debootstrap squashfs-tools xorriso mtools
-grub-efi-amd64-bin grub-efi-amd64-signed shim-signed
-grub-pc-bin rsync dosfstools isolinux syslinux-common
-```
-
-Install manually if needed:
-
-```bash
-sudo nala install debootstrap squashfs-tools xorriso mtools \
-    grub-efi-amd64-bin grub-efi-amd64-signed shim-signed \
-    grub-pc-bin rsync dosfstools isolinux syslinux-common
-```
-
-## File Organization
-
-### Critical files (active distro)
-
-- `scripts/build-iso.sh` — the ISO builder; every step (debootstrap →
-  APT → base → KDE → NVIDIA → AI services → media stack → squashfs →
-  xorriso) lives here.
-- `scripts/patch-iso.sh` — delta patcher for an existing ISO.
-- `installer/nexus-install.sh` — overlay install on existing Pop!_OS or
-  fresh ZFS-on-root install.
-- `core/bin/nexuspkg`, `core/bin/nexus-control`, `core/bin/stella`,
-  `core/bin/maxjr` — user-facing CLIs.
-- `core/services/*.service` + `*.timer` — systemd units for the AI
-  services.
-
-### Build artifacts (`build/`)
-
-- `build/nexusos-1.0-YYYY.MM.DD-x86_64.iso` — hybrid UEFI/BIOS ISO
-  (typically ~4.8 GB).
+Pop!_OS 22.04 on Intel i9-13900HX + RTX 4080 + 64 GB DDR5.
+Preferred package manager: `nala` (not raw `apt`).
 
 ## Code Quality Standards
 
-### ABSOLUTE REQUIREMENT: Zero Stub Code
+Every function must be complete and working.  No stubs, no TODOs, no zombie code.
 
-**This is non-negotiable. Every piece of code committed to this repository must be 100% complete and functional.**
-
-- **NO TODO comments** - No TODO, FIXME, unimplemented, or similar markers
-- **NO incomplete functions** - Every function must have a complete, working implementation
-- **NO zombie code** - No dead code paths, incomplete logic, or placeholder implementations
-- **NO stubs** - Assembly stubs must be complete with proper error handling
-- **NO partial features** - Features are either fully working or not included
-
-### Verification Checklist Before Any Commit
-
-1. **No incomplete code patterns**:
-   - Search codebase for: `TODO`, `FIXME`, `XXX`, `HACK`, `stub`, `unimplemented`
-   - All must return ZERO matches
-
-2. **All functions fully implemented**:
-   - Every function body is complete
-   - All error paths handled
-   - All parameters validated
-   - All edge cases covered
-
-3. **Code tested and verified**:
-   - Code compiles without errors
-   - Code runs and produces correct output
-   - No infinite loops or hangs (unless intentional)
-   - No memory leaks or buffer overflows
-
-4. **Assembly stubs are production quality**:
-   - All exception/interrupt handlers complete
-   - Proper register saving/restoring
-   - Correct calling conventions
-   - No placeholder implementations
-
-### Enforcement
-
-- **Before merging**: All code is audited for stubs/TODOs
-- **During development**: Incomplete work stays in branches, never merged to master
-- **Commit messages**: Must clearly state what's implemented and verified
-
-### Example of Unacceptable Code
-
-```c
-// ❌ REJECTED - Incomplete
-int process_file(const char *path) {
-    // TODO: implement file reading
-    return -1;
-}
-
-// ❌ REJECTED - Stub
-void handle_interrupt() {
-    // stub
-}
-```
-
-### Example of Acceptable Code
-
-```c
-// ✅ ACCEPTED - Complete
-int process_file(const char *path) {
-    if (!path) return -EINVAL;
-    
-    int fd = open(path, O_RDONLY);
-    if (fd < 0) return fd;
-    
-    char buffer[4096];
-    int bytes = read(fd, buffer, sizeof(buffer));
-    if (bytes < 0) {
-        close(fd);
-        return bytes;
-    }
-    
-    // Process buffer...
-    close(fd);
-    return bytes;
-}
-
-// ✅ ACCEPTED - Production ISR
-.globl isr42
-isr42:
-    pushl $0              /* error code */
-    pushl $42             /* exception number */
-    jmp isr_common
-    /* Complete handler in common code */
-```
+- **NO** `TODO`, `FIXME`, `XXX`, `HACK`, `stub`, or `unimplemented` markers
+- **NO** incomplete functions or dead code paths
+- Code compiles clean and runs correctly before committing
