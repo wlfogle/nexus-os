@@ -120,6 +120,21 @@ pub extern "C" fn _start() -> ! {
             .get()
             .expect("Limine: no framebuffer response");
         io::framebuffer::init(fb);
+        // Reprint the full boot log to the framebuffer now that it's ready
+        kprintln!();
+        kprintln!("==========================================");
+        kprintln!("  NexusOS Kernel v{}  [  laptop  ]", env!("CARGO_PKG_VERSION"));
+        kprintln!("  World's First AI-Native OS");
+        kprintln!("==========================================");
+        kprintln!();
+        kprintln!("[boot] HHDM offset       : {:#018x}", hhdm_offset);
+        kprintln!("[boot] Kernel phys base  : {:#018x}", kaddr.physical_base);
+        kprintln!("[boot] Kernel virt base  : {:#018x}", kaddr.virtual_base);
+        kprintln!("[arch] CPU structures loaded");
+        kprintln!("[pmem] {} MiB usable", memory::physical::free_frames() * 4096 / (1024*1024));
+        kprintln!("[mem]  Physical frame allocator online");
+        kprintln!("[mem]  Paging initialised");
+        kprintln!("[mem]  Kernel heap ({} MB) ready", memory::heap::HEAP_SIZE / (1024*1024));
         kprintln!("[fb]   Framebuffer console active");
     }
 
