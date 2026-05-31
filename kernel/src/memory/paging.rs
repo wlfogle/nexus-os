@@ -116,12 +116,18 @@ pub fn map_page(virt: u64, phys: u64, page_flags: u64) {
     let pml4_phys = active_pml4_phys();
     let pml4 = unsafe { &mut *(phys_to_virt(pml4_phys) as *mut PageTable) };
 
+    // For user-accessible pages, intermediate entries must also carry the USER
+    // bit — x86_64 denies user-mode access if ANY level has U/S=0.
+    let inter_flags = flags::PRESENT | flags::WRITABLE
+        | (page_flags & flags::USER);   // propagate USER to PML4/PDPT/PD
+
     let l4 = pml4_idx(virt);
     if pml4.0[l4] & flags::PRESENT == 0 {
         let new_tbl = super::physical::alloc_frame();
-        // Zero the new table
         unsafe { (phys_to_virt(new_tbl) as *mut PageTable).write_bytes(0, 1) };
-        pml4.0[l4] = new_tbl | flags::PRESENT | flags::WRITABLE;
+        pml4.0[l4] = new_tbl | inter_flags;
+    } else if page_flags & flags::USER != 0 {
+        pml4.0[l4] |= flags::USER; // set USER on existing entry
     }
     let pdpt_phys = pml4.0[l4] & !0xFFF;
     let pdpt = unsafe { &mut *(phys_to_virt(pdpt_phys) as *mut PageTable) };
@@ -130,7 +136,12 @@ pub fn map_page(virt: u64, phys: u64, page_flags: u64) {
     if pdpt.0[l3] & flags::PRESENT == 0 {
         let new_tbl = super::physical::alloc_frame();
         unsafe { (phys_to_virt(new_tbl) as *mut PageTable).write_bytes(0, 1) };
-        pdpt.0[l3] = new_tbl | flags::PRESENT | flags::WRITABLE;
+        pdpt.0[l3] = new_tbl | inter_flags;
+    } else {
+        assert_eq!(pdpt.0[l3] & flags::HUGE, 0,
+            "map_page: PDPT[{l3}] at virt {virt:#x} is a 1 GB huge page — pick a higher user address",
+            l3 = l3, virt = virt);
+        if page_flags & flags::USER != 0 { pdpt.0[l3] |= flags::USER; }
     }
     let pd_phys = pdpt.0[l3] & !0xFFF;
     let pd = unsafe { &mut *(phys_to_virt(pd_phys) as *mut PageTable) };
@@ -139,7 +150,12 @@ pub fn map_page(virt: u64, phys: u64, page_flags: u64) {
     if pd.0[l2] & flags::PRESENT == 0 {
         let new_tbl = super::physical::alloc_frame();
         unsafe { (phys_to_virt(new_tbl) as *mut PageTable).write_bytes(0, 1) };
-        pd.0[l2] = new_tbl | flags::PRESENT | flags::WRITABLE;
+        pd.0[l2] = new_tbl | inter_flags;
+    } else {
+        assert_eq!(pd.0[l2] & flags::HUGE, 0,
+            "map_page: PD[{l2}] at virt {virt:#x} is a 2 MB huge page — pick a higher user address",
+            l2 = l2, virt = virt);
+        if page_flags & flags::USER != 0 { pd.0[l2] |= flags::USER; }
     }
     let pt_phys = pd.0[l2] & !0xFFF;
     let pt = unsafe { &mut *(phys_to_virt(pt_phys) as *mut PageTable) };

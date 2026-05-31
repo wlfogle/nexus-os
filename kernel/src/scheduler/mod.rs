@@ -76,6 +76,12 @@ pub unsafe extern "C" fn scheduler_tick(current_rsp: u64) -> u64 {
     process::set_state(next_id, ProcessState::Running);
     CURRENT.store(next_id, Ordering::SeqCst);
 
+    // Update PERCPU.kernel_rsp (for syscall entry) and TSS.RSP0 (for ring-3 interrupts)
+    crate::syscall::update_kernel_rsp(next_id);
+    if let Some(top) = crate::process::get_kernel_stack_top(next_id) {
+        crate::arch::x86_64::gdt::update_rsp0(top);
+    }
+
     // Return the next process's saved RSP
     process::get_rsp(next_id).unwrap_or(current_rsp)
 }

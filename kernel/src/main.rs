@@ -22,7 +22,9 @@ pub mod memory;
 pub mod panic;
 pub mod process;
 pub mod scheduler;
+pub mod syscall;
 pub mod timer;
+pub mod userspace;
 
 // ─── Limine boot protocol requests ───────────────────────────────────────────
 // These static variables are scanned by the Limine bootloader before handing
@@ -166,11 +168,16 @@ pub extern "C" fn _start() -> ! {
         .expect("failed to spawn echo-client");
     kprintln!("[ipc]  echo-server and echo-client spawned");
 
+    // ── Phase 4: Syscall interface + user-space process ───────────────
+    syscall::init();
+    let user_pid = userspace::spawn_user_init();
+    kprintln!("[user] nexus-init spawned as pid={} (ring 3)", user_pid);
+
     // Enable hardware interrupts — timer fires immediately
     arch::enable_interrupts();
     kprintln!("[arch] Interrupts enabled — scheduler is LIVE");
     kprintln!();
-    kprintln!("NexusOS v{} — Phase 3: IPC message-passing active.",
+    kprintln!("NexusOS v{} — Phase 4: syscall interface active.",
               env!("CARGO_PKG_VERSION"));
 
     // Idle loop — preempted every 10 ms

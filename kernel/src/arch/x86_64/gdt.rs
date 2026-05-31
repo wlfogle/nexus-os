@@ -26,17 +26,31 @@ use x86_64::{
 pub const DOUBLE_FAULT_IST: u16 = 0;
 
 /// 20 KiB emergency stack for the double-fault handler.
-/// Must outlive the TSS — place in BSS (zero-initialised by bootloader).
 #[repr(align(16))]
 struct DoubleFaultStack([u8; 20 * 1024]);
 static DOUBLE_FAULT_STACK: DoubleFaultStack = DoubleFaultStack([0u8; 20 * 1024]);
 
-// ─── TSS ─────────────────────────────────────────────────────────────────────
+/// 16 KiB initial ring-0 interrupt stack (RSP0).
+/// Used when a timer or other interrupt fires while a ring-3 process is running.
+/// The scheduler updates TSS.RSP0 to each process's own kernel stack on switch
+/// (via `update_rsp0`); this static is only used before the first user process runs.
+#[repr(align(16))]
+struct Rsp0Stack([u8; 16 * 1024]);
+static RSP0_STACK: Rsp0Stack = Rsp0Stack([0u8; 16 * 1024]);
+
+// ─── TSS ─────────────────────────────────────────────────────────────────────────────────
 
 static TSS: Lazy<TaskStateSegment> = Lazy::new(|| {
     let mut tss = TaskStateSegment::new();
 
-    // IST[0]: top of the emergency stack (stack grows downward)
+    // RSP0: kernel stack for interrupts from ring 3.
+    // The scheduler updates this on every context switch (see update_rsp0).
+    tss.privilege_stack_table[0] = {
+        let stack_start = VirtAddr::from_ptr(RSP0_STACK.0.as_ptr());
+        stack_start + RSP0_STACK.0.len() as u64
+    };
+
+    // IST[0]: emergency stack for the double-fault handler.
     tss.interrupt_stack_table[DOUBLE_FAULT_IST as usize] = {
         let stack_start = VirtAddr::from_ptr(DOUBLE_FAULT_STACK.0.as_ptr());
         stack_start + DOUBLE_FAULT_STACK.0.len() as u64
@@ -92,4 +106,19 @@ pub fn init() {
 #[inline]
 pub fn kernel_code_selector() -> SegmentSelector {
     GDT.1.kernel_code
+}
+
+/// Update TSS.RSP0 to a new kernel stack top.
+/// Called by the scheduler on every context switch so that ring-3 interrupts
+/// (timer, etc.) land on the correct per-process kernel stack.
+///
+/// # Safety
+/// Must only be called with interrupts disabled (from the timer ISR context).
+pub fn update_rsp0(stack_top: u64) {
+    unsafe {
+        // TSS is behind Lazy<> — we take a raw mutable pointer to update RSP0.
+        // This is safe because interrupts are disabled during the call.
+        let tss_ptr = &*TSS as *const TaskStateSegment as *mut TaskStateSegment;
+        (*tss_ptr).privilege_stack_table[0] = VirtAddr::new(stack_top);
+    }
 }

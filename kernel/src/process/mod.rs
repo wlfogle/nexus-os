@@ -38,6 +38,8 @@ pub struct Process {
     pub state: ProcessState,
     /// Saved kernel stack pointer (updated on every context switch out).
     pub rsp:   u64,
+    /// Top of the kernel stack (fixed; used to reset RSP on syscall entry).
+    pub kernel_stack_top: u64,
     pub name:  [u8; 32],
     /// Kernel stack storage (lives inside the PCB for simplicity).
     pub stack: [u8; KSTACK_SIZE],
@@ -46,11 +48,12 @@ pub struct Process {
 impl Process {
     const fn zero() -> Self {
         Self {
-            id:    0,
-            state: ProcessState::Dead,
-            rsp:   0,
-            name:  [0u8; 32],
-            stack: [0u8; KSTACK_SIZE],
+            id:               0,
+            state:            ProcessState::Dead,
+            rsp:              0,
+            kernel_stack_top: 0,
+            name:             [0u8; 32],
+            stack:            [0u8; KSTACK_SIZE],
         }
     }
 
@@ -119,9 +122,10 @@ pub fn spawn(name: &[u8], entry: u64) -> Option<u64> {
         push64!(sp, 0);
     }
 
-    slot.id    = id;
-    slot.rsp   = sp;
-    slot.state = ProcessState::Ready;
+    slot.id               = id;
+    slot.rsp              = sp;
+    slot.kernel_stack_top = stack_top;  // syscall handler resets to here
+    slot.state            = ProcessState::Ready;
 
     Some(id)
 }
@@ -156,6 +160,56 @@ pub fn get_state(id: u64) -> ProcessState {
         .find(|p| p.id == id)
         .map(|p| p.state)
         .unwrap_or(ProcessState::Dead)
+}
+
+/// Spawn a user-space (ring-3) process.
+/// The initial IRETQ frame uses user segment selectors so the CPU performs a
+/// full privilege-level switch on first schedule.
+pub fn spawn_ring3(name: &[u8], user_rip: u64, user_rsp: u64) -> Option<u64> {
+    let id = NEXT_ID.fetch_add(1, Ordering::Relaxed);
+    let mut table = TABLE.lock();
+    let slot = table.iter_mut().find(|p| p.state == ProcessState::Dead)?;
+
+    let len = name.len().min(31);
+    slot.name[..len].copy_from_slice(&name[..len]);
+    slot.name[len] = 0;
+
+    let stack_top = (slot.stack.as_ptr() as u64) + KSTACK_SIZE as u64;
+    let mut sp = stack_top & !0xF;
+
+    macro_rules! push64 {
+        ($sp:expr, $val:expr) => {{
+            $sp -= 8;
+            unsafe { *($sp as *mut u64) = $val };
+        }};
+    }
+
+    // Ring-3 IRETQ frame: SS, RSP, RFLAGS, CS, RIP
+    push64!(sp, 0x1B);     // SS  — user data, RPL=3
+    push64!(sp, user_rsp); // RSP — user stack
+    push64!(sp, 0x202);    // RFLAGS — IF=1
+    push64!(sp, 0x23);     // CS  — user code, RPL=3
+    push64!(sp, user_rip); // RIP — user entry point
+
+    // Saved GP registers (all zero for fresh process)
+    for _ in 0..15 {
+        push64!(sp, 0);
+    }
+
+    slot.id               = id;
+    slot.rsp              = sp;
+    slot.kernel_stack_top = stack_top;
+    slot.state            = ProcessState::Ready;
+
+    Some(id)
+}
+
+/// Get a process's kernel stack top address (for syscall PERCPU update).
+pub fn get_kernel_stack_top(id: u64) -> Option<u64> {
+    let table = TABLE.lock();
+    table.iter()
+        .find(|p| p.id == id)
+        .map(|p| p.kernel_stack_top)
 }
 
 /// Return IDs of all Ready or Running processes, in table order.
