@@ -1,0 +1,64 @@
+[package]
+name = "nexus-kernel"
+version = "0.1.0"
+edition = "2021"
+description = "NexusOS Kernel — AI-Native, From Scratch"
+license = "MIT"
+
+[[bin]]
+name = "nexus-kernel"
+path = "src/main.rs"
+
+# ─── Dependencies ────────────────────────────────────────────────────────────
+
+[dependencies]
+# Limine boot protocol types (agnostic to host OS)
+limine = "0.1"
+# Spinlock / Lazy init (no_std safe)
+spin = "0.9"
+# Kernel heap allocator
+linked_list_allocator = { version = "0.10", default-features = false, features = ["use_spin"] }
+
+# x86_64-only deps
+[target.'cfg(target_arch = "x86_64")'.dependencies]
+x86_64 = { version = "0.14", default-features = false }
+
+# aarch64-only deps
+[target.'cfg(target_arch = "aarch64")'.dependencies]
+aarch64-cpu = "9.0"
+
+# ─── Feature Flags ───────────────────────────────────────────────────────────
+#
+# Build targets:
+#   laptop   — Intel i9-13900HX, x86_64, full features (framebuffer, AI hooks)
+#   tiamat   — x86_64 server, headless, service management hooks
+#   bahamut  — ARM64 edge node, 2 GB RAM, serial-only, minimal heap
+#
+[features]
+default = []
+
+laptop  = ["framebuffer", "ai-hooks", "acpi"]
+tiamat  = ["server-mode", "acpi"]
+bahamut = ["minimal-heap", "serial-only"]
+
+framebuffer  = []
+ai-hooks     = []
+acpi         = []
+server-mode  = []
+minimal-heap = []
+serial-only  = []
+
+# ─── Profiles ────────────────────────────────────────────────────────────────
+
+[profile.dev]
+panic         = "abort"
+opt-level     = 0
+codegen-units = 1
+debug         = true
+
+[profile.release]
+panic         = "abort"
+opt-level     = 2
+codegen-units = 1
+lto           = true
+strip         = "none"   # keep symbols for debugging
