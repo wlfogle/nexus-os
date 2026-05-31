@@ -13,7 +13,7 @@ target = "x86_64-unknown-none"
 # ─── x86_64 bare metal ───────────────────────────────────────────────────────
 [target.x86_64-unknown-none]
 rustflags = [
-    "-C", "link-arg=-T../nexus-x86_64.ld",
+    "-C", "link-arg=-Tnexus-x86_64.ld",
     "-C", "relocation-model=static",
     "-C", "code-model=kernel",
 ]
@@ -21,6 +21,6 @@ rustflags = [
 # ─── AArch64 bare metal (Bahamut) ────────────────────────────────────────────
 [target.aarch64-unknown-none-softfloat]
 rustflags = [
-    "-C", "link-arg=-T../nexus-aarch64.ld",
+    "-C", "link-arg=-Tnexus-aarch64.ld",
     "-C", "relocation-model=static",
 ]

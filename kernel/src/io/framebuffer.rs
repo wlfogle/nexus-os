@@ -5,7 +5,7 @@
 
 use core::fmt;
 use spin::Mutex;
-use limine::LimineFramebufferResponse;
+use limine::FramebufferResponse;
 
 // ─── 8×8 bitmap font (printable ASCII 0x20..=0x7e) ──────────────────────────
 // Each character is 8 bytes, one bit per pixel (MSB = leftmost pixel).
@@ -129,15 +129,14 @@ impl fmt::Write for FbConsole {
 static CONSOLE: Mutex<FbConsole> = Mutex::new(FbConsole::uninit());
 
 /// Initialise the framebuffer console from a Limine framebuffer response.
-pub fn init(fb_resp: &LimineFramebufferResponse) {
-    let fbs = fb_resp.framebuffer.as_slice();
+pub fn init(fb_resp: &FramebufferResponse) {
+    let fbs = fb_resp.framebuffers();
     if fbs.is_empty() { return; }
-    let fb_ptr = fbs[0].get();
-    if fb_ptr.is_none() { return; }
-    let fb = fb_ptr.unwrap();
+    // NonNullPtr<Framebuffer> implements Deref<Target = Framebuffer>
+    let fb = &*fbs[0];
 
     let mut c = CONSOLE.lock();
-    c.addr   = fb.address.as_ptr().unwrap_or(core::ptr::null_mut()) as *mut u8;
+    c.addr   = fb.address.as_ptr().unwrap_or(core::ptr::null_mut());
     c.width  = fb.width;
     c.height = fb.height;
     c.pitch  = fb.pitch;
@@ -147,9 +146,10 @@ pub fn init(fb_resp: &LimineFramebufferResponse) {
 
     // Clear to background colour
     if !c.addr.is_null() && c.bpp == 32 {
+        let bg = c.bg;
         for y in 0..c.height {
             for x in 0..c.width {
-                c.put_pixel(x, y, c.bg);
+                c.put_pixel(x, y, bg);
             }
         }
     }

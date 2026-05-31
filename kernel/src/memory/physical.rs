@@ -8,7 +8,7 @@
 //!   bahamut:       up to  2 GB  (64 KB bitmap)
 
 use spin::Mutex;
-use limine::{LimineMemmapResponse, LimineMemoryMapEntryType};
+use limine::{MemmapResponse, MemoryMapEntryType};
 
 const PAGE_SIZE: u64 = 4096;
 
@@ -59,7 +59,7 @@ fn is_used(frame: usize) -> bool {
 
 /// Initialise from the Limine memory map.
 /// Marks all frames as used, then frees only the `Usable` regions.
-pub fn init(mmap: &LimineMemmapResponse, _hhdm_offset: u64) {
+pub fn init(mmap: &MemmapResponse, _hhdm_offset: u64) {
     let mut alloc = ALLOCATOR.lock();
 
     // Start with all frames marked as used (safe default).
@@ -70,10 +70,8 @@ pub fn init(mmap: &LimineMemmapResponse, _hhdm_offset: u64) {
     let mut free  = 0usize;
 
     for entry_ptr in entries.iter() {
-        let entry = match entry_ptr.get() {
-            Some(e) => e,
-            None    => continue,
-        };
+        // NonNullPtr<MemmapEntry> implements Deref<Target = MemmapEntry>
+        let entry = &**entry_ptr;
 
         let start_frame = (entry.base / PAGE_SIZE) as usize;
         let frames      = (entry.len  / PAGE_SIZE) as usize;
@@ -85,7 +83,7 @@ pub fn init(mmap: &LimineMemmapResponse, _hhdm_offset: u64) {
 
         total += frames;
 
-        if entry.typ == LimineMemoryMapEntryType::Usable {
+        if entry.typ == MemoryMapEntryType::Usable {
             for f in start_frame..start_frame + frames {
                 set_free(f);
             }

@@ -12,6 +12,15 @@ import threading
 import os
 from core.usb_creator import USBCreator
 
+# Adw.MessageDialog was introduced in libadwaita 1.2.
+# Raise ImportError cleanly on older versions so the caller can degrade gracefully.
+if not hasattr(Adw, 'MessageDialog'):
+    raise ImportError(
+        "Adw.MessageDialog not available in this libadwaita version. "
+        "USB creation dialog requires libadwaita >= 1.2."
+    )
+
+
 class USBCreationDialog(Adw.MessageDialog):
     """Dialog for creating bootable USB drives"""
     

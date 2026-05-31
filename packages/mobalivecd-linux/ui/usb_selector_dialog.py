@@ -11,6 +11,14 @@ from gi.repository import Gtk, Adw, GLib
 import os
 from core.usb_creator import USBCreator
 
+# Adw.MessageDialog requires libadwaita >= 1.2
+if not hasattr(Adw, 'MessageDialog'):
+    raise ImportError(
+        "Adw.MessageDialog not available. "
+        "USB selector dialog requires libadwaita >= 1.2."
+    )
+
+
 class USBSelectorDialog(Adw.MessageDialog):
     """Dialog for selecting USB devices to boot in QEMU"""
     

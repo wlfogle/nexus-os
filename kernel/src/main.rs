@@ -25,34 +25,34 @@ pub mod panic;
 // control to _start. Limine fills in the response pointers.
 
 use limine::{
-    LimineHhdmRequest,
-    LimineMemmapRequest,
-    LimineKernelAddressRequest,
+    HhdmRequest,
+    MemmapRequest,
+    KernelAddressRequest,
 };
 
 #[cfg(feature = "framebuffer")]
-use limine::LimineFramebufferRequest;
+use limine::FramebufferRequest;
 
 /// Higher-Half Direct Map: Limine maps all physical memory at this offset.
 #[used]
 #[link_section = ".limine_requests"]
-static HHDM_REQUEST: LimineHhdmRequest = LimineHhdmRequest::new(0);
+static HHDM_REQUEST: HhdmRequest = HhdmRequest::new(0);
 
 /// Physical memory map.
 #[used]
 #[link_section = ".limine_requests"]
-static MMAP_REQUEST: LimineMemmapRequest = LimineMemmapRequest::new(0);
+static MMAP_REQUEST: MemmapRequest = MemmapRequest::new(0);
 
 /// Kernel physical + virtual base addresses.
 #[used]
 #[link_section = ".limine_requests"]
-static KADDR_REQUEST: LimineKernelAddressRequest = LimineKernelAddressRequest::new(0);
+static KADDR_REQUEST: KernelAddressRequest = KernelAddressRequest::new(0);
 
 /// Framebuffer — laptop only.
 #[cfg(feature = "framebuffer")]
 #[used]
 #[link_section = ".limine_requests"]
-static FB_REQUEST: LimineFramebufferRequest = LimineFramebufferRequest::new(0);
+static FB_REQUEST: FramebufferRequest = FramebufferRequest::new(0);
 
 // ─── Kernel entry point ───────────────────────────────────────────────────────
 

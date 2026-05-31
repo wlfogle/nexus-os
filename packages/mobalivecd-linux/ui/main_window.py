@@ -12,8 +12,18 @@ import threading
 from core.enhanced_qemu_runner import AIEnhancedQEMURunner
 from ui.help_dialog import HelpDialog
 from ui.about_dialog import AboutDialog
-from ui.usb_dialog import USBCreationDialog
-from ui.usb_selector_dialog import USBSelectorDialog
+try:
+    from ui.usb_dialog import USBCreationDialog
+    _USB_DIALOG_AVAILABLE = True
+except (AttributeError, ImportError):
+    USBCreationDialog = None
+    _USB_DIALOG_AVAILABLE = False
+try:
+    from ui.usb_selector_dialog import USBSelectorDialog
+    _USB_SELECTOR_AVAILABLE = True
+except (AttributeError, ImportError):
+    USBSelectorDialog = None
+    _USB_SELECTOR_AVAILABLE = False
 from ui.nvme_selector_dialog import NVMePartitionSelectorDialog
 
 class MobaLiveCDWindow(Adw.ApplicationWindow):

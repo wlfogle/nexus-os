@@ -21,7 +21,7 @@ linked_list_allocator = { version = "0.10", default-features = false, features =
 
 # x86_64-only deps
 [target.'cfg(target_arch = "x86_64")'.dependencies]
-x86_64 = { version = "0.14", default-features = false }
+x86_64 = { version = "0.14", default-features = false, features = ["instructions", "abi_x86_interrupt"] }
 
 # aarch64-only deps
 [target.'cfg(target_arch = "aarch64")'.dependencies]

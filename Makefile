@@ -32,6 +32,7 @@ TARGET_ARM   := aarch64-unknown-none-softfloat
 KERNEL_DIR   := kernel
 BUILD_DIR    := build
 LIMINE_DIR   := limine
+LIMINE_BIN   := $(LIMINE_DIR)/bin
 
 # ─── Default target ────────────────────────────────────────────────────────────
 .PHONY: all
@@ -47,11 +48,14 @@ setup:
 	rustup component add rust-src llvm-tools-preview
 	@echo "==> Fetching Limine bootloader submodule..."
 	git submodule update --init --recursive $(LIMINE_DIR)
-	@echo "==> Building Limine from source (requires cc + make)..."
-	$(MAKE) -C $(LIMINE_DIR) all CC=cc \
-	    ENABLE_BIOS_CD=yes \
-	    ENABLE_UEFI_X86_64=yes \
-	    ENABLE_UEFI_AARCH64=yes
+	@echo "==> Building Limine from source (requires cc, clang, lld, llvm-*-14)..."
+	cd $(LIMINE_DIR) && ./bootstrap && \
+	    OBJCOPY_FOR_TARGET=llvm-objcopy-14 OBJDUMP_FOR_TARGET=llvm-objdump-14 \
+	    AR_FOR_TARGET=llvm-ar-14 RANLIB_FOR_TARGET=llvm-ranlib-14 \
+	    STRIP_FOR_TARGET=llvm-strip-14 NM_FOR_TARGET=llvm-nm-14 \
+	    READELF_FOR_TARGET=llvm-readelf-14 \
+	    ./configure --enable-bios --enable-bios-cd --enable-uefi-x86-64 --enable-uefi-cd && \
+	    make -j$$(nproc)
 	@echo ""
 	@echo "Setup complete. Run 'make laptop', 'make tiamat', or 'make bahamut'."
 
@@ -110,10 +114,10 @@ iso-laptop: laptop
 	@mkdir -p $(BUILD_DIR)/iso-laptop/EFI/BOOT
 	cp $(BUILD_DIR)/nexus-kernel-laptop    $(BUILD_DIR)/iso-laptop/boot/nexus-kernel
 	cp iso_root/limine-laptop.conf         $(BUILD_DIR)/iso-laptop/boot/limine/limine.conf
-	cp $(LIMINE_DIR)/limine-bios.sys       $(BUILD_DIR)/iso-laptop/boot/limine/
-	cp $(LIMINE_DIR)/limine-bios-cd.bin    $(BUILD_DIR)/iso-laptop/boot/limine/
-	cp $(LIMINE_DIR)/limine-uefi-cd.bin    $(BUILD_DIR)/iso-laptop/boot/limine/
-	cp $(LIMINE_DIR)/BOOTX64.EFI           $(BUILD_DIR)/iso-laptop/EFI/BOOT/
+	cp $(LIMINE_BIN)/limine-bios.sys       $(BUILD_DIR)/iso-laptop/boot/limine/
+	cp $(LIMINE_BIN)/limine-bios-cd.bin    $(BUILD_DIR)/iso-laptop/boot/limine/
+	cp $(LIMINE_BIN)/limine-uefi-cd.bin    $(BUILD_DIR)/iso-laptop/boot/limine/
+	cp $(LIMINE_BIN)/BOOTX64.EFI           $(BUILD_DIR)/iso-laptop/EFI/BOOT/
 	$(XORRISO) -as mkisofs \
 	    -b boot/limine/limine-bios-cd.bin \
 	    -no-emul-boot -boot-load-size 4 -boot-info-table \
@@ -121,7 +125,7 @@ iso-laptop: laptop
 	    -efi-boot-part --efi-boot-image --protective-msdos-label \
 	    $(BUILD_DIR)/iso-laptop \
 	    -o $(BUILD_DIR)/nexusos-laptop.iso
-	$(LIMINE_DIR)/limine bios-install $(BUILD_DIR)/nexusos-laptop.iso
+	$(LIMINE_BIN)/limine bios-install $(BUILD_DIR)/nexusos-laptop.iso
 	@echo "==> $(BUILD_DIR)/nexusos-laptop.iso ready"
 
 .PHONY: iso-tiamat
@@ -132,10 +136,10 @@ iso-tiamat: tiamat
 	@mkdir -p $(BUILD_DIR)/iso-tiamat/EFI/BOOT
 	cp $(BUILD_DIR)/nexus-kernel-tiamat    $(BUILD_DIR)/iso-tiamat/boot/nexus-kernel
 	cp iso_root/limine-tiamat.conf         $(BUILD_DIR)/iso-tiamat/boot/limine/limine.conf
-	cp $(LIMINE_DIR)/limine-bios.sys       $(BUILD_DIR)/iso-tiamat/boot/limine/
-	cp $(LIMINE_DIR)/limine-bios-cd.bin    $(BUILD_DIR)/iso-tiamat/boot/limine/
-	cp $(LIMINE_DIR)/limine-uefi-cd.bin    $(BUILD_DIR)/iso-tiamat/boot/limine/
-	cp $(LIMINE_DIR)/BOOTX64.EFI           $(BUILD_DIR)/iso-tiamat/EFI/BOOT/
+	cp $(LIMINE_BIN)/limine-bios.sys       $(BUILD_DIR)/iso-tiamat/boot/limine/
+	cp $(LIMINE_BIN)/limine-bios-cd.bin    $(BUILD_DIR)/iso-tiamat/boot/limine/
+	cp $(LIMINE_BIN)/limine-uefi-cd.bin    $(BUILD_DIR)/iso-tiamat/boot/limine/
+	cp $(LIMINE_BIN)/BOOTX64.EFI           $(BUILD_DIR)/iso-tiamat/EFI/BOOT/
 	$(XORRISO) -as mkisofs \
 	    -b boot/limine/limine-bios-cd.bin \
 	    -no-emul-boot -boot-load-size 4 -boot-info-table \
@@ -143,7 +147,7 @@ iso-tiamat: tiamat
 	    -efi-boot-part --efi-boot-image --protective-msdos-label \
 	    $(BUILD_DIR)/iso-tiamat \
 	    -o $(BUILD_DIR)/nexusos-tiamat.iso
-	$(LIMINE_DIR)/limine bios-install $(BUILD_DIR)/nexusos-tiamat.iso
+	$(LIMINE_BIN)/limine bios-install $(BUILD_DIR)/nexusos-tiamat.iso
 	@echo "==> $(BUILD_DIR)/nexusos-tiamat.iso ready"
 
 .PHONY: iso-bahamut
@@ -154,8 +158,8 @@ iso-bahamut: bahamut
 	@mkdir -p $(BUILD_DIR)/iso-bahamut/EFI/BOOT
 	cp $(BUILD_DIR)/nexus-kernel-bahamut   $(BUILD_DIR)/iso-bahamut/boot/nexus-kernel
 	cp iso_root/limine-bahamut.conf        $(BUILD_DIR)/iso-bahamut/boot/limine/limine.conf
-	cp $(LIMINE_DIR)/limine-uefi-cd.bin    $(BUILD_DIR)/iso-bahamut/boot/limine/
-	cp $(LIMINE_DIR)/BOOTAA64.EFI          $(BUILD_DIR)/iso-bahamut/EFI/BOOT/
+	cp $(LIMINE_BIN)/limine-uefi-cd.bin    $(BUILD_DIR)/iso-bahamut/boot/limine/
+	cp $(LIMINE_BIN)/BOOTAA64.EFI          $(BUILD_DIR)/iso-bahamut/EFI/BOOT/
 	$(XORRISO) -as mkisofs \
 	    --efi-boot boot/limine/limine-uefi-cd.bin \
 	    -efi-boot-part --efi-boot-image --protective-msdos-label \
