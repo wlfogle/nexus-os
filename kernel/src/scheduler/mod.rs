@@ -13,6 +13,7 @@
 
 use core::sync::atomic::{AtomicU64, Ordering};
 use crate::process::{self, ProcessState};
+use crate::ipc;
 
 /// ID of the currently-running process (0 = no process / boot context).
 static CURRENT: AtomicU64 = AtomicU64::new(0);
@@ -22,17 +23,18 @@ static CURSOR: AtomicU64 = AtomicU64::new(0);
 
 /// Initialise the scheduler: register the boot context as process 0 (idle).
 pub fn init() {
-    // The boot/main thread is already running — register it as the idle process.
-    // We give it a dummy stack setup; its actual RSP is set by the first tick.
     let id = process::spawn(b"idle", idle_entry as u64)
         .expect("scheduler: could not spawn idle process");
+    ipc::inbox_alloc(id);
     CURRENT.store(id, Ordering::SeqCst);
     crate::kprintln!("[sched] Scheduler initialized, idle process id={}", id);
 }
 
-/// Spawn a kernel thread.
+/// Spawn a kernel thread and allocate its IPC inbox.
 pub fn spawn(name: &[u8], entry: extern "C" fn() -> !) -> Option<u64> {
-    process::spawn(name, entry as u64)
+    let id = process::spawn(name, entry as u64)?;
+    ipc::inbox_alloc(id);
+    Some(id)
 }
 
 /// Called from the timer ISR with the RSP *after* all GP registers were pushed.

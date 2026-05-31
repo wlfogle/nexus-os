@@ -25,6 +25,10 @@ pub enum ProcessState {
     Ready,
     Running,
     Dead,
+    /// Waiting to receive a message — scheduler skips this process.
+    BlockedOnRecv,
+    /// Waiting to send (destination inbox full) — scheduler skips this process.
+    BlockedOnSend,
 }
 
 /// Process Control Block.

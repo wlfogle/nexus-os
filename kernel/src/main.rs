@@ -17,6 +17,7 @@ extern crate alloc;
 
 pub mod arch;
 pub mod io;
+pub mod ipc;
 pub mod memory;
 pub mod panic;
 pub mod process;
@@ -158,16 +159,19 @@ pub extern "C" fn _start() -> ! {
 
     scheduler::init();                      // register idle process
 
-    // Spawn demo kernel task
-    scheduler::spawn(b"task-demo", task_demo)
-        .expect("failed to spawn demo task");
-    kprintln!("[sched] demo task spawned");
+    // ── Phase 3: IPC echo server + client ────────────────────────────
+    scheduler::spawn(b"echo-server", task_echo_server)
+        .expect("failed to spawn echo-server");
+    scheduler::spawn(b"echo-client", task_echo_client)
+        .expect("failed to spawn echo-client");
+    kprintln!("[ipc]  echo-server and echo-client spawned");
 
     // Enable hardware interrupts — timer fires immediately
     arch::enable_interrupts();
     kprintln!("[arch] Interrupts enabled — scheduler is LIVE");
     kprintln!();
-    kprintln!("NexusOS Phase 2 running — preemptive multitasking active.");
+    kprintln!("NexusOS v{} — Phase 3: IPC message-passing active.",
+              env!("CARGO_PKG_VERSION"));
 
     // Idle loop — preempted every 10 ms
     loop {
@@ -206,21 +210,83 @@ macro_rules! kprintln {
     ($($arg:tt)*)   => ($crate::kprint!("{}\n", format_args!($($arg)*)));
 }
 
-// ─── Kernel tasks ────────────────────────────────────────────────────────────
+// ─── Kernel tasks (Phase 3 IPC demo) ──────────────────────────────────────────────
 
-/// Demo kernel task — prints a heartbeat once per second to prove preemption.
-extern "C" fn task_demo() -> ! {
-    let mut last_tick = 0u64;
+/// Echo server — registers port "nexus.echo", receives any message, echoes back.
+/// This is the prototype for AI Core, filesystem, and network servers.
+extern "C" fn task_echo_server() -> ! {
+    use ipc::{ipc_recv, ipc_send, Message, ANY, MSG_PING, MSG_PONG};
+    use ipc::ports::port_register;
+
+    port_register(b"nexus.echo").expect("echo-server: port register failed");
+    kprintln!("[echo-server] registered port 'nexus.echo'");
+
+    let mut req = Message::new(0, 0);
     loop {
-        let t = timer::ticks();
-        // Print once per second (100 ticks = 1 second at 100 Hz)
-        if t.wrapping_sub(last_tick) >= 100 {
-            last_tick = t;
-            kprintln!("[task-demo] alive at {}s (tick={})",
-                      t / timer::TIMER_HZ as u64, t);
+        // Block until a message arrives from any sender
+        ipc_recv(ANY, &mut req).expect("echo-server: recv failed");
+
+        kprintln!("[echo-server] got MSG {:04x} from pid={} len={}: {}",
+                  req.msg_type, req.from, req.len, req.as_str());
+
+        // Echo back: type PONG, same payload
+        let reply = Message::with_str(req.from, MSG_PONG, req.as_str());
+        ipc_send(req.from, reply).ok();
+    }
+}
+
+/// Echo client — looks up the echo server by port, sends pings every 2 seconds.
+extern "C" fn task_echo_client() -> ! {
+    use ipc::{ipc_recv, ipc_send, Message, ANY, MSG_PING, MSG_PONG};
+    use ipc::ports::port_find;
+
+    // Wait a moment for the server to register its port
+    for _ in 0..50 {
+        unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
+    }
+
+    let mut seq: u32 = 0;
+    let mut reply = Message::new(0, 0);
+
+    loop {
+        // Find the echo server's PID via the port registry
+        let server_pid = loop {
+            if let Some(pid) = port_find(b"nexus.echo") {
+                break pid;
+            }
+            unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
+        };
+
+        // Build ping with a sequence number in the payload
+        seq = seq.wrapping_add(1);
+        // Write seq number as text into a small buffer
+        let mut buf = [0u8; 16];
+        let s = seq;
+        let digits = [
+            b'p', b'i', b'n', b'g', b'#',
+            b'0' + ((s / 10000) % 10) as u8,
+            b'0' + ((s / 1000)  % 10) as u8,
+            b'0' + ((s / 100)   % 10) as u8,
+            b'0' + ((s / 10)    % 10) as u8,
+            b'0' + (s % 10)           as u8,
+        ];
+        buf[..digits.len()].copy_from_slice(&digits);
+        let text = core::str::from_utf8(&buf[..digits.len()]).unwrap_or("?");
+
+        let ping = Message::with_str(server_pid, MSG_PING, text);
+        kprintln!("[echo-client] -> pid={} MSG_PING '{}'", server_pid, text);
+
+        ipc_send(server_pid, ping).expect("echo-client: send failed");
+
+        // Wait for the echo reply
+        ipc_recv(server_pid, &mut reply).expect("echo-client: recv failed");
+        kprintln!("[echo-client] <- MSG_PONG '{}' (round-trip OK)", reply.as_str());
+
+        // Pause ~2 seconds (200 ticks at 100 Hz)
+        let start = timer::ticks();
+        while timer::ticks().wrapping_sub(start) < 200 {
+            unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
         }
-        // Yield to scheduler via hlt (timer will preempt us)
-        unsafe { core::arch::asm!("hlt", options(nomem, nostack)); }
     }
 }
 
