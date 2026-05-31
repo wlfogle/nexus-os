@@ -21,7 +21,7 @@ Three build targets — one codebase, zero shared OS assumptions.
 Only four things — none are distro-specific:
 
 | Tool | Purpose | Install |
-|------|---------|---------|
+|------|---------|----------|
 | `rustup` | Rust toolchain + targets | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |
 | `make` | Build orchestration | any Linux (already present) |
 | `xorriso` | ISO creation | `apt/dnf/pacman install xorriso` or build from source |
@@ -134,6 +134,11 @@ UEFI or BIOS firmware
              13. First ring-3 process (nexus-init via IRETQ)
              14. SYS_WRITE, SYS_SLEEP, SYS_GETPID, SYS_IPC_* live
              15. Idle loop (preempted every 10 ms)
+
+              Phase 5 — AI Core
+             16. Register system ports (nexus.ai, nexus.fs, nexus.gpu)
+             17. Spawn nexus-ai daemon into ring-3
+             18. AI Core listening on nexus.ai port for IPC queries
 ```
 
 ## Phase Roadmap
@@ -144,7 +149,7 @@ UEFI or BIOS firmware
 | 2 | **Done** | Preemptive scheduler, 8259A PIC, 8253 PIT, round-robin | `[task-demo] alive at 9s` |
 | 3 | **Done** | IPC ring-buffers, blocking send/recv, named port registry | `ping#00007 round-trip OK` |
 | 4 | **Done** | `syscall`/`sysretq`, ring-3 user process, SYS_WRITE/SLEEP/IPC | `Hello from ring 3!` |
-| 5 | Planned | **AI Core server** — user-space Ollama IPC, `nexus.ai` port |
+| 5 | **In Progress** | **AI Core server** — user-space Ollama IPC, `nexus.ai` port, SYS_IPC_QUERY | See [PHASE5_ARCHITECTURE.md](PHASE5_ARCHITECTURE.md) |
 | 6 | Planned | NexusTerminal ↔ AI Core via IPC |
 | 7 | Planned | VFS, network stack, NexusOS installer |
 
@@ -165,6 +170,26 @@ sudo ./scripts/vm/vfio-unbind.sh
 
 VM disk image lives at `/media/loufogle/Data/vms/nexusos/nexusos.qcow2` (40 GB).
 A `libvirt` domain `nexusos` is registered in virt-manager for GUI access.
+
+## Phase 5 Development
+
+See [PHASE5_ARCHITECTURE.md](PHASE5_ARCHITECTURE.md) for:
+- Kernel syscall additions (SYS_IPC_QUERY, SYS_IPC_TIMEOUT, SYS_GPU_MMAP)
+- nexus-ai daemon implementation
+- IPC protocol specification
+- Phase 5.0–5.3 roadmap
+
+**Quick start for Phase 5:**
+
+```bash
+# Create feature branch
+git checkout -b phase/5-ai-core
+
+# Build with AI-Core (adds syscalls + port registry)
+cd kernel && make setup && make laptop && make iso-laptop && make run-laptop
+
+# In VM, nexus-ai should spawn and listen on nexus.ai port
+```
 
 ## Legacy Code
 
