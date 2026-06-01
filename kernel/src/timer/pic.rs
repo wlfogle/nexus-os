@@ -62,8 +62,9 @@ pub fn init() {
         m_data.write(0xFF);
         s_data.write(0xFF);
 
-        // … then unmask only IRQ0 (timer) on master
+        // … then unmask IRQ0 (timer) and IRQ1 (keyboard)
         unmask(IRQ_TIMER);
+        unmask(IRQ_KEYBOARD);
     }
 }
 

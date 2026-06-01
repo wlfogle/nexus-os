@@ -8,6 +8,9 @@
 #[cfg(target_arch = "x86_64")]
 pub mod serial;
 
+#[cfg(target_arch = "x86_64")]
+pub mod keyboard;
+
 #[cfg(target_arch = "aarch64")]
 pub mod uart;
 

@@ -179,13 +179,17 @@ pub extern "C" fn _start() -> ! {
     scheduler::spawn(b"nexus-ai", task_nexus_ai)
         .expect("failed to spawn nexus-ai");
     kprintln!("[ai]   nexus-ai AI Core daemon spawned");
+    scheduler::spawn(b"kbd-echo", task_keyboard_echo)
+        .expect("failed to spawn kbd-echo");
+    kprintln!("[kbd]  keyboard echo task spawned");
 
     // Enable hardware interrupts — timer fires immediately
     arch::enable_interrupts();
     kprintln!("[arch] Interrupts enabled — scheduler is LIVE");
     kprintln!();
-    kprintln!("NexusOS v{} — Phase 4: syscall interface active.",
+    kprintln!("NexusOS v{} — Phase 5: AI Core + PS/2 keyboard active.",
               env!("CARGO_PKG_VERSION"));
+    kprintln!("[kbd]  PS/2 keyboard online — type to interact");
 
     // Idle loop — preempted every 10 ms
     loop {
@@ -222,6 +226,35 @@ macro_rules! kprint {
 macro_rules! kprintln {
     ()              => ($crate::kprint!("\n"));
     ($($arg:tt)*)   => ($crate::kprint!("{}\n", format_args!($($arg)*)));
+}
+
+// ─── Phase 5: Keyboard echo kernel task ──────────────────────────────────────────
+
+/// Kernel thread that echoes keystrokes to serial + framebuffer.
+/// Proves the full ring-0 keyboard input pipeline:
+///   IRQ1 fires → scancode translated → key buffered → BlockedOnKey process woken
+///   → this task reads the char → prints it
+extern "C" fn task_keyboard_echo() -> ! {
+    kprintln!("[kbd]  keyboard echo task running — type something!");
+    loop {
+        // Block until a key arrives (IRQ1 wakes us)
+        while !io::keyboard::has_key() {
+            process::set_state(scheduler::current_id(),
+                               process::ProcessState::BlockedOnKey);
+            unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
+            process::set_state(scheduler::current_id(),
+                               process::ProcessState::Running);
+        }
+        if let Some(ch) = io::keyboard::try_read() {
+            match ch {
+                b'\n' | 13 => kprintln!(),
+                8          => kprint!("\x08 \x08"),  // backspace: erase
+                27         => kprintln!("[ESC]"),
+                c if c >= 32 => kprint!("{}", c as char),
+                _          => {}
+            }
+        }
+    }
 }
 
 // ─── Phase 5: AI Core kernel thread ────────────────────────────────────────────

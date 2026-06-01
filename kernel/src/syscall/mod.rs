@@ -44,6 +44,8 @@ pub const SYS_SLEEP:         u64 = 9;  // sleep(ticks)
 pub const SYS_IPC_QUERY:     u64 = 10; // ipc_query(name_ptr, name_len, 0) → pid
 pub const SYS_IPC_TIMEOUT:   u64 = 11; // ipc_timeout(timeout_ms)
 pub const SYS_GPU_MMAP:      u64 = 12; // gpu_mmap(size, flags, 0) → vaddr
+pub const SYS_READ_CHAR:     u64 = 13; // read_char() → u8 (blocks until key)
+pub const SYS_READ_CHAR_NB:  u64 = 14; // read_char_nb() → u8 or -1 if empty
 
 // ─── MSR addresses ───────────────────────────────────────────────────────────
 
@@ -326,6 +328,30 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
 
         // ── SYS_GPU_MMAP ───────────────────────────────────────────────────
         SYS_GPU_MMAP => handlers::handle_gpu_mmap(a1, a2, a3 as u64),
+
+        // ── SYS_READ_CHAR ───────────────────────────────────────────────
+        // Blocking read — blocks until a key is available
+        SYS_READ_CHAR => {
+            let my_id = scheduler::current_id();
+            loop {
+                if let Some(ch) = crate::io::keyboard::try_read() {
+                    return ch as i64;
+                }
+                // Block this process until IRQ1 wakes it
+                process::set_state(my_id, process::ProcessState::BlockedOnKey);
+                unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
+                process::set_state(my_id, process::ProcessState::Running);
+            }
+        }
+
+        // ── SYS_READ_CHAR_NB ─────────────────────────────────────────────
+        // Non-blocking read — returns -1 immediately if no key waiting
+        SYS_READ_CHAR_NB => {
+            match crate::io::keyboard::try_read() {
+                Some(ch) => ch as i64,
+                None     => -1,
+            }
+        }
 
         _ => {
             crate::kprintln!("[syscall] unknown syscall {} from pid={}",

@@ -29,6 +29,8 @@ pub enum ProcessState {
     BlockedOnRecv,
     /// Waiting to send (destination inbox full) — scheduler skips this process.
     BlockedOnSend,
+    /// Waiting for keyboard input — scheduler skips; IRQ1 handler wakes.
+    BlockedOnKey,
 }
 
 /// Process Control Block.
@@ -202,6 +204,20 @@ pub fn spawn_ring3(name: &[u8], user_rip: u64, user_rsp: u64) -> Option<u64> {
     slot.state            = ProcessState::Ready;
 
     Some(id)
+}
+
+/// Return IDs of all processes in BlockedOnKey state.
+pub fn blocked_on_key_ids(buf: &mut [u64]) -> usize {
+    let table = TABLE.lock();
+    let mut n = 0;
+    for p in table.iter() {
+        if n >= buf.len() { break; }
+        if p.state == ProcessState::BlockedOnKey {
+            buf[n] = p.id;
+            n += 1;
+        }
+    }
+    n
 }
 
 /// Get a process's kernel stack top address (for syscall PERCPU update).
