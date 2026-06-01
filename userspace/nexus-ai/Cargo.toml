@@ -2,12 +2,18 @@
 name = "nexus-ai"
 version = "0.1.0"
 edition = "2021"
+description = "NexusOS AI Core daemon — ring-3 user-space service (Phase 5.1+)"
 
-[lib]
-crate-type = ["staticlib"]
-
+# This is a future user-space binary that will run in ring-3 once the
+# kernel has an ELF loader (Phase 5.1).  For Phase 5.0 the AI Core logic
+# runs as a kernel thread spawned from kernel/src/main.rs.
 [[bin]]
 name = "nexus-ai"
 path = "src/main.rs"
 
+[profile.release]
+panic = "abort"
+opt-level = 2
+
 [dependencies]
+# no external deps — no_std binary, alloc provided by kernel at link time

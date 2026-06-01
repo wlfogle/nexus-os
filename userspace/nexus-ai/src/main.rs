@@ -12,14 +12,20 @@ mod ollama_client;
 mod inference;
 
 // Syscall numbers (must match kernel/src/syscall/mod.rs)
-const SYS_WRITE: u64 = 1;
-const SYS_SLEEP: u64 = 2;
-const SYS_GETPID: u64 = 3;
-const SYS_IPC_SEND: u64 = 4;
-const SYS_IPC_RECV: u64 = 5;
-const SYS_IPCCTL: u64 = 6;
-const SYS_IPC_QUERY: u64 = 7;
-const SYS_IPC_TIMEOUT: u64 = 8;
+// Phase 4 syscalls:
+const SYS_EXIT:          u64 = 1;
+const SYS_WRITE:         u64 = 2;
+const SYS_GETPID:        u64 = 3;
+const SYS_YIELD:         u64 = 4;
+const SYS_IPC_SEND:      u64 = 5;
+const SYS_IPC_RECV:      u64 = 6;
+const SYS_PORT_REGISTER: u64 = 7;
+const SYS_PORT_FIND:     u64 = 8;
+const SYS_SLEEP:         u64 = 9;
+// Phase 5 syscalls:
+const SYS_IPC_QUERY:     u64 = 10;
+const SYS_IPC_TIMEOUT:   u64 = 11;
+const SYS_GPU_MMAP:      u64 = 12;
 
 /// Make a syscall with 3 arguments
 #[inline(always)]

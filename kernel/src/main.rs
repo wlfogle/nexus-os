@@ -173,6 +173,13 @@ pub extern "C" fn _start() -> ! {
     let user_pid = userspace::spawn_user_init();
     kprintln!("[user] nexus-init spawned as pid={} (ring 3)", user_pid);
 
+    // ── Phase 5: AI Core kernel thread ───────────────────────────
+    // Runs as a ring-0 kernel thread for Phase 5.0.
+    // Phase 5.1 will load userspace/nexus-ai as a real ring-3 ELF binary.
+    scheduler::spawn(b"nexus-ai", task_nexus_ai)
+        .expect("failed to spawn nexus-ai");
+    kprintln!("[ai]   nexus-ai AI Core daemon spawned");
+
     // Enable hardware interrupts — timer fires immediately
     arch::enable_interrupts();
     kprintln!("[arch] Interrupts enabled — scheduler is LIVE");
@@ -215,6 +222,41 @@ macro_rules! kprint {
 macro_rules! kprintln {
     ()              => ($crate::kprint!("\n"));
     ($($arg:tt)*)   => ($crate::kprint!("{}\n", format_args!($($arg)*)));
+}
+
+// ─── Phase 5: AI Core kernel thread ────────────────────────────────────────────
+
+/// AI Core daemon — registers the `nexus.ai` port and serves inference requests.
+///
+/// Phase 5.0: responds with a structured mock reply so the IPC pipeline and
+/// port-discovery path are fully exercised.  The Ollama HTTP client that sends
+/// real prompts ships in Phase 5.1 once the network stack is available.
+extern "C" fn task_nexus_ai() -> ! {
+    use ipc::{ipc_recv, ipc_send, Message, ANY, MSG_AI_REQUEST, MSG_AI_RESPONSE};
+    use ipc::ports::port_register;
+
+    port_register(b"nexus.ai").expect("nexus-ai: failed to register port");
+    kprintln!("[nexus-ai] AI Core online — port 'nexus.ai' registered");
+    kprintln!("[nexus-ai] Phase 5.0: mock inference active (Ollama HTTP in Phase 5.1)");
+
+    let mut req = Message::new(0, 0);
+    loop {
+        ipc_recv(ANY, &mut req).expect("nexus-ai: recv failed");
+
+        let query = req.as_str();
+        kprintln!("[nexus-ai] request from pid={}: {}", req.from, query);
+
+        // Phase 5.0: canned response so IPC round-trip is proven.
+        // Phase 5.1: issue HTTP POST to http://localhost:11434/api/generate
+        let reply_text = alloc::format!(
+            "AI Core v0.5 [Phase 5.0]: received '{}' \
+             (Ollama HTTP client ships in Phase 5.1)",
+            if query.len() > 40 { &query[..40] } else { query }
+        );
+        let reply = Message::with_str(req.from, MSG_AI_RESPONSE, &reply_text);
+        ipc_send(req.from, reply).ok();
+        kprintln!("[nexus-ai] response sent to pid={}", req.from);
+    }
 }
 
 // ─── Kernel tasks (Phase 3 IPC demo) ──────────────────────────────────────────────

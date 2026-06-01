@@ -1,4 +1,7 @@
-//! NexusOS Syscall Interface — Phase 4
+//! NexusOS Syscall Interface — Phase 4 + Phase 5
+//!
+//! Phase 5 additions: SYS_IPC_QUERY(10), SYS_IPC_TIMEOUT(11), SYS_GPU_MMAP(12)
+//! Handlers live in the `handlers` submodule.
 //!
 //! Implements the fast `syscall`/`sysretq` path for ring-3 → ring-0 transitions.
 //!
@@ -24,6 +27,8 @@ use crate::{process, scheduler, timer};
 use crate::ipc;
 use crate::ipc::ports;
 
+pub mod handlers;
+
 // ─── Syscall numbers ──────────────────────────────────────────────────────────
 
 pub const SYS_EXIT:          u64 = 1;
@@ -35,6 +40,10 @@ pub const SYS_IPC_RECV:      u64 = 6;  // ipc_recv(from, buf_ptr, buf_len)
 pub const SYS_PORT_REGISTER: u64 = 7;  // port_register(name_ptr, name_len)
 pub const SYS_PORT_FIND:     u64 = 8;  // port_find(name_ptr, name_len) → pid
 pub const SYS_SLEEP:         u64 = 9;  // sleep(ticks)
+// ── Phase 5 ─────────────────────────────────────────────────────────────────────────────
+pub const SYS_IPC_QUERY:     u64 = 10; // ipc_query(name_ptr, name_len, 0) → pid
+pub const SYS_IPC_TIMEOUT:   u64 = 11; // ipc_timeout(timeout_ms)
+pub const SYS_GPU_MMAP:      u64 = 12; // gpu_mmap(size, flags, 0) → vaddr
 
 // ─── MSR addresses ───────────────────────────────────────────────────────────
 
@@ -306,6 +315,17 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
             }
             0
         }
+
+        // ── Phase 5 syscalls ──────────────────────────────────────────────────────────
+
+        // ── SYS_IPC_QUERY ────────────────────────────────────────────────────
+        SYS_IPC_QUERY => handlers::handle_ipc_query(a1, a2, a3 as u64),
+
+        // ── SYS_IPC_TIMEOUT ────────────────────────────────────────────────
+        SYS_IPC_TIMEOUT => handlers::handle_ipc_timeout(a1),
+
+        // ── SYS_GPU_MMAP ───────────────────────────────────────────────────
+        SYS_GPU_MMAP => handlers::handle_gpu_mmap(a1, a2, a3 as u64),
 
         _ => {
             crate::kprintln!("[syscall] unknown syscall {} from pid={}",
