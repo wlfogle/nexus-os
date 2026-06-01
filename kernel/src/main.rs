@@ -17,6 +17,7 @@ extern crate alloc;
 
 pub mod arch;
 pub mod drivers;
+pub mod fs;
 pub mod io;
 pub mod ipc;
 pub mod memory;
@@ -161,6 +162,11 @@ pub extern "C" fn _start() -> ! {
         }
         None => kprintln!("[disk] no VirtIO-blk device found"),
     }
+
+    // ── 7.6. FAT32 filesystem ─────────────────────────────────────────────────
+    // Must run after framebuffer (to display the [fs] line) and after disk driver.
+    let fs_msg = fs::fat::init();
+    kprintln!("[fs]   {}", fs_msg);
 
     // ── 8. Feature-specific init ─────────────────────────────────────────────
     #[cfg(feature = "ai-hooks")]

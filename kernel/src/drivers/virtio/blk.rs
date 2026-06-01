@@ -1,17 +1,16 @@
 //! NexusOS VirtIO Block Device Driver
 //!
-//! Implements synchronous sector read/write via the VirtIO legacy interface.
+//! Uses the device-reported queue size to compute the correct virtqueue layout.
+//! Root cause of previous hang: QEMU ignores REG_QUEUE_SIZE writes and uses
+//! qsz=256 by default.  For qsz=256 the used ring sits at f0+8192, not f0+4096.
 //!
-//! Virtqueue layout for Q = 8 entries (allocated from physical frame allocator):
-//!   Page 0 (4 KB):  descriptor table (128 B) + available ring (22 B)
-//!   Page 1 (4 KB):  used ring (74 B)
+//! Memory layout (for device-reported queue size Q):
+//!   [f0 + 0          ] Descriptor table  (16 * Q bytes)
+//!   [f0 + 16*Q       ] Available ring    (4 + 2*Q bytes)
+//!   [f0 + used_off   ] Used ring         (4 + 8*Q bytes)  [page-aligned]
+//!   [f0 + req_off    ] Request buffers   (header 16 B + data 512 B + status 1 B)
 //!
-//! Each I/O reuses descriptors 0-2:
-//!   0 → request header  (blk_req: type + reserved + sector, device-readable)
-//!   1 → data buffer     (512 B, device-readable on write / device-writable on read)
-//!   2 → status byte     (1 B,   device-writable)
-//!
-//! The driver polls the used ring index until the device signals completion.
+//! We always use descriptors 0-2 with one outstanding request at a time.
 
 use spin::Mutex;
 use core::sync::atomic::{fence, Ordering};
@@ -27,43 +26,41 @@ use super::{
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 pub const SECTOR_SIZE: usize = 512;
-const QUEUE_SIZE: usize = 8;
 
-/// VirtIO-blk request types
-const BLK_T_IN:  u32 = 0; // read  (device → guest)
-const BLK_T_OUT: u32 = 1; // write (guest  → device)
+const BLK_T_IN:  u32 = 0;
+const BLK_T_OUT: u32 = 1;
 
-/// Virtqueue descriptor flags
 const VRING_DESC_F_NEXT:  u16 = 1;
-const VRING_DESC_F_WRITE: u16 = 2; // device may write to this buffer
+const VRING_DESC_F_WRITE: u16 = 2;
 
-/// VirtIO-blk status values (written by device into status byte)
 const VIRTIO_BLK_S_OK: u8 = 0;
 
-// ─── Virtqueue memory layout ──────────────────────────────────────────────────
-//
-// We use two contiguous physical frames:
-//
-// Frame 0:
-//   offset 0x000 : VirtqDesc[8]   (16 × 8 = 128 bytes)
-//   offset 0x080 : VirtqAvail     (2+2 + 2×8 = 20 bytes; ring[QUEUE_SIZE] of u16)
-//
-// Frame 1 (4096-aligned per spec):
-//   offset 0x000 : VirtqUsed      (2+2 + 8×8 = 68 bytes; ring[QUEUE_SIZE] of (u32,u32))
-//
-// Request scratch buffer occupies the tail of Frame 0:
-//   offset 0x100 : BlkReqHdr      (16 bytes: type u32, reserved u32, sector u64)
-//   offset 0x110 : data[512]      (512 bytes for one sector)
-//   offset 0x310 : status u8      (1 byte)
+// ─── Layout helpers ───────────────────────────────────────────────────────────
 
-// Offsets within frame 0 (used only to compute physical addresses)
-const OFF_DESC:    u64 = 0x000;
-const OFF_AVAIL:   u64 = 0x080;
-const OFF_REQ_HDR: u64 = 0x100;
-const OFF_DATA:    u64 = 0x110;
-const OFF_STATUS:  u64 = 0x310;
+#[inline]
+const fn align_up(val: usize, align: usize) -> usize {
+    (val + align - 1) & !(align - 1)
+}
 
-// ─── Virtqueue repr structs (repr(C), naturally aligned) ─────────────────────
+fn used_ring_offset(qsz: usize) -> usize {
+    // desc + avail (no avail_event; we clear EVENT_IDX in feature negotiation)
+    let desc  = 16 * qsz;
+    let avail = 4 + 2 * qsz;
+    align_up(desc + avail, 4096)
+}
+
+fn req_buf_offset(qsz: usize) -> usize {
+    let used_off   = used_ring_offset(qsz);
+    let used_bytes = 4 + 8 * qsz;
+    align_up(used_off + used_bytes, 4096)
+}
+
+fn frames_needed(qsz: usize) -> usize {
+    let total = req_buf_offset(qsz) + 16 + SECTOR_SIZE + 1;
+    (total + 4095) / 4096
+}
+
+// ─── Virtqueue structs ────────────────────────────────────────────────────────
 
 #[repr(C)]
 struct VirtqDesc {
@@ -71,27 +68,6 @@ struct VirtqDesc {
     len:   u32,
     flags: u16,
     next:  u16,
-}
-
-#[repr(C)]
-struct VirtqAvail {
-    flags: u16,
-    idx:   u16,
-    ring:  [u16; QUEUE_SIZE],
-    // (avail_event omitted — not used in polling mode)
-}
-
-#[repr(C)]
-struct VirtqUsedElem {
-    id:  u32,
-    len: u32,
-}
-
-#[repr(C)]
-struct VirtqUsed {
-    flags: u16,
-    idx:   u16,
-    ring:  [VirtqUsedElem; QUEUE_SIZE],
 }
 
 #[repr(C)]
@@ -104,80 +80,93 @@ struct BlkReqHdr {
 // ─── Driver state ─────────────────────────────────────────────────────────────
 
 pub struct VirtioBlk {
-    io_base:       u16,
-    // Physical addresses for queue memory
-    frame0_phys:   u64,
-    frame1_phys:   u64,
-    frame0_virt:   u64,
-    // Rolling counters
-    avail_idx:     u16,  // how many descriptors we've put in avail ring
-    last_used_idx: u16,  // last used.idx we saw
-    /// Disk capacity in 512-byte sectors.
-    pub capacity:  u64,
+    io_base:        u16,
+    queue_size:     u16,
+    desc_virt:      u64,
+    avail_virt:     u64,
+    used_virt:      u64,
+    req_hdr_phys:   u64,
+    req_dat_phys:   u64,
+    req_sts_phys:   u64,
+    req_hdr_virt:   u64,
+    req_dat_virt:   u64,
+    req_sts_virt:   u64,
+    avail_idx:      u16,
+    last_used_idx:  u16,
+    pub capacity:   u64,
 }
-
-// ─── Global singleton ─────────────────────────────────────────────────────────
 
 static DISK: Mutex<Option<VirtioBlk>> = Mutex::new(None);
 
 // ─── Initialisation ───────────────────────────────────────────────────────────
 
-/// Initialise the VirtIO-blk driver given the PCI I/O base (from BAR0).
-/// Returns `Ok(capacity_in_sectors)` or `Err(&str)`.
 pub fn init(io_base: u16) -> Result<u64, &'static str> {
-    // 1. Reset + acknowledge
     reset_and_ack(io_base);
 
-    // 2. Negotiate features (accept everything the device offers, minus RO)
+    // Feature negotiation: accept all except RO and EVENT_IDX.
+    // Clearing EVENT_IDX ensures the avail ring has no avail_event field,
+    // keeping our layout formula correct.
     let dev_features = read32(io_base, REG_DEVICE_FEATURES);
-    let drv_features = dev_features & !super::VIRTIO_BLK_F_RO;
+    let drv_features = dev_features
+        & !super::VIRTIO_BLK_F_RO
+        & !(1u32 << 29); // VIRTIO_RING_F_EVENT_IDX
     write32(io_base, REG_DRIVER_FEATURES, drv_features);
 
-    // 3. Allocate two contiguous physical frames for the virtqueue.
-    //    At kernel init time the frame allocator returns frames in order,
-    //    so consecutive alloc_frame() calls are always physically contiguous.
-    let f0 = physical::alloc_frame();
-    let f1 = physical::alloc_frame();
-    if f1 != f0 + 4096 {
-        return Err("VirtIO-blk: virtqueue frames are not contiguous");
-    }
-    init_with_frames(io_base, f0, f1)
-}
-
-fn init_with_frames(io_base: u16, f0: u64, f1: u64)
-    -> Result<u64, &'static str>
-{
-    let v0 = paging::phys_to_virt(f0);
-
-    // Zero both frames (use phys_to_virt for frame 1 directly)
-    unsafe {
-        core::ptr::write_bytes(v0 as *mut u8, 0, 4096);
-        core::ptr::write_bytes(paging::phys_to_virt(f1) as *mut u8, 0, 4096);
-    }
-
-    // 4. Select queue 0 and verify size
+    // Read device-reported queue size (typically 256 in QEMU)
     write16(io_base, REG_QUEUE_SELECT, 0);
     let qsz = read16(io_base, REG_QUEUE_SIZE) as usize;
     if qsz == 0 {
-        return Err("VirtIO-blk: queue size is 0 (device not present?)");
+        return Err("VirtIO-blk: queue size 0");
     }
 
-    // 5. Tell device the queue's physical page number (frame 0 / 4096)
+    // Allocate contiguous frames for desc+avail+used+req_buf
+    let n = frames_needed(qsz);
+    let f0 = physical::alloc_frame();
+    for i in 1..n {
+        let fi = physical::alloc_frame();
+        if fi != f0 + i as u64 * 4096 {
+            return Err("VirtIO-blk: queue frames not contiguous");
+        }
+    }
+
+    // Zero all frames
+    for i in 0..n {
+        unsafe {
+            core::ptr::write_bytes(
+                paging::phys_to_virt(f0 + i as u64 * 4096) as *mut u8,
+                0, 4096);
+        }
+    }
+
+    // Compute layout
+    let avail_off = (16 * qsz) as u64;
+    let used_off  = used_ring_offset(qsz) as u64;
+    let req_off   = req_buf_offset(qsz)   as u64;
+
+    let avail_phys = f0 + avail_off;
+    let used_phys  = f0 + used_off;
+    let req_phys   = f0 + req_off;
+
+    // Register queue with device
     write32(io_base, REG_QUEUE_ADDRESS, (f0 / 4096) as u32);
 
-    // 6. Set DRIVER_OK
-    set_status(io_base,
-        STATUS_ACKNOWLEDGE | STATUS_DRIVER | STATUS_DRIVER_OK);
+    // Signal DRIVER_OK
+    set_status(io_base, STATUS_ACKNOWLEDGE | STATUS_DRIVER | STATUS_DRIVER_OK);
 
-    // 7. Read capacity
     let capacity = blk_capacity(io_base);
 
-    let mut disk = DISK.lock();
-    *disk = Some(VirtioBlk {
+    *DISK.lock() = Some(VirtioBlk {
         io_base,
-        frame0_phys: f0,
-        frame1_phys: f1,
-        frame0_virt: v0,
+        queue_size:   qsz as u16,
+        desc_virt:    paging::phys_to_virt(f0),
+        avail_virt:   paging::phys_to_virt(avail_phys),
+        used_virt:    paging::phys_to_virt(used_phys),
+        req_hdr_phys: req_phys,
+        req_dat_phys: req_phys + 16,
+        req_sts_phys: req_phys + 16 + SECTOR_SIZE as u64,
+        req_hdr_virt: paging::phys_to_virt(req_phys),
+        req_dat_virt: paging::phys_to_virt(req_phys + 16),
+        req_sts_virt: paging::phys_to_virt(req_phys + 16 + SECTOR_SIZE as u64),
         avail_idx:     0,
         last_used_idx: 0,
         capacity,
@@ -186,10 +175,8 @@ fn init_with_frames(io_base: u16, f0: u64, f1: u64)
     Ok(capacity)
 }
 
-// ─── I/O operations ───────────────────────────────────────────────────────────
+// ─── Public I/O ───────────────────────────────────────────────────────────────
 
-/// Read `count` 512-byte sectors starting at `lba` into `buf`.
-/// `buf` must be at least `count * 512` bytes.
 pub fn read_sectors(lba: u64, buf: &mut [u8]) -> Result<(), &'static str> {
     let count = buf.len() / SECTOR_SIZE;
     if count == 0 { return Ok(()); }
@@ -202,7 +189,6 @@ pub fn read_sectors(lba: u64, buf: &mut [u8]) -> Result<(), &'static str> {
     Ok(())
 }
 
-/// Write `count` 512-byte sectors starting at `lba` from `buf`.
 pub fn write_sectors(lba: u64, buf: &[u8]) -> Result<(), &'static str> {
     let count = buf.len() / SECTOR_SIZE;
     if count == 0 { return Ok(()); }
@@ -216,7 +202,6 @@ pub fn write_sectors(lba: u64, buf: &[u8]) -> Result<(), &'static str> {
     Ok(())
 }
 
-/// Return the disk capacity in sectors (or 0 if not initialised).
 pub fn capacity() -> u64 {
     DISK.lock().as_ref().map(|d| d.capacity).unwrap_or(0)
 }
@@ -224,103 +209,85 @@ pub fn capacity() -> u64 {
 // ─── Internal: single-sector I/O ─────────────────────────────────────────────
 
 impl VirtioBlk {
-    /// Perform a single-sector read (BLK_T_IN) or write (BLK_T_OUT).
-    /// `data` must be exactly 512 bytes.
     fn do_io(&mut self, req_type: u32, sector: u64, data: &mut [u8])
         -> Result<(), &'static str>
     {
         assert_eq!(data.len(), SECTOR_SIZE);
 
-        let v0     = self.frame0_virt;
-        let f0     = self.frame0_phys;
-        let f1     = self.frame1_phys;
+        let qsz = self.queue_size as usize;
 
-        // — Build request header in frame 0 scratch area —
-        let hdr_virt = (v0 + OFF_REQ_HDR) as *mut BlkReqHdr;
-        let dat_virt = (v0 + OFF_DATA)    as *mut u8;
-        let sts_virt = (v0 + OFF_STATUS)  as *mut u8;
-
+        // Build request header and data in the dedicated buffer page
         unsafe {
-            (*hdr_virt).req_type = req_type;
-            (*hdr_virt).reserved = 0;
-            (*hdr_virt).sector   = sector;
-
-            // Copy write data into scratch; for read, device overwrites this
-            core::ptr::copy_nonoverlapping(data.as_ptr(), dat_virt, SECTOR_SIZE);
-
-            // Status byte: set to 0xFF so we can detect device writes
-            *sts_virt = 0xFF;
+            let hdr = self.req_hdr_virt as *mut BlkReqHdr;
+            (*hdr).req_type = req_type;
+            (*hdr).reserved = 0;
+            (*hdr).sector   = sector;
+            core::ptr::copy_nonoverlapping(
+                data.as_ptr(), self.req_dat_virt as *mut u8, SECTOR_SIZE);
+            *(self.req_sts_virt as *mut u8) = 0xFF;
         }
 
-        // — Fill descriptor table (descriptors 0, 1, 2) —
-        let desc_base = v0 + OFF_DESC;
-
-        // Descriptor 0: request header (device-readable)
-        let hdr_phys = f0 + OFF_REQ_HDR;
-        let dat_phys = f0 + OFF_DATA;
-        let sts_phys = f0 + OFF_STATUS;
-
-        let data_flags: u16 = if req_type == BLK_T_IN {
-            VRING_DESC_F_WRITE | VRING_DESC_F_NEXT  // device writes to data buf
+        // Fill descriptors 0..2
+        let data_flags = if req_type == BLK_T_IN {
+            VRING_DESC_F_WRITE | VRING_DESC_F_NEXT
         } else {
-            VRING_DESC_F_NEXT  // device reads from data buf
+            VRING_DESC_F_NEXT
         };
 
         unsafe {
-            let desc = desc_base as *mut VirtqDesc;
-            // Desc 0: header
-            (*desc.add(0)).addr  = hdr_phys;
-            (*desc.add(0)).len   = 16;
-            (*desc.add(0)).flags = VRING_DESC_F_NEXT;
-            (*desc.add(0)).next  = 1;
-            // Desc 1: data
-            (*desc.add(1)).addr  = dat_phys;
-            (*desc.add(1)).len   = SECTOR_SIZE as u32;
-            (*desc.add(1)).flags = data_flags;
-            (*desc.add(1)).next  = 2;
-            // Desc 2: status (device always writes)
-            (*desc.add(2)).addr  = sts_phys;
-            (*desc.add(2)).len   = 1;
-            (*desc.add(2)).flags = VRING_DESC_F_WRITE;
-            (*desc.add(2)).next  = 0;
+            let d = self.desc_virt as *mut VirtqDesc;
+            (*d.add(0)).addr  = self.req_hdr_phys;
+            (*d.add(0)).len   = 16;
+            (*d.add(0)).flags = VRING_DESC_F_NEXT;
+            (*d.add(0)).next  = 1;
+            (*d.add(1)).addr  = self.req_dat_phys;
+            (*d.add(1)).len   = SECTOR_SIZE as u32;
+            (*d.add(1)).flags = data_flags;
+            (*d.add(1)).next  = 2;
+            (*d.add(2)).addr  = self.req_sts_phys;
+            (*d.add(2)).len   = 1;
+            (*d.add(2)).flags = VRING_DESC_F_WRITE;
+            (*d.add(2)).next  = 0;
         }
 
-        // — Add to available ring —
-        let avail = (v0 + OFF_AVAIL) as *mut VirtqAvail;
-        let avail_slot = (self.avail_idx as usize) % QUEUE_SIZE;
+        // Publish in available ring
+        // avail ring layout: flags(u16) idx(u16) ring[qsz](u16)
+        let avail_slot  = (self.avail_idx as usize) % qsz;
+        let ring_entry  = (self.avail_virt + 4 + avail_slot as u64 * 2) as *mut u16;
+        let avail_idx_p = (self.avail_virt + 2) as *mut u16;
         unsafe {
-            (*avail).ring[avail_slot] = 0; // descriptor chain starts at index 0
+            core::ptr::write_volatile(ring_entry, 0); // head = descriptor 0
             fence(Ordering::SeqCst);
-            (*avail).idx = self.avail_idx.wrapping_add(1);
+            core::ptr::write_volatile(avail_idx_p, self.avail_idx.wrapping_add(1));
         }
         self.avail_idx = self.avail_idx.wrapping_add(1);
 
-        // — Notify device: queue 0 —
+        // Kick device
         fence(Ordering::SeqCst);
         write16(self.io_base, REG_QUEUE_NOTIFY, 0);
 
-        // — Poll used ring until device marks this request done —
-        let used = (paging::phys_to_virt(f1)) as *const VirtqUsed;
+        // Poll used ring: used.idx is at offset 2 within the used ring
+        let used_idx_ptr = (self.used_virt + 2) as *const u16;
         let target = self.last_used_idx.wrapping_add(1);
         loop {
             fence(Ordering::SeqCst);
-            let used_idx = unsafe { core::ptr::read_volatile(&(*used).idx) };
-            if used_idx == target { break; }
-            // Busy-wait (Phase 5.0; Phase 5.1 will use IRQ9)
+            if unsafe { core::ptr::read_volatile(used_idx_ptr) } == target { break; }
             core::hint::spin_loop();
         }
         self.last_used_idx = target;
 
-        // — Check status byte —
-        let status = unsafe { core::ptr::read_volatile(sts_virt) };
-        if status != VIRTIO_BLK_S_OK {
-            return Err("VirtIO-blk: I/O error (device returned non-zero status)");
+        // Check status
+        let st = unsafe { core::ptr::read_volatile(self.req_sts_virt as *const u8) };
+        if st != VIRTIO_BLK_S_OK {
+            return Err("VirtIO-blk: I/O error");
         }
 
-        // — Copy data out (for reads) —
+        // Copy data out on read
         if req_type == BLK_T_IN {
             unsafe {
-                core::ptr::copy_nonoverlapping(dat_virt, data.as_mut_ptr(), SECTOR_SIZE);
+                core::ptr::copy_nonoverlapping(
+                    self.req_dat_virt as *const u8,
+                    data.as_mut_ptr(), SECTOR_SIZE);
             }
         }
 
