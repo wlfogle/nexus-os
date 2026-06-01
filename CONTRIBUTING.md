@@ -1,273 +1,175 @@
-# Contributing to NexusOS 🚀
+# Contributing to NexusOS
 
-Thank you for your interest in contributing to NexusOS! We're building the world's first universal Linux distribution with AI mascot companions, and we'd love your help.
+NexusOS is a **from-scratch Rust microkernel** — no Linux, no glibc, no POSIX.
+If you've ever wanted to work on a real OS kernel, this is your chance.
 
-## 🌟 Ways to Contribute
+**Current state:** Phases 1–5.2 complete — the kernel boots, schedules
+processes preemptively, has IPC, syscalls, ring-3 userspace, a PS/2 keyboard
+driver, VirtIO-blk disk I/O, and a FAT32 filesystem. See `README.md` for the
+full boot sequence.
 
-### 🔧 Code Contributions
-- **Core Systems**: nexuspkg universal package manager, system integration
-- **AI Development**: Stella 🐕 & Max Jr. 🐱 assistants
-- **Desktop Environment**: NexusDE components (QML/C++)
-- **Media Stack**: Service configurations and Docker containers
-- **Installation System**: nexus-install.sh installer improvements
+## Where you can help
 
-### 📚 Documentation
-- User guides and tutorials
-- API documentation
-- Installation instructions
-- Troubleshooting guides
+### Kernel (Rust, `#![no_std]`)
 
-### 🎨 Design & Creative
-- UI/UX improvements for NexusDE
-- Mascot artwork for Stella & Max Jr.
-- Branding and visual assets
-- Website design
+These are the highest-impact areas right now:
 
-### 🧪 Testing & QA
-- Hardware compatibility testing
-- Package installation testing
-- Performance benchmarking
-- Bug reporting and verification
+| Area | Difficulty | Description |
+|------|-----------|-------------|
+| **FAT32 write support** | Medium | Extend the read-only FAT32 driver to support file creation and writes |
+| **AHCI / NVMe drivers** | Hard | Real hardware disk drivers (currently VirtIO-blk only) |
+| **VirtIO-net** | Medium | Network driver — required before any networking stack |
+| **TCP/IP stack** | Hard | Minimal IP + TCP + UDP — needed for AI Core to reach Ollama |
+| **USB HID** | Hard | USB keyboard/mouse (currently PS/2 only) |
+| **ACPI** | Medium | Power management, shutdown, device enumeration |
+| **SMP** | Hard | Multi-core scheduler (currently single-core) |
+| **ext4 read support** | Medium | Second filesystem for real-world disk access |
 
-## 🛠️ Development Setup
+### Userspace
 
-### Prerequisites
-- Pop!_OS 22.04 LTS NVIDIA (recommended)
-- 16GB+ RAM
-- 500GB+ storage
-- Git, Docker, Qt6 development tools
+| Area | Difficulty | Description |
+|------|-----------|-------------|
+| **NexusTerminal** | Medium | Terminal emulator in userspace (see `PHASE6_NEXUSTERMINAL.md`) |
+| **Shell** | Medium | Basic command interpreter for NexusTerminal |
+| **Personality servers** | Hard | Linux/BSD/macOS/Win32 ABI translation layers (the long-term vision) |
+| **Init system** | Medium | Service manager replacing the current hardcoded boot sequence |
 
-### Getting Started
+### Documentation
+
+| Area | Description |
+|------|-------------|
+| **Architecture docs** | Explain how paging, IPC, or the scheduler work — help newcomers understand the code |
+| **Build guides** | Test the build on different Linux distros, document issues |
+| **Syscall reference** | Document every syscall number, arguments, return values |
+| **Driver writing guide** | How to add a new driver to NexusOS |
+
+### Testing
+
+| Area | Description |
+|------|-------------|
+| **QEMU testing** | Run the kernel on different QEMU configs, report what breaks |
+| **Hardware testing** | Boot the ISO on real hardware, report results |
+| **Fuzzing** | Fuzz syscall inputs from ring-3 |
+
+## Build setup
+
+You need four things:
 
 ```bash
-# Fork and clone the repository
-git clone https://github.com/YOUR_USERNAME/nexusos.git
-cd nexusos
+# 1. Rust nightly (via rustup)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-# Set up development environment
-sudo mkdir -p /opt/nexusos
-sudo chown $USER:$USER /opt/nexusos
+# 2. make, xorriso
+# Debian/Ubuntu/Pop!_OS:
+sudo apt install make xorriso
+# Fedora:
+sudo dnf install make xorriso
+# Arch:
+sudo pacman -S make xorriso
 
-# Install development dependencies
-sudo nala install build-essential cmake qtbase5-dev qtdeclarative5-dev docker.io python3 python3-pip
+# 3. QEMU (for testing)
+sudo apt install qemu-system-x86 qemu-system-aarch64
 
-# Build core components
-make -C userspace/system/nexuspkg
-make -C userspace/system/nexus-setup-assistant
+# 4. Clone and build
+git clone https://github.com/wlfogle/nexus-os.git
+cd nexus-os
+make setup    # installs Rust targets, builds Limine bootloader
+make laptop   # build x86_64 kernel
+make iso-laptop
+make run-laptop   # boots in QEMU
 ```
 
-## 📋 Development Guidelines
+Three build targets from one codebase:
 
-### Code Style
-- **C/C++**: Follow Linux kernel style guidelines
-- **Python**: Follow PEP 8 standards
-- **QML**: Follow Qt QML coding conventions
-- **Shell Scripts**: Use shellcheck for validation
+| Target | Arch | Use case |
+|--------|------|----------|
+| `laptop` | x86_64 | Full: framebuffer + serial + AI hooks |
+| `tiamat` | x86_64 | Headless server: serial only |
+| `bahamut` | AArch64 | Raspberry Pi / edge: minimal heap |
 
-### Commit Guidelines
-- Use clear, descriptive commit messages
-- Reference issue numbers when applicable
-- Keep commits focused and atomic
-- Follow conventional commit format:
-  ```
-  type(scope): description
-  
-  Examples:
-  feat(nexuspkg): add universal package detection
-  fix(stella): resolve security scan memory leak
-  docs(readme): update installation instructions
-  ```
+## Good first issues
 
-### Testing Requirements
-- Test changes on Pop!_OS base system
-- Verify package installations don't conflict
-- Ensure AI assistants function correctly
-- Test media stack deployment
-- Run existing test suite (when available)
+If you're new to OS development, start here:
 
-## 🤖 AI Assistant Development
+- **Add a new syscall** — follow the pattern in `kernel/src/syscall/`. Pick
+  something simple like `SYS_UPTIME` (return tick count) or `SYS_GETPID`
+  improvements.
+- **Improve serial output formatting** — add color codes, timestamps, or log
+  levels to the serial console.
+- **Write a userspace test program** — create a ring-3 program that exercises
+  IPC or disk syscalls and reports pass/fail.
+- **Document a subsystem** — pick any module in `kernel/src/` and write a
+  `docs/` page explaining how it works.
+- **Test on your hardware** — boot the ISO and report what happens (GPU,
+  serial output, crashes).
 
-### Stella 🐕 (Security Guardian)
-- **Language**: Python
-- **Focus**: Security monitoring, package validation
-- **Files**: `core/services/stella/`
-- **Tests**: Security scanning, privacy features
+## Code standards
 
-### Max Jr. 🐱 (Performance Optimizer)
-- **Language**: Python  
-- **Focus**: Performance monitoring, system optimization
-- **Files**: `core/services/maxjr/`
-- **Tests**: Performance metrics, gaming optimization
+- **Rust, `#![no_std]`, nightly** — no standard library, no allocator until
+  the heap is initialized.
+- **No stubs or zombie code.** Every function must be complete and working.
+  The only exception: syscall stubs for future phases must have inline
+  comments explaining scope.
+- **No `TODO`, `FIXME`, `XXX`, `HACK`, or `unimplemented!()` in committed
+  code.**
+- **Code must compile clean** — `make laptop` with no warnings before you
+  open a PR.
+- Kernel code uses `unsafe` where hardware access demands it. Every `unsafe`
+  block must have a `// SAFETY:` comment explaining why it's sound.
 
-## 🎮 Gaming Integration
+## Commit messages
 
-### Requirements
-- Maintain gaming performance parity with base Pop!_OS
-- Test with popular games (Steam, Lutris)
-- Validate GPU switching functionality
-- Ensure gaming tools compatibility
+```
+type(scope): description
 
-## 📺 Media Stack Development
-
-### Service Integration
-- Follow awesome-stack patterns
-- Use Docker containers for services
-- Maintain port consistency (8000-8599 range)
-- Test service health monitoring
-
-## 🐛 Bug Reports
-
-### Before Submitting
-- Search existing issues
-- Test on clean Pop!_OS installation
-- Gather system information
-- Document reproduction steps
-
-### Bug Report Template
-```markdown
-**System Information**
-- NexusOS Version: 
-- Base System: Pop!_OS 22.04 NVIDIA
-- Kernel Version:
-- Hardware: CPU/GPU/RAM
-
-**Bug Description**
-Clear description of the issue
-
-**Steps to Reproduce**
-1. Step one
-2. Step two
-3. Expected vs actual behavior
-
-**Additional Context**
-- Log files
-- Screenshots
-- Related issues
+Examples:
+feat(kernel/drivers): add AHCI port detection
+fix(scheduler): prevent double-free of process stacks
+docs(syscall): document SYS_DISK_READ arguments
+test(ipc): add ring-3 IPC stress test
 ```
 
-## 💡 Feature Requests
+## Project structure
 
-### Guidelines
-- Check existing feature requests
-- Explain the use case and benefit
-- Consider implementation complexity
-- Align with NexusOS vision
+```
+kernel/src/
+├── main.rs          — boot sequence, kernel tasks
+├── arch/            — x86_64 and AArch64 CPU setup (GDT, IDT, exceptions)
+├── memory/          — physical allocator, paging, heap
+├── io/              — serial, UART, framebuffer
+├── timer/           — PIC, PIT
+├── process/         — PCB, kernel stacks, ring-3 spawn
+├── scheduler/       — round-robin preemptive scheduler
+├── ipc/             — message queues, named port registry
+├── syscall/         — STAR/LSTAR entry, syscall dispatch
+├── drivers/         — PCI, VirtIO-blk (add yours here)
+└── userspace/       — ring-3 init process, page mapping
 
-### Feature Request Template
-```markdown
-**Feature Summary**
-Brief description of the requested feature
-
-**Problem Statement**
-What problem does this solve?
-
-**Proposed Solution**
-How should this feature work?
-
-**Alternatives Considered**
-Other approaches you've thought about
-
-**Additional Context**
-Screenshots, mockups, related issues
+userspace/           — userspace daemons (nexus-ai, etc.)
+scripts/             — build scripts, VM helpers, integration tests
+docs/                — architecture documentation
 ```
 
-## 🔄 Pull Request Process
+## Workflow
 
-### Before Submitting
-1. Create feature branch: `git checkout -b feature/amazing-feature`
-2. Make changes and test thoroughly
-3. Update documentation if needed
-4. Commit with clear messages
-5. Push to your fork
-6. Create pull request
+1. Fork the repo
+2. Create a feature branch: `git checkout -b feat/your-feature`
+3. Build and test: `make laptop && make iso-laptop && make run-laptop`
+4. Check serial output in QEMU for your changes
+5. Commit (see format above)
+6. Open a PR against `main`
 
-### PR Requirements
-- Clear title and description
-- Reference related issues
-- Include testing information
-- Update documentation
-- Pass all checks (when CI is set up)
+## Communication
 
-### Review Process
-1. Automated checks (coming soon)
-2. Code review by maintainers
-3. Testing on various hardware
-4. Approval and merge
+- **GitHub Issues** — bugs, feature proposals, questions
+- **GitHub Discussions** — architecture discussions, design proposals
+- **PRs** — code review happens here
 
-## 🌟 Recognition
+## License
 
-Contributors will be:
-- Listed in repository contributors
-- Mentioned in release notes
-- Added to project acknowledgments
-- Invited to maintainer team (for significant contributions)
-
-## 📞 Getting Help
-
-### Communication Channels
-- **GitHub Issues**: Bug reports and feature requests
-- **GitHub Discussions**: General questions and ideas
-- **Discord**: Real-time development chat (coming soon)
-- **Email**: Direct contact with maintainers
-
-### Development Questions
-- Architecture decisions: Open GitHub discussion
-- Implementation help: Comment on related issues
-- AI assistant behavior: Tag @stella or @maxjr in comments
-- Gaming performance: Use #gaming label
-
-## 🎯 Current Priorities
-
-### Phase 1 (Current)
-- [ ] nexuspkg package manager completion
-- [ ] AI assistant integration
-- [ ] Media stack deployment
-- [ ] NexusOS branding overlay
-
-### Looking for Help With
-- C++ developers for nexuspkg
-- Python developers for AI assistants
-- QML developers for NexusDE
-- Docker experts for media stack
-- Gaming enthusiasts for testing
-
-## 📜 Code of Conduct
-
-### Our Standards
-- Be respectful and inclusive
-- Welcome newcomers and help them learn
-- Focus on constructive feedback
-- Respect different viewpoints and experiences
-- Show empathy towards others
-
-### Unacceptable Behavior
-- Harassment or discrimination
-- Trolling or deliberately disruptive behavior
-- Personal attacks or insults
-- Publishing private information
-- Inappropriate sexual content
-
-## 📄 License Agreement
-
-By contributing to NexusOS, you agree:
-- Your contributions will be licensed under GPL-3.0+
-- You have the right to submit your contributions
-- You understand the open source nature of the project
+Contributions are licensed under GPL-3.0+. By submitting a PR, you agree
+your code falls under this license.
 
 ---
 
-## 🚀 Ready to Contribute?
-
-1. **Star the repository** ⭐ to show your support
-2. **Fork the project** 🍴 to start contributing  
-3. **Join discussions** 💬 to connect with the community
-4. **Pick an issue** 🎯 to work on
-5. **Submit your first PR** 🎉
-
-**Welcome to the NexusOS family!** 🐕🐱
-
-*With Stella & Max Jr. cheering you on!*
-
----
-
-*For questions about contributing, open a GitHub discussion or contact the maintainers.*
+*NexusOS — AI-native from the first instruction.*
