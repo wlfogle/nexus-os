@@ -16,6 +16,7 @@ extern crate alloc;
 // ─── Sub-modules ─────────────────────────────────────────────────────────────
 
 pub mod arch;
+pub mod drivers;
 pub mod io;
 pub mod ipc;
 pub mod memory;
@@ -117,6 +118,24 @@ pub extern "C" fn _start() -> ! {
     memory::heap::init();
     kprintln!("[mem]  Kernel heap ({} MB) ready",
               memory::heap::HEAP_SIZE / (1024 * 1024));
+
+    // ── 6.5. VirtIO-blk disk driver ─────────────────────────────────────────
+    // VirtIO vendor 0x1AF4; device 0x1001 = legacy blk, 0x1042 = transitional
+    const VIRTIO_VENDOR: u16 = 0x1AF4;
+    match drivers::pci::find(&[(VIRTIO_VENDOR, 0x1001), (VIRTIO_VENDOR, 0x1042)]) {
+        Some(dev) => {
+            dev.enable_io_and_busmaster();
+            match drivers::virtio::blk::init(dev.io_base()) {
+                Ok(sectors) => {
+                    // Report in GiB; sectors are 512 B each
+                    let gib = sectors / (2 * 1024 * 1024); // sectors per GiB
+                    kprintln!("[disk] VirtIO-blk: {} GiB ({} sectors)", gib, sectors);
+                }
+                Err(e) => kprintln!("[disk] VirtIO-blk init failed: {}", e),
+            }
+        }
+        None => kprintln!("[disk] no VirtIO-blk device found"),
+    }
 
     // ── 7. Framebuffer text console (laptop only) ────────────────────────────
     #[cfg(feature = "framebuffer")]

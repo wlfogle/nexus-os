@@ -3,7 +3,7 @@
 > **The world's first AI-native operating system.**  
 > Built from scratch. No Linux. No glibc. No distro assumptions.
 
-**Current version: v0.4.0** — Phases 1–4 complete and verified on bare metal.
+**Current version: v0.5.1** — Phases 1–5.1 complete and verified (AI Core + keyboard + VirtIO-blk disk).
 
 ## Architecture
 
@@ -99,6 +99,11 @@ kernel/
     │   ├── mod.rs           Message, inbox queues, blocking send/recv
     │   └── ports.rs         named port registry (nexus.ai, nexus.fs, ...)
     ├── syscall/             STAR/LSTAR/FMASK/EFER + GS-relative entry stub
+    ├── drivers/
+    │   ├── pci.rs           legacy PCI I/O scanner (0xCF8/0xCFC, BAR0)
+    │   └── virtio/
+    │       ├── mod.rs       VirtIO legacy I/O register helpers
+    │       └── blk.rs       VirtIO-blk driver (8-entry virtqueue, polling)
     └── userspace/           ring-3 process spawn, page mapping, init code
 ```
 
@@ -135,10 +140,12 @@ UEFI or BIOS firmware
              14. SYS_WRITE, SYS_SLEEP, SYS_GETPID, SYS_IPC_* live
              15. Idle loop (preempted every 10 ms)
 
-              Phase 5 — AI Core
-             16. Register system ports (nexus.ai, nexus.fs, nexus.gpu)
-             17. Spawn nexus-ai daemon into ring-3
-             18. AI Core listening on nexus.ai port for IPC queries
+              Phase 5 — AI Core + Drivers
+             16. PCI scan -> VirtIO-blk detect -> disk capacity printed
+             17. Register system ports (nexus.ai, nexus.fs, nexus.gpu)
+             18. Spawn nexus-ai daemon, AI Core listening on nexus.ai
+             19. PS/2 keyboard (IRQ1, ring-buffer, BlockedOnKey)
+             20. SYS_DISK_READ/WRITE syscalls (15/16)
 ```
 
 ## Phase Roadmap
@@ -149,9 +156,11 @@ UEFI or BIOS firmware
 | 2 | **Done** | Preemptive scheduler, 8259A PIC, 8253 PIT, round-robin | `[task-demo] alive at 9s` |
 | 3 | **Done** | IPC ring-buffers, blocking send/recv, named port registry | `ping#00007 round-trip OK` |
 | 4 | **Done** | `syscall`/`sysretq`, ring-3 user process, SYS_WRITE/SLEEP/IPC | `Hello from ring 3!` |
-| 5 | **In Progress** | **AI Core server** — user-space Ollama IPC, `nexus.ai` port, SYS_IPC_QUERY | See [PHASE5_ARCHITECTURE.md](PHASE5_ARCHITECTURE.md) |
-| 6 | Planned | NexusTerminal ↔ AI Core via IPC |
-| 7 | Planned | VFS, network stack, NexusOS installer |
+| 5.0 | **Done** | AI Core kernel thread, `nexus.ai` port, SYS_IPC_QUERY/TIMEOUT/GPU_MMAP, keyboard | `[nexus-ai] AI Core online` |
+| 5.1 | **Done** | PCI scanner, VirtIO-blk disk driver, SYS_DISK_READ/WRITE (15/16) | `[disk] VirtIO-blk: N GiB` |
+| 5.2 | **Next** | FAT32 filesystem via `fatfs` crate | — |
+| 5.3 | Planned | NexusOS installer (Limine + kernel -> disk) | — |
+| 5.4 | Planned | Boot from installed disk; VirtIO-vsock -> Ollama | — |
 
 ## Test VM
 

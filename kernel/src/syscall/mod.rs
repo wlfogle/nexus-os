@@ -46,6 +46,8 @@ pub const SYS_IPC_TIMEOUT:   u64 = 11; // ipc_timeout(timeout_ms)
 pub const SYS_GPU_MMAP:      u64 = 12; // gpu_mmap(size, flags, 0) → vaddr
 pub const SYS_READ_CHAR:     u64 = 13; // read_char() → u8 (blocks until key)
 pub const SYS_READ_CHAR_NB:  u64 = 14; // read_char_nb() → u8 or -1 if empty
+pub const SYS_DISK_READ:     u64 = 15; // disk_read(lba, buf_ptr, num_sectors) → 0 or -err
+pub const SYS_DISK_WRITE:    u64 = 16; // disk_write(lba, buf_ptr, num_sectors) → 0 or -err
 
 // ─── MSR addresses ───────────────────────────────────────────────────────────
 
@@ -350,6 +352,44 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
             match crate::io::keyboard::try_read() {
                 Some(ch) => ch as i64,
                 None     => -1,
+            }
+        }
+
+        // ── SYS_DISK_READ ────────────────────────────────────────────────
+        // disk_read(lba: u64, buf_ptr: *mut u8, num_sectors: u64) → 0 or -EIO
+        SYS_DISK_READ => {
+            let lba         = a1;
+            let buf_ptr     = a2 as *mut u8;
+            let num_sectors = a3 as usize;
+            if num_sectors == 0 { return 0; }
+            let buf = unsafe {
+                core::slice::from_raw_parts_mut(
+                    buf_ptr,
+                    num_sectors * crate::drivers::virtio::blk::SECTOR_SIZE,
+                )
+            };
+            match crate::drivers::virtio::blk::read_sectors(lba, buf) {
+                Ok(())  => 0,
+                Err(_)  => -5, // EIO
+            }
+        }
+
+        // ── SYS_DISK_WRITE ───────────────────────────────────────────────
+        // disk_write(lba: u64, buf_ptr: *const u8, num_sectors: u64) → 0 or -EIO
+        SYS_DISK_WRITE => {
+            let lba         = a1;
+            let buf_ptr     = a2 as *const u8;
+            let num_sectors = a3 as usize;
+            if num_sectors == 0 { return 0; }
+            let buf = unsafe {
+                core::slice::from_raw_parts(
+                    buf_ptr,
+                    num_sectors * crate::drivers::virtio::blk::SECTOR_SIZE,
+                )
+            };
+            match crate::drivers::virtio::blk::write_sectors(lba, buf) {
+                Ok(())  => 0,
+                Err(_)  => -5, // EIO
             }
         }
 
