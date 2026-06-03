@@ -118,6 +118,8 @@ iso-laptop: laptop
 	cp $(LIMINE_BIN)/limine-bios-cd.bin    $(BUILD_DIR)/iso-laptop/boot/limine/
 	cp $(LIMINE_BIN)/limine-uefi-cd.bin    $(BUILD_DIR)/iso-laptop/boot/limine/
 	cp $(LIMINE_BIN)/BOOTX64.EFI           $(BUILD_DIR)/iso-laptop/EFI/BOOT/
+	cp $(BUILD_DIR)/nexus-kernel-laptop    $(BUILD_DIR)/iso-laptop/EFI/BOOT/nexus-kernel
+	cp iso_root/limine-laptop-uefi.conf    $(BUILD_DIR)/iso-laptop/EFI/BOOT/limine.conf
 	$(XORRISO) -as mkisofs \
 	    -b boot/limine/limine-bios-cd.bin \
 	    -no-emul-boot -boot-load-size 4 -boot-info-table \
@@ -140,6 +142,8 @@ iso-tiamat: tiamat
 	cp $(LIMINE_BIN)/limine-bios-cd.bin    $(BUILD_DIR)/iso-tiamat/boot/limine/
 	cp $(LIMINE_BIN)/limine-uefi-cd.bin    $(BUILD_DIR)/iso-tiamat/boot/limine/
 	cp $(LIMINE_BIN)/BOOTX64.EFI           $(BUILD_DIR)/iso-tiamat/EFI/BOOT/
+	cp $(BUILD_DIR)/nexus-kernel-tiamat    $(BUILD_DIR)/iso-tiamat/EFI/BOOT/nexus-kernel
+	cp iso_root/limine-tiamat-uefi.conf    $(BUILD_DIR)/iso-tiamat/EFI/BOOT/limine.conf
 	$(XORRISO) -as mkisofs \
 	    -b boot/limine/limine-bios-cd.bin \
 	    -no-emul-boot -boot-load-size 4 -boot-info-table \
@@ -160,6 +164,7 @@ iso-bahamut: bahamut
 	cp iso_root/limine-bahamut.conf        $(BUILD_DIR)/iso-bahamut/boot/limine/limine.conf
 	cp $(LIMINE_BIN)/limine-uefi-cd.bin    $(BUILD_DIR)/iso-bahamut/boot/limine/
 	cp $(LIMINE_BIN)/BOOTAA64.EFI          $(BUILD_DIR)/iso-bahamut/EFI/BOOT/
+	cp iso_root/limine-bahamut.conf        $(BUILD_DIR)/iso-bahamut/EFI/BOOT/limine.conf
 	$(XORRISO) -as mkisofs \
 	    --efi-boot boot/limine/limine-uefi-cd.bin \
 	    -efi-boot-part --efi-boot-image --protective-msdos-label \
