@@ -8,8 +8,8 @@ this repository.
 NexusOS is a **from-scratch Rust microkernel** — the world's first AI-native
 operating system.  No Linux.  No glibc.  No distro assumptions.
 
-**Current state: v0.4.0 — Phases 1–4 verified on bare metal (QEMU + KVM).**  
-**In Progress: Phase 5 — AI Core (see PHASE5_ARCHITECTURE.md)**
+**Current state: v0.5.3 — Phases 1–5.3 verified (QEMU + KVM).**  
+**Next: Phase 5.4 — Boot from installed disk; VirtIO-vsock → Ollama**
 
 The old Ubuntu/distro material is preserved under `legacy/` but is never built.
 
@@ -152,3 +152,41 @@ Every function must be complete and working.  No stubs, no TODOs, no zombie code
 - **Phase 5.3** — Multi-model scheduling, load balancing
 - **Phase 6** — NexusTerminal ↔ AI Core integration
 - **Phase 7** — VFS, network stack, package manager
+---
+
+## The Mission
+
+NexusOS is the **world's first universal AI-native operating system**.
+
+No OS has ever natively bridged all four major platform ABIs in a single microkernel.
+NexusOS will be the first.
+
+### Universal Compatibility via Personality Servers
+
+```
+NexusOS Microkernel (Rust, from scratch)
+├── nexus.linux  — ELF binaries, Linux syscalls     → run any Linux app
+├── nexus.bsd    — ELF binaries, BSD/POSIX syscalls → run any BSD app
+├── nexus.macos  — Mach-O binaries, Darwin APIs     → run any macOS app
+├── nexus.win    — PE/COFF binaries, Win32 API      → run any Windows app
+└── nexus.native — NexusOS native (Rust, our ABI)
+```
+
+Each personality server is a userspace process that:
+1. Registers itself with the kernel for a binary format
+2. Translates platform syscalls → NexusOS IPC
+3. Returns results in the expected ABI format
+
+### NexusStore
+One store. All platforms. AI-curated.
+Install anything from Linux, macOS, BSD, or Windows — no emulation, no VM.
+Just native personality servers translating the ABI.
+
+### Milestones
+- Phase 5 (now):      Foundation — kernel, disk, FAT32, AI Core, installer
+- Phase 6 (Month 2):  Linux personality server — run any Linux ELF
+- Phase 7 (Month 3):  BSD personality server + NexusStore v0.1
+- Phase 8 (Month 4):  Windows personality server (Wine-level API coverage)
+- Phase 9 (Month 6):  macOS personality server (Darling-level Mach-O support)
+- Phase 10 (Month 8): NexusStore v1.0 — install anything from any source
+- Phase 11 (Month 12): Bare metal on i9-13900HX + RTX 4080 daily driver

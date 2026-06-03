@@ -43,21 +43,30 @@ impl fatfs::IoError for DiskError {
 /// Wraps the global VirtIO-blk driver and presents byte-level `IoBase + Read +
 /// Write + Seek` as required by `fatfs`.  Internally caches one 512-byte sector.
 pub struct DiskIo {
-    pos:       u64,
-    buf:       [u8; SECTOR_SIZE],
-    buf_lba:   u64,    // LBA currently cached  (u64::MAX → cache empty)
-    buf_dirty: bool,
+    pos:        u64,
+    buf:        [u8; SECTOR_SIZE],
+    buf_lba:    u64,         // LBA currently cached (u64::MAX = empty)
+    buf_dirty:  bool,
+    lba_offset: u64,         // add to every LBA before hitting the driver
 }
 
 impl DiskIo {
+    /// Whole-disk access (offset 0).
     pub fn new() -> Self {
-        DiskIo { pos: 0, buf: [0u8; SECTOR_SIZE], buf_lba: u64::MAX, buf_dirty: false }
+        DiskIo { pos: 0, buf: [0u8; SECTOR_SIZE], buf_lba: u64::MAX,
+                 buf_dirty: false, lba_offset: 0 }
+    }
+
+    /// Partition-relative access: all I/O is offset by `lba_offset` sectors.
+    pub fn at_partition(lba_offset: u64) -> Self {
+        DiskIo { pos: 0, buf: [0u8; SECTOR_SIZE], buf_lba: u64::MAX,
+                 buf_dirty: false, lba_offset }
     }
 
     /// Write the cached sector back to disk if it has been modified.
     fn flush_cache(&mut self) -> Result<(), DiskError> {
         if self.buf_dirty && self.buf_lba != u64::MAX {
-            write_sectors(self.buf_lba, &self.buf).map_err(|_| DiskError)?;
+            write_sectors(self.buf_lba + self.lba_offset, &self.buf).map_err(|_| DiskError)?;
             self.buf_dirty = false;
         }
         Ok(())
@@ -67,7 +76,7 @@ impl DiskIo {
     fn load(&mut self, lba: u64) -> Result<(), DiskError> {
         if self.buf_lba == lba { return Ok(()); }
         self.flush_cache()?;
-        read_sectors(lba, &mut self.buf).map_err(|_| DiskError)?;
+        read_sectors(lba + self.lba_offset, &mut self.buf).map_err(|_| DiskError)?;
         self.buf_lba   = lba;
         self.buf_dirty = false;
         Ok(())
@@ -156,11 +165,34 @@ type FatDiskFs = FileSystem<DiskIo, NullTimeProvider, LossyOemCpConverter>;
 //   • NullTimeProvider / LossyOemCpConverter are ZSTs → Send
 //   • fatfs 0.4 stores owned TP/OCC (not &'static dyn), so auto-Send is sound
 // Wrapping in Mutex<Option<_>> gives us Sync for the static.
-static FS: Mutex<Option<FatDiskFs>> = Mutex::new(None);
+pub(crate) static FS: Mutex<Option<FatDiskFs>> = Mutex::new(None);
+
+// ─── GPT detection ───────────────────────────────────────────────────────────
+
+/// Check for a GUID Partition Table at LBA 1.  If found, return the LBA where
+/// the NexusOS EFI System Partition starts.  The NexusOS installer always
+/// places the ESP at LBA 34 (GPT `first_usable_lba`).  A full partition-entry
+/// scan for portability is deferred to Phase 5.5.
+fn detect_gpt_esp() -> Option<u64> {
+    const GPT_MAGIC: u64 = 0x5452_4150_2049_4645; // b"EFI PART" LE
+    let mut buf = [0u8; SECTOR_SIZE];
+    read_sectors(1, &mut buf).ok()?;
+    let magic = u64::from_le_bytes(buf[0..8].try_into().ok()?);
+    if magic != GPT_MAGIC {
+        return None;
+    }
+    Some(34) // NexusOS installer ESP_START_LBA
+}
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 
 /// Probe the VirtIO-blk disk for a FAT filesystem and mount it.
+///
+/// Two attempts are made:
+///   1. Raw FAT32 at LBA 0 — used when the disk is unpartitioned (first install
+///      from ISO writes the partition table and re-mounts via `format()`).
+///   2. GPT detected at LBA 1 → mount FAT32 at the ESP start LBA (34) — used
+///      when booting from the fully-installed NexusOS disk.
 ///
 /// Called at boot (after disk driver init and framebuffer).
 /// Returns a string suitable for the `[fs]` boot log line.
@@ -168,16 +200,30 @@ pub fn init() -> &'static str {
     if capacity() == 0 {
         return "no disk — skipping FAT32";
     }
+
+    // Attempt 1: raw FAT32 at LBA 0 (unpartitioned disk or first-boot ISO)
     let opts = FsOptions::new().time_provider(NullTimeProvider::new());
     match FileSystem::new(DiskIo::new(), opts) {
         Ok(fs) => {
             *FS.lock() = Some(fs);
-            "FAT32 mounted"
+            return "FAT32 mounted";
         }
-        Err(_) => {
-            "disk present, not formatted — run installer to format"
+        Err(_) => {}
+    }
+
+    // Attempt 2: GPT-partitioned disk — locate and mount the ESP
+    if let Some(esp_lba) = detect_gpt_esp() {
+        let opts = FsOptions::new().time_provider(NullTimeProvider::new());
+        match FileSystem::new(DiskIo::at_partition(esp_lba), opts) {
+            Ok(fs) => {
+                *FS.lock() = Some(fs);
+                return "FAT32 mounted (GPT ESP at LBA 34)";
+            }
+            Err(_) => {}
         }
     }
+
+    "disk present, not formatted — run installer to format"
 }
 
 /// Format the VirtIO-blk disk as FAT32 and mount the new filesystem.

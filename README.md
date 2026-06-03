@@ -3,7 +3,7 @@
 > **The world's first AI-native operating system.**  
 > Built from scratch. No Linux. No glibc. No distro assumptions.
 
-**Current version: v0.5.1** — Phases 1–5.1 complete and verified (AI Core + keyboard + VirtIO-blk disk).
+**Current version: v0.5.3** — Phases 1–5.3 complete and verified (AI Core + keyboard + VirtIO-blk + FAT32 + installer).
 
 ## Architecture
 
@@ -146,6 +146,10 @@ UEFI or BIOS firmware
              18. Spawn nexus-ai daemon, AI Core listening on nexus.ai
              19. PS/2 keyboard (IRQ1, ring-buffer, BlockedOnKey)
              20. SYS_DISK_READ/WRITE syscalls (15/16)
+
+              Phase 5.2/5.3 — FAT32 + Installer
+             21. FAT32 mounted (GPT ESP detected at LBA 34 on installed disk)
+             22. NexusOS installer writes GPT + FAT32 ESP + BOOTX64.EFI + kernel
 ```
 
 ## Phase Roadmap
@@ -158,9 +162,9 @@ UEFI or BIOS firmware
 | 4 | **Done** | `syscall`/`sysretq`, ring-3 user process, SYS_WRITE/SLEEP/IPC | `Hello from ring 3!` |
 | 5.0 | **Done** | AI Core kernel thread, `nexus.ai` port, SYS_IPC_QUERY/TIMEOUT/GPU_MMAP, keyboard | `[nexus-ai] AI Core online` |
 | 5.1 | **Done** | PCI scanner, VirtIO-blk disk driver, SYS_DISK_READ/WRITE (15/16) | `[disk] VirtIO-blk: N GiB` |
-| 5.2 | **Next** | FAT32 filesystem via `fatfs` crate | — |
-| 5.3 | Planned | NexusOS installer (Limine + kernel -> disk) | — |
-| 5.4 | Planned | Boot from installed disk; VirtIO-vsock -> Ollama | — |
+| 5.2 | **Done** | FAT32 filesystem via `fatfs` crate (sector-buffered DiskIo adapter) | `[fs] FAT32 mounted` |
+| 5.3 | **Done** | NexusOS installer: GPT + FAT32 ESP + BOOTX64.EFI + kernel + limine.conf | `[install] Installation complete!` |
+| 5.4 | **Next** | Boot from installed disk (GPT ESP detection); VirtIO-vsock → Ollama | — |
 
 ## Test VM
 
