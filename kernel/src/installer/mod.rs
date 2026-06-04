@@ -13,7 +13,7 @@ pub mod crc32;
 pub mod gpt;
 
 use gpt::write_gpt;
-use crate::{kprintln, fs, memory::paging};
+use crate::{kprintln, fs};
 use crate::drivers::virtio::blk::capacity;
 use core::sync::atomic::Ordering;
 
@@ -21,22 +21,23 @@ use core::sync::atomic::Ordering;
 
 static BOOTX64_EFI: &[u8] = include_bytes!("../../../limine/bin/BOOTX64.EFI");
 
-static LIMINE_CONF: &[u8] = b"\
-# NexusOS Boot Configuration\n\
-timeout: 5\n\
-default_entry: 1\n\
-\n\
-/NexusOS\n\
-    protocol: limine\n\
-    path: boot():/boot/nexus-kernel\n\
-    cmdline: target=laptop\n\
-";
+static LIMINE_CONF: &[u8] =
+    b"# NexusOS Boot Configuration\ntimeout: 5\ndefault_entry: 1\n\n/NexusOS\n    protocol: limine\n    path: boot():/boot/nexus-kernel\n    cmdline: target=laptop\n";
 
-// ─── Kernel location globals (set by _start) ──────────────────────────────────
+/// EFI shell startup script: auto-launches Limine when OVMF has no saved
+/// boot entry for this disk (first power-on after install). After Limine
+/// runs successfully, OVMF writes a permanent NVRAM entry and subsequent
+/// boots go directly to Limine without the shell.
+static STARTUP_NSH: &[u8] = b"\\EFI\\BOOT\\BOOTX64.EFI\r\n";
 
-pub static KERNEL_PHYS_BASE: core::sync::atomic::AtomicU64 =
+// ─── Kernel ELF globals (set by _start from KernelFileRequest) ───────────────
+// These hold the virtual address and byte-length of the original ELF file that
+// Limine loaded from disk.  Writing these bytes to the installed disk produces
+// a proper ELF that Limine can load on the next boot.
+
+pub static KERNEL_ELF_BASE: core::sync::atomic::AtomicU64 =
     core::sync::atomic::AtomicU64::new(0);
-pub static KERNEL_SIZE: core::sync::atomic::AtomicU64 =
+pub static KERNEL_ELF_SIZE: core::sync::atomic::AtomicU64 =
     core::sync::atomic::AtomicU64::new(0);
 
 // ─── Installer task ───────────────────────────────────────────────────────────
@@ -90,7 +91,6 @@ fn run_install() -> Result<(), &'static str> {
     fs::fat::mkdir("EFI")?;
     fs::fat::mkdir("EFI/BOOT")?;
     fs::fat::mkdir("boot")?;
-    fs::fat::mkdir("boot/limine")?;
 
     kprintln!("[install] Writing BOOTX64.EFI ({} KB)...", BOOTX64_EFI.len() / 1024);
     write_file_to_esp("EFI/BOOT/BOOTX64.EFI", BOOTX64_EFI)?;
@@ -99,7 +99,10 @@ fn run_install() -> Result<(), &'static str> {
     write_kernel()?;
 
     kprintln!("[install] Writing limine.conf...");
-    write_file_to_esp("boot/limine/limine.conf", LIMINE_CONF)?;
+    write_file_to_esp("EFI/BOOT/limine.conf", LIMINE_CONF)?;
+
+    kprintln!("[install] Writing startup.nsh...");
+    write_file_to_esp("startup.nsh", STARTUP_NSH)?;
 
     Ok(())
 }
@@ -153,14 +156,13 @@ fn write_file_to_esp(path: &str, data: &[u8]) -> Result<(), &'static str> {
 }
 
 fn write_kernel() -> Result<(), &'static str> {
-    let phys = KERNEL_PHYS_BASE.load(Ordering::Relaxed);
-    let size = KERNEL_SIZE.load(Ordering::Relaxed) as usize;
-    if phys == 0 || size == 0 {
-        return Err("installer: kernel phys/size not set");
+    let base = KERNEL_ELF_BASE.load(Ordering::Relaxed);
+    let size = KERNEL_ELF_SIZE.load(Ordering::Relaxed) as usize;
+    if base == 0 || size == 0 {
+        return Err("installer: kernel ELF not available (KernelFileRequest failed)");
     }
-    let kernel_bytes = unsafe {
-        core::slice::from_raw_parts(paging::phys_to_virt(phys) as *const u8, size)
-    };
-    kprintln!("[install] kernel phys={:#x} size={} KB", phys, size / 1024);
+    // Safety: Limine holds this memory live for the entire boot session.
+    let kernel_bytes = unsafe { core::slice::from_raw_parts(base as *const u8, size) };
+    kprintln!("[install] kernel ELF at virt={:#x} size={} KB", base, size / 1024);
     write_file_to_esp("boot/nexus-kernel", kernel_bytes)
 }

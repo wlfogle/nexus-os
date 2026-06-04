@@ -9,15 +9,21 @@
 #![no_main]
 #![feature(alloc_error_handler)]
 #![feature(abi_x86_interrupt)]      // x86_64 interrupt handlers
-#![feature(naked_functions)]        // AArch64 exception stubs
 
 extern crate alloc;
+
+// ─── Kernel end symbol (set by linker, used by installer) ────────────────────────
+
+extern "C" {
+    static __kernel_end: u8;
+}
 
 // ─── Sub-modules ─────────────────────────────────────────────────────────────
 
 pub mod arch;
 pub mod drivers;
 pub mod fs;
+pub mod installer;
 pub mod io;
 pub mod ipc;
 pub mod memory;
@@ -36,6 +42,7 @@ use limine::{
     HhdmRequest,
     MemmapRequest,
     KernelAddressRequest,
+    KernelFileRequest,
 };
 
 #[cfg(feature = "framebuffer")]
@@ -55,6 +62,12 @@ static MMAP_REQUEST: MemmapRequest = MemmapRequest::new(0);
 #[used]
 #[link_section = ".limine_requests"]
 static KADDR_REQUEST: KernelAddressRequest = KernelAddressRequest::new(0);
+
+/// Original kernel ELF file — used by the installer to write the correct
+/// binary to the installed disk (rather than a raw memory image).
+#[used]
+#[link_section = ".limine_requests"]
+static KFILE_REQUEST: KernelFileRequest = KernelFileRequest::new(0);
 
 /// Framebuffer — laptop only.
 #[cfg(feature = "framebuffer")]
@@ -102,6 +115,25 @@ pub extern "C" fn _start() -> ! {
     kprintln!("[boot] HHDM offset       : {:#018x}", hhdm_offset);
     kprintln!("[boot] Kernel phys base  : {:#018x}", kaddr.physical_base);
     kprintln!("[boot] Kernel virt base  : {:#018x}", kaddr.virtual_base);
+
+    // Store original kernel ELF pointer + size for the installer task.
+    // KernelFileRequest gives us the exact bytes Limine read from disk, so
+    // the installer writes a proper ELF rather than a raw memory image.
+    // KernelFileRequest: Ptr<T>::get() → Option<&T>, Ptr<u8>::as_ptr() → Option<*mut u8>
+    if let Some(kfile_resp) = KFILE_REQUEST.get_response().get() {
+        if let Some(kfile) = kfile_resp.kernel_file.get() {
+            if let Some(base_ptr) = kfile.base.as_ptr() {
+                installer::KERNEL_ELF_BASE.store(
+                    base_ptr as u64,
+                    core::sync::atomic::Ordering::Relaxed,
+                );
+                installer::KERNEL_ELF_SIZE.store(
+                    kfile.length,
+                    core::sync::atomic::Ordering::Relaxed,
+                );
+            }
+        }
+    }
 
     // ── 3. Architecture initialisation (GDT/IDT on x86_64, VBAR on AArch64)
     arch::init();
@@ -151,13 +183,22 @@ pub extern "C" fn _start() -> ! {
     const VIRTIO_VENDOR: u16 = 0x1AF4;
     match drivers::pci::find(&[(VIRTIO_VENDOR, 0x1001), (VIRTIO_VENDOR, 0x1042)]) {
         Some(dev) => {
-            dev.enable_io_and_busmaster();
-            match drivers::virtio::blk::init(dev.io_base()) {
-                Ok(sectors) => {
-                    let gib = sectors / (2 * 1024 * 1024);
-                    kprintln!("[disk] VirtIO-blk: {} GiB ({} sectors)", gib, sectors);
+            kprintln!("[disk] PCI {:02x}:{:02x}.{} vendor={:#06x} device={:#06x} BAR0={:#010x}",
+                      dev.bus, dev.dev, dev.func,
+                      dev.vendor_id, dev.device_id, dev.bar0);
+            if dev.bar0 & 1 == 0 {
+                kprintln!("[disk] BAR0 is MMIO (not I/O port) — legacy driver incompatible");
+                kprintln!("[disk] MMIO addr={:#010x} — needs MMIO VirtIO transport",
+                          dev.bar0 & !0xF);
+            } else {
+                dev.enable_io_and_busmaster();
+                match drivers::virtio::blk::init(dev.io_base()) {
+                    Ok(sectors) => {
+                        let gib = sectors / (2 * 1024 * 1024);
+                        kprintln!("[disk] VirtIO-blk: {} GiB ({} sectors)", gib, sectors);
+                    }
+                    Err(e) => kprintln!("[disk] VirtIO-blk init failed: {}", e),
                 }
-                Err(e) => kprintln!("[disk] VirtIO-blk init failed: {}", e),
             }
         }
         None => kprintln!("[disk] no VirtIO-blk device found"),
@@ -197,15 +238,21 @@ pub extern "C" fn _start() -> ! {
     let user_pid = userspace::spawn_user_init();
     kprintln!("[user] nexus-init spawned as pid={} (ring 3)", user_pid);
 
-    // ── Phase 5: AI Core kernel thread ───────────────────────────
-    // Runs as a ring-0 kernel thread for Phase 5.0.
-    // Phase 5.1 will load userspace/nexus-ai as a real ring-3 ELF binary.
+    // ── Phase 5: AI Core kernel thread ──────────────────
     scheduler::spawn(b"nexus-ai", task_nexus_ai)
         .expect("failed to spawn nexus-ai");
     kprintln!("[ai]   nexus-ai AI Core daemon spawned");
     scheduler::spawn(b"kbd-echo", task_keyboard_echo)
         .expect("failed to spawn kbd-echo");
     kprintln!("[kbd]  keyboard echo task spawned");
+
+    // ── NexusOS Installer ───────────────────────────────────────────────
+    // Runs only when disk is unformatted (first boot from ISO).
+    if !fs::fat::is_mounted() {
+        scheduler::spawn(b"installer", installer::task_installer)
+            .expect("failed to spawn installer");
+        kprintln!("[inst] NexusOS Installer spawned");
+    }
 
     // Enable hardware interrupts — timer fires immediately
     arch::enable_interrupts();
@@ -289,7 +336,7 @@ extern "C" fn task_keyboard_echo() -> ! {
 /// port-discovery path are fully exercised.  The Ollama HTTP client that sends
 /// real prompts ships in Phase 5.1 once the network stack is available.
 extern "C" fn task_nexus_ai() -> ! {
-    use ipc::{ipc_recv, ipc_send, Message, ANY, MSG_AI_REQUEST, MSG_AI_RESPONSE};
+    use ipc::{ipc_recv, ipc_send, Message, ANY, MSG_AI_RESPONSE};
     use ipc::ports::port_register;
 
     port_register(b"nexus.ai").expect("nexus-ai: failed to register port");
@@ -321,7 +368,7 @@ extern "C" fn task_nexus_ai() -> ! {
 /// Echo server — registers port "nexus.echo", receives any message, echoes back.
 /// This is the prototype for AI Core, filesystem, and network servers.
 extern "C" fn task_echo_server() -> ! {
-    use ipc::{ipc_recv, ipc_send, Message, ANY, MSG_PING, MSG_PONG};
+    use ipc::{ipc_recv, ipc_send, Message, ANY, MSG_PONG};
     use ipc::ports::port_register;
 
     port_register(b"nexus.echo").expect("echo-server: port register failed");
@@ -343,7 +390,7 @@ extern "C" fn task_echo_server() -> ! {
 
 /// Echo client — looks up the echo server by port, sends pings every 2 seconds.
 extern "C" fn task_echo_client() -> ! {
-    use ipc::{ipc_recv, ipc_send, Message, ANY, MSG_PING, MSG_PONG};
+    use ipc::{ipc_recv, ipc_send, Message, MSG_PING};
     use ipc::ports::port_find;
 
     // Wait a moment for the server to register its port
