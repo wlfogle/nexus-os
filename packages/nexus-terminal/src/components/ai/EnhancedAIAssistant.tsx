@@ -12,6 +12,7 @@ import './ai-scrollbars.css';
 
 interface EnhancedAIAssistantProps {
   className?: string;
+  onSwitchToTerminal?: () => void;
 }
 
 interface AICapability {
@@ -53,7 +54,7 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
   const activeTab = useSelector(selectActiveTab);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { handleInput } = useInputRouting();
+  useInputRouting(); // keep hook alive for side effects
   const [capabilities, setCapabilities] = useState<AICapability[]>([
     {
       id: 'rag',
@@ -308,8 +309,9 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
     }
   }; */
 
-  // Streaming response buffer — accumulates tokens for the in-progress message
-  const streamingMsgId = useRef<string | null>(null);
+  // Streaming response buffer — live tokens displayed locally, only final answer goes to Redux
+  const [streamingContent, setStreamingContent] = useState<string>('');
+  const [streamingTools, setStreamingTools] = useState<Array<{tool: string; args: string; result?: string}>>([]);
 
   const handleSendMessage = useCallback(async () => {
     if (!message.trim() || !activeTab || isLoading) return;
@@ -337,11 +339,7 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
         ({ payload }) => {
           if (payload.session_id !== sessionId) return;
           streamBuffer += payload.token;
-          // Dispatch a live update so the user sees tokens arrive
-          dispatch(addAIMessage({
-            tabId,
-            message: { id: sessionId, role: 'assistant', content: streamBuffer + '█', timestamp: new Date() }
-          }));
+          setStreamingContent(streamBuffer + '█');
           streamMsgAdded.done = true;
         }
       );
@@ -350,11 +348,9 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
         'agent-tool-call',
         ({ payload }) => {
           if (payload.session_id !== sessionId) return;
-          streamBuffer = ''; // reset buffer for next step
-          dispatch(addAIMessage({
-            tabId,
-            message: { role: 'system', content: `🔧 ${payload.tool}  ${payload.args}`, timestamp: new Date() }
-          }));
+          streamBuffer = '';
+          setStreamingContent('');
+          setStreamingTools(prev => [...prev, { tool: payload.tool, args: payload.args }]);
         }
       );
 
@@ -362,11 +358,10 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
         'agent-tool-result',
         ({ payload }) => {
           if (payload.session_id !== sessionId) return;
-          const preview = payload.result.slice(0, 400) + (payload.result.length > 400 ? '\n[...]' : '');
-          dispatch(addAIMessage({
-            tabId,
-            message: { role: 'system', content: `\`\`\`\n${preview}\n\`\`\``, timestamp: new Date() }
-          }));
+          const preview = payload.result.slice(0, 300) + (payload.result.length > 300 ? ' [...]' : '');
+          setStreamingTools(prev => prev.map(t =>
+            t.tool === payload.tool && !t.result ? { ...t, result: preview } : t
+          ));
         }
       );
 
@@ -374,11 +369,13 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
         'agent-done',
         ({ payload }) => {
           if (payload.session_id !== sessionId) return;
-          // Replace streaming placeholder with final answer
+          // Commit final answer to Redux, clear streaming state
           dispatch(addAIMessage({
             tabId,
-            message: { id: sessionId, role: 'assistant', content: payload.answer, timestamp: new Date() }
+            message: { role: 'assistant', content: payload.answer, timestamp: new Date() }
           }));
+          setStreamingContent('');
+          setStreamingTools([]);
           setIsLoading(false);
           unlistenToken();
           unlistenToolCall();
@@ -750,10 +747,38 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
                 </div>
               ))}
               
-              {isLoading && (
+              {/* Live streaming tokens */}
+              {streamingContent && (
                 <div className="flex justify-start">
-                  <div className="p-3 rounded-lg bg-gray-600 text-white">
-                    🤖 AI is thinking...
+                  <div className="max-w-[80%] p-3 rounded-lg bg-gray-600 text-white">
+                    <div className="text-xs opacity-70 mb-1">🤖 NexusAI</div>
+                    <div className="whitespace-pre-wrap font-mono text-sm">{streamingContent}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Live tool calls */}
+              {streamingTools.map((t, i) => (
+                <div key={i} className="flex justify-start">
+                  <div className="max-w-[90%] p-2 rounded-lg bg-gray-700 border border-gray-500 text-xs font-mono">
+                    <div className="flex items-center gap-2 text-yellow-400">
+                      <span>🔧</span>
+                      <span className="font-bold">{t.tool}</span>
+                      <span className="text-gray-400 truncate">{t.args.slice(0, 80)}</span>
+                    </div>
+                    {t.result && (
+                      <div className="mt-1 text-green-400 pl-5">
+                        <span className="text-gray-500">✓ </span>{t.result.slice(0, 120)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {isLoading && !streamingContent && streamingTools.length === 0 && (
+                <div className="flex justify-start">
+                  <div className="p-3 rounded-lg bg-gray-700 text-gray-400 text-sm">
+                    <span className="animate-pulse">⬤</span> NexusAI is working...
                   </div>
                 </div>
               )}
