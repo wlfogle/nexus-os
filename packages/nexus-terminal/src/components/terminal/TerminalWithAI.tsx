@@ -7,7 +7,7 @@ import { SearchAddon } from '@xterm/addon-search';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { TerminalTab } from '../../types/terminal';
-import { addError } from '../../store/slices/terminalTabSlice';
+import { addError, addTerminalBlock } from '../../store/slices/terminalTabSlice';
 import EnhancedAIAssistant from '../ai/EnhancedAIAssistant';
 import { useInputRouting } from '../../hooks/useInputRouting';
 import { terminalLogger } from '../../utils/logger';
@@ -122,13 +122,90 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
 
     setIsTerminalReady(true);
 
-    // Listen for terminal output from the backend PTY and write to xterm
+    // Listen for terminal output — write to xterm AND parse OSC 133 sequences
+    // to record completed commands as TerminalBlocks (same as Warp's BlockContext).
+    // OSC 133 sequences injected by terminal.rs:
+    //   \x1b]133;A\x07  = prompt start
+    //   \x1b]133;B\x07  = command start (user about to type)
+    //   \x1b]133;C\x07  = output start (command running)
+    //   \x1b]133;D;N\x07 = command end, N = exit code
     let unlistenTerminalOutput: (() => void) | null = null;
     const capturedTerminalId = tab.terminalId;
+    const capturedTabId = tab.id;
+    const capturedCwd = tab.workingDirectory;
+
+    // OSC 133 parser state
+    let osc133State: 'prompt' | 'input' | 'output' = 'prompt';
+    let currentCommand = '';
+    let outputBuffer = '';
+
+    const OSC_RE = /\x1b\]133;([^\x07]*)\x07/g;
+
     listen<{ terminal_id: string; data: string }>('terminal-output', (event) => {
       const { terminal_id, data } = event.payload;
-      if (terminal_id === capturedTerminalId && terminal.current) {
-        terminal.current.write(data);
+      if (terminal_id !== capturedTerminalId || !terminal.current) return;
+
+      // Write raw data to xterm (including OSC sequences — xterm ignores unknown ones)
+      terminal.current.write(data);
+
+      // Parse OSC 133 sequences from the raw data stream
+      let lastIndex = 0;
+      OSC_RE.lastIndex = 0;
+      let match;
+      while ((match = OSC_RE.exec(data)) !== null) {
+        const seq = match[1]; // e.g. 'A', 'B', 'C', 'D;0'
+        const textBefore = data.slice(lastIndex, match.index);
+        lastIndex = match.index + match[0].length;
+
+        if (osc133State === 'input') {
+          // Accumulate raw keystrokes between B and C
+          // Strip ANSI escapes for clean command text
+          currentCommand += textBefore.replace(/\x1b\[[^A-Za-z]*[A-Za-z]/g, '');
+        } else if (osc133State === 'output') {
+          outputBuffer += textBefore.replace(/\x1b\[[^A-Za-z]*[A-Za-z]/g, '');
+        }
+
+        if (seq === 'A') {
+          osc133State = 'prompt';
+        } else if (seq === 'B') {
+          osc133State = 'input';
+          currentCommand = '';
+        } else if (seq === 'C') {
+          osc133State = 'output';
+          outputBuffer = '';
+          // Clean up command (remove trailing newline/CR)
+          currentCommand = currentCommand.trim();
+        } else if (seq.startsWith('D')) {
+          // Command finished — record block
+          const exitCode = parseInt(seq.split(';')[1] ?? '0', 10);
+          const cmd = currentCommand.trim();
+          const out = outputBuffer.trim();
+
+          if (cmd) {
+            dispatch(addTerminalBlock({
+              tabId: capturedTabId,
+              block: {
+                command: cmd,
+                output: out,
+                exitCode,
+                cwd: capturedCwd,
+                timestamp: new Date().toISOString(),
+              }
+            }));
+          }
+
+          osc133State = 'prompt';
+          currentCommand = '';
+          outputBuffer = '';
+        }
+      }
+
+      // Accumulate text after last OSC sequence
+      const tail = data.slice(lastIndex);
+      if (osc133State === 'input') {
+        currentCommand += tail.replace(/\x1b\[[^A-Za-z]*[A-Za-z]/g, '');
+      } else if (osc133State === 'output') {
+        outputBuffer += tail.replace(/\x1b\[[^A-Za-z]*[A-Za-z]/g, '');
       }
     })
       .then((unlisten) => { unlistenTerminalOutput = unlisten; })
