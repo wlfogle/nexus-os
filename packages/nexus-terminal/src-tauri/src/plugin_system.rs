@@ -885,18 +885,18 @@ pub enum PluginSource {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempdir::TempDir;
+    use tempfile::TempDir;
 
     #[tokio::test]
     async fn test_plugin_system_creation() {
-        let temp_dir = TempDir::new("plugins").unwrap();
+        let temp_dir = TempDir::new().unwrap();
         let system = PluginSystem::new(temp_dir.path().to_path_buf());
         assert!(system.plugins.is_empty());
     }
 
     #[tokio::test]
     async fn test_plugin_system_initialization() {
-        let temp_dir = TempDir::new("plugins").unwrap();
+        let temp_dir = TempDir::new().unwrap();
         let mut system = PluginSystem::new(temp_dir.path().to_path_buf());
         assert!(system.initialize().await.is_ok());
         assert!(temp_dir.path().exists());
@@ -904,7 +904,7 @@ mod tests {
 
     #[test]
     fn test_plugin_search() {
-        let temp_dir = TempDir::new("plugins").unwrap();
+        let temp_dir = TempDir::new().unwrap();
         let mut system = PluginSystem::new(temp_dir.path().to_path_buf());
         
         let plugin = Plugin {

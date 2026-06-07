@@ -145,6 +145,9 @@ tower-lsp = "0.20"
 rayon = "1.8"
 num_cpus = "1.16"
 
+[dev-dependencies]
+tempfile = "3.0"
+
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]

@@ -63,7 +63,7 @@ pub struct Participant {
     pub cursor_position: Option<CursorPosition>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ParticipantRole {
     Owner,
     Admin,

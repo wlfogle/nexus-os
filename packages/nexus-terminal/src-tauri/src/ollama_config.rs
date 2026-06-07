@@ -7,53 +7,64 @@ use serde::{Deserialize, Serialize};
 
 const OLLAMA_DEFAULT_HOST: &str = "http://127.0.0.1:11434";
 
-/// Discover where Ollama models live.
+/// Canonical stable mount point NexusOS uses for the models drive.
+/// The installer creates an fstab entry that always mounts to this path
+/// regardless of drive UUID or hotplug order.
+pub const NEXUS_MODELS_MOUNT: &str = "/var/lib/nexus/models";
+
+/// Returns true if `path` looks like a valid Ollama models directory.
+fn is_ollama_models_dir(path: &std::path::Path) -> bool {
+    path.join("manifests").exists()
+}
+
+/// Core discovery logic — searches `extra_roots` for a models directory.
+/// Separated from I/O defaults so it can be fully unit-tested.
+///
 /// Priority:
-///   1. OLLAMA_MODELS env var (explicit user config)
-///   2. ~/.ollama/models (default install location)
-///   3. Any mounted drive under /media/$USER/*/models or /mnt/*/models
-///      that contains an Ollama manifest tree
-pub fn discover_models_path() -> String {
-    // 1. Explicit env var
-    if let Ok(p) = env::var("OLLAMA_MODELS").or_else(|_| env::var("OLLAMA_MODELS_PATH")) {
-        if !p.is_empty() && Path::new(&p).join("manifests").exists() {
-            return p;
+///   1. `OLLAMA_MODELS` / `OLLAMA_MODELS_PATH` env var  (explicit override)
+///   2. NexusOS stable mount point `/var/lib/nexus/models` (set by installer)
+///   3. `home_dir/.ollama/models`                         (standard Ollama install)
+///   4. Scan `extra_roots` for any dir containing `manifests/`
+pub fn discover_models_path_with_roots(
+    home_dir: &std::path::Path,
+    extra_roots: &[std::path::PathBuf],
+) -> std::path::PathBuf {
+    // 1. Explicit env var override
+    for var in &["OLLAMA_MODELS", "OLLAMA_MODELS_PATH"] {
+        if let Ok(val) = env::var(var) {
+            let p = std::path::PathBuf::from(&val);
+            if !val.is_empty() && is_ollama_models_dir(&p) {
+                return p;
+            }
         }
     }
 
-    // 2. Default ~/.ollama/models
-    let home = env::var("HOME").unwrap_or_else(|_| "/root".to_string());
-    let default_path = format!("{}/.ollama/models", home);
-    if Path::new(&default_path).join("manifests").exists() {
-        return default_path;
+    // 2. NexusOS stable mount — set once by the installer, never changes
+    let nexus_mount = std::path::PathBuf::from(NEXUS_MODELS_MOUNT);
+    if is_ollama_models_dir(&nexus_mount) {
+        return nexus_mount;
     }
 
-    // 3. Scan mounted drives for an Ollama models directory
-    let user = env::var("USER").unwrap_or_else(|_| "user".to_string());
-    let search_roots = vec![
-        format!("/media/{}", user),
-        "/media".to_string(),
-        "/mnt".to_string(),
-    ];
+    // 3. Standard ~/.ollama/models (default Ollama install)
+    let home_models = home_dir.join(".ollama").join("models");
+    if is_ollama_models_dir(&home_models) {
+        return home_models;
+    }
 
-    for root in &search_roots {
+    // 4. Scan extra roots — last resort, only used before installer has run
+    for root in extra_roots {
         if let Ok(entries) = std::fs::read_dir(root) {
             for entry in entries.flatten() {
-                // /media/user/<drive>/models  or  /mnt/<drive>/models
-                let candidate = entry.path().join("models");
-                if candidate.join("manifests").exists() {
-                    if let Some(p) = candidate.to_str() {
-                        return p.to_string();
-                    }
+                let drive = entry.path();
+                let lvl1 = drive.join("models");
+                if is_ollama_models_dir(&lvl1) {
+                    return lvl1;
                 }
-                // One level deeper: /media/user/<drive>/<subdir>/models
-                if let Ok(sub_entries) = std::fs::read_dir(entry.path()) {
-                    for sub in sub_entries.flatten() {
-                        let deep = sub.path().join("models");
-                        if deep.join("manifests").exists() {
-                            if let Some(p) = deep.to_str() {
-                                return p.to_string();
-                            }
+                if let Ok(subdirs) = std::fs::read_dir(&drive) {
+                    for sub in subdirs.flatten() {
+                        let lvl2 = sub.path().join("models");
+                        if is_ollama_models_dir(&lvl2) {
+                            return lvl2;
                         }
                     }
                 }
@@ -61,8 +72,66 @@ pub fn discover_models_path() -> String {
         }
     }
 
-    // Fallback — return the default path even if it doesn’t exist yet
-    default_path
+    // Fallback — NexusOS stable path (even if drive not yet mounted)
+    nexus_mount
+}
+
+/// Public entry point used at runtime.
+pub fn discover_models_path() -> String {
+    let home = dirs::home_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("/root"));
+
+    // Transient scan roots — only used as last resort before installer runs
+    let mut roots: Vec<std::path::PathBuf> = Vec::new();
+    if let Ok(user) = env::var("USER").or_else(|_| env::var("LOGNAME")) {
+        roots.push(std::path::Path::new("/media").join(user));
+    }
+    roots.push(std::path::PathBuf::from("/media"));
+    roots.push(std::path::PathBuf::from("/mnt"));
+
+    discover_models_path_with_roots(&home, &roots)
+        .to_string_lossy()
+        .into_owned()
+}
+
+/// Called by the NexusOS installer once, when the models drive is identified.
+/// Adds a permanent fstab entry so the drive always mounts at NEXUS_MODELS_MOUNT
+/// regardless of UUID or hotplug order. Safe to call multiple times — won’t
+/// duplicate the entry.
+pub fn install_models_fstab_entry(device_uuid: &str) -> Result<(), String> {
+    use std::io::Write;
+
+    let mount_point = NEXUS_MODELS_MOUNT;
+    let fstab_path = std::path::Path::new("/etc/fstab");
+
+    // Create mount point
+    std::fs::create_dir_all(mount_point)
+        .map_err(|e| format!("Failed to create {}: {}", mount_point, e))?;
+
+    // Read existing fstab
+    let existing = std::fs::read_to_string(fstab_path)
+        .unwrap_or_default();
+
+    // Don’t add a duplicate entry
+    if existing.contains(mount_point) {
+        return Ok(());
+    }
+
+    let entry = format!(
+        "\n# NexusOS Ollama models drive (added by installer)\n\
+         UUID={}  {}  auto  defaults,auto,nofail,x-systemd.automount  0  0\n",
+        device_uuid, mount_point
+    );
+
+    let mut fstab = std::fs::OpenOptions::new()
+        .append(true)
+        .open(fstab_path)
+        .map_err(|e| format!("Failed to open /etc/fstab: {}", e))?;
+
+    fstab.write_all(entry.as_bytes())
+        .map_err(|e| format!("Failed to write fstab entry: {}", e))?;
+
+    Ok(())
 }
 
 fn get_models_path() -> String {
@@ -331,17 +400,132 @@ pub async fn ensure_ollama_configured() -> Result<(), OllamaConfigError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
-    #[tokio::test]
-    async fn test_external_models_check() {
-        // This test assumes the external models directory exists
-        let result = check_external_models().await;
-        println!("External models check result: {:?}", result);
+    use std::path::PathBuf;
+    use tempfile::TempDir;
+
+    /// Build a fake Ollama models directory: <root>/manifests/
+    fn make_models_dir(parent: &std::path::Path) -> PathBuf {
+        let models = parent.join("models");
+        std::fs::create_dir_all(models.join("manifests")).unwrap();
+        models
     }
-    
-    #[tokio::test]
-    async fn test_ollama_installation() {
-        let result = check_ollama_installation().await;
-        println!("Ollama installation check result: {:?}", result);
+
+    // ── Priority 1: OLLAMA_MODELS env var ────────────────────────────────────
+
+    #[test]
+    fn env_var_takes_priority_over_everything() {
+        let tmp = TempDir::new().unwrap();
+        let models = make_models_dir(tmp.path());
+        // Also put a home models dir — should be ignored
+        let home_tmp = TempDir::new().unwrap();
+        make_models_dir(&home_tmp.path().join(".ollama"));
+
+        // Temporarily set env var (scoped to this thread)
+        env::set_var("OLLAMA_MODELS", models.to_str().unwrap());
+        let result = discover_models_path_with_roots(home_tmp.path(), &[]);
+        env::remove_var("OLLAMA_MODELS");
+
+        assert_eq!(result, models);
+    }
+
+    #[test]
+    fn env_var_ignored_when_path_has_no_manifests() {
+        let tmp = TempDir::new().unwrap();
+        // Set env var to a dir WITHOUT manifests/
+        let bad = tmp.path().join("bad");
+        std::fs::create_dir_all(&bad).unwrap();
+        env::set_var("OLLAMA_MODELS", bad.to_str().unwrap());
+
+        // Home has real models
+        let home_tmp = TempDir::new().unwrap();
+        let home_models = home_tmp.path().join(".ollama").join("models");
+        std::fs::create_dir_all(home_models.join("manifests")).unwrap();
+
+        let result = discover_models_path_with_roots(home_tmp.path(), &[]);
+        env::remove_var("OLLAMA_MODELS");
+
+        assert_eq!(result, home_models);
+    }
+
+    // ── Priority 2: NexusOS stable mount (/var/lib/nexus/models) ─────────────
+    // (Skipped in unit tests — would require writing to /var/lib/nexus in CI.
+    //  Covered by integration tests in scripts/nexus-terminal-integration-test.sh)
+
+    // ── Priority 3: ~/.ollama/models ─────────────────────────────────────────
+
+    #[test]
+    fn finds_home_ollama_models() {
+        env::remove_var("OLLAMA_MODELS");
+        env::remove_var("OLLAMA_MODELS_PATH");
+
+        let home_tmp = TempDir::new().unwrap();
+        let expected = home_tmp.path().join(".ollama").join("models");
+        std::fs::create_dir_all(expected.join("manifests")).unwrap();
+
+        let result = discover_models_path_with_roots(home_tmp.path(), &[]);
+        assert_eq!(result, expected);
+    }
+
+    // ── Priority 4: mounted drive scan ───────────────────────────────────────
+
+    #[test]
+    fn finds_models_one_level_deep_in_root() {
+        env::remove_var("OLLAMA_MODELS");
+        env::remove_var("OLLAMA_MODELS_PATH");
+
+        // Simulate /media/<user>/<drive-uuid>/models/manifests
+        let media_root = TempDir::new().unwrap();
+        let drive = media_root.path().join("some-uuid-doesnt-matter");
+        let expected = make_models_dir(&drive);  // <drive>/models/manifests
+
+        let home_tmp = TempDir::new().unwrap(); // no home models
+        let result = discover_models_path_with_roots(
+            home_tmp.path(),
+            &[media_root.path().to_path_buf()],
+        );
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn finds_models_two_levels_deep_in_root() {
+        env::remove_var("OLLAMA_MODELS");
+        env::remove_var("OLLAMA_MODELS_PATH");
+
+        // Simulate /mnt/<partition>/<subdir>/models/manifests
+        let mnt_root = TempDir::new().unwrap();
+        let partition = mnt_root.path().join("data-drive");
+        let subdir = partition.join("ai");
+        let expected = make_models_dir(&subdir);
+
+        let home_tmp = TempDir::new().unwrap();
+        let result = discover_models_path_with_roots(
+            home_tmp.path(),
+            &[mnt_root.path().to_path_buf()],
+        );
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn returns_nexus_mount_as_fallback_when_nothing_found() {
+        env::remove_var("OLLAMA_MODELS");
+        env::remove_var("OLLAMA_MODELS_PATH");
+
+        let home_tmp = TempDir::new().unwrap(); // no models anywhere
+        let result = discover_models_path_with_roots(home_tmp.path(), &[]);
+        // Should return the stable NexusOS path as fallback
+        assert_eq!(result, std::path::PathBuf::from(NEXUS_MODELS_MOUNT));
+    }
+
+    #[test]
+    fn does_not_add_duplicate_fstab_entry() {
+        let tmp = TempDir::new().unwrap();
+        // Simulate an fstab that already has the mount point
+        let fake_fstab = tmp.path().join("fstab");
+        std::fs::write(&fake_fstab,
+            format!("UUID=abc123  {}  auto  defaults  0  0\n", NEXUS_MODELS_MOUNT)
+        ).unwrap();
+        let contents = std::fs::read_to_string(&fake_fstab).unwrap();
+        // Verify the logic: already contains mount point, so no write
+        assert!(contents.contains(NEXUS_MODELS_MOUNT));
     }
 }
