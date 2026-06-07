@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { listen } from '@tauri-apps/api/event';
 import { useSelector, useDispatch } from 'react-redux';
 import { Eye, Search, Brain, Camera, BookOpen, Zap, AlertTriangle, CheckCircle, ChevronDown } from 'lucide-react';
 import { selectActiveTab, addAIMessage } from '../../store/slices/terminalTabSlice';
@@ -307,70 +308,122 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
     }
   }; */
 
-  const handleSendMessage = async () => {
-    if (!message.trim() || !activeTab) return;
+  // Streaming response buffer — accumulates tokens for the in-progress message
+  const streamingMsgId = useRef<string | null>(null);
+
+  const handleSendMessage = useCallback(async () => {
+    if (!message.trim() || !activeTab || isLoading) return;
     const userMessage = message.trim();
     setMessage('');
     setIsLoading(true);
 
-    // Add user message to conversation
+    // Add user message
     dispatch(addAIMessage({
       tabId: activeTab.id,
       message: { role: 'user', content: userMessage, timestamp: new Date() }
     }));
 
+    const sessionId = `session_${Date.now()}`;
+    const tabId = activeTab.id;
+    let streamBuffer = '';
+    const streamMsgAdded = { done: false };
+
     try {
       const { invoke } = await import('@tauri-apps/api/core');
 
-      // Build history from existing conversation (exclude last user msg we just added)
+      // Subscribe to streaming events before firing
+      const unlistenToken = await listen<{ session_id: string; token: string }>(
+        'agent-token',
+        ({ payload }) => {
+          if (payload.session_id !== sessionId) return;
+          streamBuffer += payload.token;
+          // Dispatch a live update so the user sees tokens arrive
+          dispatch(addAIMessage({
+            tabId,
+            message: { id: sessionId, role: 'assistant', content: streamBuffer + '█', timestamp: new Date() }
+          }));
+          streamMsgAdded.done = true;
+        }
+      );
+
+      const unlistenToolCall = await listen<{ session_id: string; tool: string; args: string }>(
+        'agent-tool-call',
+        ({ payload }) => {
+          if (payload.session_id !== sessionId) return;
+          streamBuffer = ''; // reset buffer for next step
+          dispatch(addAIMessage({
+            tabId,
+            message: { role: 'system', content: `🔧 ${payload.tool}  ${payload.args}`, timestamp: new Date() }
+          }));
+        }
+      );
+
+      const unlistenToolResult = await listen<{ session_id: string; tool: string; result: string }>(
+        'agent-tool-result',
+        ({ payload }) => {
+          if (payload.session_id !== sessionId) return;
+          const preview = payload.result.slice(0, 400) + (payload.result.length > 400 ? '\n[...]' : '');
+          dispatch(addAIMessage({
+            tabId,
+            message: { role: 'system', content: `\`\`\`\n${preview}\n\`\`\``, timestamp: new Date() }
+          }));
+        }
+      );
+
+      const unlistenDone = await listen<{ session_id: string; answer: string }>(
+        'agent-done',
+        ({ payload }) => {
+          if (payload.session_id !== sessionId) return;
+          // Replace streaming placeholder with final answer
+          dispatch(addAIMessage({
+            tabId,
+            message: { id: sessionId, role: 'assistant', content: payload.answer, timestamp: new Date() }
+          }));
+          setIsLoading(false);
+          unlistenToken();
+          unlistenToolCall();
+          unlistenToolResult();
+          unlistenDone();
+          unlistenError();
+        }
+      );
+
+      const unlistenError = await listen<{ session_id: string; error: string }>(
+        'agent-error',
+        ({ payload }) => {
+          if (payload.session_id !== sessionId) return;
+          dispatch(addAIMessage({
+            tabId,
+            message: { role: 'assistant', content: `❌ ${payload.error}`, timestamp: new Date() }
+          }));
+          setIsLoading(false);
+          unlistenToken(); unlistenToolCall(); unlistenToolResult(); unlistenDone(); unlistenError();
+        }
+      );
+
       const history = activeTab.aiConversation
         .filter((m: any) => m.role === 'user' || m.role === 'assistant')
-        .slice(-20)  // keep last 20 turns
+        .slice(-20)
         .map((m: any) => ({ role: m.role, content: m.content }));
 
-      const result = await invoke<{
-        answer: string;
-        steps: Array<{ kind: string; content: string }>;
-      }>('agent_chat', {
+      // Fire streaming agent — returns immediately
+      await invoke('agent_chat_stream', {
         message: userMessage,
+        sessionId,
         history,
         cwd: activeTab.workingDirectory || null,
         context: `Shell: ${activeTab.shell}\nDirectory: ${activeTab.workingDirectory}`,
       });
 
-      // Show tool steps inline before the answer
-      const toolSteps = result.steps.filter((s: any) => s.kind === 'tool_call' || s.kind === 'tool_result');
-      if (toolSteps.length > 0) {
-        const stepsText = toolSteps.map((s: any) =>
-          s.kind === 'tool_call'
-            ? `🔧 ${s.content}`
-            : `\`\`\`\n${s.content.slice(0, 500)}${s.content.length > 500 ? '\n[...]' : ''}\n\`\`\``
-        ).join('\n');
-        dispatch(addAIMessage({
-          tabId: activeTab.id,
-          message: { role: 'system', content: stepsText, timestamp: new Date() }
-        }));
-      }
-
-      // Final answer
-      dispatch(addAIMessage({
-        tabId: activeTab.id,
-        message: { role: 'assistant', content: result.answer, timestamp: new Date() }
-      }));
     } catch (error) {
       aiLogger.error('Agent chat failed', error as Error, 'agent_chat_failed');
       dispatch(addAIMessage({
         tabId: activeTab.id,
-        message: {
-          role: 'assistant',
-          content: `Error: ${error instanceof Error ? error.message : String(error)}`,
-          timestamp: new Date()
-        }
+        message: { role: 'assistant', content: `❌ ${error instanceof Error ? error.message : String(error)}`, timestamp: new Date() }
       }));
-    } finally {
       setIsLoading(false);
     }
-  };
+  }, [message, activeTab, isLoading, dispatch]);
 
   const getCapabilityIcon = (capability: AICapability) => {
     const Icon = capability.icon;

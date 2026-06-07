@@ -2464,7 +2464,7 @@ async fn ollama_ensure_configured() -> Result<(), String> {
 
 
 
-// ── Agent chat ────────────────────────────────────────────────────────────────
+// ── Agent chat (blocking) ──────────────────────────────────────────────────────
 #[tauri::command]
 async fn agent_chat(
     message: String,
@@ -2494,6 +2494,47 @@ async fn agent_chat(
     )
     .await
     .map_err(|e| e.to_string())
+}
+
+// ── Agent chat (streaming via Tauri events) ────────────────────────────
+/// Fire-and-forget: returns immediately, streams events to frontend.
+/// Events: agent-token, agent-tool-call, agent-tool-result, agent-done, agent-error
+#[tauri::command]
+async fn agent_chat_stream(
+    message: String,
+    session_id: String,
+    history: Vec<agent::ChatMessage>,
+    cwd: Option<String>,
+    context: Option<String>,
+    state: State<'_, AppState>,
+    app: tauri::AppHandle,
+) -> Result<(), String> {
+    let config = state.config.read().await;
+    let ollama_url = config.ai.ollama_url.clone();
+    let model = config.ai.default_model.clone();
+    drop(config);
+
+    let working_dir = cwd.unwrap_or_else(|| {
+        std::env::current_dir()
+            .map(|p| p.to_string_lossy().to_string())
+            .unwrap_or_else(|_| "/".to_string())
+    });
+
+    // Spawn so this returns immediately and streams events
+    tokio::spawn(async move {
+        agent::run_agent_streaming(
+            app,
+            session_id,
+            &ollama_url,
+            &model,
+            &message,
+            history,
+            &working_dir,
+            context.as_deref(),
+        ).await;
+    });
+
+    Ok(())
 }
 
 // ── Alias persistence ────────────────────────────────────────────────────────
@@ -3179,6 +3220,7 @@ async fn main() {
             ollama_ensure_configured,
             // Agent
             agent_chat,
+            agent_chat_stream,
             // Alias persistence
             load_aliases,
             save_aliases,

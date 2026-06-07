@@ -1,9 +1,11 @@
 /// NexusTerminal Agent — autonomous AI with tool use.
 /// Works like Oz: reads files, runs commands, writes code, loops until done.
 use anyhow::Result;
+use futures::StreamExt;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
+use tauri::Emitter;
 use tracing::{debug, info, warn};
 
 const MAX_STEPS: usize = 20;
@@ -335,4 +337,203 @@ pub async fn run_agent(
         answer: "Agent reached maximum steps. The last tool result is shown in the steps above.".to_string(),
         steps,
     })
+}
+
+// ── Streaming agent ────────────────────────────────────────────────────────────────
+// Streams tokens to the frontend as they arrive, then executes tools.
+// Emits Tauri events:
+//   agent-token      { session_id, token: String }          – text chunk
+//   agent-tool-call  { session_id, tool, args }             – before tool runs
+//   agent-tool-result{ session_id, tool, result: String }   – after tool runs
+//   agent-done       { session_id, answer: String }         – final answer
+//   agent-error      { session_id, error: String }          – on failure
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AgentTokenEvent {
+    pub session_id: String,
+    pub token: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AgentToolEvent {
+    pub session_id: String,
+    pub tool: String,
+    pub args: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AgentToolResultEvent {
+    pub session_id: String,
+    pub tool: String,
+    pub result: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AgentDoneEvent {
+    pub session_id: String,
+    pub answer: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AgentErrorEvent {
+    pub session_id: String,
+    pub error: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct StreamChunk {
+    message: Option<StreamMessage>,
+    done: Option<bool>,
+}
+
+#[derive(Debug, Deserialize)]
+struct StreamMessage {
+    content: String,
+}
+
+pub async fn run_agent_streaming<R: tauri::Runtime>(
+    app: tauri::AppHandle<R>,
+    session_id: String,
+    ollama_url: &str,
+    model: &str,
+    user_message: &str,
+    history: Vec<ChatMessage>,
+    cwd: &str,
+    context: Option<&str>,
+) {
+    let result = run_agent_streaming_inner(
+        &app, &session_id, ollama_url, model, user_message, history, cwd, context
+    ).await;
+
+    if let Err(e) = result {
+        let _ = app.emit("agent-error", AgentErrorEvent {
+            session_id,
+            error: e.to_string(),
+        });
+    }
+}
+
+async fn run_agent_streaming_inner<R: tauri::Runtime>(
+    app: &tauri::AppHandle<R>,
+    session_id: &str,
+    ollama_url: &str,
+    model: &str,
+    user_message: &str,
+    history: Vec<ChatMessage>,
+    cwd: &str,
+    context: Option<&str>,
+) -> Result<()> {
+    let client = Client::builder()
+        .timeout(Duration::from_secs(300))
+        .build()?;
+
+    let mut messages: Vec<ChatMessage> = Vec::new();
+
+    let sys = if let Some(ctx) = context {
+        format!("{}\n\nCurrent working directory: {}\nContext: {}", SYSTEM_PROMPT, cwd, ctx)
+    } else {
+        format!("{}\n\nCurrent working directory: {}", SYSTEM_PROMPT, cwd)
+    };
+    messages.push(ChatMessage { role: "system".to_string(), content: sys });
+    for msg in history { messages.push(msg); }
+    messages.push(ChatMessage { role: "user".to_string(), content: user_message.to_string() });
+
+    for step in 0..MAX_STEPS {
+        debug!("Streaming agent step {}", step);
+
+        // Build request body with stream: true
+        let body = serde_json::json!({
+            "model": model,
+            "messages": messages,
+            "stream": true,
+            "options": { "temperature": 0.2, "num_predict": 4096 }
+        });
+
+        let url = format!("{}/api/chat", ollama_url);
+        let resp = client.post(&url).json(&body).send().await
+            .map_err(|e| anyhow::anyhow!("Ollama request failed: {}", e))?;
+
+        if !resp.status().is_success() {
+            let status = resp.status();
+            let body_txt = resp.text().await.unwrap_or_default();
+            return Err(anyhow::anyhow!("Ollama error {}: {}", status, body_txt));
+        }
+
+        // Stream token chunks
+        let mut stream = resp.bytes_stream();
+        let mut full_response = String::new();
+
+        while let Some(chunk_result) = stream.next().await {
+            let chunk = chunk_result
+                .map_err(|e| anyhow::anyhow!("Stream read error: {}", e))?;
+            let text = String::from_utf8_lossy(&chunk);
+
+            // Each chunk may contain one or more newline-separated JSON objects
+            for line in text.lines() {
+                let line = line.trim();
+                if line.is_empty() { continue; }
+
+                if let Ok(parsed) = serde_json::from_str::<StreamChunk>(line) {
+                    if let Some(msg) = parsed.message {
+                        let token = msg.content;
+                        if !token.is_empty() {
+                            full_response.push_str(&token);
+                            let _ = app.emit("agent-token", AgentTokenEvent {
+                                session_id: session_id.to_string(),
+                                token,
+                            });
+                        }
+                    }
+                    if parsed.done.unwrap_or(false) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        info!("Streaming step {}: {} chars", step, full_response.len());
+
+        messages.push(ChatMessage {
+            role: "assistant".to_string(),
+            content: full_response.clone(),
+        });
+
+        // Check for tool call in the completed response
+        if let Some(tool_call) = parse_tool_call(&full_response) {
+            info!("Streaming tool call: {}", tool_call.tool);
+
+            let _ = app.emit("agent-tool-call", AgentToolEvent {
+                session_id: session_id.to_string(),
+                tool: tool_call.tool.clone(),
+                args: serde_json::to_string(&tool_call.args).unwrap_or_default(),
+            });
+
+            let result = exec_tool(&tool_call, cwd).await;
+
+            let _ = app.emit("agent-tool-result", AgentToolResultEvent {
+                session_id: session_id.to_string(),
+                tool: tool_call.tool.clone(),
+                result: result.clone(),
+            });
+
+            messages.push(ChatMessage {
+                role: "user".to_string(),
+                content: format!("Tool result:\n{}", result),
+            });
+
+        } else {
+            // No tool call — done
+            let _ = app.emit("agent-done", AgentDoneEvent {
+                session_id: session_id.to_string(),
+                answer: full_response,
+            });
+            return Ok(());
+        }
+    }
+
+    let _ = app.emit("agent-done", AgentDoneEvent {
+        session_id: session_id.to_string(),
+        answer: "Agent reached maximum steps.".to_string(),
+    });
+    Ok(())
 }
