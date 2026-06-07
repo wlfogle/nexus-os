@@ -2522,8 +2522,16 @@ async fn agent_chat_stream(
             .unwrap_or_else(|_| "/".to_string())
     });
 
+    // Pre-flight: if the message is a scan/fix/check request, run build checks NOW
+    // and inject the actual errors into the message. This converts a vague request
+    // into a concrete one with real error text the model can act on immediately.
+    let message = if is_scan_fix_request(&message) {
+        augment_with_build_errors(&message, &working_dir).await
+    } else {
+        message
+    };
+
     // Auto-gather build/git context — same as Warp auto-attaching the last block.
-    // This makes vague requests like "fix it", "fix the error", "what's broken" work.
     let auto_context = gather_project_context(&working_dir).await;
 
     let full_context = match (context, auto_context.as_str()) {
@@ -2549,6 +2557,79 @@ async fn agent_chat_stream(
     });
 
     Ok(())
+}
+
+/// Detect vague scan/fix/check requests that need pre-flight execution.
+fn is_scan_fix_request(message: &str) -> bool {
+    let m = message.to_lowercase();
+    (m.contains("scan") || m.contains("fix") || m.contains("check") || m.contains("audit") || m.contains("repair"))
+    && (m.contains("error") || m.contains("file") || m.contains("code") || m.contains("all") || m.contains("project") || m.contains("bug"))
+}
+
+/// Run build checks and inject the actual errors into the user message.
+/// This converts "scan and fix all errors" into a message with real compiler output.
+async fn augment_with_build_errors(original: &str, cwd: &str) -> String {
+    let mut errors: Vec<String> = Vec::new();
+
+    let has_cargo = std::path::Path::new(cwd).join("Cargo.toml").exists();
+    let has_package = std::path::Path::new(cwd).join("package.json").exists();
+    let has_pkg_parent = std::path::Path::new(cwd).parent()
+        .map(|p| p.join("package.json").exists()).unwrap_or(false);
+
+    if has_cargo {
+        if let Ok(Ok(out)) = tokio::time::timeout(
+            std::time::Duration::from_secs(60),
+            tokio::process::Command::new("cargo")
+                .args(["check", "--message-format=short"])
+                .current_dir(cwd)
+                .output()
+        ).await {
+            let combined = format!("{}{}",
+                String::from_utf8_lossy(&out.stdout),
+                String::from_utf8_lossy(&out.stderr));
+            let trimmed = combined.trim();
+            if !trimmed.is_empty() && !out.status.success() {
+                let truncated = if trimmed.len() > 4000 { &trimmed[..4000] } else { trimmed };
+                errors.push(format!("=== cargo check errors ===\n{}", truncated));
+            } else if out.status.success() {
+                errors.push("=== cargo check: PASSED (no Rust errors) ===".to_string());
+            }
+        }
+    }
+
+    let pkg_cwd = if has_package { cwd.to_string() }
+        else if has_pkg_parent { std::path::Path::new(cwd).parent().unwrap().to_string_lossy().to_string() }
+        else { String::new() };
+
+    if !pkg_cwd.is_empty() {
+        if let Ok(Ok(out)) = tokio::time::timeout(
+            std::time::Duration::from_secs(60),
+            tokio::process::Command::new("sh")
+                .arg("-c").arg("npm run build 2>&1")
+                .current_dir(&pkg_cwd)
+                .output()
+        ).await {
+            let combined = String::from_utf8_lossy(&out.stdout).to_string();
+            let trimmed = combined.trim();
+            if !trimmed.is_empty() && !out.status.success() {
+                let truncated = if trimmed.len() > 4000 { &trimmed[..4000] } else { trimmed };
+                errors.push(format!("=== npm build errors ===\n{}", truncated));
+            } else if out.status.success() {
+                errors.push("=== npm build: PASSED (no TypeScript errors) ===".to_string());
+            }
+        }
+    }
+
+    if errors.is_empty() {
+        // No build system found — fall back to original message
+        return original.to_string();
+    }
+
+    format!(
+        "{}\n\n--- Pre-flight build results ---\n{}\n\nNow fix every error shown above using edit_file. Read each failing file first, apply the minimal fix, then run cargo check / npm run build to verify. Commit when all pass.",
+        original,
+        errors.join("\n\n")
+    )
 }
 
 /// Automatically gather project context: git status + project-specific build errors.
