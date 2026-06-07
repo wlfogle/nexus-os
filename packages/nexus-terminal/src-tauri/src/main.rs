@@ -2620,6 +2620,33 @@ async fn gather_project_context(cwd: &str) -> String {
     parts.join("\n\n")
 }
 
+// ── run_cmd_capture — run a command and return stdout/stderr/exit_code ─────────
+/// Used by the self-healing loop to get clean error output for the agent.
+#[tauri::command]
+async fn run_cmd_capture(
+    cmd: String,
+    cwd: Option<String>,
+) -> Result<serde_json::Value, String> {
+    let working_dir = cwd.unwrap_or_else(|| {
+        std::env::current_dir().map(|p| p.to_string_lossy().to_string()).unwrap_or_else(|_| "/".to_string())
+    });
+    match tokio::time::timeout(
+        std::time::Duration::from_secs(60),
+        tokio::process::Command::new("sh")
+            .arg("-c").arg(&cmd)
+            .current_dir(&working_dir)
+            .output()
+    ).await {
+        Ok(Ok(out)) => Ok(serde_json::json!({
+            "stdout": String::from_utf8_lossy(&out.stdout).to_string(),
+            "stderr": String::from_utf8_lossy(&out.stderr).to_string(),
+            "exit_code": out.status.code().unwrap_or(-1)
+        })),
+        Ok(Err(e)) => Err(e.to_string()),
+        Err(_) => Err("Command timed out after 60s".to_string()),
+    }
+}
+
 // ── Predictive command engine ───────────────────────────────────────
 /// Returns a predicted command completion or next command.
 /// History-first (instant), AI-enhanced (llama3.2:3b, ~500ms).
@@ -3328,6 +3355,7 @@ async fn main() {
             ollama_ensure_configured,
 // Input classifier (Warp-derived NL vs shell detection)
             classify_input,
+            run_cmd_capture,
             predict_command,
             // Agent
             agent_chat,

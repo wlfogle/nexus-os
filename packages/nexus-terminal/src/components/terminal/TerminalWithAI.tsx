@@ -150,7 +150,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
 
     const OSC_RE = /\x1b\]133;([^\x07]*)\x07/g;
 
-    listen<{ terminalId: string; data: string }>('terminal-output', (event) => {
+    listen<{ terminal_id: string; data: string }>('terminal-output', (event) => {
       const { terminal_id, data } = event.payload;
       if (terminal_id !== capturedTerminalId) return;
       if (!terminal.current) {
@@ -159,6 +159,10 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
       }
       // Write raw data to xterm
       terminal.current.write(data);
+
+      // Feed into error detection buffer (strip ANSI for pattern matching)
+      const plain = data.replace(/\x1b\[[^A-Za-z]*[A-Za-z]/g, '').replace(/\x1b\][^\x07]*\x07/g, '');
+      termOutputBuffer.current += plain;
 
       // Parse OSC 133 sequences from the raw data stream
       let lastIndex = 0;
@@ -370,6 +374,127 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
   const unifiedInputRef = useRef<HTMLInputElement>(null);
   const classifyDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ── Error detection + self-healing ───────────────────────────────
+  const [lastShellCmd, setLastShellCmd] = useState<string>('');
+  const [errorState, setErrorState] = useState<{ cmd: string; output: string } | null>(null);
+  const [isHealing, setIsHealing] = useState(false);
+  const termOutputBuffer = useRef<string>(''); // accumulates raw terminal output
+  const errorCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Error patterns that indicate a failed command
+  const isErrorOutput = (text: string): boolean => {
+    const patterns = [
+      /\berror(?:\[|:)/i,           // error: or error[ (Rust, TypeScript, etc.)
+      /\bfailed\b/i,                // failed
+      /\bException\b/,              // Python/Java exceptions
+      /command not found/i,
+      /No such file or directory/i,
+      /Permission denied/i,
+      /npm ERR!/,                   // npm errors
+      /FAILED.*\d+ test/i,          // test failures
+      /SyntaxError|TypeError|ReferenceError|ImportError|ModuleNotFoundError/,
+      /\bfatal:/i,                  // git fatal errors
+      /\bAborted\b/,
+    ];
+    return patterns.some(p => p.test(text));
+  };
+
+  // Check buffered output for errors after command settles (1.5s)
+  const scheduleErrorCheck = (cmd: string) => {
+    termOutputBuffer.current = '';
+    if (errorCheckTimer.current) clearTimeout(errorCheckTimer.current);
+    errorCheckTimer.current = setTimeout(() => {
+      const output = termOutputBuffer.current;
+      if (output && isErrorOutput(output)) {
+        setErrorState({ cmd, output: output.slice(0, 4000) });
+      }
+    }, 1500);
+  };
+
+  // Self-healing: re-run command via agent with full error context
+  const handleHeal = async () => {
+    if (!errorState) return;
+    setErrorState(null);
+    setIsHealing(true);
+
+    // Re-run command via run_cmd to get clean captured output for the agent
+    let capturedOutput = errorState.output;
+    try {
+      const result = await invoke<{ stdout: string; stderr: string; exit_code: number }>(
+        'run_cmd_capture',
+        { cmd: errorState.cmd, cwd: tab.workingDirectory || null }
+      );
+      capturedOutput = `STDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}\nEXIT CODE: ${result.exit_code}`;
+    } catch { /* use buffered output as fallback */ }
+
+    // Build self-healing agent message
+    const healPrompt = [
+      `The command \`${errorState.cmd}\` failed.`,
+      ``,
+      `Error output:`,
+      `\`\`\``,
+      capturedOutput.slice(0, 3000),
+      `\`\`\``,
+      ``,
+      `Fix it:`,
+      `1. Read the relevant file(s)`,
+      `2. Apply the minimal fix with edit_file`,
+      `3. Run \`${errorState.cmd}\` again to verify`,
+      `4. Repeat until it passes`,
+      `5. Commit if it passes`,
+    ].join('\n');
+
+    const sessionId = `heal_${Date.now()}`;
+    const streamId = `heal_stream_${Date.now()}`;
+    let streamBuffer = '';
+    const localTools: Array<{ tool: string; args: string; result?: string }> = [];
+    setAiBlocks(prev => [...prev, { id: `heal_user_${Date.now()}`, role: 'user', content: `fix: ${errorState.cmd}` }]);
+    setAiBlocks(prev => [...prev, { id: streamId, role: 'assistant', content: '', streaming: '' }]);
+
+    const u1 = await listen<any>('agent-token', ({ payload }) => {
+      if (payload.session_id !== sessionId) return;
+      streamBuffer += payload.token;
+      setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, streaming: streamBuffer + '█' } : b));
+    });
+    const u2 = await listen<any>('agent-tool-call', ({ payload }) => {
+      if (payload.session_id !== sessionId) return;
+      localTools.push({ tool: payload.tool, args: payload.args });
+      setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, tools: [...localTools] } : b));
+    });
+    const u3 = await listen<any>('agent-tool-result', ({ payload }) => {
+      if (payload.session_id !== sessionId) return;
+      const idx = localTools.map(t => t.tool).lastIndexOf(payload.tool);
+      if (idx >= 0) localTools[idx].result = payload.result.slice(0, 500);
+      setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, tools: [...localTools] } : b));
+    });
+    const u4 = await listen<any>('agent-done', ({ payload }) => {
+      if (payload.session_id !== sessionId) return;
+      const toolSec = localTools.length > 0
+        ? localTools.map(t => `🔧 ${t.tool}\n\`\`\`\n${(t.result ?? '').slice(0, 600)}\n\`\`\``).join('\n\n')
+        : '';
+      const final = toolSec && payload.answer.trim()
+        ? `${toolSec}\n\n${payload.answer.trim()}`
+        : toolSec || payload.answer.trim() || '✓ Done';
+      setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, content: final, streaming: undefined, tools: undefined } : b));
+      setIsHealing(false);
+      u1(); u2(); u3(); u4(); u5();
+    });
+    const u5 = await listen<any>('agent-error', ({ payload }) => {
+      if (payload.session_id !== sessionId) return;
+      setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, content: `❌ ${payload.error}`, streaming: undefined } : b));
+      setIsHealing(false);
+      u1(); u2(); u3(); u4(); u5();
+    });
+
+    await invoke('agent_chat_stream', {
+      message: healPrompt,
+      sessionId,
+      history: [],
+      cwd: (!tab.workingDirectory || tab.workingDirectory === '~') ? null : tab.workingDirectory,
+      context: `Shell: ${tab.shell}\nDirectory: ${tab.workingDirectory}`,
+    }).catch(() => { setIsHealing(false); });
+  };
+
   // ── Ghost text prediction ──────────────────────────────────────────
   const [prediction, setPrediction] = useState('');
   const predictDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -485,8 +610,11 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     const isShell = forceShell || (!forceAI && inputMode === 'shell');
 
     if (isShell) {
-      recordShellCommand(text); // feed into prediction history
+      recordShellCommand(text);
       setPrediction('');
+      setLastShellCmd(text);
+      setErrorState(null); // clear previous error
+      scheduleErrorCheck(text); // start watching for errors
       // Execute in PTY
       if (!tab.terminalId) {
         console.error('[NexusTerminal] No terminalId on tab — cannot execute shell command');
@@ -666,6 +794,40 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
           </div>
         )}
       </div>
+
+      {/* ── Error banner: "Fix this?" ─────────────────────────────── */}
+      {errorState && !isHealing && (
+        <div style={{
+          flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '6px 12px', background: 'rgba(239,68,68,0.12)', borderTop: '1px solid rgba(239,68,68,0.3)',
+        }}>
+          <span style={{ fontSize: 12, color: '#fca5a5', fontFamily: 'monospace' }}>
+            ⚠️ Error in <strong>`{errorState.cmd}`</strong>
+          </span>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={handleHeal}
+              style={{
+                fontSize: 11, padding: '3px 12px', borderRadius: 4,
+                background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600,
+              }}
+            >
+              🔧 Fix this
+            </button>
+            <button
+              onClick={() => setErrorState(null)}
+              style={{ fontSize: 11, padding: '3px 8px', borderRadius: 4, background: 'transparent', color: '#9ca3af', border: '1px solid #374151', cursor: 'pointer' }}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+      {isHealing && (
+        <div style={{ flexShrink: 0, padding: '6px 12px', background: 'rgba(168,85,247,0.1)', borderTop: '1px solid rgba(168,85,247,0.3)', fontSize: 12, color: '#c084fc', fontFamily: 'monospace' }}>
+          🤖 NexusAI is analyzing and fixing the error…
+        </div>
+      )}
 
       {/* ── Warp-style UDI ───────────────────────────────────────────── */}
       {/* 6px margin all sides, 8px corner radius — matches Warp's UDI container */}
