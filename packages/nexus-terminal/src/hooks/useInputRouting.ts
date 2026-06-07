@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { selectActiveTab, addAIMessage, updateTabTerminalId } from '../store/slices/terminalTabSlice';
 import { commandRoutingService } from '../services/commandRouting';
 import { routingLogger } from '../utils/logger';
@@ -147,64 +148,55 @@ export const useInputRouting = () => {
         }
         
         try {
-          // Start AI request with enhanced context
-          const startTime = Date.now();
-          const timer = routingLogger.performanceTimer('AI Request');
-          
-          // Enhanced prompt with routing context
-          const enhancedPrompt = `User Query: ${trimmed}\n\nContext: Terminal session in ${activeTab.workingDirectory} using ${activeTab.shell}\nRouting confidence: ${(routingResult.confidence * 100).toFixed(1)}%\nReason: ${routingResult.reason}`;
-          
-          routingLogger.info('Sending AI request', 'ai_request', { query: trimmed, contextLength: enhancedPrompt.length });
-          
-          // Send to AI with enhanced context
-          const aiResponse = await invoke('ai_chat_with_memory', {
-            message: trimmed,
-            conversation_id: activeTab.id,
-            context: enhancedPrompt
-          }) as string;
-          
-          const responseTime = Date.now() - startTime;
+          routingLogger.info('Sending to NexusAI agent (streaming)', 'agent_stream', { query: trimmed });
 
-          timer.end({ component: 'AIRequest', metadata: { query: trimmed, responseLength: aiResponse.length } });
-          
-          // Add AI response
-          dispatch(addAIMessage({
-            tabId: activeTab.id,
-            message: {
-              role: 'assistant',
-              content: aiResponse,
-              timestamp: new Date(),
-              metadata: {
-                response_time_ms: responseTime,
-                context_type: 'enhanced',
-                routing_confidence: routingResult.confidence
-              }
-            }
-          }));
-          
-          // Call optional callback with AI response
-          if (onAIResponse) {
-            onAIResponse(aiResponse);
-          }
-          
+          const sessionId = `route_${Date.now()}`;
+          const tabId = activeTab.id;
+          let buffer = '';
+
+          const ul1 = await listen<{ session_id: string; token: string }>('agent-token', ({ payload }) => {
+            if (payload.session_id !== sessionId) return;
+            buffer += payload.token;
+          });
+
+          const ul2 = await listen<{ session_id: string; tool: string; args: string }>('agent-tool-call', ({ payload }) => {
+            if (payload.session_id !== sessionId) return;
+            dispatch(addAIMessage({ tabId, message: { role: 'system', content: `🔧 ${payload.tool}  ${payload.args.slice(0, 120)}`, timestamp: new Date() } }));
+          });
+
+          const ul3 = await listen<{ session_id: string; answer: string }>('agent-done', ({ payload }) => {
+            if (payload.session_id !== sessionId) return;
+            dispatch(addAIMessage({ tabId, message: { role: 'assistant', content: payload.answer, timestamp: new Date() } }));
+            if (onAIResponse) onAIResponse(payload.answer);
+            ul1(); ul2(); ul3(); ul4();
+          });
+
+          const ul4 = await listen<{ session_id: string; error: string }>('agent-error', ({ payload }) => {
+            if (payload.session_id !== sessionId) return;
+            const msg = `❌ ${payload.error}`;
+            dispatch(addAIMessage({ tabId, message: { role: 'assistant', content: msg, timestamp: new Date() } }));
+            if (onAIResponse) onAIResponse(msg);
+            ul1(); ul2(); ul3(); ul4();
+          });
+
+          const history = activeTab.aiConversation
+            .filter((m: any) => m.role === 'user' || m.role === 'assistant')
+            .slice(-20)
+            .map((m: any) => ({ role: m.role, content: m.content }));
+
+          await invoke('agent_chat_stream', {
+            message: trimmed,
+            sessionId,
+            history,
+            cwd: activeTab.workingDirectory || null,
+            context: `Shell: ${activeTab.shell}\nDirectory: ${activeTab.workingDirectory}`,
+          });
+
         } catch (error) {
-          routingLogger.error('AI request failed', error as Error, 'ai_request_failed', { query: trimmed });
-          
-          const errorMessage = `❌ Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-          
-          dispatch(addAIMessage({
-            tabId: activeTab.id,
-            message: {
-              role: 'assistant',
-              content: errorMessage,
-              timestamp: new Date(),
-              metadata: { error: true }
-            }
-          }));
-          
-          if (onAIResponse) {
-            onAIResponse(errorMessage);
-          }
+          routingLogger.error('Agent stream failed', error as Error, 'agent_stream_failed', { query: trimmed });
+          const errorMessage = `❌ ${error instanceof Error ? error.message : String(error)}`;
+          dispatch(addAIMessage({ tabId: activeTab.id, message: { role: 'assistant', content: errorMessage, timestamp: new Date() } }));
+          if (onAIResponse) onAIResponse(errorMessage);
         }
       }
     } catch (routingError) {

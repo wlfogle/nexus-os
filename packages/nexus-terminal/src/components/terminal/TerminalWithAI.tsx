@@ -7,14 +7,11 @@ import { SearchAddon } from '@xterm/addon-search';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { TerminalTab } from '../../types/terminal';
-import { 
-  addError 
-} from '../../store/slices/terminalTabSlice';
+import { addError } from '../../store/slices/terminalTabSlice';
 import EnhancedAIAssistant from '../ai/EnhancedAIAssistant';
 import { useInputRouting } from '../../hooks/useInputRouting';
 import { terminalLogger } from '../../utils/logger';
 import '@xterm/xterm/css/xterm.css';
-
 interface TerminalWithAIProps {
   tab: TerminalTab;
 }
@@ -28,14 +25,9 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
   const [aiPanelOpen, setAIPanelOpen] = useState(true); // Start in AI mode by default
   const [isTerminalReady, setIsTerminalReady] = useState(false);
   const [inputBuffer, setInputBuffer] = useState('');
-  
-  terminalLogger.debug('TerminalWithAI state', 'state_change', { aiPanelOpen, isTerminalReady, tabId: tab.id });
 
   // Centralized routing: differentiates shell commands from natural language
   const { handleInput, isShellCommand } = useInputRouting();
-
-  // Tracks the line currently being typed directly in the xterm widget
-  const lineBuffer = useRef<string>('');
 
   // Memoize terminal theme based on shell type
   const terminalTheme = useMemo(() => {
@@ -108,67 +100,15 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     terminal.current.open(terminalRef.current);
     fitAddon.current.fit();
 
-    // Set up data handler with command routing
+    // ALL keyboard input goes directly to the PTY — terminal is a pure shell
+    // Natural language goes to the AI panel's own dedicated input (right side)
     terminal.current.onData(async (data: string) => {
       if (!tab.terminalId) return;
-
       try {
-        if (data === '\r') {
-          // Enter pressed — route based on what was typed
-          const currentLine = lineBuffer.current.trim();
-
-          lineBuffer.current = '';
-
-          if (!currentLine || isShellCommand(currentLine)) {
-            // Shell command or empty line: execute normally
-            await invoke('write_to_terminal', { terminal_id: tab.terminalId, data: '\r' });
-          } else {
-            // Natural language query: cancel the shell input and route to AI
-            terminalLogger.info('NL query intercepted in xterm', 'nl_intercept', { query: currentLine });
-            // Ctrl+U clears the current input line in bash/zsh
-            await invoke('write_to_terminal', { terminal_id: tab.terminalId, data: '\x15' });
-            setAIPanelOpen(true);
-            handleInput(currentLine);
-          }
-        } else {
-          // Forward all other input to the PTY unchanged
-          await invoke('write_to_terminal', { terminal_id: tab.terminalId, data });
-
-          // Keep lineBuffer in sync with what the user is typing
-          if (data === '\x7f') {
-            // Backspace
-            lineBuffer.current = lineBuffer.current.slice(0, -1);
-          } else if (data === '\x15') {
-            // Ctrl+U — clear line
-            lineBuffer.current = '';
-          } else if (data.length === 1 && data.charCodeAt(0) >= 32) {
-            // Printable character
-            lineBuffer.current += data;
-          }
-          // Ignore escape sequences and other control sequences
-
-          // Handle Ctrl+R for command history search
-          if (data === '\x12') {
-            const history = tab.terminalHistory.map(h => h.command).slice(-20);
-
-            if (history.length > 0) {
-              const searchPrompt = `\r\n🔍 Command History (${history.length} commands):\r\n${history.map((cmd, i) => `${i + 1}. ${cmd}`).join('\r\n')}\r\n`;
-
-              terminal.current?.write(searchPrompt);
-            }
-          }
-        }
+        await invoke('write_to_terminal', { terminal_id: tab.terminalId, data });
       } catch (error) {
-        terminalLogger.error('Failed to write to terminal', error as Error, 'write_terminal_failed', { terminalId: tab.terminalId });
-        dispatch(addError({
-          tabId: tab.id,
-          error: {
-            command: 'write_to_terminal',
-            errorMessage: error?.toString() || 'Failed to write to terminal',
-            timestamp: new Date(),
-            workingDirectory: tab.workingDirectory
-          }
-        }));
+        terminalLogger.error('PTY write failed', error as Error, 'write_terminal_failed', { terminalId: tab.terminalId });
+        dispatch(addError({ tabId: tab.id, error: { command: 'write_to_terminal', errorMessage: String(error), timestamp: new Date(), workingDirectory: tab.workingDirectory } }));
       }
     });
 
@@ -333,9 +273,11 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-900">
-      {/* Terminal Area */}
-      <div className="flex-1 relative">
+    <div className="flex h-full bg-gray-900 overflow-hidden">
+
+      {/* ── LEFT: Pure PTY Terminal ──────────────────────────────────── */}
+      <div className="flex-1 relative min-w-0">
+        {/* hidden — real layout continues below */}
         {/* XTerm.js Container */}
         <div 
           ref={terminalRef}
