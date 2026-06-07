@@ -308,25 +308,65 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
   }; */
 
   const handleSendMessage = async () => {
-    aiLogger.info('Send message initiated', 'send_message', { messageLength: message.length });
-    
-    if (!message.trim() || !activeTab) {
-      aiLogger.debug('Send message aborted - empty message or no active tab', 'send_abort', { hasMessage: !!message.trim(), hasTab: !!activeTab });
-      return;
-    }
-    
-    const userMessage = message;
-    aiLogger.debug('Processing message', 'process_message', { messageLength: userMessage.length });
+    if (!message.trim() || !activeTab) return;
+    const userMessage = message.trim();
     setMessage('');
-    
-    // Use central input routing - it handles both shell commands and AI queries
     setIsLoading(true);
+
+    // Add user message to conversation
+    dispatch(addAIMessage({
+      tabId: activeTab.id,
+      message: { role: 'user', content: userMessage, timestamp: new Date() }
+    }));
+
     try {
-      aiLogger.debug('Routing message to input handler', 'route_input', { message: userMessage });
-      await handleInput(userMessage, () => {
-        aiLogger.debug('Input handling completed', 'input_complete');
-        setIsLoading(false);
+      const { invoke } = await import('@tauri-apps/api/core');
+
+      // Build history from existing conversation (exclude last user msg we just added)
+      const history = activeTab.aiConversation
+        .filter((m: any) => m.role === 'user' || m.role === 'assistant')
+        .slice(-20)  // keep last 20 turns
+        .map((m: any) => ({ role: m.role, content: m.content }));
+
+      const result = await invoke<{
+        answer: string;
+        steps: Array<{ kind: string; content: string }>;
+      }>('agent_chat', {
+        message: userMessage,
+        history,
+        cwd: activeTab.workingDirectory || null,
+        context: `Shell: ${activeTab.shell}\nDirectory: ${activeTab.workingDirectory}`,
       });
+
+      // Show tool steps inline before the answer
+      const toolSteps = result.steps.filter((s: any) => s.kind === 'tool_call' || s.kind === 'tool_result');
+      if (toolSteps.length > 0) {
+        const stepsText = toolSteps.map((s: any) =>
+          s.kind === 'tool_call'
+            ? `🔧 ${s.content}`
+            : `\`\`\`\n${s.content.slice(0, 500)}${s.content.length > 500 ? '\n[...]' : ''}\n\`\`\``
+        ).join('\n');
+        dispatch(addAIMessage({
+          tabId: activeTab.id,
+          message: { role: 'system', content: stepsText, timestamp: new Date() }
+        }));
+      }
+
+      // Final answer
+      dispatch(addAIMessage({
+        tabId: activeTab.id,
+        message: { role: 'assistant', content: result.answer, timestamp: new Date() }
+      }));
+    } catch (error) {
+      aiLogger.error('Agent chat failed', error as Error, 'agent_chat_failed');
+      dispatch(addAIMessage({
+        tabId: activeTab.id,
+        message: {
+          role: 'assistant',
+          content: `Error: ${error instanceof Error ? error.message : String(error)}`,
+          timestamp: new Date()
+        }
+      }));
     } finally {
       setIsLoading(false);
     }

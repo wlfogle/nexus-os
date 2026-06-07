@@ -198,8 +198,27 @@ impl TerminalManager {
         // Start reading output in a separate thread
         self.start_output_reader(&terminal_id).await?;
 
-        info!("Created terminal with ID: {} using shell: {} in directory: {}", 
-              terminal_id, shell_cmd, working_dir);
+        // Inject OSC 133 shell integration hooks after shell initialises
+        {
+            let terminals_osc = Arc::clone(&self.terminals);
+            let tid = terminal_id.clone();
+            let shell_name = shell_cmd.clone();
+            tokio::spawn(async move {
+                // Wait for shell startup
+                tokio::time::sleep(Duration::from_millis(400)).await;
+                let bootstrap = osc133_bootstrap(&shell_name);
+                if let Ok(terminals) = terminals_osc.lock() {
+                    if let Some(t) = terminals.get(&tid) {
+                        if let Ok(mut w) = t.master.take_writer() {
+                            let _ = w.write_all(bootstrap.as_bytes());
+                            let _ = w.flush();
+                        }
+                    }
+                }
+            });
+        }
+
+        info!("Created terminal {} shell={} cwd={}", terminal_id, shell_cmd, working_dir);
         Ok(terminal_id)
     }
 
@@ -358,6 +377,34 @@ pub struct TerminalOutputEvent {
 pub struct TerminalExitEvent {
     pub terminal_id: String,
     pub exit_code: Option<i32>,
+}
+
+/// Generate shell-specific OSC 133 (FTCS) hook commands.
+/// These make the terminal emit prompt/command boundary markers so the
+/// frontend can detect exact command blocks — the same technique Warp uses.
+fn osc133_bootstrap(shell: &str) -> String {
+    if shell.contains("fish") {
+        // fish uses event hooks
+        concat!(
+            "function __osc133_prompt --on-event fish_prompt\n",
+            "  printf '\x1b]133;A\x07'\n",
+            "end\n",
+            "function __osc133_preexec --on-event fish_preexec\n",
+            "  printf '\x1b]133;B\x07'\n",
+            "end\n",
+        ).to_string()
+    } else if shell.contains("zsh") {
+        concat!(
+            "precmd()  { printf '\x1b]133;A\x07'; }\n",
+            "preexec() { printf '\x1b]133;B\x07'; }\n",
+        ).to_string()
+    } else {
+        // bash / sh / dash — PROMPT_COMMAND + PS0
+        concat!(
+            "PROMPT_COMMAND='printf \"\x1b]133;A\x07\"'\n",
+            "PS0='\x1b]133;B\x07'\n",
+        ).to_string()
+    }
 }
 
 impl Default for TerminalManager {

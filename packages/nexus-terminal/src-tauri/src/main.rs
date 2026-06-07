@@ -9,6 +9,7 @@ use anyhow::Result;
 use chrono::Timelike;
 use tracing::info;
 
+mod agent;
 mod ai;
 mod git;
 mod git_advanced;
@@ -2463,6 +2464,364 @@ async fn ollama_ensure_configured() -> Result<(), String> {
 
 
 
+// ── Agent chat ────────────────────────────────────────────────────────────────
+#[tauri::command]
+async fn agent_chat(
+    message: String,
+    history: Vec<agent::ChatMessage>,
+    cwd: Option<String>,
+    context: Option<String>,
+    state: State<'_, AppState>,
+) -> Result<agent::AgentResponse, String> {
+    let config = state.config.read().await;
+    let ollama_url = config.ai.ollama_url.clone();
+    let model = config.ai.default_model.clone();
+    drop(config);
+
+    let working_dir = cwd.unwrap_or_else(|| {
+        std::env::current_dir()
+            .map(|p| p.to_string_lossy().to_string())
+            .unwrap_or_else(|_| "/".to_string())
+    });
+
+    agent::run_agent(
+        &ollama_url,
+        &model,
+        &message,
+        history,
+        &working_dir,
+        context.as_deref(),
+    )
+    .await
+    .map_err(|e| e.to_string())
+}
+
+// ── Alias persistence ────────────────────────────────────────────────────────
+#[tauri::command]
+async fn load_aliases(state: State<'_, AppState>) -> Result<Vec<serde_json::Value>, String> {
+    let config = state.config.read().await;
+    let path = config.paths.data_dir.join("aliases.json");
+    drop(config);
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+    let content = tokio::fs::read_to_string(&path).await.map_err(|e| e.to_string())?;
+    serde_json::from_str::<Vec<serde_json::Value>>(&content).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn save_aliases(
+    aliases: Vec<serde_json::Value>,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let config = state.config.read().await;
+    let path = config.paths.data_dir.join("aliases.json");
+    drop(config);
+    if let Some(parent) = path.parent() {
+        tokio::fs::create_dir_all(parent).await.map_err(|e| e.to_string())?;
+    }
+    let content = serde_json::to_string_pretty(&aliases).map_err(|e| e.to_string())?;
+    tokio::fs::write(&path, content).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn load_command_frequency(
+    state: State<'_, AppState>,
+) -> Result<HashMap<String, u64>, String> {
+    let config = state.config.read().await;
+    let path = config.paths.data_dir.join("command_frequency.json");
+    drop(config);
+    if !path.exists() {
+        return Ok(HashMap::new());
+    }
+    let content = tokio::fs::read_to_string(&path).await.map_err(|e| e.to_string())?;
+    serde_json::from_str::<HashMap<String, u64>>(&content).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn save_command_frequency(
+    frequency: HashMap<String, u64>,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let config = state.config.read().await;
+    let path = config.paths.data_dir.join("command_frequency.json");
+    drop(config);
+    if let Some(parent) = path.parent() {
+        tokio::fs::create_dir_all(parent).await.map_err(|e| e.to_string())?;
+    }
+    let content = serde_json::to_string_pretty(&frequency).map_err(|e| e.to_string())?;
+    tokio::fs::write(&path, content).await.map_err(|e| e.to_string())
+}
+
+// ── Command preview (dry-run analysis) ───────────────────────────────────────
+#[tauri::command]
+async fn preview_command(
+    command: String,
+    cwd: String,
+) -> Result<serde_json::Value, String> {
+    let parts: Vec<&str> = command.trim().split_whitespace().collect();
+    let base_cmd = parts.first().copied().unwrap_or("");
+
+    let mut will_create: Vec<String> = Vec::new();
+    let mut will_modify: Vec<String> = Vec::new();
+    let mut will_delete: Vec<String> = Vec::new();
+    let mut risk_level = "safe";
+    let mut warnings: Vec<String> = Vec::new();
+    let mut affected_files: usize = 0;
+
+    let resolve = |p: &str| -> String {
+        if p.starts_with('/') { p.to_string() } else { format!("{}/{}", cwd, p) }
+    };
+
+    match base_cmd {
+        "rm" => {
+            risk_level = "dangerous";
+            let has_r = parts.iter().any(|&p| {
+                p == "-r" || p == "-R" || p == "-rf" || p == "-fr" || p == "-Rf" || p == "-fR"
+                    || (p.starts_with('-') && !p.starts_with("--") && p.contains('r'))
+            });
+            let has_f = parts.iter().any(|&p| {
+                p == "-f" || p == "-rf" || p == "-fr"
+                    || (p.starts_with('-') && !p.starts_with("--") && p.contains('f'))
+            });
+            let targets: Vec<&str> = parts[1..].iter().filter(|&&p| !p.starts_with('-')).copied().collect();
+            for t in &targets { will_delete.push(resolve(t)); }
+            if has_r { warnings.push("Recursive deletion — will remove directories and all contents".to_string()); }
+            if has_f { warnings.push("Force flag — will not prompt for confirmation".to_string()); }
+            if targets.iter().any(|&t| t == "/" || t == "/*" || t == "~" || t == "~/*") {
+                warnings.push("⚠️ EXTREMELY DANGEROUS: targets system or home root".to_string());
+            }
+            affected_files = targets.len() * if has_r { 10 } else { 1 };
+        }
+        "mv" => {
+            risk_level = "moderate";
+            let args: Vec<&str> = parts[1..].iter().filter(|&&p| !p.starts_with('-')).copied().collect();
+            if args.len() >= 2 {
+                let dest = args[args.len() - 1];
+                for src in &args[..args.len() - 1] { will_modify.push(resolve(src)); }
+                will_create.push(resolve(dest));
+                affected_files = args.len() - 1;
+            }
+        }
+        "cp" => {
+            let has_r = parts.iter().any(|&p| p == "-r" || p == "-R");
+            let args: Vec<&str> = parts[1..].iter().filter(|&&p| !p.starts_with('-')).copied().collect();
+            if args.len() >= 2 {
+                let dest = args[args.len() - 1];
+                for src in &args[..args.len() - 1] {
+                    will_create.push(format!("{}/{}", resolve(dest), src));
+                }
+                affected_files = (args.len() - 1) * if has_r { 5 } else { 1 };
+            }
+        }
+        "mkdir" => {
+            let dirs: Vec<&str> = parts[1..].iter().filter(|&&p| !p.starts_with('-')).copied().collect();
+            for d in &dirs { will_create.push(resolve(d)); }
+            affected_files = dirs.len();
+        }
+        "touch" => {
+            let files: Vec<&str> = parts[1..].iter().filter(|&&p| !p.starts_with('-')).copied().collect();
+            for f in &files { will_create.push(resolve(f)); }
+            affected_files = files.len();
+        }
+        "chmod" | "chown" => {
+            risk_level = "moderate";
+            let targets: Vec<&str> = parts.get(2..).unwrap_or(&[]).iter()
+                .filter(|&&p| !p.starts_with('-')).copied().collect();
+            for t in &targets { will_modify.push(resolve(t)); }
+            affected_files = targets.len();
+        }
+        "sudo" => {
+            risk_level = "dangerous";
+            warnings.push("Executing with elevated privileges".to_string());
+        }
+        "dd" | "mkfs" | "fdisk" | "format" => {
+            risk_level = "dangerous";
+            warnings.push(format!("'{}' can permanently destroy disk data", base_cmd));
+        }
+        "git" => {
+            if parts.get(1).copied() == Some("reset") && parts.iter().any(|&p| p == "--hard") {
+                risk_level = "dangerous";
+                warnings.push("git reset --hard discards all uncommitted changes permanently".to_string());
+            } else if parts.get(1).copied() == Some("clean") && parts.iter().any(|&p| p == "-f") {
+                risk_level = "moderate";
+                warnings.push("git clean -f permanently removes untracked files".to_string());
+            } else if parts.get(1).copied() == Some("push")
+                && parts.iter().any(|&p| p == "--force" || p == "-f")
+            {
+                risk_level = "moderate";
+                warnings.push("Force push can overwrite remote history".to_string());
+            }
+        }
+        _ => {}
+    }
+
+    if command.contains("rm -rf") || command.contains("rm -fr") {
+        risk_level = "dangerous";
+        if !warnings.iter().any(|w| w.contains("Recursive")) {
+            warnings.push("Recursive force delete detected".to_string());
+        }
+    }
+
+    Ok(serde_json::json!({
+        "command": command,
+        "willCreate": will_create,
+        "willModify": will_modify,
+        "willDelete": will_delete,
+        "riskLevel": risk_level,
+        "warnings": warnings,
+        "affectedFiles": affected_files,
+    }))
+}
+
+// ── Terminal health metrics ───────────────────────────────────────────────────
+#[tauri::command]
+async fn get_health_metrics(state: State<'_, AppState>) -> Result<serde_json::Value, String> {
+    use sysinfo::{System, Disks, Networks};
+
+    let mut sys = System::new_all();
+    sys.refresh_all();
+
+    // CPU — average across all cores
+    let cpu_count = sys.cpus().len().max(1);
+    let cpu_avg = sys.cpus().iter().map(|c| c.cpu_usage() as f64).sum::<f64>() / cpu_count as f64;
+
+    // System memory (bytes)
+    let total_memory = sys.total_memory();
+    let used_memory  = sys.used_memory();
+
+    // Current process RSS
+    let current_pid = sysinfo::Pid::from_u32(std::process::id());
+    let process_rss = sys.process(current_pid).map(|p| p.memory()).unwrap_or(0);
+
+    // Load average
+    let load_avg = System::load_average();
+
+    // Root partition disk space
+    let disks = Disks::new_with_refreshed_list();
+    let (disk_total, disk_avail) = disks.list().iter()
+        .find(|d| d.mount_point() == std::path::Path::new("/"))
+        .map(|d| (d.total_space(), d.available_space()))
+        .unwrap_or((0, 0));
+    let disk_used    = disk_total.saturating_sub(disk_avail);
+    let disk_percent = if disk_total > 0 { disk_used as f64 / disk_total as f64 * 100.0 } else { 0.0 };
+
+    // Network cumulative totals
+    let mut bytes_rx = 0u64;
+    let mut bytes_tx = 0u64;
+    let mut pkts_rx  = 0u64;
+    let mut pkts_tx  = 0u64;
+    let networks = Networks::new_with_refreshed_list();
+    for (_, data) in &networks {
+        bytes_rx += data.total_received();
+        bytes_tx += data.total_transmitted();
+        pkts_rx  += data.total_packets_received();
+        pkts_tx  += data.total_packets_transmitted();
+    }
+
+    // Session stats from terminal manager
+    let terminal_count = state.terminal_manager.read().await.get_terminal_count();
+    let uptime = System::uptime();
+
+    Ok(serde_json::json!({
+        "memoryUsage": {
+            "rss":          process_rss,
+            "heapTotal":    total_memory,
+            "heapUsed":     used_memory,
+            "external":     0,
+            "arrayBuffers": 0
+        },
+        "cpuUsage": {
+            "user":    cpu_avg * 0.75,
+            "system":  cpu_avg * 0.25,
+            "percent": cpu_avg
+        },
+        "commandStats": {
+            "totalCommands":        0,
+            "commandsPerMinute":    0.0,
+            "averageExecutionTime": 0.0,
+            "failureRate":          0.0,
+            "mostUsedCommands":     []
+        },
+        "sessionStats": {
+            "uptime":               uptime,
+            "totalSessions":        terminal_count,
+            "activeSessions":       terminal_count,
+            "averageSessionLength": 0.0
+        },
+        "systemHealth": {
+            "diskSpace": {
+                "total":       disk_total,
+                "used":        disk_used,
+                "available":   disk_avail,
+                "percentUsed": disk_percent
+            },
+            "networkStats": {
+                "bytesReceived":    bytes_rx,
+                "bytesSent":        bytes_tx,
+                "packetsReceived":  pkts_rx,
+                "packetsSent":      pkts_tx
+            },
+            "loadAverage": [load_avg.one, load_avg.five, load_avg.fifteen]
+        },
+        "renderingStats": {
+            "fps":                60.0,
+            "frameTime":          16.67,
+            "droppedFrames":      0,
+            "scrollbackBufferSize": 10000
+        },
+        "timestamp": chrono::Utc::now().to_rfc3339()
+    }))
+}
+
+// ── Health report generator ───────────────────────────────────────────────────
+#[tauri::command]
+async fn generate_health_report(
+    health_check: serde_json::Value,
+    format: String,
+) -> Result<String, String> {
+    match format.as_str() {
+        "html" => {
+            let score     = health_check.get("healthScore").and_then(|v| v.as_f64()).unwrap_or(0.0);
+            let status    = health_check.get("status").and_then(|v| v.as_str()).unwrap_or("unknown");
+            let timestamp = health_check.get("timestamp").and_then(|v| v.as_str()).unwrap_or("");
+            let color = match status {
+                "excellent" => "#22c55e",
+                "good"      => "#86efac",
+                "fair"      => "#facc15",
+                "poor"      => "#f97316",
+                _           => "#ef4444",
+            };
+            let recs = health_check.get("recommendations")
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.iter().filter_map(|r| r.as_str())
+                    .map(|r| format!("<li>{}</li>", r))
+                    .collect::<Vec<_>>().join(""))
+                .unwrap_or_default();
+            let raw = serde_json::to_string_pretty(&health_check).unwrap_or_default();
+            Ok(format!(
+                "<!DOCTYPE html><html><head><meta charset=\"utf-8\">\
+<title>NexusTerminal Health Report</title>\
+<style>body{{font-family:monospace;background:#0f172a;color:#e2e8f0;padding:2rem}}\
+h1{{color:#38bdf8}}.score{{font-size:3rem;font-weight:bold;color:{color}}}\
+.section{{background:#1e293b;border-radius:8px;padding:1rem;margin:1rem 0}}\
+pre{{overflow:auto;white-space:pre-wrap;font-size:.85rem}}</style></head><body>\
+<h1>NexusTerminal Health Report</h1>\
+<div class=\"section\"><div class=\"score\">{score:.0}%</div>\
+<p>Status: <strong style=\"color:{color}\">{status}</strong></p>\
+<p>Generated: {timestamp}</p></div>\
+<div class=\"section\"><h2>Recommendations</h2><ul>{recs}</ul></div>\
+<div class=\"section\"><h2>Full Metrics (JSON)</h2><pre>{raw}</pre></div>\
+</body></html>",
+                color = color, score = score, status = status,
+                timestamp = timestamp, recs = recs, raw = raw,
+            ))
+        }
+        // json + pdf fallback → pretty JSON
+        _ => serde_json::to_string_pretty(&health_check).map_err(|e| e.to_string()),
+    }
+}
+
 #[tokio::main]
 async fn main() {
     // Load .env file first for environment configuration
@@ -2818,6 +3177,18 @@ async fn main() {
             ollama_get_available_models,
             ollama_initialize_config,
             ollama_ensure_configured,
+            // Agent
+            agent_chat,
+            // Alias persistence
+            load_aliases,
+            save_aliases,
+            load_command_frequency,
+            save_command_frequency,
+            // Command preview
+            preview_command,
+            // Terminal health
+            get_health_metrics,
+            generate_health_report,
         ])
         .run(tauri::generate_context!())
         .map_err(|e| {

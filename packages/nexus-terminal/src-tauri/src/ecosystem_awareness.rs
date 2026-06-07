@@ -1502,7 +1502,7 @@ impl EcosystemState {
         
         // Sort by CPU and memory usage
         let mut cpu_sorted = all_processes.clone();
-        cpu_sorted.sort_by(|a, b| b.cpu_percent.partial_cmp(&a.cpu_percent).unwrap());
+        cpu_sorted.sort_by(|a, b| b.cpu_percent.partial_cmp(&a.cpu_percent).unwrap_or(std::cmp::Ordering::Equal));
         let top_cpu = cpu_sorted.into_iter().take(10).collect();
         
         let mut mem_sorted = all_processes.clone();
@@ -1911,7 +1911,7 @@ impl AdaptiveLearningEngine {
         }
 
         // Sort by confidence
-        predictions.sort_by(|a, b| b.confidence.partial_cmp(&a.confidence).unwrap());
+        predictions.sort_by(|a, b| b.confidence.partial_cmp(&a.confidence).unwrap_or(std::cmp::Ordering::Equal));
         
         Ok(predictions.into_iter().take(10).collect())
     }
