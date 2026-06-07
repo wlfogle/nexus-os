@@ -12,6 +12,7 @@ use tracing::info;
 mod agent;
 mod ai;
 mod input_classifier;
+mod prediction;
 mod git;
 mod git_advanced;
 mod terminal;
@@ -2619,6 +2620,22 @@ async fn gather_project_context(cwd: &str) -> String {
     parts.join("\n\n")
 }
 
+// ── Predictive command engine ───────────────────────────────────────
+/// Returns a predicted command completion or next command.
+/// History-first (instant), AI-enhanced (llama3.2:3b, ~500ms).
+#[tauri::command]
+async fn predict_command(
+    partial_input: String,
+    history: Vec<String>,
+    cwd: String,
+    state: State<'_, AppState>,
+) -> Result<Option<String>, String> {
+    let config = state.config.read().await;
+    let ollama_url = config.ai.ollama_url.clone();
+    drop(config);
+    Ok(prediction::predict_command(&partial_input, &history, &cwd, &ollama_url).await)
+}
+
 // ── Input classifier (Warp-derived) ─────────────────────────────────────────
 /// Classify terminal input as shell command or natural language.
 /// Same algorithm as Warp's HeuristicClassifier (ported from AGPL-3.0 source).
@@ -3311,6 +3328,7 @@ async fn main() {
             ollama_ensure_configured,
 // Input classifier (Warp-derived NL vs shell detection)
             classify_input,
+            predict_command,
             // Agent
             agent_chat,
             agent_chat_stream,

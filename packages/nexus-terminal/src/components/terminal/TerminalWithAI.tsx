@@ -361,9 +361,51 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
   const unifiedInputRef = useRef<HTMLInputElement>(null);
   const classifyDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ── Ghost text prediction ──────────────────────────────────────────
+  const [prediction, setPrediction] = useState('');
+  const predictDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Track history of shell commands for prediction
+  const shellHistory = useRef<string[]>([]);
+
+  // Trigger prediction on input change
+  const triggerPrediction = (value: string) => {
+    if (predictDebounce.current) clearTimeout(predictDebounce.current);
+    if (isAILoading) { setPrediction(''); return; }
+    // Only predict in shell mode or detecting (not AI queries)
+    if (inputMode === 'ai') { setPrediction(''); return; }
+    predictDebounce.current = setTimeout(async () => {
+      try {
+        const result = await invoke<string | null>('predict_command', {
+          partialInput: value,
+          history: shellHistory.current.slice(0, 50),
+          cwd: tab.workingDirectory || '~',
+        });
+        // Only show if prediction extends the current input
+        if (result && result !== value && result.startsWith(value)) {
+          setPrediction(result);
+        } else if (result && !value) {
+          // Zero-input next-command suggestion
+          setPrediction(result);
+        } else {
+          setPrediction('');
+        }
+      } catch {
+        setPrediction('');
+      }
+    }, 300); // 300ms debounce — fast enough to feel instant
+  };
+
+  // Record completed shell commands into history for prediction
+  const recordShellCommand = (cmd: string) => {
+    if (!cmd.trim()) return;
+    shellHistory.current = [cmd, ...shellHistory.current.filter(c => c !== cmd)].slice(0, 200);
+  };
+
   // Classify input as user types — live mode indicator like Warp
   const handleUnifiedInputChange = (value: string) => {
     setUnifiedInput(value);
+    setPrediction(''); // clear stale prediction immediately
+    triggerPrediction(value);
 
     // Force overrides: ! = shell, * = AI
     if (value.startsWith('!')) { setInputMode('shell'); return; }
@@ -434,6 +476,8 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     const isShell = forceShell || (!forceAI && inputMode === 'shell');
 
     if (isShell) {
+      recordShellCommand(text); // feed into prediction history
+      setPrediction('');
       // Execute in PTY
       if (!tab.terminalId) {
         console.error('[NexusTerminal] No terminalId on tab — cannot execute shell command');
@@ -659,19 +703,46 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
               boxShadow: inputMode !== 'detecting' ? `0 0 6px ${udiBorderColor}` : 'none',
               transition: 'background 0.15s, box-shadow 0.15s',
             }} />
-            <input
-              ref={unifiedInputRef}
-              type="text"
-              value={unifiedInput}
-              onChange={e => handleUnifiedInputChange(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleUnifiedSubmit(); }
-              }}
-              placeholder={inputMode === 'shell' ? 'Shell command…' : inputMode === 'ai' ? 'Ask NexusAI…' : 'Type a command or ask AI…'}
-              style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#f9fafb', fontSize: 13, fontFamily: 'monospace' }}
-              autoFocus
-              disabled={isAILoading}
-            />
+{/* Ghost text + input wrapper — Warp-style inline prediction */}
+            <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+              {/* Ghost text layer (behind) */}
+              {prediction && inputMode !== 'ai' && (
+                <div aria-hidden style={{
+                  position: 'absolute', left: 0, top: 0, bottom: 0,
+                  display: 'flex', alignItems: 'center',
+                  fontSize: 13, fontFamily: 'monospace',
+                  pointerEvents: 'none', whiteSpace: 'pre', userSelect: 'none',
+                  color: 'transparent',  // invisible spacer matching typed text
+                }}>
+                  {unifiedInput}
+                  <span style={{ color: '#4b5563' }}>{prediction.slice(unifiedInput.length)}</span>
+                </div>
+              )}
+              <input
+                ref={unifiedInputRef}
+                type="text"
+                value={unifiedInput}
+                onChange={e => handleUnifiedInputChange(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Tab' && prediction && inputMode !== 'ai') {
+                    e.preventDefault();
+                    setUnifiedInput(prediction);
+                    setPrediction('');
+                    triggerPrediction(prediction);
+                  } else if (e.key === 'Escape') {
+                    setPrediction('');
+                  } else if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    setPrediction('');
+                    handleUnifiedSubmit();
+                  }
+                }}
+                placeholder={prediction ? '' : (inputMode === 'shell' ? 'Shell command…' : inputMode === 'ai' ? 'Ask NexusAI…' : 'Type a command or ask AI…')}
+                style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#f9fafb', fontSize: 13, fontFamily: 'monospace', position: 'relative' }}
+                autoFocus
+                disabled={isAILoading}
+              />
+            </div>
             <span style={{ fontSize: 10, color: '#4b5563' }}>! shell · * ai · Ctrl+I</span>
             {/* Camera button — capture screen + ask vision AI */}
             <button
