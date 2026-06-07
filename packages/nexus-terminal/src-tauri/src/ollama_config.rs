@@ -7,15 +7,66 @@ use serde::{Deserialize, Serialize};
 
 const OLLAMA_DEFAULT_HOST: &str = "http://127.0.0.1:11434";
 
-// Get models path from environment variable with fallback
+/// Discover where Ollama models live.
+/// Priority:
+///   1. OLLAMA_MODELS env var (explicit user config)
+///   2. ~/.ollama/models (default install location)
+///   3. Any mounted drive under /media/$USER/*/models or /mnt/*/models
+///      that contains an Ollama manifest tree
+pub fn discover_models_path() -> String {
+    // 1. Explicit env var
+    if let Ok(p) = env::var("OLLAMA_MODELS").or_else(|_| env::var("OLLAMA_MODELS_PATH")) {
+        if !p.is_empty() && Path::new(&p).join("manifests").exists() {
+            return p;
+        }
+    }
+
+    // 2. Default ~/.ollama/models
+    let home = env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let default_path = format!("{}/.ollama/models", home);
+    if Path::new(&default_path).join("manifests").exists() {
+        return default_path;
+    }
+
+    // 3. Scan mounted drives for an Ollama models directory
+    let user = env::var("USER").unwrap_or_else(|_| "user".to_string());
+    let search_roots = vec![
+        format!("/media/{}", user),
+        "/media".to_string(),
+        "/mnt".to_string(),
+    ];
+
+    for root in &search_roots {
+        if let Ok(entries) = std::fs::read_dir(root) {
+            for entry in entries.flatten() {
+                // /media/user/<drive>/models  or  /mnt/<drive>/models
+                let candidate = entry.path().join("models");
+                if candidate.join("manifests").exists() {
+                    if let Some(p) = candidate.to_str() {
+                        return p.to_string();
+                    }
+                }
+                // One level deeper: /media/user/<drive>/<subdir>/models
+                if let Ok(sub_entries) = std::fs::read_dir(entry.path()) {
+                    for sub in sub_entries.flatten() {
+                        let deep = sub.path().join("models");
+                        if deep.join("manifests").exists() {
+                            if let Some(p) = deep.to_str() {
+                                return p.to_string();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Fallback — return the default path even if it doesn’t exist yet
+    default_path
+}
+
 fn get_models_path() -> String {
-    env::var("OLLAMA_MODELS")
-        .or_else(|_| env::var("OLLAMA_MODELS_PATH"))
-        .unwrap_or_else(|_| {
-            // Fallback to default Ollama models directory
-            let home = env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
-            format!("{}/.ollama/models", home)
-        })
+    discover_models_path()
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -219,16 +270,60 @@ pub async fn initialize_ollama_config() -> Result<OllamaConfig, OllamaConfigErro
     Ok(config)
 }
 
+/// Write (or update) the systemd drop-in so the Ollama service always
+/// uses the discovered models path — survives reboots, works on any machine.
+/// Requires sudo/root. Fails silently if we don’t have permissions.
+pub fn configure_systemd_ollama(models_path: &str) {
+    let override_dir = "/etc/systemd/system/ollama.service.d";
+    let override_file = format!("{}/override.conf", override_dir);
+
+    // Only write if the content differs from what’s already there
+    let content = format!(
+        "[Service]\nEnvironment=\"OLLAMA_MODELS={}\"\nEnvironment=\"OLLAMA_HOST=0.0.0.0\"\nEnvironment=\"OLLAMA_KEEP_ALIVE=24h\"\n",
+        models_path
+    );
+
+    let existing = std::fs::read_to_string(&override_file).unwrap_or_default();
+    if existing == content {
+        return; // already configured correctly
+    }
+
+    // Try to write via sudo pkexec (works on desktops without a password prompt
+    // if the user has polkit auth) — fall back to nothing if unavailable.
+    let tmp = format!("/tmp/ollama_override_{}.conf", std::process::id());
+    if std::fs::write(&tmp, &content).is_ok() {
+        let _ = Command::new("sudo")
+            .args(["bash", "-c",
+                &format!("mkdir -p {} && cp {} {}", override_dir, tmp, override_file)
+            ])
+            .output(); // ignore failure — we can’t force sudo
+        let _ = Command::new("sudo")
+            .args(["systemctl", "daemon-reload"])
+            .output();
+        let _ = std::fs::remove_file(&tmp);
+    }
+}
+
 pub async fn ensure_ollama_configured() -> Result<(), OllamaConfigError> {
-    // This is the main function to call at app startup
+    // Auto-discover models path and configure systemd if needed
+    let models_path = discover_models_path();
+    if !models_path.is_empty() {
+        // Set for this process
+        env::set_var("OLLAMA_MODELS", &models_path);
+        // Persist for future boots
+        configure_systemd_ollama(&models_path);
+        println!("✓ Ollama models path: {}", models_path);
+    }
+
     match initialize_ollama_config().await {
         Ok(_) => {
-            println!("🎉 Ollama is ready for AI operations!");
+            println!("🎉 Ollama is ready!");
             Ok(())
         },
         Err(e) => {
-            eprintln!("❌ Ollama configuration failed: {}", e);
-            Err(e)
+            eprintln!("⚠️  Ollama configuration issue: {}", e);
+            // Non-fatal — app still starts, AI just may not work until Ollama is set up
+            Ok(())
         }
     }
 }
