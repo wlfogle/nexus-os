@@ -527,30 +527,38 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
         </div>
       </div>
 
-      {/* ── Terminal output (xterm.js) ───────────────────────────────── */}
-      <div style={{
-        flex: aiBlocks.length > 0 ? '0 0 55%' : '1 1 0%',
-        minHeight: 0,
-        width: '100%',
-        overflow: 'hidden',
-        backgroundColor: terminalTheme.background,
-        position: 'relative',
-      }}>
-        {/* xterm fills this container via width/height 100% after fit */}
-        <div
-          ref={terminalRef}
-          style={{ width: '100%', height: '100%' }}
-        />
+      {/* ── Terminal (always full) + AI overlay ───────────────────────── */}
+      <div style={{ flex: '1 1 0%', minHeight: 0, position: 'relative', overflow: 'hidden', backgroundColor: terminalTheme.background }}>
+        {/* xterm always takes full space */}
+        <div ref={terminalRef} style={{ width: '100%', height: '100%' }} />
+
         {!isTerminalReady && (
           <div style={{ position: 'absolute', inset: 0, background: '#0d0d0d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ color: '#6b7280', fontSize: 14 }}>Starting {tab.shell}…</span>
           </div>
         )}
-      </div>
 
-      {/* ── AI blocks (appear below terminal when AI is used) ─────────── */}
-      {aiBlocks.length > 0 && (
-        <div className="flex-1 overflow-y-auto bg-[#111] border-t border-gray-800 px-4 py-3 space-y-3" style={{ minHeight: 0 }}>
+        {/* AI blocks float as an overlay panel at the bottom of the terminal */}
+        {aiBlocks.length > 0 && (
+          <div style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            maxHeight: '55%',
+            display: 'flex', flexDirection: 'column',
+            background: 'rgba(10,10,10,0.96)',
+            borderTop: '1px solid #374151',
+            backdropFilter: 'blur(8px)',
+          }}>
+            {/* overlay header with dismiss */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 12px', borderBottom: '1px solid #374151', flexShrink: 0 }}>
+              <span style={{ color: '#9ca3af', fontSize: 11 }}>NexusAI</span>
+              <button
+                onClick={() => setAiBlocks([])}
+                style={{ color: '#6b7280', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}
+              >
+                × dismiss
+              </button>
+            </div>
+            <div className="overflow-y-auto px-4 py-3 space-y-3" style={{ minHeight: 0 }}>
           {aiBlocks.map(block => (
             <div key={block.id} className={`flex ${ block.role === 'user' ? 'justify-end' : 'justify-start' }`}>
               <div className={`max-w-[85%] rounded-lg px-4 py-2 text-sm font-mono whitespace-pre-wrap break-words
@@ -587,8 +595,10 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
             </div>
           )}
           <div ref={aiBlocksEndRef} />
-        </div>
-      )}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* ── Unified input — single box, Warp-style ─────────────────────── */}
       <div className={`flex-shrink-0 border-t px-3 py-2 bg-[#1a1a1a] flex items-center gap-2 ${modeColor}`}>
