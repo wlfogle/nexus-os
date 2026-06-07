@@ -528,15 +528,22 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
       </div>
 
       {/* ── Terminal output (xterm.js) ───────────────────────────────── */}
-      <div className="relative" style={{ flex: aiBlocks.length > 0 ? '0 0 55%' : '1 1 auto' }}>
+      <div style={{
+        flex: aiBlocks.length > 0 ? '0 0 55%' : '1 1 0%',
+        minHeight: 0,
+        width: '100%',
+        overflow: 'hidden',
+        backgroundColor: terminalTheme.background,
+        position: 'relative',
+      }}>
+        {/* xterm fills this container via width/height 100% after fit */}
         <div
           ref={terminalRef}
-          className="absolute inset-0"
-          style={{ backgroundColor: terminalTheme.background }}
+          style={{ width: '100%', height: '100%' }}
         />
         {!isTerminalReady && (
-          <div className="absolute inset-0 bg-[#0d0d0d] flex items-center justify-center">
-            <div className="text-gray-500 text-sm">Starting {tab.shell}…</div>
+          <div style={{ position: 'absolute', inset: 0, background: '#0d0d0d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: '#6b7280', fontSize: 14 }}>Starting {tab.shell}…</span>
           </div>
         )}
       </div>

@@ -83,7 +83,7 @@ export const WarpStyleTerminal: React.FC<WarpStyleTerminalProps> = ({ className 
       <WarpTabBar />
 
       {/* Active terminal — fills all remaining space */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div style={{ flex: '1 1 0%', minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {activeTab ? (
           <TerminalWithAI key={activeTab.id} tab={activeTab} />
         ) : (
