@@ -198,26 +198,6 @@ impl TerminalManager {
         // Start reading output in a separate thread
         self.start_output_reader(&terminal_id).await?;
 
-        // Inject OSC 133 shell integration hooks after shell initialises
-        {
-            let terminals_osc = Arc::clone(&self.terminals);
-            let tid = terminal_id.clone();
-            let shell_name = shell_cmd.clone();
-            tokio::spawn(async move {
-                // Wait for shell startup
-                tokio::time::sleep(Duration::from_millis(400)).await;
-                let bootstrap = osc133_bootstrap(&shell_name);
-                if let Ok(terminals) = terminals_osc.lock() {
-                    if let Some(t) = terminals.get(&tid) {
-                        if let Ok(mut w) = t.master.take_writer() {
-                            let _ = w.write_all(bootstrap.as_bytes());
-                            let _ = w.flush();
-                        }
-                    }
-                }
-            });
-        }
-
         info!("Created terminal {} shell={} cwd={}", terminal_id, shell_cmd, working_dir);
         Ok(terminal_id)
     }

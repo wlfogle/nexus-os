@@ -96,9 +96,14 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     terminal.current.loadAddon(new WebLinksAddon());
     terminal.current.loadAddon(new SearchAddon());
 
-    // Open terminal
+    // Open terminal — defer fit so flex layout has resolved
     terminal.current.open(terminalRef.current);
-    fitAddon.current.fit();
+    // Immediate fit + delayed refit to handle async layout
+    requestAnimationFrame(() => {
+      fitAddon.current?.fit();
+      // Second refit after paint to catch any remaining layout shifts
+      setTimeout(() => fitAddon.current?.fit(), 100);
+    });
 
     // ALL keyboard input goes directly to the PTY — terminal is a pure shell
     // Natural language goes to the AI panel's own dedicated input (right side)
@@ -112,13 +117,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
       }
     });
 
-    // Welcome message with AI-first greeting
-    terminal.current.writeln('🚀 Welcome to NexusTerminal - AI-First Terminal Assistant');
-    terminal.current.writeln('🤖 AI Chat Mode is active by default!');
-    terminal.current.writeln('💡 Type commands like "ls -la" to execute shell commands');
-    terminal.current.writeln('💬 Type questions like "how do I..." for AI assistance');
-    terminal.current.writeln(`⚡ Shell: ${getShellWelcomeMessage(tab.shell).replace(/^.+ Welcome to /, '')}`);
-    terminal.current.writeln('');
+    // No welcome clutter — shell prompt appears immediately
 
     setIsTerminalReady(true);
 
