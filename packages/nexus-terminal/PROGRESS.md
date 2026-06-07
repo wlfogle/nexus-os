@@ -166,10 +166,23 @@ From prior Copilot analysis:
 10. ✅ **Tool results persisted** (Warp-style blocks) — `EnhancedAIAssistant.tsx` + `useInputRouting.ts`: tool call outputs are now baked into the committed Redux message, not discarded on `agent-done`.
 11. ✅ `cargo check` + `npm run build` both pass clean.
 
+## Completed This Session (continued)
+
+12. ✅ **Unified input** — single bar at bottom replaces split AI modal. Warp-style: `! = shell`, `* = AI`, `Ctrl+I = toggle`
+13. ✅ **Live classifier badge** — Rust classify_input called on every keystroke. Shows 🖵 SHELL or 🤖 NEXUSAI before Enter
+14. ✅ **terminalId camelCase fix** — Tauri v2 requires camelCase args. `terminal_id` → `terminalId` in all invoke calls
+15. ✅ **xterm full-width layout** — flex:1 + minHeight:0 ensures xterm fills the container
+16. ✅ **AI overlay (not split)** — NexusAI panel floats over terminal as translucent overlay with × dismiss
+17. ✅ **cwd resolution** — `~` resolved to null so Rust uses actual home dir; agent told to use injected cwd
+18. ✅ **Shell output verified** — `ls -la` with fish colors confirmed working in full-width terminal
+19. ✅ **NexusAI verified** — `show files` triggers list_dir tool call, response appears in overlay
+
 ## Remaining
 
 - Fix remaining placeholder components: `NewTabModal.tsx`, `TerminalTabManager.tsx`
 - `ragService.ts` / `visionService.ts` missing method implementations
+- Agent cwd still resolves to Tauri process dir (src-tauri/), not the fish shell's cwd
+- OSC 133 re-enable for recentBlocks (currently disabled)
 
 ---
 
