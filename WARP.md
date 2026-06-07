@@ -154,6 +154,17 @@ Every function must be complete and working.  No stubs, no TODOs, no zombie code
 - **Phase 7** — VFS, network stack, package manager
 ---
 
+## Session Continuity
+
+**IMPORTANT: At the start of EVERY conversation, before doing anything else:**
+1. Read `/home/loufogle/nexus-os/packages/nexus-terminal/PROGRESS.md` to get current state
+2. Check `git --no-pager log --oneline -5` in `/home/loufogle/nexus-os` to see recent commits
+3. You are already caught up. Do not ask the user to explain what we were doing.
+
+This eliminates the need to re-explain context every session.
+
+---
+
 ## The Mission
 
 NexusOS is the **world's first universal AI-native operating system**.
