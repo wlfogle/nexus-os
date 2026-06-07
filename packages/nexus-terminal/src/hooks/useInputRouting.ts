@@ -60,7 +60,7 @@ export const useInputRouting = () => {
         const terminalId = await ensureTerminalId();
         if (terminalId) {
           routingLogger.info('NL→shell direct translation', 'nl_to_shell', { input: trimmed, command: directShellCmd });
-          await invoke('write_to_terminal', { terminal_id: terminalId, data: `${directShellCmd}\r` });
+          await invoke('write_to_terminal', { terminalId: terminalId, data: `${directShellCmd}\r` });
         }
         return;
       }

@@ -85,7 +85,7 @@ const TerminalView: React.FC = () => {
   // Memoized callback for terminal data handling
   const handleTerminalData = useCallback(async (data: string, terminalId: string) => {
     try {
-      await invoke('write_to_terminal', { terminal_id: terminalId, data });
+      await invoke('write_to_terminal', { terminalId: terminalId, data });
     } catch (error) {
       console.error('Failed to write to terminal:', error);
     }
@@ -97,7 +97,7 @@ const TerminalView: React.FC = () => {
     if (activeTerminalId && terminal.current) {
       const { cols, rows } = terminal.current;
 
-      invoke('resize_terminal', { terminal_id: activeTerminalId, cols, rows });
+      invoke('resize_terminal', { terminalId: activeTerminalId, cols, rows });
     }
   }, [activeTerminalId]);
 

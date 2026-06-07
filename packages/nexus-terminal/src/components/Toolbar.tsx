@@ -22,7 +22,7 @@ const Toolbar: React.FC = () => {
 
   const handleCloseTerminal = async (terminalId: string) => {
     try {
-      await invoke('close_terminal', { terminal_id: terminalId });
+      await invoke('close_terminal', { terminalId: terminalId });
       dispatch(closeTerminal(terminalId));
     } catch (error) {
       console.error('Failed to close terminal:', error);

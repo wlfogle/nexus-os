@@ -110,7 +110,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     terminal.current.onData(async (data: string) => {
       if (!tab.terminalId) return;
       try {
-        await invoke('write_to_terminal', { terminal_id: tab.terminalId, data });
+        await invoke('write_to_terminal', { terminalId: tab.terminalId, data });
       } catch (error) {
         terminalLogger.error('PTY write failed', error as Error, 'write_terminal_failed', { terminalId: tab.terminalId });
         dispatch(addError({ tabId: tab.id, error: { command: 'write_to_terminal', errorMessage: String(error), timestamp: new Date(), workingDirectory: tab.workingDirectory } }));
@@ -140,7 +140,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
 
     const OSC_RE = /\x1b\]133;([^\x07]*)\x07/g;
 
-    listen<{ terminal_id: string; data: string }>('terminal-output', (event) => {
+    listen<{ terminalId: string; data: string }>('terminal-output', (event) => {
       const { terminal_id, data } = event.payload;
       if (terminal_id !== capturedTerminalId) return;
       if (!terminal.current) {
@@ -426,7 +426,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
       }
       try {
         console.log('[NexusTerminal] write_to_terminal:', tab.terminalId, JSON.stringify(text + '\r'));
-        await invoke('write_to_terminal', { terminal_id: tab.terminalId, data: text + '\r' });
+        await invoke('write_to_terminal', { terminalId: tab.terminalId, data: text + '\r' });
         console.log('[NexusTerminal] write_to_terminal succeeded');
       } catch (e) {
         console.error('[NexusTerminal] write_to_terminal FAILED:', e);
@@ -516,7 +516,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
                     inputMode === 'ai'    ? '🤖 NEXUSAI' : '···';
 
   return (
-    <div className="flex flex-col h-full bg-[#0d0d0d] overflow-hidden">
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', background: '#0d0d0d' }}>
 
       {/* ── Header bar: shell info + model ─────────────────────────── */}
       <div className="flex-shrink-0 flex items-center justify-between px-4 py-1.5 bg-[#1a1a1a] border-b border-gray-800 text-xs text-gray-400">
