@@ -11,12 +11,31 @@ use tracing::{debug, info, warn};
 
 const MAX_STEPS: usize = 30;
 
-const SYSTEM_PROMPT: &str = r#"You are NexusAI — an autonomous software engineering agent.
-Be concise. No filler. Take action. Write complete code. Verify with tests.
-Use read_files to read multiple files at once.
-Use file_tree to understand structure before diving in.
-Use run_cmd to verify changes work.
-Never call the same tool twice with the same arguments."#;
+const SYSTEM_PROMPT: &str = r#"You are NexusAI — the autonomous intelligence core of NexusOS, the world's first AI-driven operating system.
+
+You are not a chatbot. You are an agent. You take action.
+
+Tools available:
+- read_file, read_files, write_file, edit_file — filesystem
+- run_cmd, list_dir, file_tree, grep, create_dir, search_codebase — navigation and execution
+- git_status, git_diff, git_log, git_commit — version control
+- http_get, http_post — API calls
+- ssh_exec — run commands on remote hosts
+- systemctl_cmd — control system services
+- docker_cmd — manage containers
+- list_services — enumerate running services
+- process_list — list running processes
+- scan_system — full system health scan (CPU, memory, disk, services, network)
+- proxmox_list — list all VMs and LXC containers on the Proxmox host
+
+Rules:
+- Be concise. No filler. No apologies.
+- Take the shortest path to the correct answer.
+- When asked to scan systems, use scan_system and proxmox_list.
+- Use ssh_exec to reach remote hosts (tiamat, bahamut, etc).
+- Read before editing. Verify with run_cmd.
+- Never call the same tool twice with the same arguments.
+- Write complete working code. No stubs."#;
 
 // ── Ollama native function-calling types ──────────────────────────────────────
 
@@ -334,6 +353,28 @@ fn build_tools() -> Vec<Tool> {
                     "type": "object",
                     "properties": {
                         "host": {"type": "string", "description": "Host to query (default: localhost)"}
+                    },
+                    "required": []
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "scan_system",
+                description: "Full system scan: CPU load, memory, disk usage, top processes, running services, network interfaces. Use this to diagnose any system issue.",
+                parameters: serde_json::json!({ "type": "object", "properties": {}, "required": [] }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "proxmox_list",
+                description: "List all VMs and LXC containers on the Proxmox host, plus storage pool status.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "host": {"type": "string", "description": "SSH host alias for the Proxmox server (default: tiamat)"}
                     },
                     "required": []
                 }),
@@ -749,6 +790,53 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str) -> S
                 }
                 Ok(Err(e)) => format!("ERROR: {}", e),
                 Err(_) => "ERROR: docker command timed out after 30s".to_string(),
+            }
+        }
+
+        "scan_system" => {
+            // CPU, memory, disk, top processes, all services — one call
+            let cmd = [
+                "echo '=== CPU ===' && grep -c ^processor /proc/cpuinfo && cat /proc/loadavg",
+                "echo '=== MEMORY ===' && free -h",
+                "echo '=== DISK ===' && df -h --output=source,size,used,avail,pcent,target | head -20",
+                "echo '=== TOP PROCESSES ===' && ps aux --sort=-%cpu | head -15",
+                "echo '=== SERVICES ===' && systemctl list-units --type=service --state=running --no-pager --no-legend 2>/dev/null | head -30 || docker ps --format 'table {{.Names}}\t{{.Status}}' 2>/dev/null",
+                "echo '=== NETWORK ===' && ip -brief addr 2>/dev/null || ifconfig -s 2>/dev/null",
+            ].join(" && ");
+            match tokio::time::timeout(
+                Duration::from_secs(30),
+                tokio::process::Command::new("sh").arg("-c").arg(&cmd).output(),
+            ).await {
+                Ok(Ok(out)) => {
+                    let r = String::from_utf8_lossy(&out.stdout).to_string();
+                    if r.len() > 12_000 { format!("{}\n[truncated]", &r[..12_000]) } else { r }
+                }
+                Ok(Err(e)) => format!("ERROR: {}", e),
+                Err(_) => "ERROR: scan timed out".to_string(),
+            }
+        }
+
+        "proxmox_list" => {
+            // List all VMs and LXC containers on Proxmox host
+            let host = args["host"].as_str().unwrap_or("tiamat");
+            let cmd = format!(
+                "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 {} \
+                \"echo '=== VMs ===' && qm list 2>/dev/null; \
+                  echo '=== LXC ===' && pct list 2>/dev/null; \
+                  echo '=== STORAGE ===' && pvesm status 2>/dev/null\"",
+                host
+            );
+            match tokio::time::timeout(
+                Duration::from_secs(20),
+                tokio::process::Command::new("sh").arg("-c").arg(&cmd).output(),
+            ).await {
+                Ok(Ok(out)) => {
+                    let stdout = String::from_utf8_lossy(&out.stdout);
+                    let stderr = String::from_utf8_lossy(&out.stderr);
+                    if stdout.is_empty() { format!("ERROR: {}", stderr) } else { stdout.to_string() }
+                }
+                Ok(Err(e)) => format!("ERROR: {}", e),
+                Err(_) => "ERROR: proxmox query timed out".to_string(),
             }
         }
 
