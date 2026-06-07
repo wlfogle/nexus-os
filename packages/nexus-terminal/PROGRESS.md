@@ -160,16 +160,16 @@ From prior Copilot analysis:
 4. ✅ OSC 133 shell integration — `terminal.rs` now injects bash/zsh/fish hooks on spawn
 5. ✅ **Agent engine** — `src-tauri/src/agent.rs`: autonomous AI with tool use (read_file, write_file, run_cmd, list_dir, grep, git_status), 20-step loop, works with any Ollama model
 6. ✅ `EnhancedAIAssistant.tsx` — wired to `agent_chat`, shows tool calls inline
-7. ✅ Ollama configured to use external drive models (`/media/loufogle/.../models`)
-8. ✅ `.env` set to `deepseek-coder-v2:16b` as default agent model (fits RTX 4080 12GB)
-9. ✅ `cargo check` passes clean
+7. ✅ **Fixed agent model** — `AGENT_MODEL=llama3.1:8b` (supports tool calling). `deepseek-coder-v2:16b` does NOT support Ollama tool calls — kept only for completions.
+8. ✅ **Warp input classifier ported** — `src-tauri/src/input_classifier.rs`: exact port of Warp’s HeuristicClassifier (AGPL-3.0). Uses Warp’s `words.txt` + `stack_overflow.txt` word lists, shell syntax detection, PATH lookup. Exposed as `classify_input` Tauri command.
+9. ✅ **commandRouting.ts rewritten** — primary path now calls Rust `classify_input` instead of TypeScript regex. Regex kept as fallback only.
+10. ✅ **Tool results persisted** (Warp-style blocks) — `EnhancedAIAssistant.tsx` + `useInputRouting.ts`: tool call outputs are now baked into the committed Redux message, not discarded on `agent-done`.
+11. ✅ `cargo check` + `npm run build` both pass clean.
 
 ## Remaining
 
-- Frontend full build (`npm run build`) — needs Node deps installed
 - Fix remaining placeholder components: `NewTabModal.tsx`, `TerminalTabManager.tsx`
 - `ragService.ts` / `visionService.ts` missing method implementations
-- Streaming responses (currently waits for full agent reply)
 
 ---
 

@@ -11,6 +11,7 @@ use tracing::info;
 
 mod agent;
 mod ai;
+mod input_classifier;
 mod git;
 mod git_advanced;
 mod terminal;
@@ -2475,7 +2476,7 @@ async fn agent_chat(
 ) -> Result<agent::AgentResponse, String> {
     let config = state.config.read().await;
     let ollama_url = config.ai.ollama_url.clone();
-    let model = config.ai.default_model.clone();
+    let model = config.ai.agent_model.clone();  // use tool-use optimised model
     drop(config);
 
     let working_dir = cwd.unwrap_or_else(|| {
@@ -2511,7 +2512,7 @@ async fn agent_chat_stream(
 ) -> Result<(), String> {
     let config = state.config.read().await;
     let ollama_url = config.ai.ollama_url.clone();
-    let model = config.ai.default_model.clone();
+    let model = config.ai.agent_model.clone();  // use tool-use optimised model
     drop(config);
 
     let working_dir = cwd.unwrap_or_else(|| {
@@ -2535,6 +2536,14 @@ async fn agent_chat_stream(
     });
 
     Ok(())
+}
+
+// ── Input classifier (Warp-derived) ─────────────────────────────────────────
+/// Classify terminal input as shell command or natural language.
+/// Same algorithm as Warp's HeuristicClassifier (ported from AGPL-3.0 source).
+#[tauri::command]
+async fn classify_input(input: String) -> Result<input_classifier::ClassifyResult, String> {
+    Ok(input_classifier::classify(&input).await)
 }
 
 // ── Alias persistence ────────────────────────────────────────────────────────
@@ -3218,6 +3227,8 @@ async fn main() {
             ollama_get_available_models,
             ollama_initialize_config,
             ollama_ensure_configured,
+// Input classifier (Warp-derived NL vs shell detection)
+            classify_input,
             // Agent
             agent_chat,
             agent_chat_stream,
