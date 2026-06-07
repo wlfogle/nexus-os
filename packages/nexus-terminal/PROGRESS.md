@@ -1,5 +1,5 @@
-# NexusTerminal – Conversation Progress Report
-Generated: 2026-06-07 (updated)
+# NexusTerminal – Progress Report
+Last updated: 2026-06-07 (Phase 1 complete)
 
 ---
 
@@ -166,23 +166,79 @@ From prior Copilot analysis:
 10. ✅ **Tool results persisted** (Warp-style blocks) — `EnhancedAIAssistant.tsx` + `useInputRouting.ts`: tool call outputs are now baked into the committed Redux message, not discarded on `agent-done`.
 11. ✅ `cargo check` + `npm run build` both pass clean.
 
-## Completed This Session (continued)
+---
 
-12. ✅ **Unified input** — single bar at bottom replaces split AI modal. Warp-style: `! = shell`, `* = AI`, `Ctrl+I = toggle`
-13. ✅ **Live classifier badge** — Rust classify_input called on every keystroke. Shows 🖵 SHELL or 🤖 NEXUSAI before Enter
-14. ✅ **terminalId camelCase fix** — Tauri v2 requires camelCase args. `terminal_id` → `terminalId` in all invoke calls
-15. ✅ **xterm full-width layout** — flex:1 + minHeight:0 ensures xterm fills the container
-16. ✅ **AI overlay (not split)** — NexusAI panel floats over terminal as translucent overlay with × dismiss
-17. ✅ **cwd resolution** — `~` resolved to null so Rust uses actual home dir; agent told to use injected cwd
-18. ✅ **Shell output verified** — `ls -la` with fish colors confirmed working in full-width terminal
-19. ✅ **NexusAI verified** — `show files` triggers list_dir tool call, response appears in overlay
+## 🏁 Phase 1 Complete — 2026-06-07
 
-## Remaining
+### Core Terminal
+| Feature | Status |
+|---------|--------|
+| Fish shell PTY | ✅ Full-width, fish colors, correct cwd |
+| Shell command routing | ✅ `ls -la` → green **SHELL** badge → PTY → output in xterm |
+| NL routing | ✅ `list files` → purple **AGENT** badge → llama3.1:8b → overlay |
+| Warp-style UDI | ✅ Rounded pill, border color by mode, cwd chip, model name, mode buttons |
+| Auto-detect | ✅ Warp HeuristicClassifier ported (AGPL-3.0), 120ms debounce |
 
-- Fix remaining placeholder components: `NewTabModal.tsx`, `TerminalTabManager.tsx`
-- `ragService.ts` / `visionService.ts` missing method implementations
-- Agent cwd still resolves to Tauri process dir (src-tauri/), not the fish shell's cwd
-- OSC 133 re-enable for recentBlocks (currently disabled)
+### AI Agent
+| Feature | Status |
+|---------|--------|
+| Tool-calling model | ✅ `llama3.1:8b` (deepseek-coder-v2 doesn’t support tools) |
+| 30 agent tools | ✅ read/edit/write/run/grep/git/ssh/docker/proxmox/http/systemctl/scan |
+| `edit_file` | ✅ Exact search/replace — same as Warp/Oz; no full-file rewrites |
+| `fix it` context | ✅ Auto git-status + cargo check/tsc injected before every request |
+| Warp BlockContext | ✅ OSC 133 captures command+output+exitCode into recentBlocks |
+| Tool results persist | ✅ Tool outputs baked into final Redux message (not discarded) |
+| AI overlay | ✅ Floats over terminal, translucent, × dismiss |
+
+### Screen Vision (Phase 1.5)
+| Feature | Status |
+|---------|--------|
+| Screen capture | ✅ `scrap` + 200ms compositor flush fix for GNOME X11 |
+| Vision model | ✅ `llama3.2-vision:11b` via Ollama `/api/chat` |
+| OCR | ✅ Via vision model (no Tesseract dependency) |
+| 📸 camera button | ✅ In UDI — captures screen + describes in 2-3 sentences |
+| Agent `screenshot` tool | ✅ Agent can autonomously call screenshot to see the screen |
+| Warp classifier port | ✅ `crates/input_classifier` + `natural_language_detection` word lists |
+
+---
+
+## 🚀 Phase 2 — Next Development
+
+### Priority 1: Predictive Command Engine
+- **Next-command suggestions**: after each command completes, `llama3.1:8b` predicts likely next command (ghost text in input)
+- **History-aware**: uses recent commands + cwd + git status as context
+- **Inline ghost text**: render suggestion in gray in the input field, Tab to accept
+- **Files**: `agent.rs` new tool `predict_next_command`, `TerminalWithAI.tsx` ghost text renderer
+
+### Priority 2: Advanced RAG
+- **Codebase indexing**: `nomic-embed-text:latest` (already installed) embeds files into vector store
+- **Context injection**: relevant code snippets automatically added to agent context
+- **Status**: `ragService.ts` and `local_recall.rs` already scaffolded, need real embedding pipeline
+- **Files**: `src/services/ragService.ts`, `src-tauri/src/local_recall.rs`
+
+### Priority 3: Autonomous Debugging
+- **Error intercept**: when a shell command exits non-zero, offer `Fix this?` prompt
+- **Self-healing loop**: agent reads error → edits file → runs build → iterates until pass
+- **Already partially works** via `fix it` + `edit_file` + `run_cmd`
+- **Needs**: error block UI trigger, progress indication, iteration limit display
+
+### Priority 4: Multi-Agent Coordination
+- **Parallel agents**: spawn N agents on different tasks simultaneously
+- **Agent-to-agent messaging**: shared context, result aggregation
+- **Architecture**: Tauri event bus already supports multiple session IDs
+
+### Priority 5: Warp Drive equivalent
+- **Snippets**: save frequently used commands/prompts
+- **Notebooks**: persistent AI conversation sessions
+- **Rules**: persistent context injected into every agent request
+
+---
+
+## Remaining Known Issues
+- Agent cwd resolves to Tauri process dir (`src-tauri/`), not fish shell’s current dir
+- OSC 133 hooks disabled (removed to fix display noise); recentBlocks partially works via other path
+- `NewTabModal.tsx` / `TerminalTabManager.tsx` placeholder components still unused
+- `visionService.ts` frontend stubs not wired to new `capture_and_ask` command
 
 ---
 
