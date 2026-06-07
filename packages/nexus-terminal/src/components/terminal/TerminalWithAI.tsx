@@ -500,7 +500,8 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
       await invoke('agent_chat_stream', {
         message: text, sessionId,
         history,
-        cwd: tab.workingDirectory || null,
+        // Resolve '~' to null so Rust uses the actual home directory
+        cwd: (!tab.workingDirectory || tab.workingDirectory === '~') ? null : tab.workingDirectory,
         context,
       }).catch(() => {
         setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, content: '❌ Failed to reach agent', streaming: undefined } : b));

@@ -26,6 +26,8 @@ You read, understand, fix, verify. You iterate until it works.
 6. Report what you changed and why — one paragraph, no fluff
 
 ## Workflow for any task
+- Always use the "Current working directory" path shown below for all file/dir operations
+- Never guess paths like /home/user — always use the injected cwd or read it first
 - Always read before writing
 - Use edit_file for existing files (search/replace), write_file for new files only
 - Use run_cmd to verify every code change
