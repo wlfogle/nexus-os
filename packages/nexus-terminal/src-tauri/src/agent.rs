@@ -11,31 +11,35 @@ use tracing::{debug, info, warn};
 
 const MAX_STEPS: usize = 30;
 
-const SYSTEM_PROMPT: &str = r#"You are NexusAI — the autonomous intelligence core of NexusOS, the world's first AI-driven operating system.
+const SYSTEM_PROMPT: &str = r#"You are NexusAI — the autonomous agent core of NexusOS.
 
-You are not a chatbot. You are an agent. You take action.
+You operate exactly like a senior engineer who has full access to the machine.
+You take action. You do not ask for permission. You do not explain before acting.
+You read, understand, fix, verify. You iterate until it works.
 
-Tools available:
-- read_file, read_files, write_file, edit_file — filesystem
-- run_cmd, list_dir, file_tree, grep, create_dir, search_codebase — navigation and execution
-- git_status, git_diff, git_log, git_commit — version control
-- http_get, http_post — API calls
-- ssh_exec — run commands on remote hosts
-- systemctl_cmd — control system services
-- docker_cmd — manage containers
-- list_services — enumerate running services
-- process_list — list running processes
-- scan_system — full system health scan (CPU, memory, disk, services, network)
-- proxmox_list — list all VMs and LXC containers on the Proxmox host
+## Workflow for fixing code
+1. read_file / grep / search_codebase — understand the problem
+2. edit_file — make the minimal targeted change (never rewrite whole files unless new)
+3. run_cmd — verify: build, test, lint
+4. If it fails, read the error, edit_file again, verify again
+5. git_commit — commit when it works
+6. Report what you changed and why — one paragraph, no fluff
 
-Rules:
-- Be concise. No filler. No apologies.
-- Take the shortest path to the correct answer.
-- When asked to scan systems, use scan_system and proxmox_list.
-- Use ssh_exec to reach remote hosts (tiamat, bahamut, etc).
-- Read before editing. Verify with run_cmd.
-- Never call the same tool twice with the same arguments.
-- Write complete working code. No stubs."#;
+## Workflow for any task
+- Always read before writing
+- Use edit_file for existing files (search/replace), write_file for new files only
+- Use run_cmd to verify every code change
+- Use ssh_exec for remote hosts (tiamat, bahamut, Pi nodes)
+- Use scan_system when diagnosing performance or health issues
+- Use grep/search_codebase to find things before asking where they are
+- Never call the same tool twice with identical arguments
+- No stubs. No TODOs. Complete working code only.
+
+## Tools
+read_file, read_files, write_file, edit_file, run_cmd, list_dir, file_tree,
+grep, create_dir, search_codebase, git_status, git_diff, git_log, git_commit,
+http_get, http_post, ssh_exec, systemctl_cmd, process_list, docker_cmd,
+list_services, scan_system, proxmox_list"#;
 
 // ── Ollama native function-calling types ──────────────────────────────────────
 
@@ -383,12 +387,117 @@ fn build_tools() -> Vec<Tool> {
         Tool {
             kind: "function",
             function: ToolFunction {
+                name: "edit_file",
+                description: "Edit a file with exact search/replace. Replaces the FIRST occurrence of `search` with `replace`. Use this for targeted changes to existing files — never rewrite whole files.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "path":    {"type": "string", "description": "Absolute path to the file"},
+                        "search":  {"type": "string", "description": "Exact string to find (must be unique in the file)"},
+                        "replace": {"type": "string", "description": "String to replace it with"}
+                    },
+                    "required": ["path", "search", "replace"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "git_log",
+                description: "Show recent git commits (oneline format).",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "path":  {"type": "string", "description": "Repository path"},
+                        "count": {"type": "integer", "description": "Number of commits to show (default 10)"}
+                    },
+                    "required": ["path"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "git_commit",
+                description: "Stage all changes and create a git commit.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "path":    {"type": "string", "description": "Repository path"},
+                        "message": {"type": "string", "description": "Commit message"}
+                    },
+                    "required": ["path", "message"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "ssh_exec",
+                description: "Run a shell command on a remote host over SSH.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "host": {"type": "string", "description": "SSH host alias or user@host"},
+                        "cmd":  {"type": "string", "description": "Command to run on the remote host"}
+                    },
+                    "required": ["host", "cmd"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "http_post",
+                description: "Send an HTTP POST request with a JSON body.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "url":  {"type": "string", "description": "URL to POST to"},
+                        "body": {"type": "string", "description": "JSON body as a string"}
+                    },
+                    "required": ["url", "body"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "systemctl_cmd",
+                description: "Run a systemctl command (start, stop, restart, status, enable, disable).",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "action":  {"type": "string", "description": "Action: start|stop|restart|status|enable|disable"},
+                        "service": {"type": "string", "description": "Service name (e.g. 'nginx', 'docker')"}
+                    },
+                    "required": ["action", "service"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "process_list",
+                description: "List running processes, optionally filtered by name.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "filter": {"type": "string", "description": "Optional process name filter"}
+                    },
+                    "required": []
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
                 name: "docker_cmd",
                 description: "Run a docker command (ps, logs, restart, exec, etc).",
                 parameters: serde_json::json!({
                     "type": "object",
                     "properties": {
-                        "cmd": {"type": "string", "description": "Docker subcommand and args (e.g. 'ps -a', 'logs jellyfin', 'restart sonarr')"}
+                        "cmd": {"type": "string", "description": "Docker subcommand and args"}
                     },
                     "required": ["cmd"]
                 }),
@@ -837,6 +946,134 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str) -> S
                 }
                 Ok(Err(e)) => format!("ERROR: {}", e),
                 Err(_) => "ERROR: proxmox query timed out".to_string(),
+            }
+        }
+
+        "edit_file" => {
+            let path = args["path"].as_str().unwrap_or("");
+            let search = args["search"].as_str().unwrap_or("");
+            let replace = args["replace"].as_str().unwrap_or("");
+            if path.is_empty() || search.is_empty() {
+                return "ERROR: path and search are required".to_string();
+            }
+            match tokio::fs::read_to_string(path).await {
+                Ok(content) => {
+                    if !content.contains(search) {
+                        return format!("ERROR: search string not found in {}\nHint: read the file first and use an exact substring.", path);
+                    }
+                    let new_content = content.replacen(search, replace, 1);
+                    match tokio::fs::write(path, &new_content).await {
+                        Ok(_) => format!("OK: edited {} ({} bytes → {} bytes)", path, content.len(), new_content.len()),
+                        Err(e) => format!("ERROR writing {}: {}", path, e),
+                    }
+                }
+                Err(e) => format!("ERROR reading {}: {}", path, e),
+            }
+        }
+
+        "git_log" => {
+            let path = args["path"].as_str().unwrap_or(default_cwd);
+            let count = args["count"].as_u64().unwrap_or(10);
+            match tokio::process::Command::new("git")
+                .args(["-C", path, "--no-pager", "log", "--oneline", &format!("-{}", count)])
+                .output().await
+            {
+                Ok(out) => String::from_utf8_lossy(&out.stdout).to_string(),
+                Err(e) => format!("ERROR: {}", e),
+            }
+        }
+
+        "git_commit" => {
+            let path = args["path"].as_str().unwrap_or(default_cwd);
+            let message = args["message"].as_str().unwrap_or("fix");
+            let stage = tokio::process::Command::new("git")
+                .args(["-C", path, "add", "-A"])
+                .output().await;
+            if let Err(e) = stage {
+                return format!("ERROR staging: {}", e);
+            }
+            match tokio::process::Command::new("git")
+                .args(["-C", path, "commit", "-m", message])
+                .output().await
+            {
+                Ok(out) => {
+                    let stdout = String::from_utf8_lossy(&out.stdout);
+                    let stderr = String::from_utf8_lossy(&out.stderr);
+                    if out.status.success() { stdout.to_string() } else { format!("ERROR: {}", stderr) }
+                }
+                Err(e) => format!("ERROR: {}", e),
+            }
+        }
+
+        "ssh_exec" => {
+            let host = args["host"].as_str().unwrap_or("");
+            let cmd = args["cmd"].as_str().unwrap_or("");
+            if host.is_empty() || cmd.is_empty() {
+                return "ERROR: host and cmd are required".to_string();
+            }
+            let full_cmd = format!("ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 {} '{}'", host, cmd.replace('\'', "'\"'\"'"));
+            match tokio::time::timeout(
+                Duration::from_secs(30),
+                tokio::process::Command::new("sh").arg("-c").arg(&full_cmd).output(),
+            ).await {
+                Ok(Ok(out)) => {
+                    let stdout = String::from_utf8_lossy(&out.stdout);
+                    let stderr = String::from_utf8_lossy(&out.stderr);
+                    let exit = out.status.code().unwrap_or(-1);
+                    let result = if stderr.is_empty() { stdout.to_string() } else if stdout.is_empty() { stderr.to_string() } else { format!("{}\nSTDERR: {}", stdout, stderr) };
+                    if exit != 0 { format!("EXIT {}\n{}", exit, result) } else { result }
+                }
+                Ok(Err(e)) => format!("ERROR: {}", e),
+                Err(_) => "ERROR: ssh timed out after 30s".to_string(),
+            }
+        }
+
+        "http_post" => {
+            let url = args["url"].as_str().unwrap_or("");
+            let body = args["body"].as_str().unwrap_or("");
+            if url.is_empty() { return "ERROR: url is required".to_string(); }
+            let client = match Client::builder().timeout(Duration::from_secs(15)).danger_accept_invalid_certs(true).build() {
+                Ok(c) => c,
+                Err(e) => return format!("ERROR: {}", e),
+            };
+            match client.post(url).header("Content-Type", "application/json").body(body.to_string()).send().await {
+                Ok(resp) => {
+                    let status = resp.status();
+                    match resp.text().await {
+                        Ok(b) => { let b = if b.len() > 8000 { format!("{}\n[truncated]", &b[..8000]) } else { b }; if status.is_success() { b } else { format!("HTTP {}\n{}", status, b) } }
+                        Err(e) => format!("HTTP {} — read error: {}", status, e),
+                    }
+                }
+                Err(e) => format!("ERROR: {}", e),
+            }
+        }
+
+        "systemctl_cmd" => {
+            let action = args["action"].as_str().unwrap_or("");
+            let service = args["service"].as_str().unwrap_or("");
+            if action.is_empty() || service.is_empty() { return "ERROR: action and service required".to_string(); }
+            let valid = ["start", "stop", "restart", "status", "enable", "disable"];
+            if !valid.contains(&action) { return format!("ERROR: action must be one of {:?}", valid); }
+            match tokio::process::Command::new("systemctl").args([action, service]).output().await {
+                Ok(out) => {
+                    let stdout = String::from_utf8_lossy(&out.stdout);
+                    let stderr = String::from_utf8_lossy(&out.stderr);
+                    if stdout.is_empty() { stderr.to_string() } else { stdout.to_string() }
+                }
+                Err(e) => format!("ERROR: {}", e),
+            }
+        }
+
+        "process_list" => {
+            let filter = args["filter"].as_str().unwrap_or("");
+            let cmd = if filter.is_empty() {
+                "ps aux --sort=-%cpu | head -30".to_string()
+            } else {
+                format!("ps aux | grep -i '{}' | grep -v grep", filter)
+            };
+            match tokio::process::Command::new("sh").arg("-c").arg(&cmd).output().await {
+                Ok(out) => String::from_utf8_lossy(&out.stdout).to_string(),
+                Err(e) => format!("ERROR: {}", e),
             }
         }
 
