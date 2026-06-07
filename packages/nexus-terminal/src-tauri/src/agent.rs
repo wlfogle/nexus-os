@@ -1,49 +1,84 @@
-/// NexusTerminal Agent — autonomous AI with tool use.
-/// Works like Oz: reads files, runs commands, writes code, loops until done.
+/// NexusTerminal Agent — autonomous AI with native Ollama function-calling.
+/// Uses Ollama's OpenAI-compatible tool_calls API — no text parsing, no infinite loops.
 use anyhow::Result;
 use futures::StreamExt;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::time::Duration;
 use tauri::Emitter;
 use tracing::{debug, info, warn};
 
-const MAX_STEPS: usize = 20;
+const MAX_STEPS: usize = 30;
 
-const SYSTEM_PROMPT: &str = r#"You are NexusAI, an autonomous coding agent inside NexusTerminal.
-You can read files, run shell commands, write code, and fix problems without asking permission.
+const SYSTEM_PROMPT: &str = r#"You are NexusAI — an autonomous software engineering agent.
+Be concise. No filler. Take action. Write complete code. Verify with tests.
+Use read_files to read multiple files at once.
+Use file_tree to understand structure before diving in.
+Use run_cmd to verify changes work.
+Never call the same tool twice with the same arguments."#;
 
-TOOLS — when you need a tool, output ONLY a JSON object on its own line, nothing else before or after:
-{"tool":"read_file","args":{"path":"/absolute/path/to/file"}}
-{"tool":"write_file","args":{"path":"/absolute/path","content":"full file content here"}}
-{"tool":"run_cmd","args":{"cmd":"ls -la","cwd":"/path"}}
-{"tool":"list_dir","args":{"path":"/absolute/path"}}
-{"tool":"grep","args":{"pattern":"search term","path":"/path","recursive":true}}
-{"tool":"git_status","args":{"path":"/repo/path"}}
+// ── Ollama native function-calling types ──────────────────────────────────────
 
-RULES:
-- Be concise. No filler. No "Sure!", "Of course!", "I'll help you with that."
-- Take action immediately. Don't ask permission for obvious steps.
-- When you want to use a tool, output ONLY the JSON — nothing else on that line.
-- After seeing a tool result, keep reasoning and use more tools or give your final answer.
-- One tool call per response.
-- When done with tools, give a brief plain-text answer.
-- If something fails, try a different approach.
-- Write complete working code — no stubs, no TODOs."#;
+/// Tool definition sent to Ollama in OpenAI function-calling format.
+#[derive(Debug, Clone, Serialize)]
+struct Tool {
+    #[serde(rename = "type")]
+    kind: &'static str,
+    function: ToolFunction,
+}
 
-// ── Ollama /api/chat types ────────────────────────────────────────────────────
+#[derive(Debug, Clone, Serialize)]
+struct ToolFunction {
+    name: &'static str,
+    description: &'static str,
+    parameters: serde_json::Value,
+}
 
+/// Chat message with optional native tool_calls support.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChatMessage {
     pub role: String,
     pub content: String,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub tool_calls: Option<Vec<ToolCallResponse>>,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub tool_call_id: Option<String>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ToolCallResponse {
+    pub function: ToolCallFunction,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ToolCallFunction {
+    pub name: String,
+    pub arguments: serde_json::Value,
+}
+
+// ── Agent response types (public API) ────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AgentStep {
+    pub kind: String, // "tool_call" | "tool_result" | "answer"
+    pub content: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AgentResponse {
+    pub answer: String,
+    pub steps: Vec<AgentStep>,
+}
+
+// ── Ollama request/response ──────────────────────────────────────────────────
 
 #[derive(Debug, Serialize)]
 struct ChatRequest<'a> {
     model: &'a str,
     messages: &'a [ChatMessage],
     stream: bool,
+    tools: &'a [Tool],
     options: ChatOptions,
 }
 
@@ -54,299 +89,11 @@ struct ChatOptions {
 }
 
 #[derive(Debug, Deserialize)]
-struct ChatResponse {
+struct ChatResponseBody {
     message: ChatMessage,
 }
 
-// ── Tool call / result types (also sent to frontend) ─────────────────────────
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ToolCall {
-    pub tool: String,
-    pub args: serde_json::Value,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AgentStep {
-    pub kind: String,   // "think" | "tool_call" | "tool_result" | "answer"
-    pub content: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct AgentResponse {
-    pub answer: String,
-    pub steps: Vec<AgentStep>,
-}
-
-// ── Tool execution ────────────────────────────────────────────────────────────
-
-async fn exec_tool(call: &ToolCall, default_cwd: &str) -> String {
-    match call.tool.as_str() {
-        "read_file" => {
-            let path = call.args["path"].as_str().unwrap_or("");
-            match tokio::fs::read_to_string(path).await {
-                Ok(content) => {
-                    // Truncate very large files
-                    if content.len() > 32_000 {
-                        format!("{}\n\n[... truncated at 32KB ...]", &content[..32_000])
-                    } else {
-                        content
-                    }
-                }
-                Err(e) => format!("ERROR: {}", e),
-            }
-        }
-        "write_file" => {
-            let path = call.args["path"].as_str().unwrap_or("");
-            let content = call.args["content"].as_str().unwrap_or("");
-            if let Some(parent) = std::path::Path::new(path).parent() {
-                let _ = tokio::fs::create_dir_all(parent).await;
-            }
-            match tokio::fs::write(path, content).await {
-                Ok(_) => format!("OK: wrote {} bytes to {}", content.len(), path),
-                Err(e) => format!("ERROR: {}", e),
-            }
-        }
-        "run_cmd" => {
-            let cmd = call.args["cmd"].as_str().unwrap_or("");
-            let cwd = call.args["cwd"].as_str().unwrap_or(default_cwd);
-            if cmd.is_empty() { return "ERROR: empty command".to_string(); }
-            match tokio::time::timeout(
-                Duration::from_secs(30),
-                tokio::process::Command::new("sh")
-                    .arg("-c")
-                    .arg(cmd)
-                    .current_dir(cwd)
-                    .output()
-            ).await {
-                Ok(Ok(out)) => {
-                    let stdout = String::from_utf8_lossy(&out.stdout);
-                    let stderr = String::from_utf8_lossy(&out.stderr);
-                    let exit = out.status.code().unwrap_or(-1);
-                    let result = if stderr.is_empty() {
-                        stdout.to_string()
-                    } else if stdout.is_empty() {
-                        stderr.to_string()
-                    } else {
-                        format!("{}\nSTDERR: {}", stdout, stderr)
-                    };
-                    let result = if result.len() > 8000 {
-                        format!("{}\n[... truncated ...]", &result[..8000])
-                    } else { result };
-                    if exit != 0 {
-                        format!("EXIT {}\n{}", exit, result)
-                    } else {
-                        result.to_string()
-                    }
-                }
-                Ok(Err(e)) => format!("ERROR: {}", e),
-                Err(_) => "ERROR: command timed out after 30s".to_string(),
-            }
-        }
-        "list_dir" => {
-            let path = call.args["path"].as_str().unwrap_or(default_cwd);
-            match tokio::fs::read_dir(path).await {
-                Ok(mut dir) => {
-                    let mut entries = Vec::new();
-                    while let Ok(Some(entry)) = dir.next_entry().await {
-                        let name = entry.file_name().to_string_lossy().to_string();
-                        let is_dir = entry.file_type().await
-                            .map(|t| t.is_dir()).unwrap_or(false);
-                        entries.push(if is_dir { format!("{}/", name) } else { name });
-                    }
-                    entries.sort();
-                    entries.join("\n")
-                }
-                Err(e) => format!("ERROR: {}", e),
-            }
-        }
-        "grep" => {
-            let pattern = call.args["pattern"].as_str().unwrap_or("");
-            let path = call.args["path"].as_str().unwrap_or(default_cwd);
-            let recursive = call.args["recursive"].as_bool().unwrap_or(true);
-            let flag = if recursive { "-r" } else { "" };
-            let cmd = if flag.is_empty() {
-                format!("grep -n '{}' '{}'", pattern, path)
-            } else {
-                format!("grep -rn '{}' '{}'", pattern, path)
-            };
-            match tokio::time::timeout(
-                Duration::from_secs(15),
-                tokio::process::Command::new("sh").arg("-c").arg(&cmd).output()
-            ).await {
-                Ok(Ok(out)) => {
-                    let result = String::from_utf8_lossy(&out.stdout).to_string();
-                    if result.is_empty() { "no matches".to_string() }
-                    else if result.len() > 8000 {
-                        format!("{}\n[... truncated ...]", &result[..8000])
-                    } else { result }
-                }
-                Ok(Err(e)) => format!("ERROR: {}", e),
-                Err(_) => "ERROR: grep timed out".to_string(),
-            }
-        }
-        "git_status" => {
-            let path = call.args["path"].as_str().unwrap_or(default_cwd);
-            match tokio::process::Command::new("git")
-                .args(["-C", path, "status", "--short", "--branch"])
-                .output().await {
-                Ok(out) => String::from_utf8_lossy(&out.stdout).to_string(),
-                Err(e) => format!("ERROR: {}", e),
-            }
-        }
-        other => format!("ERROR: unknown tool '{}'", other),
-    }
-}
-
-// ── Parse a tool call JSON from a line of model output ───────────────────────
-
-fn parse_tool_call(text: &str) -> Option<ToolCall> {
-    // Look for a line that parses as {"tool":..., "args":...}
-    for line in text.lines() {
-        let trimmed = line.trim();
-        if trimmed.starts_with('{') && trimmed.contains("\"tool\"") {
-            if let Ok(v) = serde_json::from_str::<serde_json::Value>(trimmed) {
-                if let (Some(tool), Some(args)) = (
-                    v["tool"].as_str(),
-                    v.get("args")
-                ) {
-                    return Some(ToolCall {
-                        tool: tool.to_string(),
-                        args: args.clone(),
-                    });
-                }
-            }
-        }
-    }
-    None
-}
-
-// ── Main agent entry point ────────────────────────────────────────────────────
-
-pub async fn run_agent(
-    ollama_url: &str,
-    model: &str,
-    user_message: &str,
-    history: Vec<ChatMessage>,
-    cwd: &str,
-    context: Option<&str>,
-) -> Result<AgentResponse> {
-    let client = Client::builder()
-        .timeout(Duration::from_secs(120))
-        .build()?;
-
-    let mut steps: Vec<AgentStep> = Vec::new();
-    let mut messages: Vec<ChatMessage> = Vec::new();
-
-    // System prompt (inject cwd and optional context)
-    let sys = if let Some(ctx) = context {
-        format!("{}\n\nCurrent working directory: {}\nContext: {}", SYSTEM_PROMPT, cwd, ctx)
-    } else {
-        format!("{}\n\nCurrent working directory: {}", SYSTEM_PROMPT, cwd)
-    };
-    messages.push(ChatMessage { role: "system".to_string(), content: sys });
-
-    // Inject prior conversation history
-    for msg in history {
-        messages.push(msg);
-    }
-
-    // User message
-    messages.push(ChatMessage {
-        role: "user".to_string(),
-        content: user_message.to_string(),
-    });
-
-    // Agent loop
-    for step_num in 0..MAX_STEPS {
-        debug!("Agent step {}", step_num);
-
-        let req = ChatRequest {
-            model,
-            messages: &messages,
-            stream: false,
-            options: ChatOptions {
-                temperature: 0.2,
-                num_predict: 4096,
-            },
-        };
-
-        let url = format!("{}/api/chat", ollama_url);
-        let resp = client.post(&url).json(&req).send().await
-            .map_err(|e| anyhow::anyhow!("Ollama request failed: {}", e))?;
-
-        if !resp.status().is_success() {
-            let status = resp.status();
-            let body = resp.text().await.unwrap_or_default();
-            return Err(anyhow::anyhow!("Ollama error {}: {}", status, body));
-        }
-
-        let chat_resp: ChatResponse = resp.json().await
-            .map_err(|e| anyhow::anyhow!("Failed to parse Ollama response: {}", e))?;
-
-        let assistant_text = chat_resp.message.content.clone();
-        info!("Agent step {}: {} chars", step_num, assistant_text.len());
-
-        // Push assistant message to history
-        messages.push(ChatMessage {
-            role: "assistant".to_string(),
-            content: assistant_text.clone(),
-        });
-
-        // Check for tool call
-        if let Some(tool_call) = parse_tool_call(&assistant_text) {
-            info!("Tool call: {} {:?}", tool_call.tool, tool_call.args);
-
-            steps.push(AgentStep {
-                kind: "tool_call".to_string(),
-                content: format!("{}  {}", tool_call.tool,
-                    serde_json::to_string(&tool_call.args).unwrap_or_default()),
-            });
-
-            let result = exec_tool(&tool_call, cwd).await;
-            debug!("Tool result: {} chars", result.len());
-
-            steps.push(AgentStep {
-                kind: "tool_result".to_string(),
-                content: result.clone(),
-            });
-
-            // Feed result back as a user message (tool result)
-            messages.push(ChatMessage {
-                role: "user".to_string(),
-                content: format!("Tool result:\n{}", result),
-            });
-
-        } else {
-            // No tool call — this is the final answer
-            steps.push(AgentStep {
-                kind: "answer".to_string(),
-                content: assistant_text.clone(),
-            });
-
-            return Ok(AgentResponse {
-                answer: assistant_text,
-                steps,
-            });
-        }
-    }
-
-    // Hit step limit
-    warn!("Agent hit step limit of {}", MAX_STEPS);
-    Ok(AgentResponse {
-        answer: "Agent reached maximum steps. The last tool result is shown in the steps above.".to_string(),
-        steps,
-    })
-}
-
-// ── Streaming agent ────────────────────────────────────────────────────────────────
-// Streams tokens to the frontend as they arrive, then executes tools.
-// Emits Tauri events:
-//   agent-token      { session_id, token: String }          – text chunk
-//   agent-tool-call  { session_id, tool, args }             – before tool runs
-//   agent-tool-result{ session_id, tool, result: String }   – after tool runs
-//   agent-done       { session_id, answer: String }         – final answer
-//   agent-error      { session_id, error: String }          – on failure
+// ── Tauri event types ────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize)]
 pub struct AgentTokenEvent {
@@ -380,6 +127,8 @@ pub struct AgentErrorEvent {
     pub error: String,
 }
 
+// ── Streaming chunk types ────────────────────────────────────────────────────
+
 #[derive(Debug, Deserialize)]
 struct StreamChunk {
     message: Option<StreamMessage>,
@@ -388,8 +137,825 @@ struct StreamChunk {
 
 #[derive(Debug, Deserialize)]
 struct StreamMessage {
+    #[serde(default)]
     content: String,
+    #[serde(default)]
+    tool_calls: Option<Vec<ToolCallResponse>>,
 }
+
+// ── Tool definitions (OpenAI function-calling format) ────────────────────────
+
+fn build_tools() -> Vec<Tool> {
+    vec![
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "read_file",
+                description: "Read a single file from disk. Truncates at 32KB.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string", "description": "Absolute path to the file"}
+                    },
+                    "required": ["path"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "read_files",
+                description: "Read multiple files at once. Returns content with === headers.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "paths": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Array of absolute file paths to read"
+                        }
+                    },
+                    "required": ["paths"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "write_file",
+                description: "Write content to a file. Creates parent directories if needed.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string", "description": "Absolute path to write to"},
+                        "content": {"type": "string", "description": "Complete file content to write"}
+                    },
+                    "required": ["path", "content"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "run_cmd",
+                description: "Run a shell command via sh -c. 30 second timeout.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "cmd": {"type": "string", "description": "Shell command to execute"},
+                        "cwd": {"type": "string", "description": "Working directory for the command"}
+                    },
+                    "required": ["cmd"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "list_dir",
+                description: "List directory contents. Directories have / suffix.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string", "description": "Directory path to list"}
+                    },
+                    "required": ["path"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "file_tree",
+                description: "Show directory tree view. Skips node_modules, target, .git.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string", "description": "Root directory for tree"},
+                        "depth": {"type": "integer", "description": "Maximum depth to traverse (default 3)"}
+                    },
+                    "required": ["path"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "grep",
+                description: "Search for a pattern in files. Returns matching lines with numbers.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "pattern": {"type": "string", "description": "Search pattern (regex)"},
+                        "path": {"type": "string", "description": "File or directory to search"},
+                        "recursive": {"type": "boolean", "description": "Search recursively in directories"}
+                    },
+                    "required": ["pattern", "path"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "create_dir",
+                description: "Create a directory and all parent directories (mkdir -p).",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string", "description": "Directory path to create"}
+                    },
+                    "required": ["path"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "git_status",
+                description: "Show git status (short format with branch info).",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string", "description": "Repository path"}
+                    },
+                    "required": ["path"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "git_diff",
+                description: "Show git diff summary (stat format).",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string", "description": "Repository path"}
+                    },
+                    "required": ["path"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "search_codebase",
+                description: "Search codebase for a query using recursive case-insensitive grep.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string", "description": "Search query"},
+                        "path": {"type": "string", "description": "Root directory to search"}
+                    },
+                    "required": ["query", "path"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "http_get",
+                description: "Fetch a URL and return the response body. For querying APIs (Proxmox, Jellyfin, etc).",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "url": {"type": "string", "description": "URL to fetch"}
+                    },
+                    "required": ["url"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "list_services",
+                description: "List running services. Tries systemctl, falls back to docker ps.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "host": {"type": "string", "description": "Host to query (default: localhost)"}
+                    },
+                    "required": []
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "docker_cmd",
+                description: "Run a docker command (ps, logs, restart, exec, etc).",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "cmd": {"type": "string", "description": "Docker subcommand and args (e.g. 'ps -a', 'logs jellyfin', 'restart sonarr')"}
+                    },
+                    "required": ["cmd"]
+                }),
+            },
+        },
+    ]
+}
+
+// ── Argument normalization ───────────────────────────────────────────────────
+
+/// Ollama may return arguments as a JSON string or a JSON object.
+/// This normalizes to always be a JSON object.
+fn normalize_args(args: &serde_json::Value) -> serde_json::Value {
+    match args {
+        serde_json::Value::String(s) => {
+            serde_json::from_str(s).unwrap_or_else(|_| serde_json::json!({}))
+        }
+        other => other.clone(),
+    }
+}
+
+// ── Tool execution ───────────────────────────────────────────────────────────
+
+async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str) -> String {
+    match name {
+        "read_file" => {
+            let path = args["path"].as_str().unwrap_or("");
+            match tokio::fs::read_to_string(path).await {
+                Ok(content) => {
+                    if content.len() > 32_000 {
+                        format!("{}\n\n[... truncated at 32KB ...]", &content[..32_000])
+                    } else {
+                        content
+                    }
+                }
+                Err(e) => format!("ERROR: {}", e),
+            }
+        }
+
+        "read_files" => {
+            let paths = args["paths"]
+                .as_array()
+                .map(|a| a.iter().filter_map(|v| v.as_str()).collect::<Vec<_>>())
+                .unwrap_or_default();
+            let mut result = String::new();
+            for p in paths {
+                result.push_str(&format!("=== {} ===\n", p));
+                match tokio::fs::read_to_string(p).await {
+                    Ok(content) => {
+                        if content.len() > 32_000 {
+                            result.push_str(&content[..32_000]);
+                            result.push_str("\n[... truncated at 32KB ...]\n");
+                        } else {
+                            result.push_str(&content);
+                            result.push('\n');
+                        }
+                    }
+                    Err(e) => result.push_str(&format!("ERROR: {}\n", e)),
+                }
+            }
+            result
+        }
+
+        "write_file" => {
+            let path = args["path"].as_str().unwrap_or("");
+            let content = args["content"].as_str().unwrap_or("");
+            if let Some(parent) = std::path::Path::new(path).parent() {
+                let _ = tokio::fs::create_dir_all(parent).await;
+            }
+            match tokio::fs::write(path, content).await {
+                Ok(_) => format!("OK: wrote {} bytes to {}", content.len(), path),
+                Err(e) => format!("ERROR: {}", e),
+            }
+        }
+
+        "run_cmd" => {
+            let cmd = args["cmd"].as_str().unwrap_or("");
+            let cwd = args["cwd"].as_str().unwrap_or(default_cwd);
+            if cmd.is_empty() {
+                return "ERROR: empty command".to_string();
+            }
+            match tokio::time::timeout(
+                Duration::from_secs(30),
+                tokio::process::Command::new("sh")
+                    .arg("-c")
+                    .arg(cmd)
+                    .current_dir(cwd)
+                    .output(),
+            )
+            .await
+            {
+                Ok(Ok(out)) => {
+                    let stdout = String::from_utf8_lossy(&out.stdout);
+                    let stderr = String::from_utf8_lossy(&out.stderr);
+                    let exit = out.status.code().unwrap_or(-1);
+                    let result = if stderr.is_empty() {
+                        stdout.to_string()
+                    } else if stdout.is_empty() {
+                        stderr.to_string()
+                    } else {
+                        format!("{}\nSTDERR: {}", stdout, stderr)
+                    };
+                    let result = if result.len() > 8000 {
+                        format!("{}\n[... truncated ...]", &result[..8000])
+                    } else {
+                        result
+                    };
+                    if exit != 0 {
+                        format!("EXIT {}\n{}", exit, result)
+                    } else {
+                        result
+                    }
+                }
+                Ok(Err(e)) => format!("ERROR: {}", e),
+                Err(_) => "ERROR: command timed out after 30s".to_string(),
+            }
+        }
+
+        "list_dir" => {
+            let path = args["path"].as_str().unwrap_or(default_cwd);
+            match tokio::fs::read_dir(path).await {
+                Ok(mut dir) => {
+                    let mut entries = Vec::new();
+                    while let Ok(Some(entry)) = dir.next_entry().await {
+                        let name = entry.file_name().to_string_lossy().to_string();
+                        let is_dir = entry
+                            .file_type()
+                            .await
+                            .map(|t| t.is_dir())
+                            .unwrap_or(false);
+                        entries.push(if is_dir {
+                            format!("{}/", name)
+                        } else {
+                            name
+                        });
+                    }
+                    entries.sort();
+                    entries.join("\n")
+                }
+                Err(e) => format!("ERROR: {}", e),
+            }
+        }
+
+        "file_tree" => {
+            let path = args["path"].as_str().unwrap_or(default_cwd);
+            let max_depth = args["depth"].as_u64().unwrap_or(3) as usize;
+            let skip: &[&str] = &[
+                "node_modules",
+                "target",
+                ".git",
+                "__pycache__",
+                ".cache",
+            ];
+            let mut result = format!("{}/\n", path);
+            for entry in walkdir::WalkDir::new(path)
+                .max_depth(max_depth)
+                .sort_by(|a, b| a.file_name().cmp(b.file_name()))
+                .into_iter()
+                .filter_entry(|e| {
+                    let name = e.file_name().to_string_lossy();
+                    !skip.iter().any(|s| *s == name.as_ref())
+                })
+            {
+                if let Ok(entry) = entry {
+                    if entry.depth() == 0 {
+                        continue;
+                    }
+                    let indent = "  ".repeat(entry.depth());
+                    let name = entry.file_name().to_string_lossy();
+                    let suffix = if entry.file_type().is_dir() { "/" } else { "" };
+                    result.push_str(&format!("{}{}{}\n", indent, name, suffix));
+                }
+            }
+            if result.len() > 16_000 {
+                format!("{}\n[... truncated at 16KB ...]", &result[..16_000])
+            } else {
+                result
+            }
+        }
+
+        "grep" => {
+            let pattern = args["pattern"].as_str().unwrap_or("");
+            let path = args["path"].as_str().unwrap_or(default_cwd);
+            let recursive = args["recursive"].as_bool().unwrap_or(true);
+            let cmd = if recursive {
+                format!("grep -rn '{}' '{}'", pattern, path)
+            } else {
+                format!("grep -n '{}' '{}'", pattern, path)
+            };
+            match tokio::time::timeout(
+                Duration::from_secs(15),
+                tokio::process::Command::new("sh")
+                    .arg("-c")
+                    .arg(&cmd)
+                    .output(),
+            )
+            .await
+            {
+                Ok(Ok(out)) => {
+                    let result = String::from_utf8_lossy(&out.stdout).to_string();
+                    if result.is_empty() {
+                        "no matches".to_string()
+                    } else if result.len() > 8000 {
+                        format!("{}\n[... truncated ...]", &result[..8000])
+                    } else {
+                        result
+                    }
+                }
+                Ok(Err(e)) => format!("ERROR: {}", e),
+                Err(_) => "ERROR: grep timed out".to_string(),
+            }
+        }
+
+        "create_dir" => {
+            let path = args["path"].as_str().unwrap_or("");
+            match tokio::fs::create_dir_all(path).await {
+                Ok(_) => format!("OK: created {}", path),
+                Err(e) => format!("ERROR: {}", e),
+            }
+        }
+
+        "git_status" => {
+            let path = args["path"].as_str().unwrap_or(default_cwd);
+            match tokio::process::Command::new("git")
+                .args(["-C", path, "status", "--short", "--branch"])
+                .output()
+                .await
+            {
+                Ok(out) => String::from_utf8_lossy(&out.stdout).to_string(),
+                Err(e) => format!("ERROR: {}", e),
+            }
+        }
+
+        "git_diff" => {
+            let path = args["path"].as_str().unwrap_or(default_cwd);
+            match tokio::process::Command::new("git")
+                .args(["-C", path, "--no-pager", "diff", "--stat"])
+                .output()
+                .await
+            {
+                Ok(out) => {
+                    let stdout = String::from_utf8_lossy(&out.stdout);
+                    let stderr = String::from_utf8_lossy(&out.stderr);
+                    if stdout.is_empty() && !stderr.is_empty() {
+                        format!("ERROR: {}", stderr)
+                    } else if stdout.is_empty() {
+                        "No changes".to_string()
+                    } else {
+                        stdout.to_string()
+                    }
+                }
+                Err(e) => format!("ERROR: {}", e),
+            }
+        }
+
+        "search_codebase" => {
+            let query = args["query"].as_str().unwrap_or("");
+            let path = args["path"].as_str().unwrap_or(default_cwd);
+            let cmd = format!(
+                "grep -ri '{}' '{}' --include='*.rs' --include='*.ts' \
+                 --include='*.js' --include='*.py' --include='*.toml' \
+                 --include='*.json' --include='*.md' -l",
+                query, path
+            );
+            match tokio::time::timeout(
+                Duration::from_secs(15),
+                tokio::process::Command::new("sh")
+                    .arg("-c")
+                    .arg(&cmd)
+                    .output(),
+            )
+            .await
+            {
+                Ok(Ok(out)) => {
+                    let result = String::from_utf8_lossy(&out.stdout).to_string();
+                    if result.is_empty() {
+                        "no matches".to_string()
+                    } else if result.len() > 8000 {
+                        format!("{}\n[... truncated ...]", &result[..8000])
+                    } else {
+                        result
+                    }
+                }
+                Ok(Err(e)) => format!("ERROR: {}", e),
+                Err(_) => "ERROR: search timed out".to_string(),
+            }
+        }
+
+        "http_get" => {
+            let url = args["url"].as_str().unwrap_or("");
+            if url.is_empty() {
+                return "ERROR: empty URL".to_string();
+            }
+            let client = match Client::builder()
+                .timeout(Duration::from_secs(15))
+                .danger_accept_invalid_certs(true)
+                .build()
+            {
+                Ok(c) => c,
+                Err(e) => return format!("ERROR: {}", e),
+            };
+            match client.get(url).send().await {
+                Ok(resp) => {
+                    let status = resp.status();
+                    match resp.text().await {
+                        Ok(body) => {
+                            let body = if body.len() > 16_000 {
+                                format!("{}\n[... truncated at 16KB ...]", &body[..16_000])
+                            } else {
+                                body
+                            };
+                            if status.is_success() {
+                                body
+                            } else {
+                                format!("HTTP {}\n{}", status, body)
+                            }
+                        }
+                        Err(e) => format!("HTTP {} — body read error: {}", status, e),
+                    }
+                }
+                Err(e) => format!("ERROR: {}", e),
+            }
+        }
+
+        "list_services" => {
+            // Try systemctl first, fall back to docker ps
+            let systemctl = tokio::process::Command::new("systemctl")
+                .args(["list-units", "--type=service", "--state=running", "--no-pager"])
+                .output()
+                .await;
+            match systemctl {
+                Ok(out) if out.status.success() => {
+                    let result = String::from_utf8_lossy(&out.stdout).to_string();
+                    if result.len() > 8000 {
+                        format!("{}\n[... truncated ...]", &result[..8000])
+                    } else {
+                        result
+                    }
+                }
+                _ => {
+                    // Fall back to docker ps
+                    match tokio::process::Command::new("docker")
+                        .args(["ps", "--format", "table {{.Names}}\t{{.Status}}\t{{.Ports}}"])
+                        .output()
+                        .await
+                    {
+                        Ok(out) => {
+                            let result = String::from_utf8_lossy(&out.stdout).to_string();
+                            if result.is_empty() {
+                                "No running services found (systemctl and docker both failed or empty)".to_string()
+                            } else if result.len() > 8000 {
+                                format!("{}\n[... truncated ...]", &result[..8000])
+                            } else {
+                                result
+                            }
+                        }
+                        Err(e) => format!("ERROR: neither systemctl nor docker available: {}", e),
+                    }
+                }
+            }
+        }
+
+        "docker_cmd" => {
+            let cmd = args["cmd"].as_str().unwrap_or("");
+            if cmd.is_empty() {
+                return "ERROR: empty docker command".to_string();
+            }
+            let full_cmd = format!("docker {}", cmd);
+            match tokio::time::timeout(
+                Duration::from_secs(30),
+                tokio::process::Command::new("sh")
+                    .arg("-c")
+                    .arg(&full_cmd)
+                    .output(),
+            )
+            .await
+            {
+                Ok(Ok(out)) => {
+                    let stdout = String::from_utf8_lossy(&out.stdout);
+                    let stderr = String::from_utf8_lossy(&out.stderr);
+                    let exit = out.status.code().unwrap_or(-1);
+                    let result = if stderr.is_empty() {
+                        stdout.to_string()
+                    } else if stdout.is_empty() {
+                        stderr.to_string()
+                    } else {
+                        format!("{}\nSTDERR: {}", stdout, stderr)
+                    };
+                    let result = if result.len() > 8000 {
+                        format!("{}\n[... truncated ...]", &result[..8000])
+                    } else {
+                        result
+                    };
+                    if exit != 0 {
+                        format!("EXIT {}\n{}", exit, result)
+                    } else {
+                        result
+                    }
+                }
+                Ok(Err(e)) => format!("ERROR: {}", e),
+                Err(_) => "ERROR: docker command timed out after 30s".to_string(),
+            }
+        }
+
+        other => format!("ERROR: unknown tool '{}'", other),
+    }
+}
+
+// ── Main agent entry point (blocking) ────────────────────────────────────────
+
+pub async fn run_agent(
+    ollama_url: &str,
+    model: &str,
+    user_message: &str,
+    history: Vec<ChatMessage>,
+    cwd: &str,
+    context: Option<&str>,
+) -> Result<AgentResponse> {
+    let client = Client::builder()
+        .timeout(Duration::from_secs(120))
+        .build()?;
+
+    let tools = build_tools();
+    let mut steps: Vec<AgentStep> = Vec::new();
+    let mut messages: Vec<ChatMessage> = Vec::new();
+    let mut seen_calls: HashSet<String> = HashSet::new();
+
+    // System prompt (inject cwd and optional context)
+    let sys = if let Some(ctx) = context {
+        format!(
+            "{}\n\nCurrent working directory: {}\nContext: {}",
+            SYSTEM_PROMPT, cwd, ctx
+        )
+    } else {
+        format!(
+            "{}\n\nCurrent working directory: {}",
+            SYSTEM_PROMPT, cwd
+        )
+    };
+    messages.push(ChatMessage {
+        role: "system".to_string(),
+        content: sys,
+        tool_calls: None,
+        tool_call_id: None,
+    });
+
+    // Inject prior conversation history
+    for msg in history {
+        messages.push(msg);
+    }
+
+    // User message
+    messages.push(ChatMessage {
+        role: "user".to_string(),
+        content: user_message.to_string(),
+        tool_calls: None,
+        tool_call_id: None,
+    });
+
+    // Agent loop
+    for step_num in 0..MAX_STEPS {
+        debug!("Agent step {}", step_num);
+
+        let req = ChatRequest {
+            model,
+            messages: &messages,
+            stream: false,
+            tools: &tools,
+            options: ChatOptions {
+                temperature: 0.2,
+                num_predict: 4096,
+            },
+        };
+
+        let url = format!("{}/api/chat", ollama_url);
+        let resp = client
+            .post(&url)
+            .json(&req)
+            .send()
+            .await
+            .map_err(|e| anyhow::anyhow!("Ollama request failed: {}", e))?;
+
+        if !resp.status().is_success() {
+            let status = resp.status();
+            let body = resp.text().await.unwrap_or_default();
+            return Err(anyhow::anyhow!("Ollama error {}: {}", status, body));
+        }
+
+        let chat_resp: ChatResponseBody = resp
+            .json()
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to parse Ollama response: {}", e))?;
+
+        let assistant_msg = chat_resp.message;
+        info!(
+            "Agent step {}: content={} chars, tool_calls={}",
+            step_num,
+            assistant_msg.content.len(),
+            assistant_msg
+                .tool_calls
+                .as_ref()
+                .map(|tc| tc.len())
+                .unwrap_or(0)
+        );
+
+        // Push assistant message to history (preserving tool_calls)
+        messages.push(assistant_msg.clone());
+
+        // Check for native tool calls
+        let has_tool_calls = assistant_msg
+            .tool_calls
+            .as_ref()
+            .map(|tc| !tc.is_empty())
+            .unwrap_or(false);
+
+        if has_tool_calls {
+            let tool_calls = assistant_msg.tool_calls.as_ref().unwrap();
+
+            // Loop detection: check for duplicate calls
+            let mut has_duplicate = false;
+            for tc in tool_calls {
+                let args = normalize_args(&tc.function.arguments);
+                let key = format!(
+                    "{}:{}",
+                    tc.function.name,
+                    serde_json::to_string(&args).unwrap_or_default()
+                );
+                if seen_calls.contains(&key) {
+                    has_duplicate = true;
+                    break;
+                }
+            }
+
+            if has_duplicate {
+                warn!("Duplicate tool call detected at step {}", step_num);
+                messages.push(ChatMessage {
+                    role: "user".to_string(),
+                    content: "You already ran this. Give your final answer now.".to_string(),
+                    tool_calls: None,
+                    tool_call_id: None,
+                });
+                continue;
+            }
+
+            // Execute each tool call
+            for tc in tool_calls {
+                let args = normalize_args(&tc.function.arguments);
+                let key = format!(
+                    "{}:{}",
+                    tc.function.name,
+                    serde_json::to_string(&args).unwrap_or_default()
+                );
+                seen_calls.insert(key);
+
+                info!("Tool call: {} {:?}", tc.function.name, args);
+                steps.push(AgentStep {
+                    kind: "tool_call".to_string(),
+                    content: format!(
+                        "{}  {}",
+                        tc.function.name,
+                        serde_json::to_string(&args).unwrap_or_default()
+                    ),
+                });
+
+                let result = exec_tool(&tc.function.name, &args, cwd).await;
+                debug!("Tool result: {} chars", result.len());
+
+                steps.push(AgentStep {
+                    kind: "tool_result".to_string(),
+                    content: result.clone(),
+                });
+
+                // Feed result back as role="tool" message
+                messages.push(ChatMessage {
+                    role: "tool".to_string(),
+                    content: result,
+                    tool_calls: None,
+                    tool_call_id: None,
+                });
+            }
+        } else {
+            // No tool_calls = final answer
+            let answer = assistant_msg.content.clone();
+            steps.push(AgentStep {
+                kind: "answer".to_string(),
+                content: answer.clone(),
+            });
+
+            return Ok(AgentResponse { answer, steps });
+        }
+    }
+
+    // Hit step limit
+    warn!("Agent hit step limit of {}", MAX_STEPS);
+    Ok(AgentResponse {
+        answer: "Agent reached maximum steps.".to_string(),
+        steps,
+    })
+}
+
+// ── Streaming agent ──────────────────────────────────────────────────────────
+// Streams tokens to the frontend as they arrive, then executes tools.
+// Emits Tauri events:
+//   agent-token       { session_id, token }          – text chunk
+//   agent-tool-call   { session_id, tool, args }     – before tool runs
+//   agent-tool-result { session_id, tool, result }   – after tool runs
+//   agent-done        { session_id, answer }          – final answer
+//   agent-error       { session_id, error }           – on failure
 
 pub async fn run_agent_streaming<R: tauri::Runtime>(
     app: tauri::AppHandle<R>,
@@ -402,14 +968,18 @@ pub async fn run_agent_streaming<R: tauri::Runtime>(
     context: Option<&str>,
 ) {
     let result = run_agent_streaming_inner(
-        &app, &session_id, ollama_url, model, user_message, history, cwd, context
-    ).await;
+        &app, &session_id, ollama_url, model, user_message, history, cwd, context,
+    )
+    .await;
 
     if let Err(e) = result {
-        let _ = app.emit("agent-error", AgentErrorEvent {
-            session_id,
-            error: e.to_string(),
-        });
+        let _ = app.emit(
+            "agent-error",
+            AgentErrorEvent {
+                session_id,
+                error: e.to_string(),
+            },
+        );
     }
 }
 
@@ -427,30 +997,56 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
         .timeout(Duration::from_secs(300))
         .build()?;
 
+    let tools = build_tools();
     let mut messages: Vec<ChatMessage> = Vec::new();
+    let mut seen_calls: HashSet<String> = HashSet::new();
 
     let sys = if let Some(ctx) = context {
-        format!("{}\n\nCurrent working directory: {}\nContext: {}", SYSTEM_PROMPT, cwd, ctx)
+        format!(
+            "{}\n\nCurrent working directory: {}\nContext: {}",
+            SYSTEM_PROMPT, cwd, ctx
+        )
     } else {
-        format!("{}\n\nCurrent working directory: {}", SYSTEM_PROMPT, cwd)
+        format!(
+            "{}\n\nCurrent working directory: {}",
+            SYSTEM_PROMPT, cwd
+        )
     };
-    messages.push(ChatMessage { role: "system".to_string(), content: sys });
-    for msg in history { messages.push(msg); }
-    messages.push(ChatMessage { role: "user".to_string(), content: user_message.to_string() });
+    messages.push(ChatMessage {
+        role: "system".to_string(),
+        content: sys,
+        tool_calls: None,
+        tool_call_id: None,
+    });
+    for msg in history {
+        messages.push(msg);
+    }
+    messages.push(ChatMessage {
+        role: "user".to_string(),
+        content: user_message.to_string(),
+        tool_calls: None,
+        tool_call_id: None,
+    });
 
     for step in 0..MAX_STEPS {
         debug!("Streaming agent step {}", step);
 
-        // Build request body with stream: true
+        // Stream request with tools — text tokens stream in real-time,
+        // tool calls arrive in final chunk(s).
         let body = serde_json::json!({
             "model": model,
             "messages": messages,
             "stream": true,
+            "tools": tools,
             "options": { "temperature": 0.2, "num_predict": 4096 }
         });
 
         let url = format!("{}/api/chat", ollama_url);
-        let resp = client.post(&url).json(&body).send().await
+        let resp = client
+            .post(&url)
+            .json(&body)
+            .send()
+            .await
             .map_err(|e| anyhow::anyhow!("Ollama request failed: {}", e))?;
 
         if !resp.status().is_success() {
@@ -459,31 +1055,42 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
             return Err(anyhow::anyhow!("Ollama error {}: {}", status, body_txt));
         }
 
-        // Stream token chunks
+        // Collect streamed chunks
         let mut stream = resp.bytes_stream();
-        let mut full_response = String::new();
+        let mut full_content = String::new();
+        let mut collected_tool_calls: Vec<ToolCallResponse> = Vec::new();
 
         while let Some(chunk_result) = stream.next().await {
             let chunk = chunk_result
                 .map_err(|e| anyhow::anyhow!("Stream read error: {}", e))?;
             let text = String::from_utf8_lossy(&chunk);
 
-            // Each chunk may contain one or more newline-separated JSON objects
             for line in text.lines() {
                 let line = line.trim();
-                if line.is_empty() { continue; }
+                if line.is_empty() {
+                    continue;
+                }
 
                 if let Ok(parsed) = serde_json::from_str::<StreamChunk>(line) {
                     if let Some(msg) = parsed.message {
-                        let token = msg.content;
-                        if !token.is_empty() {
-                            full_response.push_str(&token);
-                            let _ = app.emit("agent-token", AgentTokenEvent {
-                                session_id: session_id.to_string(),
-                                token,
-                            });
+                        // Emit content tokens in real-time
+                        if !msg.content.is_empty() {
+                            full_content.push_str(&msg.content);
+                            let _ = app.emit(
+                                "agent-token",
+                                AgentTokenEvent {
+                                    session_id: session_id.to_string(),
+                                    token: msg.content,
+                                },
+                            );
+                        }
+
+                        // Collect tool calls from final chunk
+                        if let Some(tcs) = msg.tool_calls {
+                            collected_tool_calls.extend(tcs);
                         }
                     }
+
                     if parsed.done.unwrap_or(false) {
                         break;
                     }
@@ -491,49 +1098,109 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
             }
         }
 
-        info!("Streaming step {}: {} chars", step, full_response.len());
+        info!(
+            "Streaming step {}: {} chars, {} tool_calls",
+            step,
+            full_content.len(),
+            collected_tool_calls.len()
+        );
 
-        messages.push(ChatMessage {
+        // Build assistant message for history
+        let assistant_msg = ChatMessage {
             role: "assistant".to_string(),
-            content: full_response.clone(),
-        });
+            content: full_content.clone(),
+            tool_calls: if collected_tool_calls.is_empty() {
+                None
+            } else {
+                Some(collected_tool_calls.clone())
+            },
+            tool_call_id: None,
+        };
+        messages.push(assistant_msg);
 
-        // Check for tool call in the completed response
-        if let Some(tool_call) = parse_tool_call(&full_response) {
-            info!("Streaming tool call: {}", tool_call.tool);
+        if !collected_tool_calls.is_empty() {
+            // Loop detection
+            let mut has_duplicate = false;
+            for tc in &collected_tool_calls {
+                let args = normalize_args(&tc.function.arguments);
+                let key = format!(
+                    "{}:{}",
+                    tc.function.name,
+                    serde_json::to_string(&args).unwrap_or_default()
+                );
+                if seen_calls.contains(&key) {
+                    has_duplicate = true;
+                    break;
+                }
+            }
 
-            let _ = app.emit("agent-tool-call", AgentToolEvent {
-                session_id: session_id.to_string(),
-                tool: tool_call.tool.clone(),
-                args: serde_json::to_string(&tool_call.args).unwrap_or_default(),
-            });
+            if has_duplicate {
+                warn!("Duplicate tool call detected at streaming step {}", step);
+                messages.push(ChatMessage {
+                    role: "user".to_string(),
+                    content: "You already ran this. Give your final answer now.".to_string(),
+                    tool_calls: None,
+                    tool_call_id: None,
+                });
+                continue;
+            }
 
-            let result = exec_tool(&tool_call, cwd).await;
+            // Execute each tool call
+            for tc in &collected_tool_calls {
+                let args = normalize_args(&tc.function.arguments);
+                let key = format!(
+                    "{}:{}",
+                    tc.function.name,
+                    serde_json::to_string(&args).unwrap_or_default()
+                );
+                seen_calls.insert(key);
 
-            let _ = app.emit("agent-tool-result", AgentToolResultEvent {
-                session_id: session_id.to_string(),
-                tool: tool_call.tool.clone(),
-                result: result.clone(),
-            });
+                let _ = app.emit(
+                    "agent-tool-call",
+                    AgentToolEvent {
+                        session_id: session_id.to_string(),
+                        tool: tc.function.name.clone(),
+                        args: serde_json::to_string(&args).unwrap_or_default(),
+                    },
+                );
 
-            messages.push(ChatMessage {
-                role: "user".to_string(),
-                content: format!("Tool result:\n{}", result),
-            });
+                let result = exec_tool(&tc.function.name, &args, cwd).await;
 
+                let _ = app.emit(
+                    "agent-tool-result",
+                    AgentToolResultEvent {
+                        session_id: session_id.to_string(),
+                        tool: tc.function.name.clone(),
+                        result: result.clone(),
+                    },
+                );
+
+                messages.push(ChatMessage {
+                    role: "tool".to_string(),
+                    content: result,
+                    tool_calls: None,
+                    tool_call_id: None,
+                });
+            }
         } else {
-            // No tool call — done
-            let _ = app.emit("agent-done", AgentDoneEvent {
-                session_id: session_id.to_string(),
-                answer: full_response,
-            });
+            // No tool calls — final answer (tokens already streamed)
+            let _ = app.emit(
+                "agent-done",
+                AgentDoneEvent {
+                    session_id: session_id.to_string(),
+                    answer: full_content,
+                },
+            );
             return Ok(());
         }
     }
 
-    let _ = app.emit("agent-done", AgentDoneEvent {
-        session_id: session_id.to_string(),
-        answer: "Agent reached maximum steps.".to_string(),
-    });
+    let _ = app.emit(
+        "agent-done",
+        AgentDoneEvent {
+            session_id: session_id.to_string(),
+            answer: "Agent reached maximum steps.".to_string(),
+        },
+    );
     Ok(())
 }
