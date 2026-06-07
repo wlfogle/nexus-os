@@ -2497,9 +2497,9 @@ async fn agent_chat(
     .map_err(|e| e.to_string())
 }
 
-// ── Agent chat (streaming via Tauri events) ────────────────────────────
+// ── Agent chat (streaming via Tauri events) ───────────────────────────────────
 /// Fire-and-forget: returns immediately, streams events to frontend.
-/// Events: agent-token, agent-tool-call, agent-tool-result, agent-done, agent-error
+/// Automatically gathers build/git context so "fix it" has something to fix.
 #[tauri::command]
 async fn agent_chat_stream(
     message: String,
@@ -2512,7 +2512,7 @@ async fn agent_chat_stream(
 ) -> Result<(), String> {
     let config = state.config.read().await;
     let ollama_url = config.ai.ollama_url.clone();
-    let model = config.ai.agent_model.clone();  // use tool-use optimised model
+    let model = config.ai.agent_model.clone();
     drop(config);
 
     let working_dir = cwd.unwrap_or_else(|| {
@@ -2520,6 +2520,18 @@ async fn agent_chat_stream(
             .map(|p| p.to_string_lossy().to_string())
             .unwrap_or_else(|_| "/".to_string())
     });
+
+    // Auto-gather build/git context — same as Warp auto-attaching the last block.
+    // This makes vague requests like "fix it", "fix the error", "what's broken" work.
+    let auto_context = gather_project_context(&working_dir).await;
+
+    let full_context = match (context, auto_context.as_str()) {
+        (Some(c), ac) if !ac.is_empty() => format!("{c}\n\n{ac}"),
+        (Some(c), _) => c,
+        (None, ac) if !ac.is_empty() => ac.to_string(),
+        _ => String::new(),
+    };
+    let full_context = if full_context.is_empty() { None } else { Some(full_context) };
 
     // Spawn so this returns immediately and streams events
     tokio::spawn(async move {
@@ -2531,11 +2543,80 @@ async fn agent_chat_stream(
             &message,
             history,
             &working_dir,
-            context.as_deref(),
+            full_context.as_deref(),
         ).await;
     });
 
     Ok(())
+}
+
+/// Automatically gather project context: git status + project-specific build errors.
+/// Injected into every agent request so the agent already knows what's broken.
+async fn gather_project_context(cwd: &str) -> String {
+    let mut parts: Vec<String> = Vec::new();
+
+    // Git status
+    if let Ok(out) = tokio::process::Command::new("git")
+        .args(["-C", cwd, "status", "--short", "--branch"])
+        .output().await
+    {
+        let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
+        if !s.is_empty() {
+            parts.push(format!("=== git status ===\n{}", s));
+        }
+    }
+
+    // Detect project type and run build check
+    let cargo_toml = std::path::Path::new(cwd).join("Cargo.toml");
+    let package_json = std::path::Path::new(cwd).join("package.json");
+    let pyproject = std::path::Path::new(cwd).join("pyproject.toml");
+
+    if cargo_toml.exists() {
+        if let Ok(Ok(out)) = tokio::time::timeout(
+            std::time::Duration::from_secs(30),
+            tokio::process::Command::new("cargo")
+                .args(["check", "--message-format=short", "2>&1"])
+                .current_dir(cwd)
+                .output()
+        ).await {
+            let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
+            if !stderr.is_empty() && !out.status.success() {
+                let truncated = if stderr.len() > 3000 { format!("{}\n[...]", &stderr[..3000]) } else { stderr };
+                parts.push(format!("=== cargo check errors ===\n{}", truncated));
+            }
+        }
+    } else if package_json.exists() {
+        if let Ok(Ok(out)) = tokio::time::timeout(
+            std::time::Duration::from_secs(30),
+            tokio::process::Command::new("sh")
+                .arg("-c")
+                .arg("npx tsc --noEmit 2>&1 || npm run build 2>&1")
+                .current_dir(cwd)
+                .output()
+        ).await {
+            let combined = format!("{}{}",
+                String::from_utf8_lossy(&out.stdout),
+                String::from_utf8_lossy(&out.stderr));
+            let combined = combined.trim().to_string();
+            if !combined.is_empty() && !out.status.success() {
+                let truncated = if combined.len() > 3000 { format!("{}\n[...]", &combined[..3000]) } else { combined };
+                parts.push(format!("=== build errors ===\n{}", truncated));
+            }
+        }
+    } else if pyproject.exists() {
+        if let Ok(Ok(out)) = tokio::time::timeout(
+            std::time::Duration::from_secs(15),
+            tokio::process::Command::new("python")
+                .args(["-m", "py_compile", "."])
+                .current_dir(cwd)
+                .output()
+        ).await {
+            let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
+            if !stderr.is_empty() { parts.push(format!("=== python errors ===\n{}", stderr)); }
+        }
+    }
+
+    parts.join("\n\n")
 }
 
 // ── Input classifier (Warp-derived) ─────────────────────────────────────────

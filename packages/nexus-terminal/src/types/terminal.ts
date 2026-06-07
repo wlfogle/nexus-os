@@ -7,6 +7,16 @@ export enum ShellType {
   CUSTOM = 'custom'
 }
 
+// Warp-style block: a completed terminal command + its full output + exit code.
+// Auto-attached as context to every agent request (same as Warp's BlockContext).
+export interface TerminalBlock {
+  command: string;
+  output: string;      // stdout + stderr combined
+  exitCode: number;    // 0 = success, non-zero = error
+  cwd: string;
+  timestamp: string;   // ISO 8601
+}
+
 export interface TerminalTab {
   id: string;
   title: string;
@@ -15,8 +25,11 @@ export interface TerminalTab {
   environmentVars: Record<string, string>;
   
   // Terminal Process
-  terminalId: string; // Backend terminal process ID
+  terminalId: string;
   terminalHistory: CommandHistoryEntry[];
+  
+  // Warp-style blocks: last N completed commands + output (for 'fix it' context)
+  recentBlocks: TerminalBlock[];
   
   // AI Context
   aiConversation: AIMessage[];
@@ -27,7 +40,7 @@ export interface TerminalTab {
   isPinned: boolean;
   lastActivity: Date;
   customIcon?: string;
-  order: number; // For drag-and-drop ordering
+  order: number;
 }
 
 export interface CommandHistoryEntry {

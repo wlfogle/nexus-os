@@ -427,13 +427,30 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
         .slice(-20)
         .map((m: any) => ({ role: m.role, content: m.content }));
 
+      // Build Warp-style block context: auto-attach recent terminal blocks.
+      // Failed blocks (exitCode != 0) get priority — they're what 'fix it' refers to.
+      const blocks: Array<{ command: string; output: string; exitCode: number; cwd: string }> =
+        (activeTab as any).recentBlocks ?? [];
+      const failedBlocks = blocks.filter((b: any) => b.exitCode !== 0);
+      const blockContext = [...failedBlocks, ...blocks.filter((b: any) => b.exitCode === 0)]
+        .slice(0, 5)
+        .map((b: any) =>
+          `[cwd: ${b.cwd}]\n$ ${b.command}\n${b.output.slice(0, 2000)}${b.output.length > 2000 ? '\n...' : ''}\n(exit ${b.exitCode})`
+        ).join('\n\n');
+
+      const context = [
+        `Shell: ${activeTab.shell}`,
+        `Directory: ${activeTab.workingDirectory}`,
+        blockContext ? `\nRecent terminal output:\n${blockContext}` : ''
+      ].filter(Boolean).join('\n');
+
       // Fire streaming agent — returns immediately
       await invoke('agent_chat_stream', {
         message: userMessage,
         sessionId,
         history,
         cwd: activeTab.workingDirectory || null,
-        context: `Shell: ${activeTab.shell}\nDirectory: ${activeTab.workingDirectory}`,
+        context,
       });
 
     } catch (error) {

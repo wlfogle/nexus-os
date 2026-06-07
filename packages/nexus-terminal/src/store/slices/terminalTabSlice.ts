@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { 
   TerminalTab, 
+  TerminalBlock,
   NewTabConfig, 
   ShellType, 
   CommandHistoryEntry, 
@@ -78,6 +79,7 @@ const terminalTabSlice = createSlice({
         // Terminal Process - will be set when backend creates the terminal
         terminalId: '', // Will be updated after backend call
         terminalHistory: [],
+        recentBlocks: [],
         
         // AI Context
         aiConversation: [{
@@ -468,6 +470,21 @@ const terminalTabSlice = createSlice({
         prevTab.lastActivity = new Date();
         state.activeTabId = prevTab.id;
       }
+    },
+
+    // Warp-style: record a completed terminal block (command + output + exit code)
+    // These are auto-attached to every agent request as context.
+    addTerminalBlock: (state, action: PayloadAction<{ tabId: string; block: TerminalBlock }>) => {
+      const { tabId, block } = action.payload;
+      const tab = state.tabs.find(t => t.id === tabId);
+      if (tab) {
+        tab.recentBlocks.push(block);
+        // Keep last 10 blocks (Warp keeps similar window)
+        if (tab.recentBlocks.length > 10) {
+          tab.recentBlocks.shift();
+        }
+        tab.lastActivity = new Date();
+      }
     }
   }
 });
@@ -496,7 +513,8 @@ export const {
   optimizeTabMemory,
   switchToTabByIndex,
   switchToNextTab,
-  switchToPrevTab
+  switchToPrevTab,
+  addTerminalBlock
 } = terminalTabSlice.actions;
 
 // Selectors
