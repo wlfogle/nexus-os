@@ -142,9 +142,12 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
 
     listen<{ terminal_id: string; data: string }>('terminal-output', (event) => {
       const { terminal_id, data } = event.payload;
-      if (terminal_id !== capturedTerminalId || !terminal.current) return;
-
-      // Write raw data to xterm (including OSC sequences — xterm ignores unknown ones)
+      if (terminal_id !== capturedTerminalId) return;
+      if (!terminal.current) {
+        console.error('[NexusTerminal] terminal-output received but terminal.current is null');
+        return;
+      }
+      // Write raw data to xterm
       terminal.current.write(data);
 
       // Parse OSC 133 sequences from the raw data stream
@@ -416,8 +419,18 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
 
     if (isShell) {
       // Execute in PTY
-      if (tab.terminalId) {
+      if (!tab.terminalId) {
+        console.error('[NexusTerminal] No terminalId on tab — cannot execute shell command');
+        setAiBlocks(prev => [...prev, { id: `err_${Date.now()}`, role: 'assistant', content: `❌ No terminal session. Restart the app.` }]);
+        return;
+      }
+      try {
+        console.log('[NexusTerminal] write_to_terminal:', tab.terminalId, JSON.stringify(text + '\r'));
         await invoke('write_to_terminal', { terminal_id: tab.terminalId, data: text + '\r' });
+        console.log('[NexusTerminal] write_to_terminal succeeded');
+      } catch (e) {
+        console.error('[NexusTerminal] write_to_terminal FAILED:', e);
+        setAiBlocks(prev => [...prev, { id: `err_${Date.now()}`, role: 'assistant', content: `❌ Shell error: ${e}` }]);
       }
     } else {
       // Send to AI agent — show in AI blocks panel
