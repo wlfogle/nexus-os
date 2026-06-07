@@ -2556,6 +2556,19 @@ async fn agent_chat_stream(
 async fn gather_project_context(cwd: &str) -> String {
     let mut parts: Vec<String> = Vec::new();
 
+    // Project type detection — tell the agent exactly what kind of project this is
+    let has_cargo = std::path::Path::new(cwd).join("Cargo.toml").exists();
+    let has_package = std::path::Path::new(cwd).join("package.json").exists();
+    let has_pyproject = std::path::Path::new(cwd).join("pyproject.toml").exists();
+    let project_type = match (has_cargo, has_package, has_pyproject) {
+        (true, true, _) => "Rust + TypeScript (Tauri) — check with `cargo check 2>&1` and `npm run build 2>&1`",
+        (true, false, _) => "Rust — check with `cargo check 2>&1` and `cargo clippy 2>&1`",
+        (false, true, _) => "Node.js/TypeScript — check with `npm run build 2>&1`",
+        (false, false, true) => "Python — check with `python -m py_compile`",
+        _ => "Generic project",
+    };
+    parts.push(format!("=== project type ===\n{}", project_type));
+
     // Git status
     if let Ok(out) = tokio::process::Command::new("git")
         .args(["-C", cwd, "status", "--short", "--branch"])
