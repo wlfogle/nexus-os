@@ -328,7 +328,10 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
     const sessionId = `session_${Date.now()}`;
     const tabId = activeTab.id;
     let streamBuffer = '';
-    const streamMsgAdded = { done: false };
+
+    // Closure-local tool log — stays current inside all event callbacks
+    // (React state would snapshot at closure creation time)
+    const localTools: Array<{ tool: string; args: string; result?: string }> = [];
 
     try {
       const { invoke } = await import('@tauri-apps/api/core');
@@ -340,7 +343,6 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
           if (payload.session_id !== sessionId) return;
           streamBuffer += payload.token;
           setStreamingContent(streamBuffer + '█');
-          streamMsgAdded.done = true;
         }
       );
 
@@ -350,7 +352,8 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
           if (payload.session_id !== sessionId) return;
           streamBuffer = '';
           setStreamingContent('');
-          setStreamingTools(prev => [...prev, { tool: payload.tool, args: payload.args }]);
+          localTools.push({ tool: payload.tool, args: payload.args });
+          setStreamingTools([...localTools]);
         }
       );
 
@@ -358,8 +361,13 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
         'agent-tool-result',
         ({ payload }) => {
           if (payload.session_id !== sessionId) return;
-          const preview = payload.result.slice(0, 300) + (payload.result.length > 300 ? ' [...]' : '');
-          setStreamingTools(prev => prev.map(t =>
+          // Store FULL result in localTools; preview only for streaming display
+          const idx = localTools.map(t => t.tool).lastIndexOf(payload.tool);
+          if (idx >= 0 && !localTools[idx].result) {
+            localTools[idx].result = payload.result;
+          }
+          const preview = payload.result.slice(0, 300) + (payload.result.length > 300 ? '\n[...]' : '');
+          setStreamingTools(localTools.map(t =>
             t.tool === payload.tool && !t.result ? { ...t, result: preview } : t
           ));
         }
@@ -369,10 +377,26 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
         'agent-done',
         ({ payload }) => {
           if (payload.session_id !== sessionId) return;
-          // Commit final answer to Redux, clear streaming state
+
+          // Build a Warp-style block: tool calls + results are permanent, not ephemeral
+          const toolSection = localTools.length > 0
+            ? localTools.map(t => {
+                const argStr = (() => { try { return JSON.stringify(JSON.parse(t.args), null, 0); } catch { return t.args; } })();
+                const result = t.result ?? '(no output)';
+                const resultLines = result.split('\n').slice(0, 50).join('\n');
+                const truncated = result.split('\n').length > 50 ? '\n... (truncated)' : '';
+                return `🔧 **${t.tool}** \`${argStr.slice(0, 120)}\`\n\`\`\`\n${resultLines}${truncated}\n\`\`\``;
+              }).join('\n\n')
+            : '';
+
+          const finalText = payload.answer.trim();
+          const fullContent = toolSection && finalText
+            ? `${toolSection}\n\n${finalText}`
+            : toolSection || finalText || '✓ Done';
+
           dispatch(addAIMessage({
             tabId,
-            message: { role: 'assistant', content: payload.answer, timestamp: new Date() }
+            message: { role: 'assistant', content: fullContent, timestamp: new Date() }
           }));
           setStreamingContent('');
           setStreamingTools([]);

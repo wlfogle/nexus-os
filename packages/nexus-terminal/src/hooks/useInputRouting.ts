@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { selectActiveTab, addAIMessage, updateTabTerminalId } from '../store/slices/terminalTabSlice';
-import { commandRoutingService } from '../services/commandRouting';
+import { commandRoutingService, translateNLToShell } from '../services/commandRouting';
 import { routingLogger } from '../utils/logger';
 import { SHELL_CONFIGS, ShellType } from '../types/terminal';
 
@@ -53,6 +53,18 @@ export const useInputRouting = () => {
     routingLogger.info(`Processing input routing`, 'handle_input', { input: trimmed });
     
     try {
+      // TIER 0: NL → shell direct translation (no AI needed)
+      // e.g. "show me files" → "ls -la", "check disk" → "df -h"
+      const directShellCmd = translateNLToShell(trimmed);
+      if (directShellCmd) {
+        const terminalId = await ensureTerminalId();
+        if (terminalId) {
+          routingLogger.info('NL→shell direct translation', 'nl_to_shell', { input: trimmed, command: directShellCmd });
+          await invoke('write_to_terminal', { terminal_id: terminalId, data: `${directShellCmd}\r` });
+        }
+        return;
+      }
+
       // Get detailed routing analysis for better decision making
       const routingResult = await commandRoutingService.routeCommand(trimmed);
       
@@ -152,23 +164,39 @@ export const useInputRouting = () => {
 
           const sessionId = `route_${Date.now()}`;
           const tabId = activeTab.id;
-          let buffer = '';
+          const localTools: Array<{ tool: string; args: string; result?: string }> = [];
 
           const ul1 = await listen<{ session_id: string; token: string }>('agent-token', ({ payload }) => {
             if (payload.session_id !== sessionId) return;
-            buffer += payload.token;
+            // tokens accumulate; committed via agent-done
           });
 
           const ul2 = await listen<{ session_id: string; tool: string; args: string }>('agent-tool-call', ({ payload }) => {
             if (payload.session_id !== sessionId) return;
-            dispatch(addAIMessage({ tabId, message: { role: 'system', content: `🔧 ${payload.tool}  ${payload.args.slice(0, 120)}`, timestamp: new Date() } }));
+            localTools.push({ tool: payload.tool, args: payload.args });
+          });
+
+          const ul2b = await listen<{ session_id: string; tool: string; result: string }>('agent-tool-result', ({ payload }) => {
+            if (payload.session_id !== sessionId) return;
+            const idx = localTools.map(t => t.tool).lastIndexOf(payload.tool);
+            if (idx >= 0 && !localTools[idx].result) localTools[idx].result = payload.result;
           });
 
           const ul3 = await listen<{ session_id: string; answer: string }>('agent-done', ({ payload }) => {
             if (payload.session_id !== sessionId) return;
-            dispatch(addAIMessage({ tabId, message: { role: 'assistant', content: payload.answer, timestamp: new Date() } }));
-            if (onAIResponse) onAIResponse(payload.answer);
-            ul1(); ul2(); ul3(); ul4();
+            const toolSection = localTools.length > 0
+              ? localTools.map(t => {
+                  const result = t.result ?? '(no output)';
+                  const lines = result.split('\n').slice(0, 50).join('\n');
+                  const trunc = result.split('\n').length > 50 ? '\n...' : '';
+                  return `🔧 **${t.tool}**\n\`\`\`\n${lines}${trunc}\n\`\`\``;
+                }).join('\n\n')
+              : '';
+            const finalText = payload.answer.trim();
+            const fullContent = toolSection && finalText ? `${toolSection}\n\n${finalText}` : toolSection || finalText || '✓ Done';
+            dispatch(addAIMessage({ tabId, message: { role: 'assistant', content: fullContent, timestamp: new Date() } }));
+            if (onAIResponse) onAIResponse(fullContent);
+            ul1(); ul2(); ul2b(); ul3(); ul4();
           });
 
           const ul4 = await listen<{ session_id: string; error: string }>('agent-error', ({ payload }) => {
@@ -176,7 +204,7 @@ export const useInputRouting = () => {
             const msg = `❌ ${payload.error}`;
             dispatch(addAIMessage({ tabId, message: { role: 'assistant', content: msg, timestamp: new Date() } }));
             if (onAIResponse) onAIResponse(msg);
-            ul1(); ul2(); ul3(); ul4();
+            ul1(); ul2(); ul2b(); ul3(); ul4();
           });
 
           const history = activeTab.aiConversation

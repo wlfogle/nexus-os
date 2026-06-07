@@ -12,9 +12,43 @@ use crate::local_recall::LocalRecallClient;
 pub struct AIConfig {
     pub ollama_url: String,
     pub default_model: String,
+    /// Model used specifically for the autonomous agent (tool-use capable).
+    /// Auto-selected at startup from available models if not set via AGENT_MODEL env var.
+    pub agent_model: String,
     pub timeout_seconds: u64,
     pub temperature: f32,
     pub max_tokens: u32,
+}
+
+/// Ranked preference list for the agent model.
+/// Models earlier in the list handle tool-use / instruction-following better.
+const AGENT_MODEL_PREFERENCES: &[&str] = &[
+    "llama3.1",         // Best tool calling support in Ollama
+    "llama3.3",         // Most capable llama variant
+    "llama3.2",         // Good tool calling
+    "hermes3",          // Explicitly trained for tool use / function calling
+    "qwen2.5",          // Strong tool calling support
+    "phi4",             // Microsoft reasoning model
+    "mistral",          // Reliable instruction follower
+    "gemma2",           // Good instruction following
+    "codestral",        // Mistral code model (limited tool calling)
+    // deepseek-coder-v2 intentionally excluded: does not support tool calling
+];
+
+/// Pick the best available agent model from `available`.
+/// Returns the first `available` model whose base name (before `:`) appears in
+/// AGENT_MODEL_PREFERENCES, in preference order.  Falls back to the first
+/// available model if nothing matches.
+pub fn select_agent_model(available: &[String]) -> String {
+    for pref in AGENT_MODEL_PREFERENCES {
+        if let Some(m) = available.iter().find(|m| {
+            let base = m.split(':').next().unwrap_or(m);
+            base.eq_ignore_ascii_case(pref)
+        }) {
+            return m.clone();
+        }
+    }
+    available.first().cloned().unwrap_or_else(|| "llama3.1:8b".to_string())
 }
 
 impl Default for AIConfig {
@@ -22,10 +56,13 @@ impl Default for AIConfig {
         let ollama_host = std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
         let ollama_port = std::env::var("OLLAMA_PORT").unwrap_or_else(|_| "11434".to_string());
         let ollama_url = format!("http://{}:{}", ollama_host, ollama_port);
-        
+        // Default agent_model — overridden at startup by auto_detect_and_set_model()
+        // MUST be a tool-calling capable model (llama3.1/3.2/3.3, hermes3, qwen2.5)
+        let agent_model = std::env::var("AGENT_MODEL").unwrap_or_else(|_| "llama3.1:8b".to_string());
         Self {
             ollama_url,
-            default_model: std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "llama3.2:1b".to_string()),
+            default_model: std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "deepseek-coder-v2:16b".to_string()),
+            agent_model,
             timeout_seconds: std::env::var("AI_TIMEOUT")
                 .ok()
                 .and_then(|v| v.parse().ok())
@@ -514,6 +551,12 @@ impl AIService {
         let configured_model = &self.config.default_model;
         if available_models.iter().any(|m| m == configured_model) {
             info!("Configured model '{}' is available, using it", configured_model);
+            // Still auto-select the agent model even when chat model is already set
+            if std::env::var("AGENT_MODEL").is_err() {
+                let agent = select_agent_model(&available_models);
+                info!("Auto-selected agent model: '{}'", agent);
+                self.config.agent_model = agent;
+            }
             return Ok(());
         }
         
@@ -567,6 +610,14 @@ impl AIService {
         self.config.default_model = fallback_model.clone();
         
         info!("Successfully auto-configured AI model: '{}'", self.config.default_model);
+
+        // Set the agent model to the best tool-use capable model
+        // (only if not explicitly set via AGENT_MODEL env var)
+        if std::env::var("AGENT_MODEL").is_err() {
+            let agent = select_agent_model(&available_models);
+            info!("Auto-selected agent model: '{}'", agent);
+            self.config.agent_model = agent;
+        }
         Ok(())
     }
 
@@ -756,7 +807,9 @@ impl AIService {
         // Redirect output to log files
         let log_file = std::fs::File::create("/tmp/ollama.log")
             .map_err(|e| anyhow::anyhow!("Failed to create log file: {}", e))?;
-        command.stdout(log_file.try_clone().unwrap());
+        let log_file_stderr = log_file.try_clone()
+            .map_err(|e| anyhow::anyhow!("Failed to clone log file handle: {}", e))?;
+        command.stdout(log_file_stderr);
         command.stderr(log_file);
         
         match command.spawn() {
