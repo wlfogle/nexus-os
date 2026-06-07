@@ -3088,6 +3088,7 @@ async fn main() {
             // Computer Vision commands (from vision_commands module)
             vision_commands::capture_screen,
             vision_commands::capture_screen_region,
+            vision_commands::capture_and_ask,
             vision_commands::perform_ocr,
             vision_commands::detect_ui_elements,
             vision_commands::query_vision_ai,

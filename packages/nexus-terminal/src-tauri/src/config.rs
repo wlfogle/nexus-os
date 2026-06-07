@@ -62,7 +62,11 @@ pub struct ShortcutsConfig {
 impl Default for PathsConfig {
     fn default() -> Self {
         let app_dir = dirs::data_dir()
-            .unwrap_or_else(|| std::env::current_dir().unwrap().join(".data"))
+            .unwrap_or_else(|| {
+                std::env::current_dir()
+                    .unwrap_or_else(|_| std::path::PathBuf::from("."))
+                    .join(".data")
+            })
             .join("nexus-terminal");
         
         Self {

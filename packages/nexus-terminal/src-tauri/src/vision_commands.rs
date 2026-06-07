@@ -1,11 +1,11 @@
 use tauri::{command, State};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use image::{DynamicImage};
+use image::DynamicImage;
 use scrap::{Capturer, Display};
-use tesseract::Tesseract;
 use reqwest::Client;
 use std::collections::HashMap;
+use base64::Engine;
 use crate::{AppState, vision};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -140,37 +140,22 @@ pub async fn perform_ocr(image_path: String, engine: String) -> Result<Vec<OCRRe
     }
 }
 
-/// Perform OCR using Tesseract
+/// OCR via Ollama vision model (replaces Tesseract — no external deps needed)
 async fn perform_tesseract_ocr(image_path: PathBuf) -> Result<Vec<OCRResult>, String> {
-    let path_str = image_path.to_str()
-        .ok_or_else(|| "Invalid image path encoding".to_string())?;
-    let mut tesseract = Tesseract::new(None, Some("eng"))
-        .map_err(|e| format!("Failed to initialize Tesseract: {}", e))?
-        .set_image(path_str)
-        .map_err(|e| format!("Failed to set image: {}", e))?;
-    
-    // Get text from the image
-    let text = tesseract
-        .get_text()
-        .map_err(|e| format!("Failed to extract text: {}", e))?;
-    
-    let mut results = Vec::new();
-    
-    // Split text into lines and create OCRResult for each non-empty line
-    for (i, line) in text.lines().enumerate() {
-        let trimmed = line.trim();
-        if !trimmed.is_empty() {
-            results.push(OCRResult {
-                text: trimmed.to_string(),
-                confidence: 0.8, // Default confidence since Tesseract API doesn't provide easy per-word confidence
-                x: 0,     // Default position - would need more complex API usage for actual bounds
-                y: i as i32 * 20, // Approximate line spacing
-                width: trimmed.len() as i32 * 10, // Approximate character width
-                height: 18, // Approximate line height
-            });
-        }
-    }
-    
+    let data = tokio::fs::read(&image_path).await
+        .map_err(|e| format!("Failed to read image: {}", e))?;
+    let b64 = base64::engine::general_purpose::STANDARD.encode(&data);
+    let text = query_vision_ai(
+        "Extract all text visible in this image. Return only the raw text, line by line.".to_string(),
+        b64, None, None, None,
+    ).await?;
+    let results = text.lines().filter(|l| !l.trim().is_empty()).enumerate()
+        .map(|(i, line)| OCRResult {
+            text: line.trim().to_string(),
+            confidence: 0.9,
+            x: 0, y: i as i32 * 20,
+            width: line.len() as i32 * 8, height: 18,
+        }).collect();
     Ok(results)
 }
 
@@ -273,89 +258,161 @@ pub async fn detect_ui_elements(image_path: String) -> Result<Vec<UIElement>, St
     Ok(elements)
 }
 
-/// Query AI with vision capabilities
+/// Query AI with vision capabilities using Ollama chat API + llama3.2-vision:11b
 #[command]
 pub async fn query_vision_ai(
     prompt: String,
-    image: String, // base64 encoded image
+    image: String, // base64 encoded image (with or without data: prefix)
     _focus_region: Option<serde_json::Value>,
     ollama_host: Option<String>,
     ollama_port: Option<String>,
 ) -> Result<String, String> {
-    let client = Client::new();
+    let client = Client::builder()
+        .timeout(std::time::Duration::from_secs(120))
+        .build()
+        .map_err(|e| e.to_string())?;
     
-    let host = ollama_host.unwrap_or_else(|| std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "localhost".to_string()));
+    let host = ollama_host.unwrap_or_else(|| std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "127.0.0.1".to_string()));
     let port = ollama_port.unwrap_or_else(|| std::env::var("OLLAMA_PORT").unwrap_or_else(|_| "11434".to_string()));
     
+    // Strip data URI prefix if present — Ollama expects raw base64
+    let raw_b64 = if image.starts_with("data:") {
+        image.splitn(2, ',').nth(1).unwrap_or(&image).to_string()
+    } else {
+        image
+    };
+    
+    // Use llama3.2-vision:11b (best available), fall back to llava:7b
+    let model = "llama3.2-vision:11b";
+    
+    // Ollama /api/chat with images array
     let request_body = serde_json::json!({
-        "model": "llava", // LLaVA model for vision + language
-        "prompt": prompt,
-        "images": [image],
+        "model": model,
+        "messages": [{
+            "role": "user",
+            "content": prompt,
+            "images": [raw_b64]
+        }],
         "stream": false,
-        "options": {
-            "temperature": 0.7,
-            "top_p": 0.9
-        }
+        "options": { "temperature": 0.3, "num_predict": 2048 }
     });
     
-    let ollama_url = format!("http://{}:{}/api/generate", host, port);
+    let ollama_url = format!("http://{}:{}/api/chat", host, port);
     
     let response = client
         .post(&ollama_url)
         .json(&request_body)
         .send()
         .await
-        .map_err(|e| format!("Failed to send request to Ollama: {}", e))?;
+        .map_err(|e| format!("Ollama request failed: {}", e))?;
     
     if !response.status().is_success() {
-        return Err(format!(
-            "Ollama API error: {} - {}",
-            response.status(),
-            response.text().await.unwrap_or_default()
-        ));
+        return Err(format!("Ollama error {}: {}", response.status(), response.text().await.unwrap_or_default()));
     }
     
-    let response_data: serde_json::Value = response
-        .json()
-        .await
+    let response_data: serde_json::Value = response.json().await
         .map_err(|e| format!("Failed to parse Ollama response: {}", e))?;
     
-    let ai_response = response_data["response"]
+    let ai_response = response_data["message"]["content"]
         .as_str()
-        .unwrap_or("No response from AI")
+        .unwrap_or("No response from vision model")
         .to_string();
     
     Ok(ai_response)
 }
 
-/// Check if required vision dependencies are available
+/// One-shot: capture screen + query vision AI. Used by camera button and agent screenshot tool.
+#[command]
+pub async fn capture_and_ask(
+    prompt: String,
+    ollama_host: Option<String>,
+    ollama_port: Option<String>,
+) -> Result<String, String> {
+    // Try scrap first, fall back to shell screenshotter (grim/scrot/gnome-screenshot)
+    let screen_data = match capture_screen().await {
+        Ok(data) => data,
+        Err(_) => {
+            // Wayland fallback: try grim, then scrot, then gnome-screenshot
+            let temp_path = "/tmp/nexusai-screenshot.png";
+            let captured = try_shell_screenshot(temp_path).await?;
+            let data = tokio::fs::read(temp_path).await
+                .map_err(|e| format!("Failed to read screenshot: {}", e))?;
+            let _ = tokio::fs::remove_file(temp_path).await;
+            ScreenCaptureData { data, width: captured.0, height: captured.1 }
+        }
+    };
+    
+    // Encode as base64
+    let b64 = base64::engine::general_purpose::STANDARD.encode(&screen_data.data);
+    
+    query_vision_ai(prompt, b64, None, ollama_host, ollama_port).await
+}
+
+/// Try shell-based screenshot tools (Wayland fallback)
+async fn try_shell_screenshot(output_path: &str) -> Result<(u32, u32), String> {
+    // Try grim (Wayland/GNOME)
+    let grim = tokio::process::Command::new("sh")
+        .arg("-c").arg(format!("grim {} 2>/dev/null", output_path))
+        .output().await;
+    if let Ok(out) = grim { if out.status.success() { return Ok((1920, 1080)); } }
+    
+    // Try scrot (X11)
+    let scrot = tokio::process::Command::new("sh")
+        .arg("-c").arg(format!("scrot {} 2>/dev/null", output_path))
+        .output().await;
+    if let Ok(out) = scrot { if out.status.success() { return Ok((1920, 1080)); } }
+    
+    // Try gnome-screenshot
+    let gnome = tokio::process::Command::new("sh")
+        .arg("-c").arg(format!("gnome-screenshot -f {} 2>/dev/null", output_path))
+        .output().await;
+    if let Ok(out) = gnome { if out.status.success() { return Ok((1920, 1080)); } }
+    
+    // Try import (ImageMagick)
+    let import = tokio::process::Command::new("sh")
+        .arg("-c").arg(format!("import -window root {} 2>/dev/null", output_path))
+        .output().await;
+    if let Ok(out) = import { if out.status.success() { return Ok((1920, 1080)); } }
+    
+    Err("No screen capture tool available (tried grim, scrot, gnome-screenshot, import)".to_string())
+}
+
+/// Check if vision dependencies are available.
+/// No longer requires Tesseract — we use Ollama vision models instead.
 #[command]
 pub async fn check_vision_dependencies() -> Result<(), String> {
-    // Check if Tesseract is available
-    match Tesseract::new(None, Some("eng")) {
-        Ok(_) => {},
-        Err(_) => return Err("Tesseract OCR not available. Please install tesseract-ocr.".to_string()),
+    // Check if scrap works (X11) OR a shell screenshotter is available (Wayland)
+    let scrap_ok = Display::primary().is_ok();
+    let shell_ok = std::process::Command::new("sh")
+        .arg("-c").arg("which grim || which scrot || which gnome-screenshot || which import")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+    
+    if !scrap_ok && !shell_ok {
+        return Err("No screen capture available. Install grim (Wayland) or scrot (X11).".to_string());
     }
     
-    // Check if scrap library works
-    match Display::primary() {
-        Ok(_) => {},
-        Err(_) => return Err("Screen capture not available.".to_string()),
-    }
-    
-    // Check if Python and EasyOCR are available (optional)
-    let python_check = std::process::Command::new("python3")
-        .arg("-c")
-        .arg("import easyocr; print('EasyOCR available')")
-        .output();
-    
-    match python_check {
-        Ok(output) if output.status.success() => {
-            tracing::info!("EasyOCR is available as fallback OCR engine");
-        },
-        _ => {
-            tracing::debug!("EasyOCR not available, using Tesseract only");
-        },
+    // Check Ollama has a vision model
+    let ollama_check = reqwest::Client::new()
+        .get("http://127.0.0.1:11434/api/tags")
+        .timeout(std::time::Duration::from_secs(3))
+        .send().await;
+    match ollama_check {
+        Ok(r) if r.status().is_success() => {
+            if let Ok(body) = r.json::<serde_json::Value>().await {
+                let has_vision = body["models"].as_array().map(|models|
+                    models.iter().any(|m| {
+                        let name = m["name"].as_str().unwrap_or("");
+                        name.contains("vision") || name.contains("llava") || name.contains("moondream")
+                    })
+                ).unwrap_or(false);
+                if !has_vision {
+                    return Err("No vision model found in Ollama. Pull llava:7b or llama3.2-vision:11b.".to_string());
+                }
+            }
+        }
+        _ => return Err("Ollama not running or not accessible at 127.0.0.1:11434".to_string()),
     }
     
     Ok(())

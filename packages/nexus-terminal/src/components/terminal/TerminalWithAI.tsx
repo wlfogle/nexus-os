@@ -400,6 +400,22 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     aiBlocksEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [aiBlocks]);
 
+  // Camera button: capture screen + ask vision AI what's visible
+  const handleScreenshot = async (prompt?: string) => {
+    setIsAILoading(true);
+    const msgId = `shot_${Date.now()}`;
+    setAiBlocks(prev => [...prev, { id: msgId, role: 'assistant', content: '', streaming: '📸 Capturing screen…' }]);
+    try {
+      const result = await invoke<string>('capture_and_ask', {
+        prompt: prompt || 'Describe what you see on the screen. Focus on any errors, code, or terminal output.',
+      });
+      setAiBlocks(prev => prev.map(b => b.id === msgId ? { ...b, content: result, streaming: undefined } : b));
+    } catch (e) {
+      setAiBlocks(prev => prev.map(b => b.id === msgId ? { ...b, content: `❌ Vision error: ${e}`, streaming: undefined } : b));
+    }
+    setIsAILoading(false);
+  };
+
   // Submit unified input
   const handleUnifiedSubmit = async () => {
     let text = unifiedInput.trim();
@@ -657,6 +673,21 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
               disabled={isAILoading}
             />
             <span style={{ fontSize: 10, color: '#4b5563' }}>! shell · * ai · Ctrl+I</span>
+            {/* Camera button — capture screen + ask vision AI */}
+            <button
+              onClick={() => handleScreenshot()}
+              disabled={isAILoading}
+              title="Capture screen and analyze with llama3.2-vision:11b"
+              style={{
+                flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: 15, opacity: isAILoading ? 0.3 : 0.7, padding: '0 2px',
+                transition: 'opacity 0.15s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+              onMouseLeave={e => (e.currentTarget.style.opacity = isAILoading ? '0.3' : '0.7')}
+            >
+              📸
+            </button>
           </div>
         </div>
       </div>

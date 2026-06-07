@@ -41,7 +41,8 @@ You read, understand, fix, verify. You iterate until it works.
 read_file, read_files, write_file, edit_file, run_cmd, list_dir, file_tree,
 grep, create_dir, search_codebase, git_status, git_diff, git_log, git_commit,
 http_get, http_post, ssh_exec, systemctl_cmd, process_list, docker_cmd,
-list_services, scan_system, proxmox_list"#;
+list_services, scan_system, proxmox_list,
+screenshot — capture the screen and see it with llama3.2-vision:11b"#;
 
 // ── Ollama native function-calling types ──────────────────────────────────────
 
@@ -502,6 +503,20 @@ fn build_tools() -> Vec<Tool> {
                         "cmd": {"type": "string", "description": "Docker subcommand and args"}
                     },
                     "required": ["cmd"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "screenshot",
+                description: "Capture the screen and analyze it with llama3.2-vision:11b. Use this to see what is on the screen, diagnose visual errors, or understand the current UI state.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "prompt": {"type": "string", "description": "What to look for or ask about the screen (e.g. 'What errors are visible?', 'Describe the current terminal output')"}
+                    },
+                    "required": ["prompt"]
                 }),
             },
         },
@@ -1076,6 +1091,18 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str) -> S
             match tokio::process::Command::new("sh").arg("-c").arg(&cmd).output().await {
                 Ok(out) => String::from_utf8_lossy(&out.stdout).to_string(),
                 Err(e) => format!("ERROR: {}", e),
+            }
+        }
+
+        "screenshot" => {
+            let prompt = args["prompt"].as_str().unwrap_or("Describe what you see on the screen");
+            // Use capture_and_ask: captures screen + sends to llama3.2-vision
+            // We call the same logic as the Tauri command directly here
+            match crate::vision_commands::capture_and_ask(
+                prompt.to_string(), None, None,
+            ).await {
+                Ok(description) => description,
+                Err(e) => format!("ERROR: screenshot failed: {}", e),
             }
         }
 

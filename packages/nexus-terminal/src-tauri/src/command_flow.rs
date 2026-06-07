@@ -974,8 +974,12 @@ impl CommandFlowEngine {
         
         // Build adjacency list and calculate in-degrees
         for edge in &flow.edges {
-            adj_list.get_mut(&edge.from).unwrap().push(edge.to.clone());
-            *in_degree.get_mut(&edge.to).unwrap() += 1;
+            if let Some(neighbors) = adj_list.get_mut(&edge.from) {
+                neighbors.push(edge.to.clone());
+            }
+            if let Some(degree) = in_degree.get_mut(&edge.to) {
+                *degree += 1;
+            }
         }
         
         // Start with nodes that have no dependencies

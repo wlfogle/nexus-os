@@ -399,7 +399,7 @@ impl AnalyticsEngine {
                 }
                 AggregationType::Percentile(p) => {
                     let mut values: Vec<f64> = data_points.iter().map(|dp| dp.value).collect();
-                    values.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                    values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
                     let index = (p / 100.0 * (values.len() - 1) as f64) as usize;
                     values.get(index).copied()
                 }
