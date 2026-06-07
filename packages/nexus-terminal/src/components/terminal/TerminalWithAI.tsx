@@ -407,7 +407,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     setAiBlocks(prev => [...prev, { id: msgId, role: 'assistant', content: '', streaming: '📸 Capturing screen…' }]);
     try {
       const result = await invoke<string>('capture_and_ask', {
-        prompt: prompt || 'Describe what you see on the screen. Focus on any errors, code, or terminal output.',
+        prompt: prompt || 'Describe what you see on screen in 2-3 sentences. Be specific: mention exact commands, error messages, file names, or code visible. Skip generic observations.',
       });
       setAiBlocks(prev => prev.map(b => b.id === msgId ? { ...b, content: result, streaming: undefined } : b));
     } catch (e) {
