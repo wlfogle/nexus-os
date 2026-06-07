@@ -516,17 +516,14 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
   const modeLabel = inputMode === 'shell' ? '🖵  SHELL' :
                     inputMode === 'ai'    ? '🤖 NEXUSAI' : '···';
 
+  // Warp UDI border color — blue for shell, magenta for AI, dim for detecting
+  const udiBorderColor =
+    inputMode === 'shell' ? '#3b82f6' :
+    inputMode === 'ai'    ? '#a855f7' :
+                           '#374151';
+
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', background: '#0d0d0d' }}>
-
-      {/* ── Header bar: shell info + model ─────────────────────────── */}
-      <div className="flex-shrink-0 flex items-center justify-between px-4 py-1.5 bg-[#1a1a1a] border-b border-gray-800 text-xs text-gray-400">
-        <span className="font-mono">{tab.shell} — {tab.workingDirectory}</span>
-        <div className="flex items-center gap-3">
-          <span className="text-gray-500">llama3.1:8b</span>
-          <span className="text-gray-600">Ctrl+I to toggle mode</span>
-        </div>
-      </div>
 
       {/* ── Terminal (always full) + AI overlay ───────────────────────── */}
       <div style={{ flex: '1 1 0%', minHeight: 0, position: 'relative', overflow: 'hidden', backgroundColor: terminalTheme.background }}>
@@ -601,45 +598,67 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
         )}
       </div>
 
-      {/* ── Unified input — single box, Warp-style ─────────────────────── */}
-      <div className={`flex-shrink-0 border-t px-3 py-2 bg-[#1a1a1a] flex items-center gap-2 ${modeColor}`}>
-        {/* Mode badge */}
-        <button
-          onClick={() => setInputMode(m => m === 'shell' ? 'ai' : 'shell')}
-          className={`flex-shrink-0 text-xs font-mono px-2 py-1 rounded border ${modeColor} bg-transparent select-none cursor-pointer hover:opacity-80`}
-          title="Ctrl+I to toggle. ! prefix forces shell, * prefix forces AI."
-        >
-          {modeLabel}
-        </button>
+      {/* ── Warp-style UDI ───────────────────────────────────────────── */}
+      {/* 6px margin all sides, 8px corner radius — matches Warp's UDI container */}
+      <div style={{ flexShrink: 0, padding: '6px' }}>
+        <div style={{
+          display: 'flex', flexDirection: 'column', gap: 0,
+          background: '#1c1c1e',
+          border: `1px solid ${udiBorderColor}`,
+          borderRadius: 8,
+          transition: 'border-color 0.15s',
+          overflow: 'hidden',
+        }}>
+          {/* Context row: cwd chip + model name */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 12px', borderBottom: '1px solid #2a2a2e' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {/* cwd chip */}
+              <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#6b7280', background: '#2a2a2e', borderRadius: 4, padding: '1px 6px' }}>
+                {tab.workingDirectory === '~' ? '~' : tab.workingDirectory.split('/').slice(-2).join('/')}
+              </span>
+              {/* mode chips: Terminal | Agent | Auto */}
+              {(['shell', 'detecting', 'ai'] as const).map(mode => (
+                <button key={mode}
+                  onClick={() => setInputMode(mode)}
+                  style={{
+                    fontSize: 10, padding: '1px 8px', borderRadius: 4, border: 'none', cursor: 'pointer',
+                    background: inputMode === mode ? (mode === 'shell' ? '#1d4ed8' : mode === 'ai' ? '#7e22ce' : '#374151') : 'transparent',
+                    color: inputMode === mode ? '#fff' : '#6b7280',
+                    fontWeight: inputMode === mode ? 600 : 400,
+                  }}
+                >
+                  {mode === 'shell' ? 'Terminal' : mode === 'ai' ? 'Agent' : 'Auto'}
+                </button>
+              ))}
+            </div>
+            <span style={{ fontSize: 10, color: '#4b5563', fontFamily: 'monospace' }}>llama3.1:8b</span>
+          </div>
 
-        <input
-          ref={unifiedInputRef}
-          type="text"
-          value={unifiedInput}
-          onChange={e => handleUnifiedInputChange(e.target.value)}
-          onKeyDown={e => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleUnifiedSubmit();
-            }
-          }}
-          placeholder={inputMode === 'shell'
-            ? 'Shell command…'
-            : inputMode === 'ai'
-            ? 'Ask NexusAI…'
-            : 'Type a command or ask AI…  (! = shell, * = AI, Ctrl+I = toggle)'}
-          className="flex-1 bg-transparent text-white text-sm font-mono outline-none placeholder-gray-600"
-          autoFocus
-          disabled={isAILoading}
-        />
-
-        <button
-          onClick={handleUnifiedSubmit}
-          disabled={!unifiedInput.trim() || isAILoading}
-          className="flex-shrink-0 px-3 py-1 text-xs rounded bg-gray-700 hover:bg-gray-600 disabled:opacity-30 text-white transition-colors"
-        >
-          ⏎
-        </button>
+          {/* Input row */}
+          <div style={{ display: 'flex', alignItems: 'center', padding: '6px 12px', gap: 8 }}>
+            {/* Autodetect indicator dot */}
+            <div style={{
+              width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+              background: udiBorderColor,
+              boxShadow: inputMode !== 'detecting' ? `0 0 6px ${udiBorderColor}` : 'none',
+              transition: 'background 0.15s, box-shadow 0.15s',
+            }} />
+            <input
+              ref={unifiedInputRef}
+              type="text"
+              value={unifiedInput}
+              onChange={e => handleUnifiedInputChange(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleUnifiedSubmit(); }
+              }}
+              placeholder={inputMode === 'shell' ? 'Shell command…' : inputMode === 'ai' ? 'Ask NexusAI…' : 'Type a command or ask AI…'}
+              style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#f9fafb', fontSize: 13, fontFamily: 'monospace' }}
+              autoFocus
+              disabled={isAILoading}
+            />
+            <span style={{ fontSize: 10, color: '#4b5563' }}>! shell · * ai · Ctrl+I</span>
+          </div>
+        </div>
       </div>
     </div>
   );
