@@ -115,6 +115,7 @@ class VisionService {
       };
 
       this.captures.set(capture.id, capture);
+
       return capture;
     } catch (error) {
       visionLogger.error('Screen capture failed', error as Error, 'capture_failed');
@@ -150,6 +151,7 @@ class VisionService {
       };
 
       this.captures.set(capture.id, capture);
+
       return capture;
     } catch (error) {
       visionLogger.error('Screen region capture failed', error as Error, 'region_capture_failed', { region: { x, y, width, height } });
@@ -162,6 +164,7 @@ class VisionService {
    */
   async performOCR(captureId: string): Promise<OCRResult[]> {
     const capture = this.captures.get(captureId);
+
     if (!capture) {
       throw new Error(`Capture ${captureId} not found`);
     }
@@ -203,6 +206,7 @@ class VisionService {
    */
   async detectElements(captureId: string): Promise<VisualElement[]> {
     const capture = this.captures.get(captureId);
+
     if (!capture) {
       throw new Error(`Capture ${captureId} not found`);
     }
@@ -246,6 +250,7 @@ class VisionService {
    */
   async analyzeScreen(captureId: string): Promise<ScreenAnalysis> {
     const capture = this.captures.get(captureId);
+
     if (!capture) {
       throw new Error(`Capture ${captureId} not found`);
     }
@@ -282,6 +287,7 @@ class VisionService {
    */
   async queryScreenWithAI(captureId: string, query: VisionQuery): Promise<string> {
     const capture = this.captures.get(captureId);
+
     if (!capture) {
       throw new Error(`Capture ${captureId} not found`);
     }
@@ -297,6 +303,7 @@ class VisionService {
           const ocrText = analysis.ocrResults
             .map(result => `"${result.text}" (confidence: ${Math.round(result.confidence * 100)}%)`)
             .join(', ');
+
           context += `\nText detected on screen: ${ocrText}`;
         }
         
@@ -304,6 +311,7 @@ class VisionService {
           const elements = analysis.visualElements
             .map(element => `${element.type}${element.text ? `: "${element.text}"` : ''}`)
             .join(', ');
+
           context += `\nUI elements detected: ${elements}`;
         }
         
@@ -408,6 +416,7 @@ class VisionService {
       const tempPath = await joinPath(tempDirPath, filename);
       
       await writeTauriFile(tempPath, capture.data);
+
       return tempPath;
     } catch (error) {
       visionLogger.error('Failed to save capture to temp file', error as Error, 'temp_save_failed', { captureId: capture.id });
@@ -420,6 +429,7 @@ class VisionService {
    */
   private async convertCaptureToBase64(capture: ScreenCapture): Promise<string> {
     const base64 = btoa(String.fromCharCode(...capture.data));
+
     return `data:image/${capture.format};base64,${base64}`;
   }
 
@@ -462,8 +472,9 @@ class VisionService {
 
     // Extract terminal commands
     const terminalCommands: string[] = [];
-    const commandRegex = /\$\s*([a-zA-Z0-9\-_\.\/\s]+)/g;
+    const commandRegex = /\$\s*([a-zA-Z0-9\-_./\s]+)/g;
     let match;
+
     while ((match = commandRegex.exec(allText)) !== null) {
       terminalCommands.push(match[1].trim());
     }
@@ -474,6 +485,7 @@ class VisionService {
     
     for (const result of ocrResults) {
       const text = result.text.toLowerCase();
+
       if (errorKeywords.some(keyword => text.includes(keyword))) {
         errorMessages.push(result.text);
       }
@@ -519,20 +531,24 @@ class VisionService {
   private hasSignificantChanges(analysis: ScreenAnalysis): boolean {
     if (!this.lastAnalysis) {
       this.lastAnalysis = analysis;
+
       return true;
     }
     
     // Check for window type changes
     if (this.lastAnalysis.detectedContext.windowType !== analysis.detectedContext.windowType) {
       this.lastAnalysis = analysis;
+
       return true;
     }
     
     // Check for new error messages
     const oldErrors = this.lastAnalysis.detectedContext.errorMessages || [];
     const newErrors = analysis.detectedContext.errorMessages || [];
+
     if (newErrors.length > oldErrors.length) {
       this.lastAnalysis = analysis;
+
       return true;
     }
     
@@ -543,6 +559,7 @@ class VisionService {
     
     if (lengthDifference > 0.3) {
       this.lastAnalysis = analysis;
+
       return true;
     }
     
@@ -561,6 +578,7 @@ class VisionService {
     // Try window environment (browser context) 
     if (typeof window !== 'undefined' && (window as any).__TAURI__ && (window as any).__TAURI_ENV__) {
       const envValue = (window as any).__TAURI_ENV__[key];
+
       if (envValue) return envValue;
     }
     
@@ -579,7 +597,7 @@ class VisionService {
   private async checkDependencies(): Promise<void> {
     try {
       await invoke('check_vision_dependencies');
-    } catch (error) {
+    } catch {
       throw new Error('Computer vision dependencies not available. Please install required packages.');
     }
   }

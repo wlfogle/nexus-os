@@ -1,17 +1,18 @@
-import React, { useEffect, useRef, useCallback, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import { SearchAddon } from '@xterm/addon-search';
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { TerminalTab } from '../../types/terminal';
 import { 
   addError 
 } from '../../store/slices/terminalTabSlice';
 import EnhancedAIAssistant from '../ai/EnhancedAIAssistant';
-import { commandRoutingService } from '../../services/commandRouting';
-import { terminalLogger, routingLogger } from '../../utils/logger';
+import { useInputRouting } from '../../hooks/useInputRouting';
+import { terminalLogger } from '../../utils/logger';
 import '@xterm/xterm/css/xterm.css';
 
 interface TerminalWithAIProps {
@@ -30,91 +31,11 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
   
   terminalLogger.debug('TerminalWithAI state', 'state_change', { aiPanelOpen, isTerminalReady, tabId: tab.id });
 
-  // Use the unified command routing service for smart command detection
-  const isShellCommand = useCallback((input: string): boolean => {
-    const result = commandRoutingService.isShellCommand(input);
-    routingLogger.routeDecision(input, result, 1.0, 'Terminal component shell command check');
-    return result;
-  }, []);
+  // Centralized routing: differentiates shell commands from natural language
+  const { handleInput, isShellCommand } = useInputRouting();
 
-  // Handle input routing between AI and shell with enhanced confidence checking
-  const handleInput = async (input: string) => {
-    const trimmed = input.trim();
-    if (!trimmed) return;
-    
-    try {
-      // Get detailed routing analysis
-      const routingResult = await commandRoutingService.routeCommand(trimmed);
-      
-      routingLogger.routeAnalysis(trimmed, routingResult.confidence, routingResult.reason);
-      
-      if (routingResult.isShellCommand) {
-        // Execute as shell command
-        if (tab.terminalId && terminal.current) {
-          try {
-            terminalLogger.info('Executing shell command', 'shell_execute', { command: trimmed, terminalId: tab.terminalId });
-            await invoke('write_to_terminal', { 
-              terminalId: tab.terminalId, 
-              data: trimmed + '\r' 
-            });
-            
-            // If confidence is low, suggest the user could also ask AI
-            if (routingResult.confidence < 0.8) {
-              routingLogger.warn('Low confidence shell routing', undefined, 'low_confidence_shell', {
-                confidence: routingResult.confidence,
-                suggestion: `Ask AI "help me with ${trimmed}"`
-              });
-            }
-          } catch (error) {
-            terminalLogger.error('Failed to execute shell command', error as Error, 'shell_execute_failed', { command: trimmed });
-            
-            // On error, suggest AI help
-            if (!aiPanelOpen) {
-              setAIPanelOpen(true);
-            }
-            // Note: AI panel will open and user can ask for help with the error
-          }
-        } else {
-          terminalLogger.error('No terminal available for shell command execution', undefined, 'no_terminal', { command: trimmed });
-        }
-      } else {
-        // Send to AI assistant
-        terminalLogger.info('Sending query to AI assistant', 'ai_query', { query: trimmed });
-        if (!aiPanelOpen) {
-          setAIPanelOpen(true);
-        }
-        // Note: AI panel will open and user can enter their query
-        
-        // If confidence is low, log that user might have meant a shell command
-        if (routingResult.confidence < 0.8) {
-          routingLogger.warn('Low confidence AI routing', undefined, 'low_confidence_ai', {
-            confidence: routingResult.confidence,
-            suggestion: `Execute as shell command: "${trimmed}"`
-          });
-        }
-      }
-    } catch (error) {
-      terminalLogger.error('Command routing failed', error as Error, 'routing_failed', { input: trimmed });
-      // Fallback to simple heuristic
-      if (isShellCommand(trimmed)) {
-        if (tab.terminalId && terminal.current) {
-          try {
-            await invoke('write_to_terminal', { 
-              terminalId: tab.terminalId, 
-              data: trimmed + '\r' 
-            });
-          } catch (execError) {
-            terminalLogger.error('Fallback shell execution failed', execError as Error, 'fallback_failed', { command: trimmed });
-          }
-        }
-      } else {
-        if (!aiPanelOpen) {
-          setAIPanelOpen(true);
-        }
-        // Note: AI panel will open for user query
-      }
-    }
-  };
+  // Tracks the line currently being typed directly in the xterm widget
+  const lineBuffer = useRef<string>('');
 
   // Memoize terminal theme based on shell type
   const terminalTheme = useMemo(() => {
@@ -187,35 +108,67 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     terminal.current.open(terminalRef.current);
     fitAddon.current.fit();
 
-    // Set up data handler with command history integration
-    terminal.current.onData(async (data) => {
-      if (tab.terminalId) {
-        try {
-          await invoke('write_to_terminal', { 
-            terminalId: tab.terminalId, 
-            data 
-          });
-          
+    // Set up data handler with command routing
+    terminal.current.onData(async (data: string) => {
+      if (!tab.terminalId) return;
+
+      try {
+        if (data === '\r') {
+          // Enter pressed — route based on what was typed
+          const currentLine = lineBuffer.current.trim();
+
+          lineBuffer.current = '';
+
+          if (!currentLine || isShellCommand(currentLine)) {
+            // Shell command or empty line: execute normally
+            await invoke('write_to_terminal', { terminal_id: tab.terminalId, data: '\r' });
+          } else {
+            // Natural language query: cancel the shell input and route to AI
+            terminalLogger.info('NL query intercepted in xterm', 'nl_intercept', { query: currentLine });
+            // Ctrl+U clears the current input line in bash/zsh
+            await invoke('write_to_terminal', { terminal_id: tab.terminalId, data: '\x15' });
+            setAIPanelOpen(true);
+            handleInput(currentLine);
+          }
+        } else {
+          // Forward all other input to the PTY unchanged
+          await invoke('write_to_terminal', { terminal_id: tab.terminalId, data });
+
+          // Keep lineBuffer in sync with what the user is typing
+          if (data === '\x7f') {
+            // Backspace
+            lineBuffer.current = lineBuffer.current.slice(0, -1);
+          } else if (data === '\x15') {
+            // Ctrl+U — clear line
+            lineBuffer.current = '';
+          } else if (data.length === 1 && data.charCodeAt(0) >= 32) {
+            // Printable character
+            lineBuffer.current += data;
+          }
+          // Ignore escape sequences and other control sequences
+
           // Handle Ctrl+R for command history search
-          if (data === '\x12') { // Ctrl+R
+          if (data === '\x12') {
             const history = tab.terminalHistory.map(h => h.command).slice(-20);
+
             if (history.length > 0) {
               const searchPrompt = `\r\n🔍 Command History (${history.length} commands):\r\n${history.map((cmd, i) => `${i + 1}. ${cmd}`).join('\r\n')}\r\n`;
+
               terminal.current?.write(searchPrompt);
             }
           }
-        } catch (error) {
-          terminalLogger.error('Failed to write to terminal', error as Error, 'write_terminal_failed', { terminalId: tab.terminalId });
-          dispatch(addError({
-            tabId: tab.id,
-            error: {
-              command: 'write_to_terminal',
-              errorMessage: error?.toString() || 'Failed to write to terminal',
-              timestamp: new Date(),
-              workingDirectory: tab.workingDirectory
-            }
-          }));
         }
+      } catch (error) {
+        terminalLogger.error('Failed to write to terminal', error as Error, 'write_terminal_failed', { terminalId: tab.terminalId });
+        dispatch(addError({
+          tabId: tab.id,
+          error: {
+            command: 'write_to_terminal',
+            errorMessage: error?.toString() || 'Failed to write to terminal',
+            timestamp: new Date(),
+            workingDirectory: tab.workingDirectory
+          }
+        }));
       }
     });
 
@@ -224,19 +177,36 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     terminal.current.writeln('🤖 AI Chat Mode is active by default!');
     terminal.current.writeln('💡 Type commands like "ls -la" to execute shell commands');
     terminal.current.writeln('💬 Type questions like "how do I..." for AI assistance');
-    terminal.current.writeln('⚡ Shell: ' + getShellWelcomeMessage(tab.shell).replace(/^.+ Welcome to /, ''));
+    terminal.current.writeln(`⚡ Shell: ${getShellWelcomeMessage(tab.shell).replace(/^.+ Welcome to /, '')}`);
     terminal.current.writeln('');
 
     setIsTerminalReady(true);
 
+    // Listen for terminal output from the backend PTY and write to xterm
+    let unlistenTerminalOutput: (() => void) | null = null;
+    const capturedTerminalId = tab.terminalId;
+    listen<{ terminal_id: string; data: string }>('terminal-output', (event) => {
+      const { terminal_id, data } = event.payload;
+      if (terminal_id === capturedTerminalId && terminal.current) {
+        terminal.current.write(data);
+      }
+    })
+      .then((unlisten) => { unlistenTerminalOutput = unlisten; })
+      .catch((err) => {
+        terminalLogger.error('Failed to set up terminal output listener', err as Error, 'listener_setup_failed', { terminalId: tab.terminalId });
+      });
+
     return () => {
+      if (unlistenTerminalOutput) {
+        unlistenTerminalOutput();
+      }
       if (terminal.current) {
         terminal.current.dispose();
         terminal.current = null;
       }
       setIsTerminalReady(false);
     };
-  }, [tab.terminalId, terminalOptions, tab.shell, tab.workingDirectory, tab.id, dispatch]);
+  }, [tab.terminalId, terminalOptions, tab.shell, tab.workingDirectory, tab.id, dispatch, isShellCommand, handleInput]);
 
   // Handle window resize
   useEffect(() => {
@@ -247,7 +217,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
         
         if (tab.terminalId) {
           invoke('resize_terminal', { 
-            terminalId: tab.terminalId, 
+            terminal_id: tab.terminalId, 
             cols, 
             rows 
           }).catch(error => {
@@ -258,6 +228,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     };
 
     window.addEventListener('resize', handleResize);
+
     return () => window.removeEventListener('resize', handleResize);
   }, [isTerminalReady, tab.terminalId]);
 
@@ -305,6 +276,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     };
 
     window.addEventListener('keydown', handleKeyDown);
+
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
@@ -379,8 +351,10 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
           onDrop={(e) => {
             e.preventDefault();
             const files = Array.from(e.dataTransfer.files);
+
             if (files.length > 0 && terminal.current) {
               const paths = files.map(f => `"${(f as any).path || f.name}"`).join(' ');
+
               terminal.current.write(paths);
             }
           }}
@@ -440,9 +414,12 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
                 type="text"
                 value={inputBuffer}
                 onChange={(e) => setInputBuffer(e.target.value)}
-                onKeyPress={(e) => {
+              onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
+                    if (inputBuffer.trim() && !isShellCommand(inputBuffer)) {
+                      setAIPanelOpen(true);
+                    }
                     handleInput(inputBuffer);
                     setInputBuffer('');
                   }
@@ -451,8 +428,11 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
                 className="flex-1 px-4 py-2 bg-gray-900 text-white border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400"
               />
               <button
-                onClick={() => {
+              onClick={() => {
                   if (inputBuffer.trim()) {
+                    if (!isShellCommand(inputBuffer)) {
+                      setAIPanelOpen(true);
+                    }
                     handleInput(inputBuffer);
                     setInputBuffer('');
                   }
@@ -518,7 +498,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
                 scrollbarColor: '#6B7280 #374151'
               }}
             >
-              <EnhancedAIAssistant />
+              <EnhancedAIAssistant onSwitchToTerminal={() => setAIPanelOpen(false)} />
             </div>
           </div>
         </div>

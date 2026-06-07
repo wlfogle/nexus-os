@@ -85,7 +85,7 @@ const TerminalView: React.FC = () => {
   // Memoized callback for terminal data handling
   const handleTerminalData = useCallback(async (data: string, terminalId: string) => {
     try {
-      await invoke('write_to_terminal', { terminalId, data });
+      await invoke('write_to_terminal', { terminal_id: terminalId, data });
     } catch (error) {
       console.error('Failed to write to terminal:', error);
     }
@@ -96,7 +96,8 @@ const TerminalView: React.FC = () => {
     fitAddon.current?.fit();
     if (activeTerminalId && terminal.current) {
       const { cols, rows } = terminal.current;
-      invoke('resize_terminal', { terminalId: activeTerminalId, cols, rows });
+
+      invoke('resize_terminal', { terminal_id: activeTerminalId, cols, rows });
     }
   }, [activeTerminalId]);
 
@@ -119,6 +120,7 @@ const TerminalView: React.FC = () => {
       const initializeTerminal = async () => {
         try {
           const terminalId = await invoke<string>('create_terminal', { shell: null });
+
           dispatch(createTerminal({ id: terminalId }));
 
           // Handle terminal data
@@ -152,7 +154,7 @@ const TerminalView: React.FC = () => {
           // Store output in Redux for history
           dispatch(addTerminalOutput({
             terminalId: terminal_id,
-            data: data,
+            data,
             type: 'stdout'
           }));
         });
@@ -161,6 +163,7 @@ const TerminalView: React.FC = () => {
       };
       
       let unlistenTerminalOutput: (() => void) | null = null;
+
       setupEventListeners().then((unlisten) => {
         unlistenTerminalOutput = unlisten;
       });

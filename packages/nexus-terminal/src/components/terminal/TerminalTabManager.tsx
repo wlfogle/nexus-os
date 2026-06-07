@@ -60,6 +60,7 @@ const extractCommandFromError = (errorMessage: string): string => {
   
   for (const pattern of patterns) {
     const match = errorMessage.match(pattern);
+
     if (match && match[1]) {
       return match[1].trim();
     }
@@ -67,6 +68,7 @@ const extractCommandFromError = (errorMessage: string): string => {
   
   // Fallback: try to extract first word
   const words = errorMessage.split(/\s+/);
+
   return words.find(word => word.length > 2 && !word.includes(':')) || 'unknown';
 };
 
@@ -228,6 +230,7 @@ export const TerminalTabManager: React.FC = () => {
 
   const analyzeTerminalOutput = useCallback((tabId: string, data: string, type?: string) => {
     const tab = tabs.find(t => t.id === tabId);
+
     if (!tab) return;
 
     // Check if this looks like a command being entered
@@ -243,6 +246,7 @@ export const TerminalTabManager: React.FC = () => {
         // This might be a command - add to history and analyze
         if (line.trim().length > 0 && !line.startsWith('  ')) {
           const command = line.trim();
+
           dispatch(addCommandToHistory({
             tabId,
             entry: {
@@ -272,6 +276,7 @@ export const TerminalTabManager: React.FC = () => {
         data.toLowerCase().includes('no such file')) {
       
       const errorMessage = data.trim();
+
       dispatch(addError({
         tabId,
         error: {
@@ -286,6 +291,7 @@ export const TerminalTabManager: React.FC = () => {
       // Add proactive AI suggestion for common errors
       if (errorMessage.includes('command not found')) {
         const command = extractCommandFromError(errorMessage);
+
         dispatch(addAISuggestion({
           tabId,
           suggestion: {
@@ -302,8 +308,10 @@ export const TerminalTabManager: React.FC = () => {
 
     // Check for directory changes
     const cdMatch = data.match(/cd\s+(.+)/);
+
     if (cdMatch) {
       const newDir = cdMatch[1].trim().replace(/^['"]|['"]$/g, ''); // Remove quotes
+
       dispatch(updateTabWorkingDirectory({ tabId, cwd: newDir }));
     }
   }, [tabs, dispatch]);
@@ -318,7 +326,9 @@ export const TerminalTabManager: React.FC = () => {
         unlisten();
         setTerminalOutputListeners(prev => {
           const newMap = new Map(prev);
+
           newMap.delete(tabId);
+
           return newMap;
         });
       }

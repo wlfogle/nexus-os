@@ -33,6 +33,7 @@ class Logger {
   constructor() {
     // Set log level based on environment
     const envLogLevel = this.getEnvVar('LOG_LEVEL', 'INFO');
+
     this.logLevel = this.parseLogLevel(envLogLevel);
   }
 
@@ -45,6 +46,7 @@ class Logger {
     // Tauri environment
     if (typeof window !== 'undefined' && (window as any).__TAURI__ && (window as any).__TAURI_ENV__) {
       const envValue = (window as any).__TAURI_ENV__[key];
+
       if (envValue) return envValue;
     }
     
@@ -117,6 +119,7 @@ class Logger {
     if (!this.shouldLog(LogLevel.DEBUG)) return;
     
     const entry = this.createLogEntry(LogLevel.DEBUG, message, context);
+
     this.logToStorage(entry);
     
     if (typeof console !== 'undefined') {
@@ -128,6 +131,7 @@ class Logger {
     if (!this.shouldLog(LogLevel.INFO)) return;
     
     const entry = this.createLogEntry(LogLevel.INFO, message, context);
+
     this.logToStorage(entry);
     
     if (typeof console !== 'undefined') {
@@ -139,6 +143,7 @@ class Logger {
     if (!this.shouldLog(LogLevel.WARN)) return;
     
     const entry = this.createLogEntry(LogLevel.WARN, message, context, error);
+
     this.logToStorage(entry);
     
     if (typeof console !== 'undefined') {
@@ -153,6 +158,7 @@ class Logger {
     if (!this.shouldLog(LogLevel.ERROR)) return;
     
     const entry = this.createLogEntry(LogLevel.ERROR, message, context, error);
+
     this.logToStorage(entry);
     
     if (typeof console !== 'undefined') {
@@ -187,6 +193,7 @@ class Logger {
       .filter(log => {
         if (component && log.context?.component !== component) return false;
         if (service && log.context?.service !== service) return false;
+
         return true;
       })
       .slice(-count);
@@ -211,6 +218,7 @@ class Logger {
    */
   performance(message: string, startTime: number, context?: LogContext): void {
     const duration = Date.now() - startTime;
+
     this.info(`${message} (${duration}ms)`, {
       ...context,
       metadata: { ...context?.metadata, duration }
@@ -222,6 +230,7 @@ class Logger {
    */
   startTimer(label: string): { end: (context?: LogContext) => void } {
     const startTime = Date.now();
+
     return {
       end: (context?: LogContext) => {
         this.performance(label, startTime, context);
@@ -294,6 +303,7 @@ export const routingLogger = {
   
   routeDecision: (input: string, isShell: boolean, confidence: number, reason: string) => {
     const type = isShell ? '🐚 Shell' : '🤖 AI';
+
     commandRoutingLogger.info(
       `Command routed: "${input}" → ${type}`,
       'route_decision',

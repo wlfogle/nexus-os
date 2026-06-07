@@ -45,6 +45,7 @@ export const WarpStyleTerminal: React.FC<WarpStyleTerminalProps> = ({ className 
     if (tabs.length === 0) {
       // Safe way to get home directory that works in browser context
       const homeDirectory = '~';
+
       dispatch(createTab({
         shell: ShellType.BASH,
         title: 'Terminal',
@@ -67,23 +68,27 @@ export const WarpStyleTerminal: React.FC<WarpStyleTerminalProps> = ({ className 
                 const terminalId = await invoke<string>('create_simple_terminal', {
                   shell: tab.shell
                 });
+
                 terminalLogger.info('Created terminal successfully', 'terminal_created', { terminalId, tabId: tab.id, shell: tab.shell });
                 dispatch(updateTabTerminalId({ tabId: tab.id, terminalId }));
               } catch (error) {
                 terminalLogger.error('Failed to create Tauri terminal', error as Error, 'terminal_create_failed', { tabId: tab.id, shell: tab.shell });
                 // Create a working fallback terminal ID
                 const fallbackId = `terminal-${Date.now()}`;
+
                 dispatch(updateTabTerminalId({ tabId: tab.id, terminalId: fallbackId }));
               }
             } else {
               // Browser fallback - create mock terminal ID
               const mockTerminalId = `browser-terminal-${tab.id}`;
+
               dispatch(updateTabTerminalId({ tabId: tab.id, terminalId: mockTerminalId }));
             }
           } catch (error) {
             terminalLogger.error('Failed to create terminal backend', error as Error, 'terminal_backend_failed', { tabId: tab.id });
             // Fallback for error case
             const fallbackTerminalId = `fallback-terminal-${tab.id}`;
+
             dispatch(updateTabTerminalId({ tabId: tab.id, terminalId: fallbackTerminalId }));
           }
         }

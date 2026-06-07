@@ -45,18 +45,22 @@ class CircularBuffer<T> {
 
   getAll(): T[] {
     const result: T[] = [];
+
     for (let i = 0; i < this.size; i++) {
       const index = (this.head + i) % this.maxSize;
       const item = this.buffer[index];
+
       if (item !== undefined) {
         result.push(item);
       }
     }
+
     return result;
   }
 
   getLastN(n: number): T[] {
     const all = this.getAll();
+
     return all.slice(Math.max(0, all.length - n));
   }
 
@@ -156,12 +160,14 @@ const terminalSlice = createSlice({
     },
     addOutput: (state, action: PayloadAction<{ terminalId: string; output: string }>) => {
       const { terminalId, output } = action.payload;
+
       if (state.terminals[terminalId]) {
         state.terminals[terminalId].history.push(output);
       }
     },
     closeTerminal: (state, action: PayloadAction<string>) => {
       const terminalId = action.payload;
+
       delete state.terminals[terminalId];
       
       // Clean up terminal's output buffer
@@ -172,6 +178,7 @@ const terminalSlice = createSlice({
       
       if (state.activeTerminalId === terminalId) {
         const remainingIds = Object.keys(state.terminals);
+
         state.activeTerminalId = remainingIds.length > 0 ? remainingIds[0] : null;
         if (state.activeTerminalId) {
           state.terminals[state.activeTerminalId].isActive = true;
@@ -212,6 +219,7 @@ const terminalSlice = createSlice({
       if (shouldCleanup) {
         // Cleanup old outputs across all terminals
         let totalOutputsAfterCleanup = 0;
+
         Object.entries(state.outputBuffers).forEach(([termId, buffer]) => {
           if (buffer instanceof CircularBuffer) {
             totalOutputsAfterCleanup += buffer.getCurrentSize();
@@ -226,6 +234,7 @@ const terminalSlice = createSlice({
     
     updateTerminalCwd: (state, action: PayloadAction<{ id: string; cwd: string }>) => {
       const { id, cwd } = action.payload;
+
       if (state.terminals[id]) {
         state.terminals[id].cwd = cwd;
       }
@@ -233,6 +242,7 @@ const terminalSlice = createSlice({
     
     updateTerminalTitle: (state, action: PayloadAction<{ id: string; title: string }>) => {
       const { id, title } = action.payload;
+
       if (state.terminals[id]) {
         state.terminals[id].title = title;
       }
@@ -252,6 +262,7 @@ const terminalSlice = createSlice({
     
     clearOutput: (state, action: PayloadAction<string>) => {
       const terminalId = action.payload;
+
       if (state.outputBuffers[terminalId]) {
         state.outputBuffers[terminalId].clear();
         state.memoryStats.bufferSizes[terminalId] = 0;
@@ -263,6 +274,7 @@ const terminalSlice = createSlice({
       // Clean up all terminal buffers to free memory
       Object.keys(state.outputBuffers).forEach(terminalId => {
         const buffer = state.outputBuffers[terminalId];
+
         if (buffer instanceof CircularBuffer) {
           // Keep only last 1000 outputs for each terminal during cleanup
           const currentOutputs = buffer.getAll();
@@ -302,16 +314,19 @@ export const {
 // Selectors
 export const selectActiveTerminal = (state: { terminal: TerminalState }) => {
   const { activeTerminalId, terminals } = state.terminal;
+
   return activeTerminalId ? terminals[activeTerminalId] : null;
 };
 
 export const selectTerminalOutput = (terminalId: string) => (state: { terminal: TerminalState }) => {
   const buffer = state.terminal.outputBuffers[terminalId];
+
   return buffer ? buffer.getAll() : [];
 };
 
 export const selectTerminalOutputLast = (terminalId: string, count: number) => (state: { terminal: TerminalState }) => {
   const buffer = state.terminal.outputBuffers[terminalId];
+
   return buffer ? buffer.getLastN(count) : [];
 };
 

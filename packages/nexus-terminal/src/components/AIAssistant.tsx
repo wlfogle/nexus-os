@@ -77,10 +77,12 @@ const AIAssistant: React.FC = () => {
     const initializeAI = async () => {
       try {
         const status = await invoke<boolean>('check_ai_connection');
+
         dispatch(setConnected(status));
         
         if (status) {
           const model = await invoke<string>('get_current_model');
+
           dispatch(setCurrentModel(model));
           
           dispatch(addMessage({
@@ -106,6 +108,7 @@ const AIAssistant: React.FC = () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
+
     setInput('');
 
     // Add user message
@@ -129,7 +132,7 @@ const AIAssistant: React.FC = () => {
       // Send to AI service
       const response = await invoke<string>('send_ai_message', {
         message: userMessage,
-        context: context
+        context
       });
 
       // Add AI response

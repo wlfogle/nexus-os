@@ -13,6 +13,7 @@ const Toolbar: React.FC = () => {
   const handleNewTerminal = async () => {
     try {
       const terminalId = await invoke<string>('create_terminal', { shell: null });
+
       dispatch(createTerminal({ id: terminalId }));
     } catch (error) {
       console.error('Failed to create terminal:', error);
@@ -21,7 +22,7 @@ const Toolbar: React.FC = () => {
 
   const handleCloseTerminal = async (terminalId: string) => {
     try {
-      await invoke('close_terminal', { terminalId });
+      await invoke('close_terminal', { terminal_id: terminalId });
       dispatch(closeTerminal(terminalId));
     } catch (error) {
       console.error('Failed to close terminal:', error);

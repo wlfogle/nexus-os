@@ -107,6 +107,7 @@ export class TerminalBroadcastingService {
    */
   updateSession(sessionId: string, updates: Partial<TerminalSession>): void {
     const session = this.sessions.get(sessionId);
+
     if (!session) return;
     
     Object.assign(session, updates);
@@ -167,6 +168,7 @@ export class TerminalBroadcastingService {
     group.sessionIds = this.getSessionsMatchingFilters(filters);
     
     this.groups.set(groupId, group);
+
     return groupId;
   }
   
@@ -175,6 +177,7 @@ export class TerminalBroadcastingService {
    */
   updateGroup(groupId: string, updates: Partial<BroadcastGroup>): void {
     const group = this.groups.get(groupId);
+
     if (!group) return;
     
     Object.assign(group, updates);
@@ -193,9 +196,11 @@ export class TerminalBroadcastingService {
    */
   addSessionsToGroup(groupId: string, sessionIds: string[]): void {
     const group = this.groups.get(groupId);
+
     if (!group) return;
     
     const uniqueIds = new Set([...group.sessionIds, ...sessionIds]);
+
     group.sessionIds = Array.from(uniqueIds);
     
     this.groups.set(groupId, group);
@@ -206,6 +211,7 @@ export class TerminalBroadcastingService {
    */
   removeSessionsFromGroup(groupId: string, sessionIds: string[]): void {
     const group = this.groups.get(groupId);
+
     if (!group) return;
     
     group.sessionIds = group.sessionIds.filter(id => !sessionIds.includes(id));
@@ -224,9 +230,10 @@ export class TerminalBroadcastingService {
     
     if (Array.isArray(groupIdOrSessionIds)) {
       sessionIds = groupIdOrSessionIds;
-      groupId = 'adhoc_' + Date.now();
+      groupId = `adhoc_${Date.now()}`;
     } else {
       const group = this.groups.get(groupIdOrSessionIds);
+
       if (!group) {
         throw new Error('Broadcast group not found');
       }
@@ -261,6 +268,7 @@ export class TerminalBroadcastingService {
     
     // Create abort controller for this broadcast
     const abortController = new AbortController();
+
     this.activeBroadcasts.set(groupId, abortController);
     
     try {
@@ -317,11 +325,13 @@ export class TerminalBroadcastingService {
       if (signal.aborted) break;
       
       const result = await this.executeOnSession(session, command, signal);
+
       results.push(result);
       
       if (settings.stopOnFirstError && result.status === 'failed') {
         // Mark remaining sessions as skipped
         const remainingSessions = sessions.slice(results.length);
+
         for (const remainingSession of remainingSessions) {
           results.push({
             sessionId: remainingSession.id,
@@ -395,6 +405,7 @@ export class TerminalBroadcastingService {
    */
   cancelBroadcast(groupId: string): void {
     const controller = this.activeBroadcasts.get(groupId);
+
     if (controller) {
       controller.abort();
       this.activeBroadcasts.delete(groupId);
@@ -426,15 +437,18 @@ export class TerminalBroadcastingService {
         case 'type':
           matches = this.testStringMatch(session.type, filter.operator, filter.value);
           break;
-        case 'environment':
+        case 'environment': {
           const [envKey, envValue] = filter.value.split('=');
+
           matches = envValue ? 
             session.environment[envKey] === envValue :
             envKey in session.environment;
           break;
+        }
         case 'regex':
           try {
             const regex = new RegExp(filter.value);
+
             matches = regex.test(session.name) || session.tags.some(tag => regex.test(tag));
           } catch {
             matches = false;
@@ -464,6 +478,7 @@ export class TerminalBroadcastingService {
   
   private getGroupSettings(groupId: string): BroadcastSettings {
     const group = this.groups.get(groupId);
+
     return group?.settings || {
       parallelExecution: true,
       stopOnFirstError: false,
@@ -487,6 +502,7 @@ export class TerminalBroadcastingService {
    */
   getSessionsByGroup(groupId: string): TerminalSession[] {
     const group = this.groups.get(groupId);
+
     if (!group) return [];
     
     return group.sessionIds
@@ -564,6 +580,7 @@ export class TerminalBroadcastingService {
    */
   async testCommand(sessionId: string, command: string): Promise<SessionResult> {
     const session = this.sessions.get(sessionId);
+
     if (!session) {
       throw new Error('Session not found');
     }

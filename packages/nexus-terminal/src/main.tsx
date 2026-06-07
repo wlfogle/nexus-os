@@ -6,6 +6,7 @@ import './index.css'
 // NUCLEAR SCROLLBAR FORCING - RUNTIME INJECTION
 const forceScrollbars = () => {
   const style = document.createElement('style');
+
   style.id = 'force-scrollbars';
   style.innerHTML = `
     * {
@@ -41,6 +42,7 @@ const forceScrollbars = () => {
     document.querySelectorAll('*').forEach(el => {
       if (el instanceof HTMLElement) {
         const computedStyle = window.getComputedStyle(el);
+
         if (computedStyle.overflow === 'hidden' && 
             (el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth)) {
           el.style.overflow = 'auto';
@@ -49,6 +51,7 @@ const forceScrollbars = () => {
       }
     });
   });
+
   observer.observe(document.body, { childList: true, subtree: true });
 };
 

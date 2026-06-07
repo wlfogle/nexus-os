@@ -33,6 +33,7 @@ const aiSlice = createSlice({
         id: Date.now().toString(),
         timestamp: Date.now(),
       };
+
       state.messages.push(message);
     },
     setLoading: (state, action: PayloadAction<boolean>) => {

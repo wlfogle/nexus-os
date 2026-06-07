@@ -105,6 +105,7 @@ export class WebScrapingService {
   
   async pauseScraping(jobId: string): Promise<void> {
     const job = this.activeJobs.get(jobId);
+
     if (!job) throw new Error('Job not found');
     
     await invoke('pause_scraping', { jobId });
@@ -113,6 +114,7 @@ export class WebScrapingService {
   
   async resumeScraping(jobId: string): Promise<void> {
     const job = this.activeJobs.get(jobId);
+
     if (!job) throw new Error('Job not found');
     
     await invoke('resume_scraping', { jobId });
@@ -122,6 +124,7 @@ export class WebScrapingService {
   
   async stopScraping(jobId: string): Promise<void> {
     const job = this.activeJobs.get(jobId);
+
     if (!job) throw new Error('Job not found');
     
     await invoke('stop_scraping', { jobId });
@@ -139,6 +142,7 @@ export class WebScrapingService {
   
   private async monitorProgress(jobId: string): Promise<void> {
     const job = this.activeJobs.get(jobId);
+
     if (!job) return;
     
     const interval = setInterval(async () => {
@@ -194,6 +198,7 @@ export class WebScrapingService {
   private isValidUrl(url: string): boolean {
     try {
       new URL(url);
+
       return true;
     } catch {
       return false;
@@ -226,6 +231,7 @@ export class WebScrapingService {
   async extractLinks(url: string): Promise<string[]> {
     try {
       const links = await invoke<string[]>('extract_links', { url });
+
       return links;
     } catch (error) {
       throw new Error(`Failed to extract links: ${error}`);
@@ -238,6 +244,7 @@ export class WebScrapingService {
   async generateSiteMap(url: string, maxDepth: number = 2): Promise<SiteMap> {
     try {
       const siteMap = await invoke<SiteMap>('generate_site_map', { url, maxDepth });
+
       return siteMap;
     } catch (error) {
       throw new Error(`Failed to generate site map: ${error}`);
@@ -278,6 +285,7 @@ export class WebScrapingService {
   async getWebsiteMetadata(url: string): Promise<WebsiteMetadata> {
     try {
       const metadata = await invoke<WebsiteMetadata>('get_website_metadata', { url });
+
       return metadata;
     } catch (error) {
       throw new Error(`Failed to get metadata: ${error}`);
@@ -290,6 +298,7 @@ export class WebScrapingService {
   async checkRobotsTxt(url: string): Promise<RobotsTxtInfo> {
     try {
       const robotsInfo = await invoke<RobotsTxtInfo>('check_robots_txt', { url });
+
       return robotsInfo;
     } catch (error) {
       throw new Error(`Failed to check robots.txt: ${error}`);
@@ -302,6 +311,7 @@ export class WebScrapingService {
   async getScrapingStats(jobId: string): Promise<ScrapingStats> {
     try {
       const stats = await invoke<ScrapingStats>('get_scraping_stats', { jobId });
+
       return stats;
     } catch (error) {
       throw new Error(`Failed to get stats: ${error}`);
@@ -325,6 +335,7 @@ export class WebScrapingService {
   async importConfig(configPath: string): Promise<ScrapingOptions> {
     try {
       const config = await invoke<ScrapingOptions>('import_scraping_config', { configPath });
+
       return config;
     } catch (error) {
       throw new Error(`Failed to import config: ${error}`);
@@ -423,6 +434,7 @@ export class WebScrapingService {
   async estimateScrapingJob(options: ScrapingOptions): Promise<ScrapingEstimate> {
     try {
       const estimate = await invoke<ScrapingEstimate>('estimate_scraping', { options });
+
       return estimate;
     } catch (error) {
       throw new Error(`Failed to estimate scraping job: ${error}`);

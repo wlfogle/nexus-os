@@ -62,7 +62,7 @@ export class CommandPreviewService {
       });
       
       Object.assign(preview, backendPreview);
-    } catch (error) {
+    } catch {
       // Fallback to frontend analysis
       this.analyzeCommandLocally(command, cwd, preview);
     }
@@ -252,11 +252,13 @@ export class CommandPreviewService {
         preview.estimatedTime = 'Variable (depends on package size)';
         break;
         
-      case 'uninstall':
+      case 'uninstall': {
         const packages = parts.slice(2);
+
         preview.willModify.push(`${cwd}/node_modules`);
         preview.warnings.push(`Will remove packages: ${packages.join(', ')}`);
         break;
+      }
         
       case 'audit':
         if (parts.includes('fix')) {
@@ -271,25 +273,32 @@ export class CommandPreviewService {
     const subcommand = parts[1];
     
     switch (subcommand) {
-      case 'run':
+      case 'run': {
         const volumeMounts = parts.filter(p => p.startsWith('-v') || p.startsWith('--volume'));
+
         for (const mount of volumeMounts) {
           const [host] = mount.split(':');
+
           if (host && !host.startsWith('-')) {
             preview.warnings.push(`Will mount host directory: ${host}`);
           }
         }
         break;
+      }
         
-      case 'rm':
+      case 'rm': {
         const containers = parts.slice(2).filter(p => !p.startsWith('-'));
+
         preview.warnings.push(`Will remove containers: ${containers.join(', ')}`);
         break;
+      }
         
-      case 'rmi':
+      case 'rmi': {
         const images = parts.slice(2).filter(p => !p.startsWith('-'));
+
         preview.warnings.push(`Will remove images: ${images.join(', ')}`);
         break;
+      }
     }
   }
 
@@ -297,9 +306,11 @@ export class CommandPreviewService {
     // Check for output redirection
     if (command.includes('>')) {
       const matches = command.match(/>\s*([^\s]+)/g);
+
       if (matches) {
         for (const match of matches) {
           const file = match.replace('>', '').trim();
+
           preview.willCreate.push(`${cwd}/${file}`);
           
           if (command.includes('>>')) {
@@ -321,12 +332,14 @@ export class CommandPreviewService {
     // Check dangerous patterns
     if (this.dangerousPatterns.some(pattern => pattern.test(command))) {
       preview.riskLevel = 'dangerous';
+
       return;
     }
     
     // Check moderate patterns
     if (this.moderatePatterns.some(pattern => pattern.test(command))) {
       preview.riskLevel = 'moderate';
+
       return;
     }
     
@@ -395,9 +408,9 @@ export class CommandPreviewService {
     const alternatives: string[] = [];
     
     if (command.match(/^rm\s+.*-rf/)) {
-      alternatives.push('Use trash command instead: trash ' + command.split(' ').slice(-1)[0]);
-      alternatives.push('Move to temp directory first: mv ' + command.split(' ').slice(-1)[0] + ' ./temp/backup_$(date +%s)');
-      alternatives.push('List files first: ls -la ' + command.split(' ').slice(-1)[0]);
+      alternatives.push(`Use trash command instead: trash ${command.split(' ').slice(-1)[0]}`);
+      alternatives.push(`Move to temp directory first: mv ${command.split(' ').slice(-1)[0]} ./temp/backup_$(date +%s)`);
+      alternatives.push(`List files first: ls -la ${command.split(' ').slice(-1)[0]}`);
     }
     
     if (command.includes('git reset --hard')) {

@@ -37,6 +37,7 @@ export class AliasService {
   async learnFromCommand(command: string, context: string): Promise<SmartAlias | null> {
     // Update frequency tracking
     const currentFreq = this.commandFrequency.get(command) || 0;
+
     this.commandFrequency.set(command, currentFreq + 1);
     
     // Track context patterns
@@ -44,6 +45,7 @@ export class AliasService {
       this.contextPatterns.set(context, []);
     }
     const contextCommands = this.contextPatterns.get(context)!;
+
     if (!contextCommands.includes(command)) {
       contextCommands.push(command);
     }
@@ -144,10 +146,12 @@ export class AliasService {
     // Look for common parameter patterns
     for (let i = 1; i < parts.length; i++) {
       const part = parts[i];
+
       if (part.startsWith('-') || part.includes('=')) {
         // This might be a parameter we can templatize
         if (part.includes('=')) {
           const [key] = part.split('=');
+
           parameters.push(`${key}=$${parameters.length + 1}`);
         } else if (i + 1 < parts.length && !parts[i + 1].startsWith('-')) {
           parameters.push(`${part} $${parameters.length + 1}`);
@@ -169,6 +173,7 @@ export class AliasService {
     
     // Find matching alias
     const alias = this.findMatchingAlias(trigger, context);
+
     if (!alias) return input;
     
     // Update usage stats
@@ -181,11 +186,12 @@ export class AliasService {
     if (alias.parameters && alias.parameters.length > 0) {
       alias.parameters.forEach((_param, index) => {
         const value = args[index] || '';
+
         expanded = expanded.replace(`$${index + 1}`, value);
       });
     } else if (args.length > 0) {
       // Simple append remaining arguments
-      expanded += ' ' + args.join(' ');
+      expanded += ` ${args.join(' ')}`;
     }
     
     return expanded;
@@ -228,10 +234,12 @@ export class AliasService {
    */
   async removeAlias(aliasId: string): Promise<boolean> {
     const index = this.aliases.findIndex(alias => alias.id === aliasId);
+
     if (index === -1) return false;
     
     this.aliases.splice(index, 1);
     await this.saveAliases();
+
     return true;
   }
 
@@ -317,6 +325,7 @@ export class AliasService {
     }
     
     await this.saveAliases();
+
     return importCount;
   }
 
@@ -345,6 +354,7 @@ export class AliasService {
   private async loadAliases(): Promise<void> {
     try {
       const stored = await invoke<SmartAlias[]>('load_aliases');
+
       this.aliases = stored.map(alias => ({
         ...alias,
         createdDate: new Date(alias.createdDate),
@@ -373,6 +383,7 @@ export class AliasService {
   private async loadCommandFrequency(): Promise<void> {
     try {
       const stored = await invoke<Record<string, number>>('load_command_frequency');
+
       this.commandFrequency = new Map(Object.entries(stored));
     } catch (error) {
       console.warn('Failed to load command frequency:', error);
@@ -386,6 +397,7 @@ export class AliasService {
   private async saveCommandFrequency(): Promise<void> {
     try {
       const data = Object.fromEntries(this.commandFrequency);
+
       await invoke('save_command_frequency', { frequency: data });
     } catch (error) {
       console.error('Failed to save command frequency:', error);

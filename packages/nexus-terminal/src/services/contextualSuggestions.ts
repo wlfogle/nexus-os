@@ -70,6 +70,7 @@ export class ContextualSuggestionsService {
     
     // Check cache first
     const cached = this.suggestionCache.get(cacheKey);
+
     if (cached) {
       return this.filterSuggestions(cached, filter);
     }
@@ -89,7 +90,7 @@ export class ContextualSuggestionsService {
       this.suggestionCache.set(cacheKey, enhancedSuggestions);
       
       return this.filterSuggestions(enhancedSuggestions, filter);
-    } catch (error) {
+    } catch {
       // Fallback to rule-based suggestions
       return this.getRuleBasedSuggestions(partialCommand, context, filter);
     }
@@ -345,6 +346,7 @@ export class ContextualSuggestionsService {
     
     recentCommands.forEach(cmd => {
       const baseCommand = cmd.split(' ')[0];
+
       commandFrequency.set(baseCommand, (commandFrequency.get(baseCommand) || 0) + 1);
     });
     
@@ -472,6 +474,7 @@ export class ContextualSuggestionsService {
   ): string {
     const contextKey = `${context.currentDirectory}_${context.projectType}_${context.timeOfDay}`;
     const filterKey = filter ? JSON.stringify(filter) : '';
+
     return `${partialCommand}_${contextKey}_${filterKey}`;
   }
   
@@ -491,6 +494,7 @@ export class ContextualSuggestionsService {
       // Update local learning patterns
       if (successful) {
         const pattern = this.extractCommandPattern(command);
+
         this.learningPatterns.set(pattern, (this.learningPatterns.get(pattern) || 0) + 1);
       }
       

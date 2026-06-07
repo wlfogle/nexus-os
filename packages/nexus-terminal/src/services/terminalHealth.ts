@@ -166,11 +166,13 @@ export class TerminalHealthMonitor {
   
   getMetricsHistory(hours: number = 1): TerminalHealthMetrics[] {
     const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000);
+
     return this.metrics.filter(m => m.timestamp > cutoff);
   }
   
   private checkHealth(): void {
     const latest = this.getLatestMetrics();
+
     if (!latest) return;
     
     this.checkMemoryHealth(latest);
@@ -253,6 +255,7 @@ export class TerminalHealthMonitor {
     }
     
     const failureRate = metrics.commandStats.failureRate * 100;
+
     if (failureRate > this.thresholds.commandFailureRate.criticalPercent) {
       this.createAlert('error', 'system',
         `High command failure rate: ${failureRate.toFixed(1)}%`,
@@ -332,6 +335,7 @@ export class TerminalHealthMonitor {
   
   acknowledgeAlert(alertId: string): void {
     const alert = this.alerts.find(a => a.id === alertId);
+
     if (alert) {
       alert.acknowledged = true;
     }
@@ -339,6 +343,7 @@ export class TerminalHealthMonitor {
   
   resolveAlert(alertId: string): void {
     const alert = this.alerts.find(a => a.id === alertId);
+
     if (alert) {
       alert.resolved = true;
       alert.resolvedAt = new Date();
@@ -347,6 +352,7 @@ export class TerminalHealthMonitor {
   
   getHealthScore(): number {
     const latest = this.getLatestMetrics();
+
     if (!latest) return 100;
     
     let score = 100;
@@ -381,6 +387,7 @@ export class TerminalHealthMonitor {
   
   getTrends(hours: number = 1): HealthTrend[] {
     const history = this.getMetricsHistory(hours);
+
     if (history.length < 2) return [];
     
     const trends: HealthTrend[] = [];
@@ -421,6 +428,7 @@ export class TerminalHealthMonitor {
     const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
     
     let trend: 'improving' | 'stable' | 'degrading';
+
     if (Math.abs(slope) < 0.1) {
       trend = 'stable';
     } else if ((metric === 'fps' && slope > 0) || (metric !== 'fps' && slope < 0)) {
@@ -454,6 +462,7 @@ export class TerminalHealthMonitor {
     if (score >= 75) return 'good';
     if (score >= 50) return 'fair';
     if (score >= 25) return 'poor';
+
     return 'critical';
   }
   

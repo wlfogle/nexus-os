@@ -154,6 +154,7 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
     if (!input.trim() || isLoading) return;
 
     const message = input.trim();
+
     setInput('');
     setIsLoading(true);
 

@@ -45,6 +45,7 @@ const AIControlBar: React.FC<AIControlBarProps> = ({ className }) => {
                       modelName.includes('1b') ? '1B' : 'Unknown';
           
           const capabilities = [];
+
           if (isVision) capabilities.push('Vision', 'Image Analysis');
           if (isCode) capabilities.push('Code Generation', 'Debugging');
           capabilities.push('Text Generation', 'Conversation');
@@ -64,6 +65,7 @@ const AIControlBar: React.FC<AIControlBarProps> = ({ className }) => {
         
         // Set default model
         const currentModel = await invoke('get_current_model') as string;
+
         setSelectedModel(currentModel);
         
       } catch (error) {
@@ -143,6 +145,7 @@ const AIControlBar: React.FC<AIControlBarProps> = ({ className }) => {
                       onClick={async () => {
                         try {
                           const { invoke } = await import('@tauri-apps/api/core');
+
                           await invoke('set_ai_model', { model: model.name });
                           setSelectedModel(model.name);
                           setShowModelPicker(false);

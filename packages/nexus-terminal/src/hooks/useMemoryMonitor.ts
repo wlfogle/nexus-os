@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, type DependencyList } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { forceMemoryCleanup, selectMemoryStats } from '../store/slices/terminalSlice';
 
@@ -42,6 +42,7 @@ export const useMemoryMonitor = (config: MemoryMonitorConfig = {}) => {
     const avgOutputSize = 200;
     const estimatedBytes = stats.totalOutputs * avgOutputSize;
     const estimatedMB = estimatedBytes / (1024 * 1024);
+
     return Math.round(estimatedMB * 100) / 100; // Round to 2 decimal places
   }, []);
 
@@ -71,6 +72,7 @@ export const useMemoryMonitor = (config: MemoryMonitorConfig = {}) => {
     // Use Performance API if available
     if ('memory' in performance) {
       const memory = (performance as any).memory;
+
       setPerformanceStats(prev => ({
         ...prev,
         heapUsed: Math.round(memory.usedJSHeapSize / (1024 * 1024) * 100) / 100,
@@ -80,6 +82,7 @@ export const useMemoryMonitor = (config: MemoryMonitorConfig = {}) => {
     }
     
     const endTime = performance.now();
+
     setPerformanceStats(prev => ({
       ...prev,
       renderTime: Math.round((endTime - startTime) * 100) / 100,
@@ -91,6 +94,7 @@ export const useMemoryMonitor = (config: MemoryMonitorConfig = {}) => {
     if (!finalConfig.enableAutoCleanup) return;
 
     const shouldCleanup = checkCleanupNeeded(memoryStats);
+
     if (shouldCleanup) {
       triggerCleanup();
     }
@@ -109,6 +113,7 @@ export const useMemoryMonitor = (config: MemoryMonitorConfig = {}) => {
   const getMemoryWarningLevel = useCallback((estimatedMB: number): 'safe' | 'warning' | 'critical' => {
     if (estimatedMB < finalConfig.cleanupThreshold * 0.5) return 'safe';
     if (estimatedMB < finalConfig.cleanupThreshold * 0.8) return 'warning';
+
     return 'critical';
   }, [finalConfig.cleanupThreshold]);
 
@@ -140,7 +145,7 @@ export const useMemoryMonitor = (config: MemoryMonitorConfig = {}) => {
 // Hook for memory-aware component optimization
 export const useMemoryAwareCallback = <T extends (...args: any[]) => any>(
   callback: T,
-  deps: React.DependencyList,
+  deps: DependencyList,
   memoryThreshold: number = 50
 ): T => {
   const { estimatedMemoryMB, isMemoryCritical } = useMemoryMonitor();
@@ -150,6 +155,7 @@ export const useMemoryAwareCallback = <T extends (...args: any[]) => any>(
       // If memory usage is critical, throttle expensive operations
       if (isMemoryCritical && estimatedMemoryMB > memoryThreshold) {
         console.warn('[MemoryMonitor] Throttling callback due to high memory usage');
+
         // Could implement debouncing or other throttling strategies here
         return;
       }
@@ -176,6 +182,7 @@ export const useMemoryAwareRendering = () => {
     if (isMemoryCritical) {
       return { ...props, ...simplificationRules };
     }
+
     return props;
   }, [isMemoryCritical]);
   

@@ -114,6 +114,7 @@ export class CommandTemplateService {
     };
     
     this.templates.set(templateId, commandTemplate);
+
     return templateId;
   }
   
@@ -122,6 +123,7 @@ export class CommandTemplateService {
    */
   updateTemplate(templateId: string, updates: Partial<CommandTemplate>): void {
     const template = this.templates.get(templateId);
+
     if (!template) throw new Error('Template not found');
     
     Object.assign(template, updates);
@@ -130,6 +132,7 @@ export class CommandTemplateService {
     // Increment version for template changes
     if (updates.template || updates.parameters) {
       const [major, minor, patch] = template.version.split('.').map(Number);
+
       template.version = `${major}.${minor}.${patch + 1}`;
     }
     
@@ -166,7 +169,7 @@ export class CommandTemplateService {
   } = {}): CommandTemplate[] {
     const templates = Array.from(this.templates.values());
     
-    let filtered = templates.filter(template => {
+    const filtered = templates.filter(template => {
       // Text search
       const searchText = `${template.name} ${template.description} ${template.tags.join(' ')}`.toLowerCase();
       const queryMatch = query.toLowerCase().split(' ').every(term => searchText.includes(term));
@@ -214,10 +217,12 @@ export class CommandTemplateService {
     } = {}
   ): Promise<TemplateExecutionResult> {
     const template = this.templates.get(templateId);
+
     if (!template) throw new Error('Template not found');
     
     // Validate parameters
     const validation = this.validateParameters(template.parameters, parameters);
+
     if (!validation.valid) {
       throw new Error(`Parameter validation failed: ${validation.errors.join(', ')}`);
     }
@@ -362,6 +367,7 @@ export class CommandTemplateService {
         if (val.pattern) {
           try {
             const regex = new RegExp(val.pattern);
+
             if (!regex.test(value)) {
               errors.push(`Parameter '${param.name}' doesn't match required pattern`);
             }
@@ -380,6 +386,7 @@ export class CommandTemplateService {
         
         if (param.type === 'number') {
           const numValue = Number(value);
+
           if (val.min !== undefined && numValue < val.min) {
             errors.push(`Parameter '${param.name}' must be at least ${val.min}`);
           }
@@ -399,11 +406,13 @@ export class CommandTemplateService {
     // Replace parameter placeholders
     for (const [name, value] of Object.entries(parameters)) {
       const placeholderRegex = new RegExp(`\\{\\{${name}\\}\\}`, 'g');
+
       command = command.replace(placeholderRegex, value);
     }
     
     // Check for unreplaced placeholders
     const unreplacedMatches = command.match(/\{\{[^}]+\}\}/g);
+
     if (unreplacedMatches) {
       console.warn('Unreplaced placeholders found:', unreplacedMatches);
     }
@@ -428,6 +437,7 @@ export class CommandTemplateService {
     };
     
     this.collections.set(collectionId, collection);
+
     return collectionId;
   }
   

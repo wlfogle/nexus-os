@@ -81,16 +81,19 @@ export const NewTabModal: React.FC<NewTabModalProps> = ({ onCreateTab, onClose }
 
   const addEnvironmentVar = useCallback(() => {
     const key = `VAR_${Object.keys(environmentVars).length + 1}`;
+
     setEnvironmentVars(prev => ({ ...prev, [key]: '' }));
   }, [environmentVars]);
 
   const updateEnvironmentVar = useCallback((oldKey: string, newKey: string, value: string) => {
     setEnvironmentVars(prev => {
       const newVars = { ...prev };
+
       if (oldKey !== newKey) {
         delete newVars[oldKey];
       }
       newVars[newKey] = value;
+
       return newVars;
     });
   }, []);
@@ -98,7 +101,9 @@ export const NewTabModal: React.FC<NewTabModalProps> = ({ onCreateTab, onClose }
   const removeEnvironmentVar = useCallback((key: string) => {
     setEnvironmentVars(prev => {
       const newVars = { ...prev };
+
       delete newVars[key];
+
       return newVars;
     });
   }, []);
@@ -123,6 +128,7 @@ export const NewTabModal: React.FC<NewTabModalProps> = ({ onCreateTab, onClose }
       } else {
         // Browser fallback - prompt for directory path
         const userPath = prompt('Enter working directory path:', workingDirectory);
+
         if (userPath && userPath.trim()) {
           setWorkingDirectory(userPath.trim());
           setSelectedPreset(null);
@@ -200,6 +206,7 @@ export const NewTabModal: React.FC<NewTabModalProps> = ({ onCreateTab, onClose }
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {Object.values(ShellType).map((shell) => {
                 const config = SHELL_CONFIGS[shell];
+
                 return (
                   <button
                     key={shell}

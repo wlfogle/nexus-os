@@ -72,7 +72,7 @@ const terminalTabSlice = createSlice({
         id: tabId,
         title: config.title || `${config.shell} ${config.workingDirectory.split('/').pop()}`,
         shell: config.shell,
-        workingDirectory: config.workingDirectory.replace('~', '/home/lou'),
+        workingDirectory: config.workingDirectory,
         environmentVars: config.environmentVars || {},
         
         // Terminal Process - will be set when backend creates the terminal
@@ -120,6 +120,7 @@ const terminalTabSlice = createSlice({
     updateTabTerminalId: (state, action: PayloadAction<{ tabId: string; terminalId: string }>) => {
       const { tabId, terminalId } = action.payload;
       const tab = state.tabs.find(t => t.id === tabId);
+
       if (tab) {
         tab.terminalId = terminalId;
       }
@@ -134,6 +135,7 @@ const terminalTabSlice = createSlice({
       
       // Activate selected tab
       const targetTab = state.tabs.find(tab => tab.id === tabId);
+
       if (targetTab) {
         targetTab.isActive = true;
         targetTab.lastActivity = new Date();
@@ -141,6 +143,7 @@ const terminalTabSlice = createSlice({
         
         // Track performance
         const switchTime = performance.now() - startTime;
+
         state.performanceMetrics.tabSwitchTimes.push(switchTime);
         
         // Keep only last 10 measurements
@@ -160,6 +163,7 @@ const terminalTabSlice = createSlice({
         // Save AI conversation to global knowledge if valuable
         if (closedTab.aiConversation.length > 2) {
           const key = `${closedTab.shell}-${closedTab.workingDirectory}`;
+
           state.aiContextGlobal.sharedKnowledge[key] = {
             lastSession: closedTab.aiConversation.slice(-5),
             insights: closedTab.aiContext.suggestions,
@@ -179,6 +183,7 @@ const terminalTabSlice = createSlice({
             // Switch to the tab that was to the right, or leftmost if this was rightmost
             const newActiveIndex = Math.min(tabIndex, state.tabs.length - 1);
             const newActiveTab = state.tabs[newActiveIndex];
+
             if (newActiveTab) {
               newActiveTab.isActive = true;
               state.activeTabId = newActiveTab.id;
@@ -213,6 +218,7 @@ const terminalTabSlice = createSlice({
         if (draggedTab && targetTab) {
           // Remove dragged tab from current position
           const draggedIndex = state.tabs.findIndex(tab => tab.id === state.dragState!.draggedTabId);
+
           state.tabs.splice(draggedIndex, 1);
           
           // Find new target position
@@ -240,6 +246,7 @@ const terminalTabSlice = createSlice({
     updateTabTitle: (state, action: PayloadAction<{ tabId: string; title: string }>) => {
       const { tabId, title } = action.payload;
       const tab = state.tabs.find(t => t.id === tabId);
+
       if (tab) {
         tab.title = title;
       }
@@ -247,6 +254,7 @@ const terminalTabSlice = createSlice({
 
     toggleTabPin: (state, action: PayloadAction<string>) => {
       const tab = state.tabs.find(t => t.id === action.payload);
+
       if (tab) {
         tab.isPinned = !tab.isPinned;
       }
@@ -255,6 +263,7 @@ const terminalTabSlice = createSlice({
     updateTabWorkingDirectory: (state, action: PayloadAction<{ tabId: string; cwd: string }>) => {
       const { tabId, cwd } = action.payload;
       const tab = state.tabs.find(t => t.id === tabId);
+
       if (tab) {
         tab.workingDirectory = cwd;
         tab.aiContext.learningContext.workingDirectory = cwd;
@@ -270,6 +279,7 @@ const terminalTabSlice = createSlice({
     addCommandToHistory: (state, action: PayloadAction<{ tabId: string; entry: CommandHistoryEntry }>) => {
       const { tabId, entry } = action.payload;
       const tab = state.tabs.find(t => t.id === tabId);
+
       if (tab) {
         tab.terminalHistory.push(entry);
         tab.aiContext.recentCommands.push(entry.command);
@@ -291,6 +301,7 @@ const terminalTabSlice = createSlice({
     addAIMessage: (state, action: PayloadAction<{ tabId: string; message: Omit<AIMessage, 'id'> }>) => {
       const { tabId, message } = action.payload;
       const tab = state.tabs.find(t => t.id === tabId);
+
       if (tab) {
         const aiMessage: AIMessage = {
           ...message,
@@ -305,6 +316,7 @@ const terminalTabSlice = createSlice({
           // Keep first (system) message and last 99
           const systemMessage = tab.aiConversation[0];
           const recentMessages = tab.aiConversation.slice(-99);
+
           tab.aiConversation = [systemMessage, ...recentMessages];
         }
       }
@@ -313,6 +325,7 @@ const terminalTabSlice = createSlice({
     addAISuggestion: (state, action: PayloadAction<{ tabId: string; suggestion: AISuggestion }>) => {
       const { tabId, suggestion } = action.payload;
       const tab = state.tabs.find(t => t.id === tabId);
+
       if (tab) {
         tab.aiContext.suggestions.push(suggestion);
         
@@ -326,6 +339,7 @@ const terminalTabSlice = createSlice({
     addError: (state, action: PayloadAction<{ tabId: string; error: ErrorContext }>) => {
       const { tabId, error } = action.payload;
       const tab = state.tabs.find(t => t.id === tabId);
+
       if (tab) {
         tab.aiContext.errors.push(error);
         
@@ -339,6 +353,7 @@ const terminalTabSlice = createSlice({
     addRecentCommand: (state, action: PayloadAction<{ tabId: string; command: string }>) => {
       const { tabId, command } = action.payload;
       const tab = state.tabs.find(t => t.id === tabId);
+
       if (tab) {
         tab.aiContext.recentCommands.push(command);
         
@@ -351,9 +366,11 @@ const terminalTabSlice = createSlice({
 
     clearAIConversation: (state, action: PayloadAction<string>) => {
       const tab = state.tabs.find(t => t.id === action.payload);
+
       if (tab) {
         // Keep system message, clear the rest
         const systemMessage = tab.aiConversation.find(msg => msg.role === 'system');
+
         tab.aiConversation = systemMessage ? [systemMessage] : [];
       }
     },
@@ -387,6 +404,7 @@ const terminalTabSlice = createSlice({
     // Performance Monitoring
     updateTabMemoryUsage: (state, action: PayloadAction<{ tabId: string; memoryMB: number }>) => {
       const { tabId, memoryMB } = action.payload;
+
       state.performanceMetrics.memoryUsage[tabId] = memoryMB;
     },
 
@@ -402,6 +420,7 @@ const terminalTabSlice = createSlice({
           if (!tab.isActive && tab.aiConversation.length > 20) {
             const systemMessage = tab.aiConversation.find(msg => msg.role === 'system');
             const recentMessages = tab.aiConversation.slice(-10);
+
             tab.aiConversation = systemMessage ? [systemMessage, ...recentMessages] : recentMessages;
           }
         });
@@ -413,8 +432,10 @@ const terminalTabSlice = createSlice({
     // Keyboard Shortcuts
     switchToTabByIndex: (state, action: PayloadAction<number>) => {
       const index = action.payload;
+
       if (index >= 0 && index < state.tabs.length) {
         const targetTab = state.tabs[index];
+
         // Reuse existing setActiveTab logic
         state.tabs.forEach(tab => { tab.isActive = false; });
         targetTab.isActive = true;

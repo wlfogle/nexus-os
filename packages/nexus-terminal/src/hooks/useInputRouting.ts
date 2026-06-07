@@ -1,24 +1,52 @@
 import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { invoke } from '@tauri-apps/api/core';
-import { selectActiveTab, addAIMessage } from '../store/slices/terminalTabSlice';
+import { selectActiveTab, addAIMessage, updateTabTerminalId } from '../store/slices/terminalTabSlice';
 import { commandRoutingService } from '../services/commandRouting';
 import { routingLogger } from '../utils/logger';
+import { SHELL_CONFIGS, ShellType } from '../types/terminal';
 
 export const useInputRouting = () => {
   const dispatch = useDispatch();
   const activeTab = useSelector(selectActiveTab);
+  
+  const ensureTerminalId = useCallback(async (): Promise<string | null> => {
+    if (!activeTab) return null;
+    if (activeTab.terminalId) return activeTab.terminalId;
+
+    try {
+      const shellConfig = SHELL_CONFIGS[activeTab.shell as ShellType] ?? SHELL_CONFIGS[ShellType.BASH];
+      const createdTerminalId = await invoke<string>('create_terminal', {
+        shell: shellConfig.executable,
+        args: shellConfig.args,
+        cwd: activeTab.workingDirectory === '~' ? null : activeTab.workingDirectory,
+        env: activeTab.environmentVars
+      });
+
+      dispatch(updateTabTerminalId({ tabId: activeTab.id, terminalId: createdTerminalId }));
+      routingLogger.info('Created missing terminal session on demand', 'create_terminal_on_demand', { tabId: activeTab.id, terminalId: createdTerminalId });
+
+      return createdTerminalId;
+    } catch (error) {
+      routingLogger.error('Failed to create terminal session on demand', error as Error, 'create_terminal_on_demand_failed', { tabId: activeTab.id });
+
+      return null;
+    }
+  }, [activeTab, dispatch]);
 
   // Use unified command routing service for smart command detection
   const isShellCommand = useCallback((input: string): boolean => {
     const result = commandRoutingService.isShellCommand(input);
+
     routingLogger.routeDecision(input, result, 1.0, 'Simple shell command check');
+
     return result;
   }, []);
 
   // Handle input routing between AI and shell with enhanced analysis
   const handleInput = useCallback(async (input: string, onAIResponse?: (message: string) => void) => {
     const trimmed = input.trim();
+
     if (!trimmed || !activeTab) return;
     
     routingLogger.info(`Processing input routing`, 'handle_input', { input: trimmed });
@@ -31,13 +59,16 @@ export const useInputRouting = () => {
       
       if (routingResult.isShellCommand) {
         // Execute as shell command
-        if (activeTab.terminalId) {
+        const terminalId = await ensureTerminalId();
+
+        if (terminalId) {
           try {
-            routingLogger.info(`Executing shell command`, 'shell_execute', { command: trimmed, terminalId: activeTab.terminalId });
+            routingLogger.info(`Executing shell command`, 'shell_execute', { command: trimmed, terminalId });
             await invoke('write_to_terminal', { 
-              terminalId: activeTab.terminalId, 
-              data: trimmed + '\r' 
+              terminal_id: terminalId, 
+              data: `${trimmed}\r` 
             });
+
             routingLogger.shellExecution(trimmed, true);
             
             // Provide feedback on low confidence routing
@@ -48,11 +79,32 @@ export const useInputRouting = () => {
               });
             }
           } catch (error) {
-            routingLogger.shellExecution(trimmed, false, error as Error);
+            const errorMessageText = error instanceof Error ? error.message : String(error);
+
+            if (errorMessageText.toLowerCase().includes('not found')) {
+              const recreatedTerminalId = await ensureTerminalId();
+
+              if (recreatedTerminalId) {
+                try {
+                  await invoke('write_to_terminal', {
+                    terminal_id: recreatedTerminalId,
+                    data: `${trimmed}\r`
+                  });
+                  routingLogger.shellExecution(trimmed, true);
+
+                  return;
+                } catch (retryError) {
+                  routingLogger.shellExecution(trimmed, false, retryError as Error);
+                }
+              }
+            } else {
+              routingLogger.shellExecution(trimmed, false, error as Error);
+            }
             
             // On shell execution error, offer AI assistance
             if (onAIResponse) {
               const errorMessage = `I had trouble executing "${trimmed}". Let me help you troubleshoot this command.`;
+
               onAIResponse(errorMessage);
               
               // Also add the AI message to store
@@ -70,6 +122,7 @@ export const useInputRouting = () => {
         } else {
           routingLogger.error('No terminal ID available for shell command execution', undefined, 'no_terminal_id', { command: trimmed });
         }
+
         return; // Important: return early for shell commands
       } else {
         // Send to AI assistant
@@ -106,11 +159,12 @@ export const useInputRouting = () => {
           // Send to AI with enhanced context
           const aiResponse = await invoke('ai_chat_with_memory', {
             message: trimmed,
-            conversationId: activeTab.id,
+            conversation_id: activeTab.id,
             context: enhancedPrompt
           }) as string;
           
           const responseTime = Date.now() - startTime;
+
           timer.end({ component: 'AIRequest', metadata: { query: trimmed, responseLength: aiResponse.length } });
           
           // Add AI response
@@ -158,12 +212,14 @@ export const useInputRouting = () => {
       
       // Fallback to simple heuristic when routing service fails
       if (isShellCommand(trimmed)) {
-        if (activeTab.terminalId) {
+        const terminalId = await ensureTerminalId();
+
+        if (terminalId) {
           try {
             routingLogger.info('Executing fallback shell command', 'fallback_shell', { command: trimmed });
             await invoke('write_to_terminal', { 
-              terminalId: activeTab.terminalId, 
-              data: trimmed + '\r' 
+              terminal_id: terminalId, 
+              data: `${trimmed}\r` 
             });
           } catch (error) {
             routingLogger.error('Fallback shell execution failed', error as Error, 'fallback_failed', { command: trimmed });
@@ -185,7 +241,7 @@ export const useInputRouting = () => {
         }
       }
     }
-  }, [activeTab, isShellCommand, dispatch]);
+  }, [activeTab, isShellCommand, dispatch, ensureTerminalId]);
 
   return {
     handleInput,

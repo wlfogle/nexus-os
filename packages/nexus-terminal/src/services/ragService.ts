@@ -74,6 +74,7 @@ class RAGServiceTauri {
       // Get or create default collection
       try {
         const collections = await this.listCollections();
+
         if (!collections.find(c => c.name === this.defaultCollection)) {
           await this.createCollection(this.defaultCollection, 'Default knowledge base');
         }
@@ -95,9 +96,11 @@ class RAGServiceTauri {
   async healthCheck(): Promise<boolean> {
     try {
       await invoke('local_recall_health_check');
+
       return true;
     } catch (error) {
       this.logger.error('Health check failed:', error as Error);
+
       return false;
     }
   }
@@ -233,6 +236,7 @@ class RAGServiceTauri {
     await this.ensureInitialized();
     try {
       const messagesPairs = messages.map(m => [m.role, m.content] as [string, string]);
+
       await invoke('local_recall_index_conversation', {
         messages: messagesPairs,
         context
@@ -348,6 +352,7 @@ class RAGServiceTauri {
       });
     } catch (error) {
       this.logger.error('Failed to get context for prompt:', error as Error);
+
       return ''; // Don't fail AI requests if RAG is unavailable
     }
   }
@@ -373,6 +378,7 @@ class RAGServiceTauri {
       return await invoke<string>('local_recall_get_default_collection');
     } catch (error) {
       this.logger.warn('Failed to get default collection:', error as Error);
+
       return this.defaultCollection;
     }
   }
@@ -411,6 +417,7 @@ class RAGServiceTauri {
     if (similarity >= 0.9) return 'direct_match';
     if (similarity >= 0.8) return 'high';
     if (similarity >= 0.6) return 'medium';
+
     return 'low';
   }
 

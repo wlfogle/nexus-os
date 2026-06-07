@@ -59,6 +59,7 @@ const WarpTab: React.FC<WarpTabProps> = ({
     if (hasErrors) return { icon: '🚨', color: 'text-red-400', tooltip: `${tab.aiContext.errors.length} errors detected` };
     if (hasSuggestions) return { icon: '💡', color: 'text-yellow-400', tooltip: `${tab.aiContext.suggestions.length} AI suggestions` };
     if (hasRecentActivity) return { icon: '🤖', color: 'text-blue-400', tooltip: 'AI assistant active' };
+
     return null;
   };
 
@@ -180,6 +181,7 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({
     };
 
     document.addEventListener('mousedown', handleClickOutside);
+
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onClose]);
 
@@ -253,6 +255,7 @@ export const WarpTabBar: React.FC = () => {
     
     // Create custom drag image
     const dragImage = document.createElement('div');
+
     dragImage.className = 'bg-gray-800 border border-gray-600 px-3 py-2 rounded text-white text-sm';
     dragImage.textContent = tabs.find(t => t.id === tabId)?.title || 'Tab';
     dragImage.style.position = 'absolute';
@@ -268,8 +271,10 @@ export const WarpTabBar: React.FC = () => {
     event.dataTransfer.dropEffect = 'move';
     
     const target = (event.currentTarget as HTMLElement).closest('[data-tab-id]');
+
     if (target) {
       const tabId = target.getAttribute('data-tab-id');
+
       if (tabId && tabId !== dragOverTab) {
         setDragOverTab(tabId);
       }
@@ -314,6 +319,7 @@ export const WarpTabBar: React.FC = () => {
   const handleDuplicate = useCallback(() => {
     if (contextMenu) {
       const tab = tabs.find(t => t.id === contextMenu.tabId);
+
       if (tab) {
         // Create a duplicate tab with same configuration
         dispatch(createTab({
@@ -329,6 +335,7 @@ export const WarpTabBar: React.FC = () => {
   const handleRename = useCallback(() => {
     if (contextMenu) {
       const newTitle = prompt('Enter new tab name:', tabs.find(t => t.id === contextMenu.tabId)?.title || '');
+
       if (newTitle && newTitle.trim()) {
         dispatch(updateTabTitle({ tabId: contextMenu.tabId, title: newTitle.trim() }));
       }
@@ -355,6 +362,7 @@ export const WarpTabBar: React.FC = () => {
         else if (event.key >= '1' && event.key <= '9') {
           event.preventDefault();
           const tabIndex = parseInt(event.key) - 1;
+
           if (tabs[tabIndex]) {
             dispatch(setActiveTab(tabs[tabIndex].id));
           }
@@ -363,6 +371,7 @@ export const WarpTabBar: React.FC = () => {
     };
 
     window.addEventListener('keydown', handleKeyDown);
+
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeTab, tabs, dispatch, handleNewTab]);
 
@@ -439,6 +448,7 @@ export const WarpTabBar: React.FC = () => {
                     };
                     
                     const colors = themeColors[themeIndex as keyof typeof themeColors] || themeColors[0];
+
                     document.documentElement.style.setProperty('--terminal-bg-color', colors.bg);
                     document.documentElement.style.setProperty('--terminal-text-color', colors.fg);
                     document.documentElement.style.setProperty('--terminal-accent-color', colors.accent);
@@ -460,6 +470,7 @@ export const WarpTabBar: React.FC = () => {
                   if (selectedFont && selectedFont >= '1' && selectedFont <= '6') {
                     const fontIndex = parseInt(selectedFont) - 1;
                     const fontFamily = fonts[fontIndex];
+
                     document.documentElement.style.setProperty('--terminal-font-family', `'${fontFamily}', monospace`);
                     document.body.style.fontFamily = `'${fontFamily}', monospace`;
                     alert(`Font changed to: ${fontFamily}`);
@@ -478,6 +489,7 @@ export const WarpTabBar: React.FC = () => {
                   
                   if (selectedOption === '1') {
                     const fontSize = prompt('Enter font size (10-24):', '14');
+
                     if (fontSize && !isNaN(Number(fontSize)) && Number(fontSize) >= 10 && Number(fontSize) <= 24) {
                       document.documentElement.style.setProperty('--terminal-font-size', `${fontSize}px`);
                       document.body.style.fontSize = `${fontSize}px`;
@@ -485,6 +497,7 @@ export const WarpTabBar: React.FC = () => {
                     }
                   } else if (selectedOption === '2') {
                     const opacity = prompt('Enter opacity (0.1-1.0):', '1.0');
+
                     if (opacity && !isNaN(Number(opacity)) && Number(opacity) >= 0.1 && Number(opacity) <= 1.0) {
                       document.documentElement.style.setProperty('--terminal-opacity', opacity);
                       alert(`Opacity changed to: ${opacity}`);
@@ -492,8 +505,10 @@ export const WarpTabBar: React.FC = () => {
                   } else if (selectedOption === '3') {
                     const cursors = ['Block', 'Underline', 'Bar'];
                     const cursor = prompt(`Cursor Style:\n\n${cursors.map((c, i) => `${i + 1}. ${c}`).join('\n')}\n\nEnter number:`, '1');
+
                     if (cursor && cursor >= '1' && cursor <= '3') {
                       const cursorIndex = parseInt(cursor) - 1;
+
                       if (cursorIndex >= 0 && cursorIndex < cursors.length) {
                         alert(`Cursor style changed to: ${cursors[cursorIndex]}`);
                       }
@@ -520,6 +535,7 @@ export const WarpTabBar: React.FC = () => {
                     '⌘+0 - Reset Zoom',
                     'F11 - Fullscreen Toggle'
                   ];
+
                   alert(`Keyboard Shortcuts:\n\n${shortcuts.join('\n')}`);
                   setShowSettingsMenu(false);
                 }}
@@ -622,9 +638,10 @@ export const WarpTabBar: React.FC = () => {
                 onClick={async () => {
                   try {
                     const stats = await invoke('get_system_info');
+
                     alert(`System Performance:\n\nCPU: Monitoring...\nMemory: In use\nDisk: Available\n\nDetailed stats logged to console.`);
                     console.log('System Stats:', stats);
-                  } catch (error) {
+                  } catch {
                     alert('Performance monitoring feature coming soon!');
                   }
                   setShowMoreOptionsMenu(false);
@@ -642,7 +659,7 @@ export const WarpTabBar: React.FC = () => {
                       scanType: 'comprehensive' 
                     });
                     alert('Security scan started! Results will appear in the AI assistant.');
-                  } catch (error) {
+                  } catch {
                     alert('Security scan feature coming soon!');
                   }
                   setShowMoreOptionsMenu(false);
@@ -669,6 +686,7 @@ export const WarpTabBar: React.FC = () => {
                   const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
+
                   a.href = url;
                   a.download = `nexus-session-${new Date().toISOString().slice(0, 19)}.json`;
                   a.click();
@@ -685,18 +703,22 @@ export const WarpTabBar: React.FC = () => {
                 className="w-full px-4 py-2 text-left text-sm text-gray-200 hover:bg-gray-700 flex items-center"
                 onClick={() => {
                   const input = document.createElement('input');
+
                   input.type = 'file';
                   input.accept = '.json';
                   input.onchange = (e) => {
                     const file = (e.target as HTMLInputElement).files?.[0];
+
                     if (file) {
                       const reader = new FileReader();
+
                       reader.onload = (e) => {
                         try {
                           const sessionData = JSON.parse(e.target?.result as string);
+
                           alert(`Session imported! Found ${sessionData.tabs?.length || 0} tabs from ${sessionData.timestamp || 'unknown time'}`);
                           // Here you would actually restore the session data
-                        } catch (error) {
+                        } catch {
                           alert('Invalid session file format!');
                         }
                       };

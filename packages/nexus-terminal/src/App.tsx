@@ -17,6 +17,7 @@ function App() {
         
         // Check if we're in Tauri context
         const isTauriContext = typeof window !== 'undefined' && (window as any).__TAURI__;
+
         logger.debug('Environment detection', { component: 'App', action: 'env_detect', metadata: { isTauriContext } });
         
         if (isTauriContext) {
