@@ -52,17 +52,28 @@ pub async fn capture_screen() -> Result<ScreenCaptureData, String> {
         let width = capturer.width();
         let height = capturer.height();
         
-        // Capture frame
-        let frame = loop {
-            match capturer.frame() {
-                Ok(frame) => break frame,
-                Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
-                    // Try again
-                    std::thread::sleep(std::time::Duration::from_millis(10));
-                    continue;
+        // Wait for the compositor to flush — without this, GNOME X11 returns a black frame
+        std::thread::sleep(std::time::Duration::from_millis(200));
+
+        // Capture frame — retry up to 50 times (500ms total) until we get a non-black frame
+        let frame = 'outer: {
+            for attempt in 0..50 {
+                match capturer.frame() {
+                    Ok(frame) => {
+                        // Check if frame is not all-black (compositor may return black on first frames)
+                        let non_black = frame.chunks_exact(4).any(|p| p[0] > 10 || p[1] > 10 || p[2] > 10);
+                        if non_black || attempt >= 20 {
+                            break 'outer frame.to_vec();
+                        }
+                        std::thread::sleep(std::time::Duration::from_millis(10));
+                    }
+                    Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                        std::thread::sleep(std::time::Duration::from_millis(10));
+                    }
+                    Err(e) => return Err(format!("Failed to capture frame: {}", e)),
                 }
-                Err(e) => return Err(format!("Failed to capture frame: {}", e)),
             }
+            return Err("Screen capture timed out (all frames were black)".to_string());
         };
         
         // Convert frame to RGBA
@@ -328,23 +339,39 @@ pub async fn capture_and_ask(
     ollama_host: Option<String>,
     ollama_port: Option<String>,
 ) -> Result<String, String> {
-    // Try scrap first, fall back to shell screenshotter (grim/scrot/gnome-screenshot)
+    let temp_path = "/tmp/nexusai-screenshot.png";
+
+    // On Linux/Wayland, scrap often returns a black frame under XWayland.
+    // Always try shell tools first on Linux; fall back to scrap only if all fail.
+    #[cfg(target_os = "linux")]
+    let screen_data = {
+        match try_shell_screenshot(temp_path).await {
+            Ok(dims) => {
+                let data = tokio::fs::read(temp_path).await
+                    .map_err(|e| format!("Failed to read screenshot: {}", e))?;
+                let _ = tokio::fs::remove_file(temp_path).await;
+                ScreenCaptureData { data, width: dims.0, height: dims.1 }
+            }
+            Err(_) => {
+                // Last resort: scrap (works on X11)
+                capture_screen().await?
+            }
+        }
+    };
+
+    #[cfg(not(target_os = "linux"))]
     let screen_data = match capture_screen().await {
         Ok(data) => data,
         Err(_) => {
-            // Wayland fallback: try grim, then scrot, then gnome-screenshot
-            let temp_path = "/tmp/nexusai-screenshot.png";
-            let captured = try_shell_screenshot(temp_path).await?;
+            let _ = try_shell_screenshot(temp_path).await?;
             let data = tokio::fs::read(temp_path).await
                 .map_err(|e| format!("Failed to read screenshot: {}", e))?;
             let _ = tokio::fs::remove_file(temp_path).await;
-            ScreenCaptureData { data, width: captured.0, height: captured.1 }
+            ScreenCaptureData { data, width: 1920, height: 1080 }
         }
     };
-    
-    // Encode as base64
+
     let b64 = base64::engine::general_purpose::STANDARD.encode(&screen_data.data);
-    
     query_vision_ai(prompt, b64, None, ollama_host, ollama_port).await
 }
 
