@@ -98,11 +98,21 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
 
     // Open terminal — defer fit so flex layout has resolved
     terminal.current.open(terminalRef.current);
-    // Immediate fit + delayed refit to handle async layout
+
+    // Use ResizeObserver to refit whenever the container actually changes size.
+    // This is more reliable than setTimeout because it fires AFTER layout.
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        fitAddon.current?.fit();
+      });
+      resizeObserver.observe(terminalRef.current);
+    }
+
+    // Also do an immediate + deferred fit as backup
     requestAnimationFrame(() => {
       fitAddon.current?.fit();
-      // Second refit after paint to catch any remaining layout shifts
-      setTimeout(() => fitAddon.current?.fit(), 100);
+      setTimeout(() => fitAddon.current?.fit(), 150);
     });
 
     // ALL keyboard input goes directly to the PTY — terminal is a pure shell
@@ -216,9 +226,8 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
       });
 
     return () => {
-      if (unlistenTerminalOutput) {
-        unlistenTerminalOutput();
-      }
+      resizeObserver?.disconnect();
+      if (unlistenTerminalOutput) unlistenTerminalOutput();
       if (terminal.current) {
         terminal.current.dispose();
         terminal.current = null;
