@@ -27,7 +27,7 @@ static STACKOVERFLOW_WORDS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
         .collect()
 });
 
-// ── One-off allowlists (from Warp's input_classifier/src/util.rs) ────────────
+// ── One-off allowlists (from Warp's input_classifier/src/util.rs) ──────────────
 
 static ONE_OFF_NL_WORDS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
     HashSet::from([
@@ -38,11 +38,23 @@ static ONE_OFF_NL_WORDS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
     ])
 });
 
+/// NL verb prefixes — if the first word is one of these, the whole phrase is natural language.
+/// "list files", "show processes", "check disk" etc. are all AI queries.
+static NL_VERB_PREFIXES: Lazy<HashSet<&'static str>> = Lazy::new(|| {
+    HashSet::from([
+        "list", "show", "display", "check", "get", "find", "search",
+        "describe", "explain", "what", "how", "why", "when", "where",
+        "fix", "debug", "help", "tell", "give", "make", "create", "write",
+        "analyze", "analyze", "review", "summarize", "generate", "run",
+        "start", "stop", "restart", "install", "update", "remove",
+    ])
+});
+
 static ONE_OFF_SHELL_KEYWORDS: Lazy<HashSet<&'static str>> = Lazy::new(|| {
     HashSet::from([
         "#", "echo", "man", "sudo", "claude", "codex", "gemini",
         "ls", "cd", "pwd", "mkdir", "rm", "cp", "mv", "cat", "grep",
-        "find", "chmod", "chown", "ps", "kill", "top", "df", "du",
+        "chmod", "chown", "ps", "kill", "top", "df", "du",
         "git", "docker", "kubectl", "npm", "yarn", "cargo", "pip",
         "ssh", "curl", "wget", "tar", "zip", "unzip", "apt", "nala",
         "systemctl", "journalctl", "bash", "sh", "fish", "zsh",
@@ -130,7 +142,22 @@ pub async fn classify(input: &str) -> ClassifyResult {
         };
     }
 
-    // ── Stage 1c: one-off NL word ───────────────────────────────────────────
+    // ── Stage 1c: NL verb prefix — "list files", "show processes", "check disk" etc.
+    // If first word is a known NL verb AND input has no shell syntax, it's AI.
+    if NL_VERB_PREFIXES.contains(first.as_str()) {
+        // Only override if there are no flags/paths in the rest
+        let has_shell_args = tokens.iter().skip(1).any(|t|
+            t.starts_with('-') || t.starts_with('/') || t.starts_with('~') || t.contains('.')
+        );
+        if !has_shell_args {
+            return ClassifyResult {
+                input_type: InputType::NaturalLanguage,
+                confidence: 0.88,
+                reason: format!("NL verb prefix '{}' with no shell flags", first),
+            };
+        }
+    }
+    // One-off single-word NL
     if tokens.len() == 1 && ONE_OFF_NL_WORDS.contains(first.as_str()) {
         return ClassifyResult {
             input_type: InputType::NaturalLanguage,
@@ -162,12 +189,15 @@ pub async fn classify(input: &str) -> ClassifyResult {
     let score = natural_language_score(&tokens, first_token_is_command);
     let total = tokens.len();
 
-    let threshold = if total <= 3 {
-        1.0
+    // For short inputs (2-3 tokens) lower the bar — 50%+ NL words is enough.
+    // Warp uses 1.0 only when there are <=2 tokens AND they include a known command.
+    // We're more liberal: any multi-word phrase that looks English is AI.
+    let threshold = if total <= 2 {
+        0.5   // "list files" → 1/2 = 0.5 → AI ✔
     } else if total <= 4 {
-        DETECT_AS_NL_LOW_TOKEN_THRESHOLD
+        DETECT_AS_NL_LOW_TOKEN_THRESHOLD  // 0.8
     } else {
-        DETECT_AS_NL_THRESHOLD
+        DETECT_AS_NL_THRESHOLD  // 0.6
     };
 
     let nl_ratio = score.nl_count as f32 / total as f32;
