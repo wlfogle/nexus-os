@@ -383,26 +383,34 @@ pub struct TerminalExitEvent {
 /// These make the terminal emit prompt/command boundary markers so the
 /// frontend can detect exact command blocks — the same technique Warp uses.
 fn osc133_bootstrap(shell: &str) -> String {
+    // Wrap all injections in stty -echo / stty echo so the function
+    // definitions don't appear visibly in the terminal output.
     if shell.contains("fish") {
-        // fish uses event hooks
+        // Single line: disable echo, define functions, re-enable echo
         concat!(
-            "function __osc133_prompt --on-event fish_prompt\n",
-            "  printf '\x1b]133;A\x07'\n",
-            "end\n",
-            "function __osc133_preexec --on-event fish_preexec\n",
-            "  printf '\x1b]133;B\x07'\n",
-            "end\n",
+            "stty -echo; ",
+            "function __osc133_prompt --on-event fish_prompt; ",
+            "printf '\x1b]133;A\x07'; ",
+            "end; ",
+            "function __osc133_preexec --on-event fish_preexec; ",
+            "printf '\x1b]133;B\x07'; ",
+            "end; ",
+            "stty echo\n",
         ).to_string()
     } else if shell.contains("zsh") {
         concat!(
-            "precmd()  { printf '\x1b]133;A\x07'; }\n",
-            "preexec() { printf '\x1b]133;B\x07'; }\n",
+            "stty -echo; ",
+            "precmd() { printf '\x1b]133;A\x07'; }; ",
+            "preexec() { printf '\x1b]133;B\x07'; }; ",
+            "stty echo\n",
         ).to_string()
     } else {
-        // bash / sh / dash — PROMPT_COMMAND + PS0
+        // bash / sh
         concat!(
-            "PROMPT_COMMAND='printf \"\x1b]133;A\x07\"'\n",
-            "PS0='\x1b]133;B\x07'\n",
+            "stty -echo; ",
+            "PROMPT_COMMAND='printf \"\x1b]133;A\x07\"'; ",
+            "PS0='\x1b]133;B\x07'; ",
+            "stty echo\n",
         ).to_string()
     }
 }

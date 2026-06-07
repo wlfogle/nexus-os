@@ -249,12 +249,13 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, [isTerminalReady, tab.terminalId]);
 
-  // Focus terminal when tab becomes active
+  // Keep focus on unified input, not xterm
+  // xterm is display-only — input goes through the unified bar
   useEffect(() => {
-    if (terminal.current && tab.isActive && isTerminalReady) {
-      terminal.current.focus();
+    if (isTerminalReady) {
+      unifiedInputRef.current?.focus();
     }
-  }, [tab.isActive, isTerminalReady]);
+  }, [isTerminalReady]);
 
   // Force AI panel to open on mount
   useEffect(() => {
