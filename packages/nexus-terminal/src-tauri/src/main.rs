@@ -2524,8 +2524,21 @@ async fn agent_chat_stream(
     });
 
     // IMPORTANT: return Ok(()) immediately so the Tauri command doesn't block.
-    // All heavy work (pre-flight, context gathering, model call) happens in the spawned task.
-    // Progress is communicated via agent-token events.
+    // ** prefix = deep mode: use llama3.3:70b for complex tasks (slow but very capable)
+    let (message, model) = if message.starts_with("**") {
+        let deep_model = std::env::var("AGENT_DEEP_MODEL").unwrap_or_else(|_| "llama3.3:70b".to_string());
+        (message.trim_start_matches("**").trim().to_string(), deep_model)
+    } else {
+        (message, model)
+    };
+
+    // @filename injection: replace @path/to/file with the file contents
+    let message = if message.contains('@') {
+        inject_file_references(&message).await
+    } else {
+        message
+    };
+
     let is_scan = is_scan_fix_request(&message);
 
     tokio::spawn(async move {
@@ -2644,6 +2657,28 @@ async fn augment_with_build_errors(original: &str, cwd: &str) -> String {
         original,
         errors.join("\n\n")
     )
+}
+
+/// Replace @path/to/file references in the message with actual file contents.
+/// Allows: "what's wrong with @src/agent.rs?" or "refactor @src/main.rs"
+async fn inject_file_references(message: &str) -> String {
+    let mut result = message.to_string();
+    // Find all @word/path tokens
+    let re = regex::Regex::new(r"@([\w./\-]+)").unwrap();
+    let message_clone = message.to_string();
+    let matches: Vec<_> = re.captures_iter(&message_clone).collect();
+    for cap in matches {
+        let token = &cap[0]; // e.g. "@src/agent.rs"
+        let path = &cap[1];  // e.g. "src/agent.rs"
+        if let Ok(content) = tokio::fs::read_to_string(path).await {
+            let truncated = if content.len() > 16_000 {
+                format!("{}\n[... truncated at 16KB ...]", &content[..16_000])
+            } else { content };
+            let replacement = format!("\n=== @{} ===\n```\n{}\n```\n", path, truncated);
+            result = result.replace(token, &replacement);
+        }
+    }
+    result
 }
 
 /// Automatically gather project context: git status + project-specific build errors.

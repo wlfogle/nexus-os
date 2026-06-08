@@ -23,16 +23,17 @@ pub struct AIConfig {
 /// Ranked preference list for the agent model.
 /// Models earlier in the list handle tool-use / instruction-following better.
 const AGENT_MODEL_PREFERENCES: &[&str] = &[
-    "llama3.1",         // Best tool calling support in Ollama
-    "llama3.3",         // Most capable llama variant
-    "llama3.2",         // Good tool calling
-    "hermes3",          // Explicitly trained for tool use / function calling
-    "qwen2.5",          // Strong tool calling support
+    "codestral",        // PRIMARY: Mistral 22B code model, fits in 12GB VRAM exactly
+    "llama3.3",         // 70B llama, highest quality available
+    "llama3.1",         // 8B llama, reliable tool calling
+    "llama3.2",         // 3B llama, fast
+    "hermes3",          // Explicitly trained for tool use
+    "qwen2.5",          // Strong tool calling
     "phi4",             // Microsoft reasoning model
+    "nous-hermes2",     // Hermes-2 tool use trained
     "mistral",          // Reliable instruction follower
     "gemma2",           // Good instruction following
-    "codestral",        // Mistral code model (limited tool calling)
-    // deepseek-coder-v2 intentionally excluded: does not support tool calling
+    // deepseek-coder-v2 intentionally excluded: does not support Ollama tool calling
 ];
 
 /// Pick the best available agent model from `available`.
@@ -57,8 +58,8 @@ impl Default for AIConfig {
         let ollama_port = std::env::var("OLLAMA_PORT").unwrap_or_else(|_| "11434".to_string());
         let ollama_url = format!("http://{}:{}", ollama_host, ollama_port);
         // Default agent_model — overridden at startup by auto_detect_and_set_model()
-        // MUST be a tool-calling capable model (llama3.1/3.2/3.3, hermes3, qwen2.5)
-        let agent_model = std::env::var("AGENT_MODEL").unwrap_or_else(|_| "llama3.1:8b".to_string());
+        // MUST be a tool-calling capable model. codestral:22b is the best fit for RTX 4080 12GB.
+        let agent_model = std::env::var("AGENT_MODEL").unwrap_or_else(|_| "codestral:22b".to_string());
         Self {
             ollama_url,
             default_model: std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "deepseek-coder-v2:16b".to_string()),

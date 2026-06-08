@@ -9,7 +9,7 @@ use std::time::Duration;
 use tauri::Emitter;
 use tracing::{debug, info, warn};
 
-const MAX_STEPS: usize = 30;
+const MAX_STEPS: usize = 50;  // More steps = more thorough fixes
 
 const SYSTEM_PROMPT: &str = r#"You are NexusAI — the autonomous agent of NexusOS. You act immediately. No preamble, no explanations, no instructions to the user. Just run tools and fix things.
 
@@ -1398,7 +1398,7 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
             "messages": messages,
             "stream": true,
             "tools": tools,
-            "options": { "temperature": 0.2, "num_predict": 4096 }
+            "options": { "temperature": 0.1, "num_predict": 8192 }
         });
 
         let url = format!("{}/api/chat", ollama_url);

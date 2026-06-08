@@ -495,6 +495,32 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     }).catch(() => { setIsHealing(false); });
   };
 
+  // ── Session memory — persist AI blocks to localStorage ───────────────────
+  const SESSION_KEY = `nexusai_session_${tab.id}`;
+
+  // Restore session on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(SESSION_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setAiBlocks(parsed);
+        }
+      }
+    } catch { /* ignore */ }
+  }, [tab.id]);
+
+  // Save session whenever aiBlocks changes
+  useEffect(() => {
+    if (aiBlocks.length === 0) return;
+    try {
+      // Keep last 50 blocks, strip streaming state
+      const toSave = aiBlocks.slice(-50).map(b => ({ ...b, streaming: undefined, tools: undefined }));
+      localStorage.setItem(SESSION_KEY, JSON.stringify(toSave));
+    } catch { /* ignore */ }
+  }, [aiBlocks]);
+
   // ── Ghost text prediction ──────────────────────────────────────────
   const [prediction, setPrediction] = useState('');
   const predictDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -870,7 +896,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
                 </button>
               ))}
             </div>
-            <span style={{ fontSize: 10, color: '#4b5563', fontFamily: 'monospace' }}>llama3.1:8b</span>
+            <span style={{ fontSize: 10, color: '#4b5563', fontFamily: 'monospace' }}>codestral:22b</span>
           </div>
 
           {/* Input row */}
@@ -922,7 +948,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
                 disabled={isAILoading}
               />
             </div>
-            <span style={{ fontSize: 10, color: '#4b5563' }}>! shell · * ai · Ctrl+I</span>
+            <span style={{ fontSize: 10, color: '#4b5563' }}>! shell · * ai · ** deep · @file</span>
             {/* Camera button — capture screen + ask vision AI */}
             <button
               onClick={() => handleScreenshot()}
