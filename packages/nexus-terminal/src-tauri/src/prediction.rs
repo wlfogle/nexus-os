@@ -7,7 +7,6 @@
 ///   3. AI prediction  — llama3.2:3b completes the command or suggests the next one
 ///                       (only if history has no strong match, or input is empty)
 
-use anyhow::Result;
 use reqwest::Client;
 use std::collections::HashMap;
 use std::time::Duration;

@@ -3,6 +3,7 @@
 
 use std::collections::HashMap;
 use std::sync::Arc;
+use tauri::Emitter;
 use tauri::State;
 use tokio::sync::RwLock;
 use anyhow::Result;
@@ -2522,28 +2523,41 @@ async fn agent_chat_stream(
             .unwrap_or_else(|_| "/".to_string())
     });
 
-    // Pre-flight: if the message is a scan/fix/check request, run build checks NOW
-    // and inject the actual errors into the message. This converts a vague request
-    // into a concrete one with real error text the model can act on immediately.
-    let message = if is_scan_fix_request(&message) {
-        augment_with_build_errors(&message, &working_dir).await
-    } else {
-        message
-    };
+    // IMPORTANT: return Ok(()) immediately so the Tauri command doesn't block.
+    // All heavy work (pre-flight, context gathering, model call) happens in the spawned task.
+    // Progress is communicated via agent-token events.
+    let is_scan = is_scan_fix_request(&message);
 
-    // Auto-gather build/git context — same as Warp auto-attaching the last block.
-    let auto_context = gather_project_context(&working_dir).await;
-
-    let full_context = match (context, auto_context.as_str()) {
-        (Some(c), ac) if !ac.is_empty() => format!("{c}\n\n{ac}"),
-        (Some(c), _) => c,
-        (None, ac) if !ac.is_empty() => ac.to_string(),
-        _ => String::new(),
-    };
-    let full_context = if full_context.is_empty() { None } else { Some(full_context) };
-
-    // Spawn so this returns immediately and streams events
     tokio::spawn(async move {
+        // Emit a status token immediately so the UI shows activity
+        if is_scan {
+            let _ = app.emit("agent-token", agent::AgentTokenEvent {
+                session_id: session_id.clone(),
+                token: "⏳ Running pre-flight checks (cargo check + npm build)…\n".to_string(),
+            });
+        }
+
+        // Pre-flight (runs in background, doesn't block the command)
+        let message = if is_scan {
+            let augmented = augment_with_build_errors(&message, &working_dir).await;
+            let _ = app.emit("agent-token", agent::AgentTokenEvent {
+                session_id: session_id.clone(),
+                token: "✅ Pre-flight done. Sending to NexusAI…\n\n".to_string(),
+            });
+            augmented
+        } else {
+            message
+        };
+
+        // Auto-gather context (also in background)
+        let auto_context = gather_project_context(&working_dir).await;
+        let full_context = match (context, auto_context.as_str()) {
+            (Some(c), ac) if !ac.is_empty() => Some(format!("{c}\n\n{ac}")),
+            (Some(c), _) => Some(c),
+            (None, ac) if !ac.is_empty() => Some(ac.to_string()),
+            _ => None,
+        };
+
         agent::run_agent_streaming(
             app,
             session_id,
