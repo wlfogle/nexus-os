@@ -526,7 +526,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
       } catch {
         setPrediction('');
       }
-    }, 300); // 300ms debounce — fast enough to feel instant
+    }, 80); // 80ms debounce — fast enough that badge updates before most Enter presses
   };
 
   // Record completed shell commands into history for prediction
@@ -607,7 +607,9 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     setUnifiedInput('');
     setInputMode('detecting');
 
-    const isShell = forceShell || (!forceAI && inputMode === 'shell');
+    // Warp default: Shell when in auto-detect mode (InputConfig::new defaults to Shell).
+    // Only route to AI when explicitly classified as 'ai' or forced with *.
+    const isShell = forceShell || (!forceAI && inputMode !== 'ai');
 
     if (isShell) {
       recordShellCommand(text);
@@ -623,7 +625,13 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
       }
       try {
         console.log('[NexusTerminal] write_to_terminal:', tab.terminalId, JSON.stringify(text + '\r'));
-        await invoke('write_to_terminal', { terminalId: tab.terminalId, data: text + '\r' });
+        // Warp uses bracketed paste for fish to prevent per-keystroke interpretation.
+        // This ensures fish treats the whole string as a complete command.
+        const isFish = tab.shell === 'fish';
+        const payload = isFish
+          ? `\x1b[200~${text}\x1b[201~\r`  // bracketed paste
+          : `${text}\r`;
+        await invoke('write_to_terminal', { terminalId: tab.terminalId, data: payload });
         console.log('[NexusTerminal] write_to_terminal succeeded');
       } catch (e) {
         console.error('[NexusTerminal] write_to_terminal FAILED:', e);
