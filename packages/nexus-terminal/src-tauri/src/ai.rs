@@ -622,46 +622,15 @@ impl AIService {
         Ok(())
     }
 
-    /// Automatically ensure Ollama is running and properly configured
+    /// Check Ollama is reachable. That's it. Never kill, never reinstall.
     async fn ensure_ollama_running(&self) -> Result<()> {
         info!("Initializing Ollama AI service...");
-        
-        // Kill any existing Ollama processes first
-        let _ = self.kill_existing_ollama().await;
-        
-        // Install Ollama if not present
-        if let Err(e) = self.ensure_ollama_installed().await {
-            error!("Failed to install Ollama: {}", e);
-            return Err(anyhow::anyhow!("Ollama installation failed: {}", e));
-        }
-        
-        // Start Ollama service with proper configuration
-        if let Err(e) = self.start_ollama_service().await {
-            error!("Failed to start Ollama service: {}", e);
-            return Err(anyhow::anyhow!("Could not start Ollama service: {}", e));
-        }
-        
-        // Wait for service to be ready
-        let mut attempts = 0;
-        let max_attempts = 30;
-        
-        while attempts < max_attempts {
-            tokio::time::sleep(Duration::from_secs(2)).await;
-            if self.test_connection().await.is_ok() {
-                info!("Ollama service is ready after {} attempts", attempts + 1);
-                break;
-            }
-            attempts += 1;
-            info!("Waiting for Ollama to start... attempt {}/{}", attempts, max_attempts);
-        }
-        
-        if attempts >= max_attempts {
-            return Err(anyhow::anyhow!("Ollama failed to start after {} attempts", max_attempts));
-        }
-        
-        // Ensure default model is available
+        self.test_connection().await
+            .map_err(|_| anyhow::anyhow!(
+                "Cannot reach Ollama at {}. Is it running? Start it with: ollama serve",
+                self.config.ollama_url
+            ))?;
         self.ensure_default_model_available().await?;
-        
         info!("Ollama AI service fully initialized and ready");
         Ok(())
     }

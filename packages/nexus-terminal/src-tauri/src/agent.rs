@@ -515,6 +515,37 @@ fn build_tools() -> Vec<Tool> {
         Tool {
             kind: "function",
             function: ToolFunction {
+                name: "web_search",
+                description: "Search the web for current information. Uses DuckDuckGo or a local SearXNG instance. Use this to answer questions about current events, docs, or anything not in the codebase.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string", "description": "Search query"},
+                        "num_results": {"type": "integer", "description": "Number of results to return (default 5)"}
+                    },
+                    "required": ["query"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "mcp_call",
+                description: "Call any MCP (Model Context Protocol) server tool. Use this to interact with Nextcloud, Home Assistant, Obsidian, TrueNAS, n8n, or any other MCP-compatible service.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "server": {"type": "string", "description": "MCP server name or URL (e.g. 'home-assistant', 'nextcloud', 'obsidian')"},
+                        "tool": {"type": "string", "description": "Tool name to call on the MCP server"},
+                        "args": {"type": "object", "description": "Arguments to pass to the tool"}
+                    },
+                    "required": ["server", "tool"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
                 name: "screenshot",
                 description: "Capture the screen and analyze it with llama3.2-vision:11b. Use this to see what is on the screen, diagnose visual errors, or understand the current UI state.",
                 parameters: serde_json::json!({
@@ -1100,10 +1131,114 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str) -> S
             }
         }
 
+        "web_search" => {
+            let query = args["query"].as_str().unwrap_or("");
+            let num = args["num_results"].as_u64().unwrap_or(5);
+            if query.is_empty() { return "ERROR: query is required".to_string(); }
+
+            // Try local SearXNG first (configurable via SEARXNG_URL env), fall back to DuckDuckGo
+            let searxng_url = std::env::var("SEARXNG_URL").unwrap_or_default();
+            let client = reqwest::Client::builder().timeout(Duration::from_secs(15)).build()
+                .unwrap_or_else(|_| reqwest::Client::new());
+
+            if !searxng_url.is_empty() {
+                let url = format!("{}/search?q={}&format=json&categories=general&language=en",
+                    searxng_url.trim_end_matches('/'),
+                    urlencoding::encode(query));
+                if let Ok(resp) = client.get(&url).send().await {
+                    if let Ok(data) = resp.json::<serde_json::Value>().await {
+                        if let Some(results) = data["results"].as_array() {
+                            let out: Vec<String> = results.iter().take(num as usize).map(|r| {
+                                format!("**{}**\n{}\n{}",
+                                    r["title"].as_str().unwrap_or("(no title)"),
+                                    r["url"].as_str().unwrap_or(""),
+                                    r["content"].as_str().unwrap_or("(no snippet)"))
+                            }).collect();
+                            return out.join("\n\n");
+                        }
+                    }
+                }
+            }
+
+            // DuckDuckGo instant answer API (no key needed)
+            let ddg_url = format!("https://api.duckduckgo.com/?q={}&format=json&no_html=1&skip_disambig=1",
+                urlencoding::encode(query));
+            match client.get(&ddg_url).header("User-Agent", "NexusTerminal/1.0").send().await {
+                Ok(resp) => {
+                    if let Ok(data) = resp.json::<serde_json::Value>().await {
+                        let mut results = Vec::new();
+                        if let Some(abstract_text) = data["Abstract"].as_str() {
+                            if !abstract_text.is_empty() {
+                                results.push(format!("**{}**\n{}",
+                                    data["Heading"].as_str().unwrap_or(query), abstract_text));
+                            }
+                        }
+                        if let Some(related) = data["RelatedTopics"].as_array() {
+                            for topic in related.iter().take(num as usize - results.len()) {
+                                if let Some(text) = topic["Text"].as_str() {
+                                    results.push(format!("- {}", text));
+                                }
+                            }
+                        }
+                        if results.is_empty() {
+                            format!("No results found for '{}'. Set SEARXNG_URL in .env for better web search.", query)
+                        } else {
+                            results.join("\n\n")
+                        }
+                    } else {
+                        format!("ERROR: failed to parse search results")
+                    }
+                }
+                Err(e) => format!("ERROR: web search failed: {}", e),
+            }
+        }
+
+        "mcp_call" => {
+            let server = args["server"].as_str().unwrap_or("");
+            let tool = args["tool"].as_str().unwrap_or("");
+            let call_args = args.get("args").cloned().unwrap_or(serde_json::json!({}));
+            if server.is_empty() || tool.is_empty() { return "ERROR: server and tool are required".to_string(); }
+
+            // Check for configured MCP server URL
+            let server_env_key = format!("MCP_{}_URL", server.to_uppercase().replace('-', "_"));
+            let server_url = std::env::var(&server_env_key)
+                .or_else(|_| std::env::var("MCP_DEFAULT_URL"))
+                .unwrap_or_else(|_| format!("http://localhost:3000"));
+
+            let client = reqwest::Client::builder().timeout(Duration::from_secs(30)).build()
+                .unwrap_or_else(|_| reqwest::Client::new());
+
+            // Standard MCP HTTP/SSE transport — POST /mcp with JSON-RPC
+            let rpc = serde_json::json!({
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "tools/call",
+                "params": { "name": tool, "arguments": call_args }
+            });
+
+            match client.post(&format!("{}/mcp", server_url.trim_end_matches('/')))
+                .json(&rpc).send().await
+            {
+                Ok(resp) => {
+                    match resp.json::<serde_json::Value>().await {
+                        Ok(data) => {
+                            if let Some(err) = data.get("error") {
+                                format!("MCP error: {}", err)
+                            } else if let Some(content) = data["result"]["content"].as_array() {
+                                content.iter().filter_map(|c| c["text"].as_str()).collect::<Vec<_>>().join("\n")
+                            } else {
+                                data["result"].to_string()
+                            }
+                        }
+                        Err(e) => format!("ERROR: failed to parse MCP response: {}", e),
+                    }
+                }
+                Err(e) => format!("ERROR: MCP call to {} failed: {}\nSet {}=<url> in .env to configure this server.", server, e, server_env_key),
+            }
+        }
+
         "screenshot" => {
             let prompt = args["prompt"].as_str().unwrap_or("Describe what you see on the screen");
-            // Use capture_and_ask: captures screen + sends to llama3.2-vision
-            // We call the same logic as the Tauri command directly here
             match crate::vision_commands::capture_and_ask(
                 prompt.to_string(), None, None,
             ).await {

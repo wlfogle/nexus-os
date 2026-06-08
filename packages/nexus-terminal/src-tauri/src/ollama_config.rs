@@ -374,13 +374,11 @@ pub fn configure_systemd_ollama(models_path: &str) {
 }
 
 pub async fn ensure_ollama_configured() -> Result<(), OllamaConfigError> {
-    // Auto-discover models path and configure systemd if needed
+    // Auto-discover models path and set for this process only.
+    // Never touch systemd — Ollama is already running as a system service.
     let models_path = discover_models_path();
     if !models_path.is_empty() {
-        // Set for this process
         env::set_var("OLLAMA_MODELS", &models_path);
-        // Persist for future boots
-        configure_systemd_ollama(&models_path);
         println!("✓ Ollama models path: {}", models_path);
     }
 
