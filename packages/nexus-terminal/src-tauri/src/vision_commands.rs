@@ -1,12 +1,53 @@
 use tauri::{command, State};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use image::DynamicImage;
+use image::{DynamicImage, GenericImageView};
 use scrap::{Capturer, Display};
 use reqwest::Client;
 use std::collections::HashMap;
-use base64::Engine;
+use base64::Engine as _;
 use crate::{AppState, vision};
+
+/// Resize image bytes to at most 1280px on the longest side and
+/// re-encode as JPEG quality 85.  Returns a raw base64 string (no data: prefix).
+/// This reduces a 1920×1080 PNG from ~4 MB to ~120 KB, avoiding VRAM pressure
+/// during vision-model inference and keeping Ollama request sizes manageable.
+pub fn resize_for_vision(data: &[u8]) -> Result<String, String> {
+    let img = image::load_from_memory(data)
+        .map_err(|e| format!("Failed to decode image: {}", e))?;
+    let (w, h) = img.dimensions();
+    let max_px: u32 = 1280;
+    let resized = if w > max_px || h > max_px {
+        let scale = max_px as f32 / w.max(h) as f32;
+        let nw = (w as f32 * scale) as u32;
+        let nh = (h as f32 * scale) as u32;
+        img.resize(nw, nh, image::imageops::FilterType::Lanczos3)
+    } else {
+        img
+    };
+    let mut jpeg_buf: Vec<u8> = Vec::new();
+    let mut cursor = std::io::Cursor::new(&mut jpeg_buf);
+    resized.write_to(&mut cursor, image::ImageFormat::Jpeg)
+        .map_err(|e| format!("Failed to encode JPEG: {}", e))?;
+    Ok(base64::engine::general_purpose::STANDARD.encode(&jpeg_buf))
+}
+
+/// Tell Ollama to unload a model from VRAM immediately (keep_alive=0).
+/// Call this before loading the vision model to ensure there is enough VRAM.
+/// Fire-and-forget — errors are silently ignored since this is best-effort.
+async fn unload_model(ollama_url: &str, model: &str) {
+    let client = match reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build() { Ok(c) => c, Err(_) => return };
+    let _ = client
+        .post(&format!("{}/api/generate", ollama_url))
+        .json(&serde_json::json!({
+            "model": model,
+            "prompt": "",
+            "keep_alive": 0
+        }))
+        .send().await;
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ScreenCaptureData {
@@ -293,10 +334,18 @@ pub async fn query_vision_ai(
         image
     };
     
-    // Use llama3.2-vision:11b (best available), fall back to llava:7b
     let model = "llama3.2-vision:11b";
-    
-    // Ollama /api/chat with images array
+
+    // Unload the text model from VRAM before loading the vision model.
+    // RTX 4080 has 16 GB VRAM; codestral:22b uses ~12 GB and
+    // llama3.2-vision:11b uses ~8 GB — they cannot coexist.
+    let agent_model = std::env::var("AGENT_MODEL")
+        .unwrap_or_else(|_| "codestral:22b".to_string());
+    let ollama_base = format!("http://{}:{}", host, port);
+    unload_model(&ollama_base, &agent_model).await;
+
+    // keep_alive:0 — unload vision model immediately after response so VRAM
+    // is freed for the text model on the very next agent step.
     let request_body = serde_json::json!({
         "model": model,
         "messages": [{
@@ -305,7 +354,8 @@ pub async fn query_vision_ai(
             "images": [raw_b64]
         }],
         "stream": false,
-        "options": { "temperature": 0.3, "num_predict": 2048 }
+        "keep_alive": 0,
+        "options": { "temperature": 0.3, "num_predict": 1024 }
     });
     
     let ollama_url = format!("http://{}:{}/api/chat", host, port);
@@ -371,7 +421,13 @@ pub async fn capture_and_ask(
         }
     };
 
-    let b64 = base64::engine::general_purpose::STANDARD.encode(&screen_data.data);
+    // Resize to ≤1280 px and convert to JPEG before encoding.
+    // A raw 1920×1080 PNG is ~4 MB base64; after resize+JPEG it is ~120 KB.
+    // This avoids the VRAM-pressure crash when loading the vision model.
+    let b64 = match resize_for_vision(&screen_data.data) {
+        Ok(b) => b,
+        Err(_) => base64::engine::general_purpose::STANDARD.encode(&screen_data.data),
+    };
     query_vision_ai(prompt, b64, None, ollama_host, ollama_port).await
 }
 

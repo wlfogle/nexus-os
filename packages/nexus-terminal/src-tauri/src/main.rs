@@ -2998,11 +2998,17 @@ async fn inject_file_references(message: &str) -> String {
             || lower.ends_with(".tiff");
 
         let replacement = if is_image {
-            // Read image, base64 encode, send to vision model
+            // Read image, resize to ≤1280 px JPEG to avoid VRAM-pressure crash,
+            // then send to vision model. query_vision_ai will also unload the
+            // text model before loading llama3.2-vision:11b.
             match tokio::fs::read(path).await {
                 Ok(data) => {
-                    let b64 = base64::engine::general_purpose::STANDARD.encode(&data);
-                    let prompt = format!("Describe this image in detail. If it contains code, errors, terminal output, or text, transcribe it exactly. Be specific.");
+                    // Resize before base64 — PNG screenshot is ~4 MB; JPEG 1280px is ~120 KB
+                    let b64 = match crate::vision_commands::resize_for_vision(&data) {
+                        Ok(b) => b,
+                        Err(_) => base64::engine::general_purpose::STANDARD.encode(&data),
+                    };
+                    let prompt = "Describe this image in detail. If it contains code, errors, terminal output, or text, transcribe it exactly. Be specific.".to_string();
                     match crate::vision_commands::query_vision_ai(prompt, b64, None, None, None).await {
                         Ok(desc) => format!("\n=== @{} (image analysis) ===\n{}\n", path, desc),
                         Err(e) => format!("\n=== @{} (image — vision failed: {}) ===\n", path, e),

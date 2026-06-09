@@ -281,8 +281,27 @@ From prior Copilot analysis:
 
 Icon: `src-tauri/icons/128x128.png` — used by both entries.
 
+## Phase 3 — Production Hardening (2026-06-09)
+
+### CTD Fixes (5 crash causes eliminated)
+| Bug | Root Cause | Fix |
+|-----|-----------|-----|
+| CTD on any agent request | `gather_project_context` ran `cargo check`+`npm build` on every request — OOM'd by compiling running app in-process | Removed build checks from context function entirely |
+| CTD on scan/optimize | `pkexec` fallback spawned polkit GUI dialogs that crashed GNOME desktop session | Replaced with graceful no-sudo message; sudoers file created |
+| Panic in @file handling | `regex::Regex::new().unwrap()` | Fixed to `match` with early return |
+| Panic if cwd=/ | `.parent().unwrap()` | Fixed to `.map().unwrap_or_default()` |
+| Image @ref crashed app | 4 MB PNG base64 → VRAM OOM (codestral 12 GB + vision 8 GB > 16 GB RTX 4080) | Resize to ≤1280 px JPEG (~120 KB) before encoding; unload text model before vision; `keep_alive:0` on vision to free VRAM immediately |
+
+### Agent CWD — Now Tracks Real Shell Directory
+- `terminal.rs`: parses OSC 7 (`\x1b]7;file://host/path\x07`) from PTY stream on every fish prompt
+- `TerminalWithAI.tsx`: `terminal-cwd` listener dispatches `updateTabWorkingDirectory` — cwd chip and agent always show real location
+
+### System Optimization — Now Actually Works
+- `/etc/sudoers.d/nexus-terminal`: NOPASSWD for `sysctl`, `swapoff`, `swapon`, `tee`
+- Uses `echo 1 | sudo tee /proc/sys/vm/drop_caches` (matches sudoers, no shell escaping)
+- No more pkexec, no more desktop crashes
+
 ## Remaining Known Issues
-- Agent cwd still resolves to Tauri process dir (`src-tauri/`), not the fish shell's current dir
 - OSC 133 hooks disabled (removed to fix display noise)
 - `NewTabModal.tsx` / `TerminalTabManager.tsx` placeholder components still unused
 - Open WebUI pip install pending in CT-300 (large deps)
