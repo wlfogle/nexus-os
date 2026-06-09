@@ -633,9 +633,13 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     setUnifiedInput('');
     setInputMode('detecting');
 
-    // Warp default: Shell when in auto-detect mode (InputConfig::new defaults to Shell).
-    // Only route to AI when explicitly classified as 'ai' or forced with *.
-    const isShell = forceShell || (!forceAI && inputMode !== 'ai');
+    // Routing when badge has fired: shell→shell, ai→AI.
+    // Routing when still detecting (typed too fast): use synchronous isShellCommand().
+    // This mirrors Warp: auto-detect uses the fast classifier, not a blind default.
+    const isShell = forceShell || (!forceAI && (
+      inputMode === 'shell' ||
+      (inputMode === 'detecting' && isShellCommand(text))
+    ));
 
     if (isShell) {
       recordShellCommand(text);
