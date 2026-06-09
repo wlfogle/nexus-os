@@ -1617,6 +1617,24 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
         };
         messages.push(assistant_msg);
 
+        // Self-correction: if the model gave text but no tool calls on the first step,
+        // it's describing instead of doing. Inject a correction to force tool execution.
+        // This is what makes Oz (using frontier models) reliable — the model always follows up.
+        if collected_tool_calls.is_empty() && step == 0 && !full_content.trim().is_empty() {
+            let correction = format!(
+                "You described what to do but didn't do it. Execute the task now. Call the appropriate tools immediately. Do not explain further.\n\nYour previous response was: {}",
+                if full_content.len() > 500 { &full_content[..500] } else { &full_content }
+            );
+            messages.push(crate::agent::ChatMessage {
+                role: "user".to_string(),
+                content: correction,
+                tool_calls: None,
+                tool_call_id: None,
+            });
+            // Don't emit agent-done yet — continue the loop to force tool execution
+            warn!("Step 0 had text but no tool calls — injecting self-correction");
+        }
+
         if !collected_tool_calls.is_empty() {
             // Loop detection
             let mut has_duplicate = false;
