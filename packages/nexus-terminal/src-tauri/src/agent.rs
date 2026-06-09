@@ -239,12 +239,17 @@ fn build_tools() -> Vec<Tool> {
             kind: "function",
             function: ToolFunction {
                 name: "run_cmd",
-                description: "Run a shell command via sh -c. 30 second timeout. USE THIS for code/project checks: 'cargo check 2>&1', 'npx tsc --noEmit 2>&1', 'npm run build', 'python -m py_compile', etc. This is the correct tool when the user says 'scan a directory for errors' or 'check a project'.",
+                description: "Run any shell command. Required 'cmd' field is the shell string. Optional 'cwd' is the working directory. \
+USE THIS for code checks — exact correct usage: \
+cargo check: {\"cmd\": \"cargo check --message-format=short 2>&1\", \"cwd\": \"/path/to/src-tauri\"} \
+TypeScript: {\"cmd\": \"npx tsc --noEmit 2>&1\", \"cwd\": \"/path/to/project\"} \
+cargo check does NOT take a path argument — use cwd instead. \
+NEVER call this with empty cmd.",
                 parameters: serde_json::json!({
                     "type": "object",
                     "properties": {
-                        "cmd": {"type": "string", "description": "Shell command to execute"},
-                        "cwd": {"type": "string", "description": "Working directory for the command"}
+                        "cmd": {"type": "string", "description": "Shell command string (e.g. 'cargo check --message-format=short 2>&1'). NEVER empty."},
+                        "cwd": {"type": "string", "description": "Working directory — use this to specify which project to check (e.g. the directory containing Cargo.toml or package.json)"}
                     },
                     "required": ["cmd"]
                 }),
