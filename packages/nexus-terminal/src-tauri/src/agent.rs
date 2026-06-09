@@ -17,28 +17,33 @@ const SYSTEM_PROMPT: &str = r#"You are NexusAI — the autonomous agent of Nexus
 - WRONG: "Here's how you could fix this: 1. Run grep..."
 - RIGHT: [call grep tool immediately]
 - NEVER write steps for the user to follow. YOU execute the steps.
-- If asked to scan/check/fix: run the tools NOW, then report results.
 - After every tool result: ask yourself "Is the task 100% done?" If no, call another tool.
 - NEVER produce a text response while there are still actions to take.
-- scan + optimize = scan THEN fix THEN verify. Three separate tool calls minimum.
-- "optimize" always means: measure current state, apply fixes, measure again, show delta.
 
-## Project detection (run first on any scan/fix task)
-Detect project type from cwd, then run the right check command:
-- Cargo.toml present → `cargo check --message-format=short 2>&1` then `cargo clippy 2>&1`
-- package.json present → `npm run build 2>&1` or `npx tsc --noEmit 2>&1`
-- pyproject.toml / setup.py → `python -m py_compile *.py 2>&1`
-- Makefile → `make --dry-run 2>&1`
-- Generic → `git status` then `grep -r 'TODO\|FIXME\|HACK\|BUG' . --include='*.rs' --include='*.ts' -l`
+## Tool selection — MOST IMPORTANT RULE
+Choose the correct tool based on what the user is asking about:
 
-## Fix workflow
-1. Detect project type, run build/check command
-2. For each error: read_file the failing file
-3. edit_file — minimal targeted search/replace (never full rewrites)
-4. run_cmd to verify the fix
-5. Iterate until all errors pass
-6. git_commit the working result
-7. Report: what was broken, what you changed (1 paragraph max)
+### Code / file tasks (scan a directory, fix errors, check a project)
+Use: run_cmd, read_file, edit_file, grep, file_tree, list_dir
+- "scan /path for errors" → detect project type in that path, run the right checker:
+  - Cargo.toml present → `cargo check --message-format=short 2>&1`
+  - package.json present → `npx tsc --noEmit 2>&1`
+  - Generic → `grep -r 'error\|ERROR\|FIXME\|TODO' /path --include='*.rs' --include='*.ts' -l`
+- NEVER call scan_system for code/file questions.
+
+### System hardware / OS diagnostics (CPU, RAM, disk, services, processes)
+Use: scan_system, process_list, list_services, systemctl_cmd
+- "scan system" / "system status" / "optimize memory" / "check performance" → scan_system
+- NEVER call scan_system for code scanning tasks.
+
+## Code fix workflow
+1. list_dir or file_tree the target path to understand the project
+2. Detect project type (Cargo.toml → Rust, package.json → Node/TS)
+3. run_cmd: `cargo check 2>&1` or `npx tsc --noEmit 2>&1`
+4. For each error: read_file the failing file, edit_file minimal fix
+5. run_cmd to verify fix
+6. Iterate until all errors pass, then git_commit
+7. Report: 1 paragraph, what was broken, what you changed
 
 ## Rules
 - Always use the injected "Current working directory" for paths
@@ -961,14 +966,15 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str) -> S
         }
 
         "scan_system" => {
-            // CPU, memory, disk, top processes, all services — one call
+            // CPU, memory, disk, top USER processes (no kernel threads), services, network
             let cmd = [
                 "echo '=== CPU ===' && grep -c ^processor /proc/cpuinfo && cat /proc/loadavg",
                 "echo '=== MEMORY ===' && free -h",
-                "echo '=== DISK ===' && df -h --output=source,size,used,avail,pcent,target | head -20",
-                "echo '=== TOP PROCESSES ===' && ps aux --sort=-%cpu | head -15",
-                "echo '=== SERVICES ===' && systemctl list-units --type=service --state=running --no-pager --no-legend 2>/dev/null | head -30 || docker ps --format 'table {{.Names}}\t{{.Status}}' 2>/dev/null",
-                "echo '=== NETWORK ===' && ip -brief addr 2>/dev/null || ifconfig -s 2>/dev/null",
+                "echo '=== DISK ===' && df -h --output=source,size,used,avail,pcent,target | grep -vE '^tmpfs|^udev|^/dev/loop' | head -10",
+                // Exclude kernel threads (names in brackets like [kworker]) — they flood the output
+                "echo '=== TOP PROCESSES ===' && ps aux --sort=-%cpu --no-headers | grep -v ' \\[' | head -12",
+                "echo '=== SERVICES ===' && systemctl list-units --type=service --state=running --no-pager --no-legend 2>/dev/null | head -20 || docker ps --format 'table {{.Names}}\t{{.Status}}' 2>/dev/null",
+                "echo '=== NETWORK ===' && ip -brief addr 2>/dev/null | grep -v '^lo ' | head -8",
             ].join(" && ");
             match tokio::time::timeout(
                 Duration::from_secs(30),
