@@ -3834,3 +3834,66 @@ async fn main() {
         })
         .expect("Failed to run Tauri application");
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{is_scan_fix_request, is_system_optimize_request};
+
+    // ── is_scan_fix_request ───────────────────────────────────────────────────
+    // Must trigger the pre-flight cargo check / npm build path.
+
+    #[test]
+    fn scan_fix_matches_fix_errors() {
+        assert!(is_scan_fix_request("fix all errors"));
+        assert!(is_scan_fix_request("scan and fix all errors"));
+        assert!(is_scan_fix_request("fix the bugs in the code"));
+        assert!(is_scan_fix_request("check the project for errors"));
+        assert!(is_scan_fix_request("audit all files"));
+        assert!(is_scan_fix_request("repair the code"));
+    }
+
+    #[test]
+    fn scan_fix_does_not_match_system_optimize() {
+        // "scan system and optimize" must NOT trigger the code pre-flight —
+        // that was the original CTD: cargo check running inside the running app.
+        assert!(!is_scan_fix_request("scan system and optimize"));
+        assert!(!is_scan_fix_request("optimize memory usage"));
+        assert!(!is_scan_fix_request("scan system"));
+        assert!(!is_scan_fix_request("list files"));
+        assert!(!is_scan_fix_request("help me"));
+        assert!(!is_scan_fix_request("scan"));
+    }
+
+    // ── is_system_optimize_request ───────────────────────────────────────────
+    // Must trigger the Rust-executed system optimization path.
+
+    #[test]
+    fn system_optimize_matches_standard_requests() {
+        assert!(is_system_optimize_request("scan system and optimize"));
+        assert!(is_system_optimize_request("optimize memory usage"));
+        assert!(is_system_optimize_request("optimize the system"));
+        assert!(is_system_optimize_request("clean up disk space"));
+        assert!(is_system_optimize_request("too much swap"));
+        assert!(is_system_optimize_request("running slow"));
+        assert!(is_system_optimize_request("speed up the system"));
+        assert!(is_system_optimize_request("tune memory"));
+    }
+
+    #[test]
+    fn system_optimize_does_not_match_code_requests() {
+        assert!(!is_system_optimize_request("fix the code"));
+        assert!(!is_system_optimize_request("list files"));
+        assert!(!is_system_optimize_request("check errors"));
+        assert!(!is_system_optimize_request("git status"));
+        assert!(!is_system_optimize_request("explain rust"));
+    }
+
+    #[test]
+    fn no_double_trigger_on_scan_system_optimize() {
+        // The phrase must be classified as SYSTEM_OPTIMIZE only, not SCAN_FIX.
+        // Double-triggering would run cargo check AND system ops — catastrophic.
+        let msg = "scan system and optimize";
+        assert!(!is_scan_fix_request(msg),  "must NOT trigger code scan");
+        assert!( is_system_optimize_request(msg), "must trigger system optimize");
+    }
+}

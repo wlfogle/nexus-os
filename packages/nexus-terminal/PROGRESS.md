@@ -301,6 +301,34 @@ Icon: `src-tauri/icons/128x128.png` — used by both entries.
 - Uses `echo 1 | sudo tee /proc/sys/vm/drop_caches` (matches sudoers, no shell escaping)
 - No more pkexec, no more desktop crashes
 
+## Test Suite (2026-06-09)
+
+### Rust — 50 tests, 0 failures (`cargo test`)
+| Module | Tests | What is covered |
+|--------|-------|-----------------|
+| `terminal::tests` | 7 | `extract_osc7_cwd`: fish format, embedded output, root path, percent-encoded spaces, absent, malformed, deep path |
+| `vision_commands::tests` | 7 | `resize_for_vision`: 1920×1080 → 1280×720, portrait, small unchanged, boundary, invalid data, JPEG output, size reduction |
+| `tests` (main.rs) | 6 | `is_scan_fix_request` / `is_system_optimize_request`: positive/negative cases, no-double-trigger guard |
+| `collaboration::tests` | 3 | session creation, join session, manager creation |
+| `workflow_automation::tests` | 3 | engine creation, workflow, execution order |
+| `analytics`, `cloud`, `command_flow`, etc. | 24 | existing module tests |
+
+### TypeScript — 49 tests, 0 failures (`npm test`)
+| Suite | Tests | What is covered |
+|-------|-------|-----------------|
+| `translateNLToShell` | 15 | NL phrases → exact shell commands, unrecognised returns null |
+| `isShellCommand — shell` | 16 | Known commands, flags, pipes, env vars, paths |
+| `isShellCommand — NL` | 11 | Questions, help requests, NL phrases correctly rejected |
+| `isShellCommand — edge` | 3 | Empty, whitespace, bare `?` |
+| `CommandRoutingService` | 3 | Instance method, systemctl, ping, question mark |
+
+### Bugs fixed during test writing
+| Bug | Fix |
+|-----|-----|
+| `broadcast_event` panicked with no subscribers | Changed `send().map_err()?` to `let _ = send()` |
+| `get_execution_order` returned reversed topological order | Removed incorrect `order.reverse()` call |
+| `isShellCommand("?")` returned `true` (shell) | Strip trailing `?,!.,` before pattern checks — mirrors Warp parser.rs line 32 (`WordDelimiter::Separator`) |
+
 ## Remaining Known Issues
 - OSC 133 hooks disabled (removed to fix display noise)
 - `NewTabModal.tsx` / `TerminalTabManager.tsx` placeholder components still unused

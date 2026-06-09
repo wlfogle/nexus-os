@@ -501,6 +501,99 @@ pub async fn check_vision_dependencies() -> Result<(), String> {
     Ok(())
 }
 
+#[cfg(test)]
+mod tests {
+    use super::resize_for_vision;
+    use base64::Engine as _;
+
+    /// Build a minimal synthetic PNG of the given dimensions.
+    fn make_png(width: u32, height: u32) -> Vec<u8> {
+        let img = image::DynamicImage::new_rgb8(width, height);
+        let mut buf = Vec::new();
+        img.write_to(
+            &mut std::io::Cursor::new(&mut buf),
+            image::ImageFormat::Png,
+        )
+        .expect("failed to encode test PNG");
+        buf
+    }
+
+    #[test]
+    fn resize_large_image_is_scaled_down() {
+        // 1920×1080 PNG — same size as the screenshots that were crashing the app
+        let data = make_png(1920, 1080);
+        let b64 = resize_for_vision(&data).expect("resize should succeed");
+        let jpeg = base64::engine::general_purpose::STANDARD.decode(&b64).unwrap();
+        let img = image::load_from_memory(&jpeg).unwrap();
+        let (w, h) = (img.width(), img.height());
+        assert!(w <= 1280, "width {} should be ≤ 1280", w);
+        assert!(h <= 1280, "height {} should be ≤ 1280", h);
+        // Aspect ratio preserved: 1920/1080 ≈ 1.778, output should be 1280×720
+        assert_eq!(w, 1280);
+        assert_eq!(h, 720);
+    }
+
+    #[test]
+    fn resize_portrait_large_image() {
+        // Portrait 1080×1920
+        let data = make_png(1080, 1920);
+        let b64 = resize_for_vision(&data).expect("resize should succeed");
+        let jpeg = base64::engine::general_purpose::STANDARD.decode(&b64).unwrap();
+        let img = image::load_from_memory(&jpeg).unwrap();
+        assert!(img.height() <= 1280, "height {} should be ≤ 1280", img.height());
+        assert_eq!(img.height(), 1280);
+        assert_eq!(img.width(), 720);
+    }
+
+    #[test]
+    fn small_image_dimensions_preserved() {
+        // 640×480 — already under 1280, no resize should occur
+        let data = make_png(640, 480);
+        let b64 = resize_for_vision(&data).expect("resize should succeed");
+        let jpeg = base64::engine::general_purpose::STANDARD.decode(&b64).unwrap();
+        let img = image::load_from_memory(&jpeg).unwrap();
+        assert_eq!(img.width(), 640);
+        assert_eq!(img.height(), 480);
+    }
+
+    #[test]
+    fn exact_boundary_image_not_resized() {
+        // Exactly 1280×720 — must not be resized
+        let data = make_png(1280, 720);
+        let b64 = resize_for_vision(&data).expect("resize should succeed");
+        let jpeg = base64::engine::general_purpose::STANDARD.decode(&b64).unwrap();
+        let img = image::load_from_memory(&jpeg).unwrap();
+        assert_eq!(img.width(), 1280);
+        assert_eq!(img.height(), 720);
+    }
+
+    #[test]
+    fn invalid_data_returns_err() {
+        let result = resize_for_vision(b"not an image at all");
+        assert!(result.is_err(), "invalid data should return Err");
+    }
+
+    #[test]
+    fn output_is_jpeg_not_png() {
+        // JPEG magic bytes: FF D8 FF
+        let data = make_png(400, 300);
+        let b64 = resize_for_vision(&data).expect("resize should succeed");
+        let bytes = base64::engine::general_purpose::STANDARD.decode(&b64).unwrap();
+        assert_eq!(&bytes[..3], &[0xFF, 0xD8, 0xFF], "output should be JPEG");
+    }
+
+    #[test]
+    fn output_smaller_than_input() {
+        // A large PNG should produce a significantly smaller JPEG
+        let data = make_png(1920, 1080);
+        let b64 = resize_for_vision(&data).expect("resize should succeed");
+        let jpeg = base64::engine::general_purpose::STANDARD.decode(&b64).unwrap();
+        // The test image is blank (all black) so JPEG is tiny, but the point is it
+        // must be smaller than the original PNG which is at least a few KB.
+        assert!(jpeg.len() < data.len(), "JPEG output should be smaller than PNG input");
+    }
+}
+
 /// Simple heuristic to detect if image likely contains a terminal
 fn is_likely_terminal(image: &DynamicImage) -> bool {
     let rgba_image = image.to_rgba8();

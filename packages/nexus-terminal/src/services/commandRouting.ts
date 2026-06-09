@@ -230,12 +230,16 @@ export class CommandRoutingService {
     if (this.findShellCommand(first)) {
       return { isShellCommand: true, confidence: 0.85, reason: `Known shell command: ${first}`, suggestedAction: 'execute_shell' };
     }
+    // Same trailing-punctuation strip as isShellCommand — mirrors Warp tokenizer.
+    const forPatternsAsync = trimmed.replace(/[?!.,]+$/, '').trim();
+    if (!forPatternsAsync) return { isShellCommand: false, confidence: 1, reason: 'Punctuation-only input', suggestedAction: 'send_to_ai' };
+
     for (const sp of this.highPriorityShellPatterns) {
-      const matched = Array.isArray(sp.pattern) ? sp.pattern.includes(first) : (sp.pattern as RegExp).test(trimmed);
+      const matched = Array.isArray(sp.pattern) ? sp.pattern.includes(first) : (sp.pattern as RegExp).test(forPatternsAsync);
       if (matched) return { isShellCommand: true, confidence: 0.9, reason: sp.description, suggestedAction: 'execute_shell' };
     }
     for (const pattern of this.shellPatterns) {
-      if (pattern.test(trimmed)) return { isShellCommand: true, confidence: 0.85, reason: `shell pattern`, suggestedAction: 'execute_shell' };
+      if (pattern.test(forPatternsAsync)) return { isShellCommand: true, confidence: 0.85, reason: 'shell pattern', suggestedAction: 'execute_shell' };
     }
     if (trimmed.includes('?') || /^(what|how|why|when|where|who|can you|please|help me)\b/i.test(trimmed)) {
       return { isShellCommand: false, confidence: 0.95, reason: 'Natural language signal', suggestedAction: 'send_to_ai' };
@@ -303,18 +307,29 @@ export class CommandRoutingService {
       return true;
     }
 
-    // Tier 1b/c — structural patterns
+    // Strip trailing sentence punctuation before pattern matching.
+    // Warp's tokenizer treats ?,!., as WordDelimiter::Separator — they are
+    // stripped from tokens entirely and never reach the glob/syntax check.
+    // Without this, "what is running?" and "?" match /[*?[\]]/ (glob pattern)
+    // and are wrongly classified as shell commands.
+    // Reference: /tmp/warp-src/crates/input_classifier/src/parser.rs line 32
+    const forPatterns = trimmed.replace(/[?!.,]+$/, '').trim();
+
+    // A bare punctuation-only input (e.g. "?") is definitively AI after stripping.
+    if (!forPatterns) return false;
+
+    // Tier 1b/c — structural patterns (run against stripped form)
     for (const sp of this.highPriorityShellPatterns) {
       const matched = Array.isArray(sp.pattern)
         ? sp.pattern.includes(first)
-        : (sp.pattern as RegExp).test(trimmed);
+        : (sp.pattern as RegExp).test(forPatterns);
       if (matched) return true;
     }
     for (const pattern of this.shellPatterns) {
-      if (pattern.test(trimmed)) return true;
+      if (pattern.test(forPatterns)) return true;
     }
 
-    // Tier 3 — definite NL signals
+    // Tier 3 — definite NL signals (check original trimmed for embedded ?)
     if (trimmed.includes('?')) return false;
     if (/^(what|how|why|when|where|who)\b/i.test(trimmed)) return false;
     if (/^(can you|could you|would you|please help|i want to|i need to|i would like|help me\b)/i.test(trimmed)) return false;

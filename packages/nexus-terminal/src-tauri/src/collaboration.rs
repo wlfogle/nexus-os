@@ -713,7 +713,8 @@ impl CollaborationManager {
     }
 
     async fn broadcast_event(&self, event: CollaborationEvent) -> Result<()> {
-        self.event_sender.send(event).map_err(|e| anyhow!("Failed to broadcast event: {}", e))?;
+        // Ignore "no receivers" — broadcast with no subscribers is normal and not an error.
+        let _ = self.event_sender.send(event);
         Ok(())
     }
 

@@ -546,7 +546,8 @@ impl WorkflowEngine {
             }
         }
 
-        order.reverse();
+        // Do NOT reverse: dfs_visit pushes each node after all its dependencies,
+        // so the list is already in correct topological (forward execution) order.
         Ok(order)
     }
 

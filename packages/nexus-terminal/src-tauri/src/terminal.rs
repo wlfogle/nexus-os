@@ -452,3 +452,55 @@ impl Default for TerminalManager {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::extract_osc7_cwd;
+
+    #[test]
+    fn osc7_fish_standard_format() {
+        // Fish emits \x1b]7;file://hostname/path\x07 on every prompt
+        let out = "\x1b]7;file://pop-os/home/loufogle/nexus-os\x07";
+        assert_eq!(extract_osc7_cwd(out), Some("/home/loufogle/nexus-os".to_string()));
+    }
+
+    #[test]
+    fn osc7_embedded_in_other_output() {
+        let out = "\x1b[32muser@host\x1b[0m \x1b]7;file://host/tmp/work\x07$ ";
+        assert_eq!(extract_osc7_cwd(out), Some("/tmp/work".to_string()));
+    }
+
+    #[test]
+    fn osc7_root_path() {
+        let out = "\x1b]7;file://host/\x07";
+        assert_eq!(extract_osc7_cwd(out), Some("/".to_string()));
+    }
+
+    #[test]
+    fn osc7_percent_encoded_space() {
+        let out = "\x1b]7;file://host/home/user/my%20documents\x07";
+        assert_eq!(extract_osc7_cwd(out), Some("/home/user/my documents".to_string()));
+    }
+
+    #[test]
+    fn osc7_absent_returns_none() {
+        assert_eq!(extract_osc7_cwd("normal output with no escape"), None);
+        assert_eq!(extract_osc7_cwd(""), None);
+    }
+
+    #[test]
+    fn osc7_rejects_relative_path() {
+        // Malformed: path doesn't start with /
+        let out = "\x1b]7;file://hostsomepath\x07";
+        assert_eq!(extract_osc7_cwd(out), None);
+    }
+
+    #[test]
+    fn osc7_nested_deep_path() {
+        let out = "\x1b]7;file://pop-os/home/loufogle/nexus-os/packages/nexus-terminal/src-tauri/src\x07";
+        assert_eq!(
+            extract_osc7_cwd(out),
+            Some("/home/loufogle/nexus-os/packages/nexus-terminal/src-tauri/src".to_string())
+        );
+    }
+}
