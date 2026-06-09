@@ -2524,6 +2524,22 @@ async fn agent_chat_stream(
     });
 
     // IMPORTANT: return Ok(()) immediately so the Tauri command doesn't block.
+    // > prefix = Open WebUI mode: route through Open WebUI's OpenAI-compatible API
+    //   gives access to RAG knowledge bases, web search, plugins, voice, image gen
+    if message.starts_with('>') && !message.starts_with(">>|") {
+        let webui_url = std::env::var("OPENWEBUI_URL").unwrap_or_else(|_| "http://192.168.12.30:8088".to_string());
+        let webui_model = std::env::var("OPENWEBUI_MODEL").unwrap_or_else(|_| model.clone());
+        let clean_msg = message.trim_start_matches('>').trim().to_string();
+        tokio::spawn(async move {
+            let _ = app.emit("agent-token", agent::AgentTokenEvent {
+                session_id: session_id.clone(),
+                token: format!("[🌐 Open WebUI — {}]\n", webui_model),
+            });
+            call_openwebui(&app, &session_id, &webui_url, &webui_model, &clean_msg, history).await;
+        });
+        return Ok(());
+    }
+
     // ** prefix = deep mode: use llama3.3:70b for complex tasks (slow but very capable)
     let (message, model) = if message.starts_with("**") {
         let deep_model = std::env::var("AGENT_DEEP_MODEL").unwrap_or_else(|_| "llama3.3:70b".to_string());
@@ -2584,6 +2600,87 @@ async fn agent_chat_stream(
     });
 
     Ok(())
+}
+
+/// Call Open WebUI's OpenAI-compatible streaming API.
+/// Streams tokens back via agent-token events, same as the native agent.
+async fn call_openwebui(
+    app: &tauri::AppHandle,
+    session_id: &str,
+    webui_url: &str,
+    model: &str,
+    message: &str,
+    history: Vec<agent::ChatMessage>,
+) {
+    let client = match reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(120))
+        .build() { Ok(c) => c, Err(_) => return };
+
+    // Build messages array (OpenAI format)
+    let mut messages: Vec<serde_json::Value> = vec![
+        serde_json::json!({"role": "system", "content": "You are NexusAI connected through Open WebUI. Use all available tools, RAG knowledge, and web search."})
+    ];
+    for h in &history {
+        messages.push(serde_json::json!({"role": h.role, "content": h.content}));
+    }
+    messages.push(serde_json::json!({"role": "user", "content": message}));
+
+    let body = serde_json::json!({
+        "model": model,
+        "messages": messages,
+        "stream": true
+    });
+
+    let url = format!("{}/api/chat/completions", webui_url.trim_end_matches('/'));
+    let resp = match client.post(&url)
+        .header("Content-Type", "application/json")
+        .json(&body).send().await
+    {
+        Ok(r) if r.status().is_success() => r,
+        Ok(r) => {
+            let _ = app.emit("agent-done", agent::AgentDoneEvent {
+                session_id: session_id.to_string(),
+                answer: format!("❌ Open WebUI error: HTTP {}.\nIs Open WebUI running at {}?", r.status(), url),
+            });
+            return;
+        }
+        Err(e) => {
+            let _ = app.emit("agent-done", agent::AgentDoneEvent {
+                session_id: session_id.to_string(),
+                answer: format!("❌ Cannot reach Open WebUI at {}: {}\nStart it or set OPENWEBUI_URL in .env", webui_url, e),
+            });
+            return;
+        }
+    };
+
+    use futures::StreamExt;
+    let mut stream = resp.bytes_stream();
+    let mut full_text = String::new();
+
+    while let Some(chunk) = stream.next().await {
+        let chunk = match chunk { Ok(c) => c, Err(_) => break };
+        let text = String::from_utf8_lossy(&chunk);
+        for line in text.lines() {
+            let line = line.trim();
+            if !line.starts_with("data: ") { continue; }
+            let data = &line[6..];
+            if data == "[DONE]" { break; }
+            if let Ok(v) = serde_json::from_str::<serde_json::Value>(data) {
+                if let Some(token) = v["choices"][0]["delta"]["content"].as_str() {
+                    full_text.push_str(token);
+                    let _ = app.emit("agent-token", agent::AgentTokenEvent {
+                        session_id: session_id.to_string(),
+                        token: token.to_string(),
+                    });
+                }
+            }
+        }
+    }
+
+    let _ = app.emit("agent-done", agent::AgentDoneEvent {
+        session_id: session_id.to_string(),
+        answer: full_text,
+    });
 }
 
 /// Detect vague scan/fix/check requests that need pre-flight execution.

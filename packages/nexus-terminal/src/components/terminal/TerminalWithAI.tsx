@@ -948,7 +948,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
                 disabled={isAILoading}
               />
             </div>
-            <span style={{ fontSize: 10, color: '#4b5563' }}>! shell · * ai · ** deep · @file</span>
+            <span style={{ fontSize: 10, color: '#4b5563' }}>! shell · * ai · ** deep · > webui · @file</span>
             {/* Camera button — capture screen + ask vision AI */}
             <button
               onClick={() => handleScreenshot()}
