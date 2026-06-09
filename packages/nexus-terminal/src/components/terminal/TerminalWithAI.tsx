@@ -226,7 +226,21 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
         outputBuffer += tail.replace(/\x1b\[[^A-Za-z]*[A-Za-z]/g, '');
       }
     })
-      .then((unlisten) => { unlistenTerminalOutput = unlisten; })
+      .then((unlisten) => {
+        unlistenTerminalOutput = unlisten;
+        // PTY output fires immediately at shell start, before this async listener
+        // is registered. Trigger a resize so the shell repaints its prompt.
+        // This is safe: resize on an idle fish shell just redraws the prompt.
+        if (fitAddon.current && terminal.current) {
+          fitAddon.current.fit();
+          const { cols, rows } = terminal.current;
+          invoke('resize_terminal', {
+            terminal_id: capturedTerminalId,
+            cols: cols || 80,
+            rows: rows || 24,
+          }).catch(() => {});
+        }
+      })
       .catch((err) => {
         terminalLogger.error('Failed to set up terminal output listener', err as Error, 'listener_setup_failed', { terminalId: tab.terminalId });
       });
