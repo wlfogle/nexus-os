@@ -21,17 +21,19 @@ pub struct AIConfig {
 }
 
 /// Ranked preference list for the agent model.
-/// Models earlier in the list handle tool-use / instruction-following better.
+/// Priority: instruction-following reliability over raw code capability.
+/// codestral:22b is a CODE COMPLETION model — poor at tool selection rules.
+/// llama3.1:8b is an INSTRUCTION model — reliably picks the right tool.
 const AGENT_MODEL_PREFERENCES: &[&str] = &[
-    "codestral",        // PRIMARY: Mistral 22B code model, fits in 12GB VRAM exactly
-    "llama3.3",         // 70B llama, highest quality available
-    "llama3.1",         // 8B llama, reliable tool calling
-    "llama3.2",         // 3B llama, fast
+    "llama3.1",         // PRIMARY: instruction-following, reliable tool selection
     "hermes3",          // Explicitly trained for tool use
+    "llama3.3",         // 70B llama, highest quality
     "qwen2.5",          // Strong tool calling
+    "mistral",          // Reliable instruction follower
+    "llama3.2",         // 3B llama, fast fallback
+    "codestral",        // Code completion model — poor tool selection, last resort
     "phi4",             // Microsoft reasoning model
     "nous-hermes2",     // Hermes-2 tool use trained
-    "mistral",          // Reliable instruction follower
     "gemma2",           // Good instruction following
     // deepseek-coder-v2 intentionally excluded: does not support Ollama tool calling
 ];

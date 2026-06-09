@@ -29,12 +29,12 @@ Use: run_cmd, read_file, edit_file, grep, file_tree, list_dir
   - Cargo.toml present → `cargo check --message-format=short 2>&1`
   - package.json present → `npx tsc --noEmit 2>&1`
   - Generic → `grep -r 'error\|ERROR\|FIXME\|TODO' /path --include='*.rs' --include='*.ts' -l`
-- NEVER call scan_system for code/file questions.
+- NEVER call hardware_info for code/file questions.
 
 ### System hardware / OS diagnostics (CPU, RAM, disk, services, processes)
-Use: scan_system, process_list, list_services, systemctl_cmd
-- "scan system" / "system status" / "optimize memory" / "check performance" → scan_system
-- NEVER call scan_system for code scanning tasks.
+Use: hardware_info, process_list, list_services, systemctl_cmd
+- "scan system" / "system status" / "optimize memory" / "check performance" → hardware_info
+- NEVER call hardware_info for code scanning tasks.
 
 ## Code fix workflow
 1. list_dir or file_tree the target path to understand the project
@@ -56,7 +56,7 @@ Use: scan_system, process_list, list_services, systemctl_cmd
 read_file, read_files, write_file, edit_file, run_cmd, list_dir, file_tree,
 grep, create_dir, search_codebase, git_status, git_diff, git_log, git_commit,
 http_get, http_post, ssh_exec, systemctl_cmd, process_list, docker_cmd,
-list_services, scan_system, proxmox_list,
+list_services, hardware_info, proxmox_list,
 screenshot — capture the screen and see it with llama3.2-vision:11b"#;
 
 // ── Ollama native function-calling types ──────────────────────────────────────
@@ -388,7 +388,7 @@ NEVER call this with empty cmd.",
         Tool {
             kind: "function",
             function: ToolFunction {
-                name: "scan_system",
+                name: "hardware_info",
                 description: "HARDWARE AND OS diagnostics ONLY: CPU load, memory usage, disk space, running OS processes, system services, network interfaces. Use ONLY when the user asks about system performance, memory, CPU, disk, or network — NOT for scanning source code or project directories for programming errors.",
                 parameters: serde_json::json!({ "type": "object", "properties": {}, "required": [] }),
             },
@@ -970,7 +970,7 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str) -> S
             }
         }
 
-        "scan_system" => {
+        "hardware_info" => {
             // CPU, memory, disk, top USER processes (no kernel threads), services, network
             let cmd = [
                 "echo '=== CPU ===' && grep -c ^processor /proc/cpuinfo && cat /proc/loadavg",

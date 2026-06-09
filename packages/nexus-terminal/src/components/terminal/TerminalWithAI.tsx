@@ -25,6 +25,12 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
   const [aiPanelOpen, setAIPanelOpen] = useState(true); // Start in AI mode by default
   const [isTerminalReady, setIsTerminalReady] = useState(false);
   const [inputBuffer, setInputBuffer] = useState('');
+  const [agentModel, setAgentModel] = useState('…');
+
+  // Fetch the actual agent model name from backend on mount
+  useEffect(() => {
+    invoke<string>('get_agent_model').then(setAgentModel).catch(() => setAgentModel('local'));
+  }, []);
 
   // Centralized routing: differentiates shell commands from natural language
   const { handleInput, isShellCommand } = useInputRouting();
@@ -940,7 +946,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
                 </button>
               ))}
             </div>
-            <span style={{ fontSize: 10, color: '#4b5563', fontFamily: 'monospace' }}>codestral:22b</span>
+            <span style={{ fontSize: 10, color: '#4b5563', fontFamily: 'monospace' }}>{agentModel}</span>
           </div>
 
           {/* Input row */}

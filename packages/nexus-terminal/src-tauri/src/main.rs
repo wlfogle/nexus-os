@@ -3020,19 +3020,41 @@ async fn inject_file_references(message: &str) -> String {
     result
 }
 
-/// Automatically gather project context: git status + project-specific build errors.
-/// Injected into every agent request so the agent already knows what's broken.
+/// Automatically gather project context: WARP.md rules + git status.
+/// Mirrors Warp's ProjectContextModel (crates/ai/src/project_context/model.rs)
+/// which walks up the directory tree looking for WARP.md / AGENTS.md files.
 async fn gather_project_context(cwd: &str) -> String {
     let mut parts: Vec<String> = Vec::new();
 
     // Inject ~/.nexus/context.md — persistent infrastructure/rules context
-    // This is what gives the agent the same "knows your setup" capability as Oz.
     let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
     let ctx_path = format!("{}/.nexus/context.md", home);
     if let Ok(ctx) = tokio::fs::read_to_string(&ctx_path).await {
         if !ctx.trim().is_empty() {
-            parts.push(format!("=== ~/.nexus/context.md (infrastructure knowledge) ===\n{}", ctx.trim()));
+            parts.push(format!("=== ~/.nexus/context.md ===\n{}", ctx.trim()));
         }
+    }
+
+    // Walk up from cwd looking for WARP.md / AGENTS.md — same as Warp's ProjectContextModel.
+    // These files tell the agent exactly how to work with the current project.
+    let mut dir = std::path::Path::new(cwd).to_path_buf();
+    let mut warp_rules_found = false;
+    for _ in 0..6 { // max 6 levels up
+        for name in &["WARP.md", "warp.md", "AGENTS.md", "agents.md"] {
+            let rule_path = dir.join(name);
+            if let Ok(content) = tokio::fs::read_to_string(&rule_path).await {
+                if !content.trim().is_empty() && !warp_rules_found {
+                    let truncated = if content.len() > 8_000 {
+                        format!("{}\n[... truncated ...]", &content[..8_000])
+                    } else {
+                        content
+                    };
+                    parts.push(format!("=== {} (project rules) ===\n{}", rule_path.display(), truncated.trim()));
+                    warp_rules_found = true;
+                }
+            }
+        }
+        if !dir.pop() { break; }
     }
 
     // Project type detection — tell the agent exactly what kind of project this is
@@ -3060,6 +3082,13 @@ async fn gather_project_context(cwd: &str) -> String {
     }
 
     parts.join("\n\n")
+}
+
+// ── Agent model query ─────────────────────────────────────────────────────────
+#[tauri::command]
+async fn get_agent_model(state: State<'_, AppState>) -> Result<String, String> {
+    let config = state.config.read().await;
+    Ok(config.ai.agent_model.clone())
 }
 
 // ── run_cmd_capture — run a command and return stdout/stderr/exit_code ─────────
@@ -3802,6 +3831,7 @@ async fn main() {
             // Agent
             agent_chat,
             agent_chat_stream,
+            get_agent_model,
             // Alias persistence
             load_aliases,
             save_aliases,
@@ -3875,7 +3905,7 @@ mod tests {
     }
 
     #[test]
-    fn no_double_trigger_on_scan_system_optimize() {
+    fn no_double_trigger_on_hardware_info_optimize() {
         // The phrase must be classified as SYSTEM_OPTIMIZE only, not SCAN_FIX.
         // Double-triggering would run cargo check AND system ops — catastrophic.
         let msg = "scan system and optimize";
