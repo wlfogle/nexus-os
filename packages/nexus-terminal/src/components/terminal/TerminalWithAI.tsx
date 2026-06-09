@@ -255,7 +255,13 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
       }
       setIsTerminalReady(false);
     };
-  }, [tab.terminalId, terminalOptions, tab.shell, tab.workingDirectory, tab.id, dispatch, isShellCommand, handleInput]);
+  // NOTE: tab.workingDirectory is intentionally NOT in this dep array.
+  // The terminal-cwd listener dispatches updateTabWorkingDirectory which changes
+  // tab.workingDirectory. Including it here would cause xterm to be disposed and
+  // recreated on every fish prompt (OSC 7 fires each time), producing a blank terminal.
+  // cwdRef inside the effect stays current via the terminal-cwd listener.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab.terminalId, terminalOptions, tab.shell, tab.id, dispatch, isShellCommand, handleInput]);
 
   // Handle window resize
   useEffect(() => {

@@ -2838,9 +2838,11 @@ async fn build_system_optimize_prompt(_original: &str) -> String {
     // --- ACTIONS ---
     let mut actions: Vec<String> = Vec::new();
 
-    // Check passwordless sudo access (NOPASSWD must be configured — see /etc/sudoers.d/nexus-terminal)
+    // Check passwordless sudo access by testing an actual NOPASSWD command.
+    // "sudo -n true" fails because "true" is not in /etc/sudoers.d/nexus-terminal.
+    // We test "sysctl -n vm.swappiness" (read-only) which IS in the sudoers file.
     // NEVER use pkexec — it spawns GUI dialogs that can crash the desktop session.
-    let has_sudo = run("sudo -n true 2>/dev/null && echo ok").await.trim() == "ok";
+    let has_sudo = run("sudo -n sysctl -n vm.swappiness 2>/dev/null && echo ok").await.trim() == "ok";
 
     if !has_sudo {
         actions.push("⚠ No passwordless sudo available. To enable system optimization:\n  sudo visudo -f /etc/sudoers.d/nexus-terminal\n  Add: loufogle ALL=(ALL) NOPASSWD: /usr/sbin/sysctl, /sbin/swapoff, /sbin/swapon, /bin/sh -c echo*".to_string());
