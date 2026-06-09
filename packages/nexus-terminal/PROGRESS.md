@@ -234,11 +234,58 @@ From prior Copilot analysis:
 
 ---
 
+## 🚀 Phase 2 Complete — 2026-06-09
+
+### Model & Capability Upgrades
+| Feature | Status |
+|---------|--------|
+| `codestral:22b` agent | ✅ 12GB Mistral code model, fits RTX 4080 VRAM exactly |
+| `llama3.3:70b` deep mode | ✅ `**` prefix routes to 42GB model |
+| `**` deep mode prefix | ✅ Complex tasks use the most capable local model |
+| `@file` injection | ✅ `@src/agent.rs` injects file content into query |
+| `>` Open WebUI routing | ✅ Routes through Open WebUI OpenAI-compatible API |
+| Session memory | ✅ AI conversation persists in localStorage across restarts |
+| MAX_STEPS 50 | ✅ More thorough multi-step fixes |
+| num_predict 8192 | ✅ Longer, more complete responses |
+
+### Agent Reliability
+| Feature | Status |
+|---------|--------|
+| Self-correction | ✅ Step 0 text + 0 tools → inject 'call the tools now' |
+| Pre-flight scan | ✅ `scan/fix/check` requests run cargo check + npm build first |
+| System optimize | ✅ Executes in Rust (sysctl, swapoff, drop_caches), model summarizes real results |
+| Routing fix | ✅ isShellCommand() fallback from Warp input.rs (no more blind shell default) |
+| No sudo password | ✅ Removed destructive Ollama restart on startup |
+
+### New Tools (32 total)
+| Tool | Description |
+|------|-------------|
+| `web_search` | DuckDuckGo + SearXNG if `SEARXNG_URL` set |
+| `mcp_call` | JSON-RPC to any MCP server (HA, Nextcloud, Obsidian) |
+| `screenshot` | Screen capture + `llama3.2-vision:11b` analysis |
+| `predict_command` | History + `llama3.2:3b` ghost text prediction |
+
+### Phase 3 — Next
+- RAG: `nomic-embed-text:latest` embeddings, codebase indexing
+- Voice input: whisper/STT integration
+- Multi-agent: parallel agents on separate tasks
+- SearXNG: install natively in CT-300 for web search
+- Open WebUI: finish native install in CT-300
+- MCP: wire Home Assistant, n8n, Nextcloud MCP servers
+
+## Desktop Launchers
+| Entry | Path | Behavior |
+|-------|------|----------|
+| NexusTerminal | `~/.local/share/applications/nexus-terminal.desktop` | Launches Tauri app directly (clean) |
+| NexusTerminal (Debug) | `~/.local/share/applications/nexus-terminal-debug.desktop` | Runs inside Konsole — shows all Rust/Tauri/Ollama logs |
+
+Icon: `src-tauri/icons/128x128.png` — used by both entries.
+
 ## Remaining Known Issues
-- Agent cwd resolves to Tauri process dir (`src-tauri/`), not fish shell’s current dir
-- OSC 133 hooks disabled (removed to fix display noise); recentBlocks partially works via other path
+- Agent cwd still resolves to Tauri process dir (`src-tauri/`), not the fish shell's current dir
+- OSC 133 hooks disabled (removed to fix display noise)
 - `NewTabModal.tsx` / `TerminalTabManager.tsx` placeholder components still unused
-- `visionService.ts` frontend stubs not wired to new `capture_and_ask` command
+- Open WebUI pip install pending in CT-300 (large deps)
 
 ---
 
