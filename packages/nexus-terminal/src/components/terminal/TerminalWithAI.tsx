@@ -269,13 +269,16 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
       }
       setIsTerminalReady(false);
     };
-  // NOTE: tab.workingDirectory is intentionally NOT in this dep array.
-  // The terminal-cwd listener dispatches updateTabWorkingDirectory which changes
-  // tab.workingDirectory. Including it here would cause xterm to be disposed and
-  // recreated on every fish prompt (OSC 7 fires each time), producing a blank terminal.
-  // cwdRef inside the effect stays current via the terminal-cwd listener.
+  // Intentional dep array decisions:
+  // - tab.workingDirectory EXCLUDED: OSC 7 updates it on every fish prompt, which
+  //   would cause xterm to dispose+recreate on every prompt (blank terminal loop).
+  //   cwdRef stays current via the terminal-cwd listener instead.
+  // - isShellCommand / handleInput EXCLUDED: neither is used inside this effect.
+  //   The onData handler only calls invoke('write_to_terminal'). Including them
+  //   caused the terminal to reinit whenever activeTab changed (e.g. on OSC 7
+  //   workingDirectory update), creating a second PTY and blanking the terminal.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab.terminalId, terminalOptions, tab.shell, tab.id, dispatch, isShellCommand, handleInput]);
+  }, [tab.terminalId, terminalOptions, tab.shell, tab.id, dispatch]);
 
   // Handle window resize
   useEffect(() => {
