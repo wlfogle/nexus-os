@@ -2842,7 +2842,7 @@ async fn build_system_optimize_prompt(_original: &str) -> String {
     // "sudo -n true" fails because "true" is not in /etc/sudoers.d/nexus-terminal.
     // We test "sysctl -n vm.swappiness" (read-only) which IS in the sudoers file.
     // NEVER use pkexec — it spawns GUI dialogs that can crash the desktop session.
-    let has_sudo = run("sudo -n sysctl -n vm.swappiness 2>/dev/null && echo ok").await.trim() == "ok";
+    let has_sudo = run("sudo -n sysctl -n vm.swappiness 2>/dev/null && echo ok").await.contains("ok");
 
     if !has_sudo {
         actions.push("⚠ No passwordless sudo available. To enable system optimization:\n  sudo visudo -f /etc/sudoers.d/nexus-terminal\n  Add: loufogle ALL=(ALL) NOPASSWD: /usr/sbin/sysctl, /sbin/swapoff, /sbin/swapon, /bin/sh -c echo*".to_string());
