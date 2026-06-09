@@ -35,11 +35,18 @@ export const WarpStyleTerminal: React.FC<WarpStyleTerminalProps> = ({ className 
     }
   }, [tabs.length, dispatch]);
 
+  // Guard: track which tab IDs have a create_terminal call in-flight.
+  // Without this, the effect re-runs on every tabs change (e.g. OSC 7 workingDirectory
+  // update) and can race with an in-flight invoke, spawning a duplicate PTY.
+  const creatingTabs = React.useRef<Set<string>>(new Set());
+
   // Create a real PTY backend for every tab that doesn't have one yet
   useEffect(() => {
     const createBackendTerminals = async () => {
       for (const tab of tabs) {
-        if (tab.terminalId) continue;
+        if (tab.terminalId) continue;                       // already has a PTY
+        if (creatingTabs.current.has(tab.id)) continue;    // creation in-flight
+        creatingTabs.current.add(tab.id);
         try {
           const shellConfig = SHELL_CONFIGS[tab.shell];
           const terminalId = await invoke<string>('create_terminal', {
@@ -52,6 +59,8 @@ export const WarpStyleTerminal: React.FC<WarpStyleTerminalProps> = ({ className 
           dispatch(updateTabTerminalId({ tabId: tab.id, terminalId }));
         } catch (error) {
           terminalLogger.error('PTY creation failed', error as Error, 'terminal_create_failed', { tabId: tab.id });
+        } finally {
+          creatingTabs.current.delete(tab.id);
         }
       }
     };
