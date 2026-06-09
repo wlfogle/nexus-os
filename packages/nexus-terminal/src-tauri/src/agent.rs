@@ -239,7 +239,7 @@ fn build_tools() -> Vec<Tool> {
             kind: "function",
             function: ToolFunction {
                 name: "run_cmd",
-                description: "Run a shell command via sh -c. 30 second timeout.",
+                description: "Run a shell command via sh -c. 30 second timeout. USE THIS for code/project checks: 'cargo check 2>&1', 'npx tsc --noEmit 2>&1', 'npm run build', 'python -m py_compile', etc. This is the correct tool when the user says 'scan a directory for errors' or 'check a project'.",
                 parameters: serde_json::json!({
                     "type": "object",
                     "properties": {
@@ -384,7 +384,7 @@ fn build_tools() -> Vec<Tool> {
             kind: "function",
             function: ToolFunction {
                 name: "scan_system",
-                description: "Full system scan: CPU load, memory, disk usage, top processes, running services, network interfaces. Use this to diagnose any system issue.",
+                description: "HARDWARE AND OS diagnostics ONLY: CPU load, memory usage, disk space, running OS processes, system services, network interfaces. Use ONLY when the user asks about system performance, memory, CPU, disk, or network — NOT for scanning source code or project directories for programming errors.",
                 parameters: serde_json::json!({ "type": "object", "properties": {}, "required": [] }),
             },
         },
