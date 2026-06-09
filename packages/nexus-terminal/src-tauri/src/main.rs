@@ -2703,68 +2703,87 @@ fn is_system_optimize_request(message: &str) -> bool {
     || m.contains("too much swap") || m.contains("running slow")
 }
 
-/// Build a system optimization prompt with pre-collected metrics.
-/// This gives the model concrete numbers so it takes action instead of explaining.
-async fn build_system_optimize_prompt(original: &str) -> String {
-    let mut sections: Vec<String> = Vec::new();
-    sections.push(original.to_string());
-    sections.push("--- CURRENT SYSTEM STATE ---".to_string());
+/// Execute system optimizations directly and return real before/after numbers to the model.
+/// We do the actual work in Rust — the model only summarizes the results.
+async fn build_system_optimize_prompt(_original: &str) -> String {
+    let run = |cmd: &str| {
+        let cmd = cmd.to_string();
+        async move {
+            tokio::time::timeout(
+                std::time::Duration::from_secs(30),
+                tokio::process::Command::new("sh").arg("-c").arg(&cmd).output()
+            ).await.ok().and_then(|r| r.ok())
+             .map(|o| format!("{}{}",
+                String::from_utf8_lossy(&o.stdout),
+                String::from_utf8_lossy(&o.stderr)))
+             .unwrap_or_default()
+        }
+    };
 
-    // Memory
-    if let Ok(Ok(out)) = tokio::time::timeout(
-        std::time::Duration::from_secs(5),
-        tokio::process::Command::new("sh").arg("-c").arg("free -h").output()
-    ).await {
-        sections.push(format!("MEMORY:\n{}", String::from_utf8_lossy(&out.stdout).trim()));
+    let mut report = String::new();
+    report.push_str("=== SYSTEM OPTIMIZATION REPORT ===\n\n");
+
+    // --- BEFORE ---
+    let before_free = run("free -h").await;
+    let swappiness_before = run("cat /proc/sys/vm/swappiness").await;
+    let ollama_models = run("ollama ps 2>/dev/null || echo '(none loaded)'").await;
+    let top_mem = run("ps aux --sort=-%mem | head -8").await;
+
+    report.push_str("BEFORE:\n");
+    report.push_str(&format!("{}", before_free.trim()));
+    report.push_str(&format!("\nvm.swappiness: {}", swappiness_before.trim()));
+    report.push_str(&format!("\nOllama loaded: {}", ollama_models.trim()));
+    report.push_str(&format!("\nTop RAM consumers:\n{}", top_mem.trim()));
+    report.push_str("\n\n");
+
+    // --- ACTIONS ---
+    let mut actions: Vec<String> = Vec::new();
+
+    // 1. Fix swappiness if > 10
+    let swappiness: u32 = swappiness_before.trim().parse().unwrap_or(60);
+    if swappiness > 10 {
+        let r = run("sysctl -w vm.swappiness=10").await;
+        actions.push(format!("✅ vm.swappiness {} → 10: {}", swappiness, r.trim()));
+    } else {
+        actions.push(format!("✔ vm.swappiness already {}: no change", swappiness));
     }
 
-    // Swap usage detail
-    if let Ok(Ok(out)) = tokio::time::timeout(
-        std::time::Duration::from_secs(5),
-        tokio::process::Command::new("sh").arg("-c")
-            .arg("cat /proc/swaps; swapon --show 2>/dev/null; grep VmSwap /proc/*/status 2>/dev/null | sort -t: -k2 -rn | head -10")
-            .output()
-    ).await {
-        let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
-        if !s.is_empty() { sections.push(format!("SWAP DETAIL:\n{}", s)); }
+    // 2. Flush swap to RAM if significant swap is in use and RAM is available
+    let swap_used_kb: u64 = run("grep SwapFree /proc/meminfo | awk '{print $2}'").await
+        .trim().parse().unwrap_or(0);
+    let swap_total_kb: u64 = run("grep SwapTotal /proc/meminfo | awk '{print $2}'").await
+        .trim().parse().unwrap_or(0);
+    let mem_available_kb: u64 = run("grep MemAvailable /proc/meminfo | awk '{print $2}'").await
+        .trim().parse().unwrap_or(0);
+    let swap_in_use_kb = swap_total_kb.saturating_sub(swap_used_kb);
+
+    if swap_in_use_kb > 1_000_000 && mem_available_kb > 4_000_000 {
+        let r = run("swapoff -a && swapon -a").await;
+        actions.push(format!("✅ Flushed {}GB of swap back to RAM: {}",
+            swap_in_use_kb / 1_000_000, if r.trim().is_empty() { "OK" } else { r.trim() }));
+    } else if swap_in_use_kb == 0 {
+        actions.push("✔ No swap in use: skip swapoff".to_string());
+    } else {
+        actions.push(format!("⚠ {}MB swap in use but only {}MB RAM available: skip swapoff (unsafe)",
+            swap_in_use_kb / 1024, mem_available_kb / 1024));
     }
 
-    // Top memory processes
-    if let Ok(Ok(out)) = tokio::time::timeout(
-        std::time::Duration::from_secs(5),
-        tokio::process::Command::new("sh").arg("-c")
-            .arg("ps aux --sort=-%mem | head -15")
-            .output()
-    ).await {
-        sections.push(format!("TOP MEMORY PROCESSES:\n{}", String::from_utf8_lossy(&out.stdout).trim()));
-    }
+    // 3. Drop page cache
+    let r = run("sync && echo 1 > /proc/sys/vm/drop_caches").await;
+    actions.push(format!("✅ Dropped page cache: {}", if r.trim().is_empty() { "OK" } else { r.trim() }));
 
-    // Ollama loaded models
-    if let Ok(Ok(out)) = tokio::time::timeout(
-        std::time::Duration::from_secs(5),
-        tokio::process::Command::new("sh").arg("-c").arg("ollama ps 2>/dev/null || echo 'ollama ps failed'").output()
-    ).await {
-        sections.push(format!("OLLAMA LOADED MODELS:\n{}", String::from_utf8_lossy(&out.stdout).trim()));
-    }
+    report.push_str("ACTIONS TAKEN:\n");
+    for a in &actions { report.push_str(&format!("  {a}\n")); }
+    report.push('\n');
 
-    // Current swappiness
-    if let Ok(Ok(out)) = tokio::time::timeout(
-        std::time::Duration::from_secs(3),
-        tokio::process::Command::new("sh").arg("-c").arg("cat /proc/sys/vm/swappiness").output()
-    ).await {
-        sections.push(format!("vm.swappiness: {}", String::from_utf8_lossy(&out.stdout).trim()));
-    }
+    // --- AFTER ---
+    let after_free = run("free -h").await;
+    report.push_str("AFTER:\n");
+    report.push_str(after_free.trim());
+    report.push_str("\n\n");
 
-    sections.push("--- REQUIRED ACTIONS ---".to_string());
-    sections.push("Based on the above, use run_cmd to:".to_string());
-    sections.push("1. If swappiness > 10: run `sysctl vm.swappiness=10` (persists until reboot)".to_string());
-    sections.push("2. If swap > 1GB used AND free RAM > 4GB: run `swapoff -a && swapon -a` to flush swap to RAM".to_string());
-    sections.push("3. If Ollama has models loaded that aren't needed: note their names (cannot unload via CLI)".to_string());
-    sections.push("4. Drop page cache if memory pressure: `sync && echo 1 > /proc/sys/vm/drop_caches`".to_string());
-    sections.push("5. After fixes: run `free -h` again and show before/after delta".to_string());
-    sections.push("Execute ALL applicable steps. Show concrete numbers (before: X, after: Y).".to_string());
-
-    sections.join("\n\n")
+    report.push_str("Summarize the results in 2-3 sentences. State exact before/after numbers from the data above. Mention what was done and the net improvement.");
+    report
 }
 
 /// Detect vague scan/fix/check requests that need pre-flight execution.
