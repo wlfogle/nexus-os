@@ -234,18 +234,26 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     })
       .then((unlisten) => {
         unlistenTerminalOutput = unlisten;
-        // PTY output fires immediately at shell start, before this async listener
-        // is registered. Trigger a resize so the shell repaints its prompt.
-        // This is safe: resize on an idle fish shell just redraws the prompt.
-        if (fitAddon.current && terminal.current) {
-          fitAddon.current.fit();
-          const { cols, rows } = terminal.current;
-          invoke('resize_terminal', {
-            terminal_id: capturedTerminalId,
-            cols: cols || 80,
-            rows: rows || 24,
+        // PTY output fires immediately at shell start, before this listener
+        // registers. Two-step repaint: resize (notifies shell of dimensions)
+        // then write \r (guaranteed prompt redraw on any idle shell).
+        const repaint = async () => {
+          if (fitAddon.current && terminal.current) {
+            fitAddon.current.fit();
+            const { cols, rows } = terminal.current;
+            await invoke('resize_terminal', {
+              terminal_id: capturedTerminalId,
+              cols: cols || 80,
+              rows: rows || 24,
+            }).catch(() => {});
+          }
+          // \r on an empty fish prompt just redraws it — safe and reliable.
+          await invoke('write_to_terminal', {
+            terminalId: capturedTerminalId,
+            data: '\r',
           }).catch(() => {});
-        }
+        };
+        repaint();
       })
       .catch((err) => {
         terminalLogger.error('Failed to set up terminal output listener', err as Error, 'listener_setup_failed', { terminalId: tab.terminalId });
