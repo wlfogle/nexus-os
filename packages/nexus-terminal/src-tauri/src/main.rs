@@ -2556,8 +2556,18 @@ async fn agent_chat_stream(
     };
 
     let is_scan = is_scan_fix_request(&message);
+    let is_sys_optimize = is_system_optimize_request(&message);
 
     tokio::spawn(async move {
+        // System optimization: pre-collect all metrics so model acts on numbers, not guesses
+        let message = if is_sys_optimize {
+            let _ = app.emit("agent-token", agent::AgentTokenEvent {
+                session_id: session_id.clone(),
+                token: "⏳ Collecting system metrics…\n".to_string(),
+            });
+            build_system_optimize_prompt(&message).await
+        } else { message };
+
         // Emit a status token immediately so the UI shows activity
         if is_scan {
             let _ = app.emit("agent-token", agent::AgentTokenEvent {
@@ -2681,6 +2691,80 @@ async fn call_openwebui(
         session_id: session_id.to_string(),
         answer: full_text,
     });
+}
+
+/// Detect system optimization requests
+fn is_system_optimize_request(message: &str) -> bool {
+    let m = message.to_lowercase();
+    (m.contains("optim") || m.contains("tune") || m.contains("clean") || m.contains("speed up") || m.contains("slow"))
+    && (m.contains("system") || m.contains("memory") || m.contains("ram") || m.contains("swap") || m.contains("cpu") || m.contains("disk"))
+    || (m.contains("scan") && (m.contains("system") || m.contains("optim")))
+    || m.contains("scan system and optim")
+    || m.contains("too much swap") || m.contains("running slow")
+}
+
+/// Build a system optimization prompt with pre-collected metrics.
+/// This gives the model concrete numbers so it takes action instead of explaining.
+async fn build_system_optimize_prompt(original: &str) -> String {
+    let mut sections: Vec<String> = Vec::new();
+    sections.push(original.to_string());
+    sections.push("--- CURRENT SYSTEM STATE ---".to_string());
+
+    // Memory
+    if let Ok(Ok(out)) = tokio::time::timeout(
+        std::time::Duration::from_secs(5),
+        tokio::process::Command::new("sh").arg("-c").arg("free -h").output()
+    ).await {
+        sections.push(format!("MEMORY:\n{}", String::from_utf8_lossy(&out.stdout).trim()));
+    }
+
+    // Swap usage detail
+    if let Ok(Ok(out)) = tokio::time::timeout(
+        std::time::Duration::from_secs(5),
+        tokio::process::Command::new("sh").arg("-c")
+            .arg("cat /proc/swaps; swapon --show 2>/dev/null; grep VmSwap /proc/*/status 2>/dev/null | sort -t: -k2 -rn | head -10")
+            .output()
+    ).await {
+        let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
+        if !s.is_empty() { sections.push(format!("SWAP DETAIL:\n{}", s)); }
+    }
+
+    // Top memory processes
+    if let Ok(Ok(out)) = tokio::time::timeout(
+        std::time::Duration::from_secs(5),
+        tokio::process::Command::new("sh").arg("-c")
+            .arg("ps aux --sort=-%mem | head -15")
+            .output()
+    ).await {
+        sections.push(format!("TOP MEMORY PROCESSES:\n{}", String::from_utf8_lossy(&out.stdout).trim()));
+    }
+
+    // Ollama loaded models
+    if let Ok(Ok(out)) = tokio::time::timeout(
+        std::time::Duration::from_secs(5),
+        tokio::process::Command::new("sh").arg("-c").arg("ollama ps 2>/dev/null || echo 'ollama ps failed'").output()
+    ).await {
+        sections.push(format!("OLLAMA LOADED MODELS:\n{}", String::from_utf8_lossy(&out.stdout).trim()));
+    }
+
+    // Current swappiness
+    if let Ok(Ok(out)) = tokio::time::timeout(
+        std::time::Duration::from_secs(3),
+        tokio::process::Command::new("sh").arg("-c").arg("cat /proc/sys/vm/swappiness").output()
+    ).await {
+        sections.push(format!("vm.swappiness: {}", String::from_utf8_lossy(&out.stdout).trim()));
+    }
+
+    sections.push("--- REQUIRED ACTIONS ---".to_string());
+    sections.push("Based on the above, use run_cmd to:".to_string());
+    sections.push("1. If swappiness > 10: run `sysctl vm.swappiness=10` (persists until reboot)".to_string());
+    sections.push("2. If swap > 1GB used AND free RAM > 4GB: run `swapoff -a && swapon -a` to flush swap to RAM".to_string());
+    sections.push("3. If Ollama has models loaded that aren't needed: note their names (cannot unload via CLI)".to_string());
+    sections.push("4. Drop page cache if memory pressure: `sync && echo 1 > /proc/sys/vm/drop_caches`".to_string());
+    sections.push("5. After fixes: run `free -h` again and show before/after delta".to_string());
+    sections.push("Execute ALL applicable steps. Show concrete numbers (before: X, after: Y).".to_string());
+
+    sections.join("\n\n")
 }
 
 /// Detect vague scan/fix/check requests that need pre-flight execution.
