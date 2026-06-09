@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
+/// <reference types="vitest" />
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
@@ -81,6 +82,18 @@ export default defineConfig(async () => ({
     drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
     // Keep error and warn console methods in production for debugging
     pure: process.env.NODE_ENV === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
+  },
+
+  // Vitest configuration
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      include: ['src/services/**', 'src/hooks/**'],
+    },
   },
 
   // Environment variables

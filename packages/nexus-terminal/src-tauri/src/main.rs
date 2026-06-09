@@ -7,6 +7,7 @@ use tauri::Emitter;
 use tauri::State;
 use tokio::sync::RwLock;
 use anyhow::Result;
+use base64::Engine as _;
 use chrono::Timelike;
 use tracing::info;
 
@@ -2524,6 +2525,22 @@ async fn agent_chat_stream(
     });
 
     // IMPORTANT: return Ok(()) immediately so the Tauri command doesn't block.
+    // If ANTHROPIC_API_KEY is set, route through Claude API for full capability
+    if let Ok(api_key) = std::env::var("ANTHROPIC_API_KEY") {
+        if !api_key.is_empty() {
+            let claude_model = std::env::var("CLAUDE_MODEL")
+                .unwrap_or_else(|_| "claude-sonnet-4-5".to_string());
+            tokio::spawn(async move {
+                let _ = app.emit("agent-token", agent::AgentTokenEvent {
+                    session_id: session_id.clone(),
+                token: format!("[\u{2601} Claude \u{2014} {}]\n", claude_model),
+                });
+                call_claude_api(&app, &session_id, &api_key, &claude_model, &message, history).await;
+            });
+            return Ok(());
+        }
+    }
+
     // > prefix = Open WebUI mode: route through Open WebUI's OpenAI-compatible API
     //   gives access to RAG knowledge bases, web search, plugins, voice, image gen
     if message.starts_with('>') && !message.starts_with(">>|") {
@@ -2610,6 +2627,88 @@ async fn agent_chat_stream(
     });
 
     Ok(())
+}
+
+/// Call Anthropic Claude API with streaming.
+/// Same token events as native agent — transparent swap-in when ANTHROPIC_API_KEY is set.
+async fn call_claude_api(
+    app: &tauri::AppHandle,
+    session_id: &str,
+    api_key: &str,
+    model: &str,
+    message: &str,
+    history: Vec<agent::ChatMessage>,
+) {
+    let client = match reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(300))
+        .build() { Ok(c) => c, Err(_) => return };
+
+    let mut messages: Vec<serde_json::Value> = history.iter()
+        .filter(|m| m.role == "user" || m.role == "assistant")
+        .map(|m| serde_json::json!({"role": m.role, "content": m.content}))
+        .collect();
+    messages.push(serde_json::json!({"role": "user", "content": message}));
+
+    let body = serde_json::json!({
+        "model": model,
+        "max_tokens": 8192,
+        "stream": true,
+        "system": "You are NexusAI running in NexusTerminal. You have access to the user's full infrastructure context. Act immediately. Use the ssh_exec tool to run commands on remote hosts. Use run_cmd for local commands. Fix things directly.",
+        "messages": messages
+    });
+
+    let resp = match client.post("https://api.anthropic.com/v1/messages")
+        .header("x-api-key", api_key)
+        .header("anthropic-version", "2023-06-01")
+        .header("content-type", "application/json")
+        .json(&body).send().await
+    {
+        Ok(r) if r.status().is_success() => r,
+        Ok(r) => {
+            let _ = app.emit("agent-done", agent::AgentDoneEvent {
+                session_id: session_id.to_string(),
+                answer: format!("\u{274C} Claude API error: HTTP {}\nCheck ANTHROPIC_API_KEY in .env", r.status()),
+            });
+            return;
+        }
+        Err(e) => {
+            let _ = app.emit("agent-done", agent::AgentDoneEvent {
+                session_id: session_id.to_string(),
+                answer: format!("\u{274C} Cannot reach Claude API: {}", e),
+            });
+            return;
+        }
+    };
+
+    use futures::StreamExt;
+    let mut stream = resp.bytes_stream();
+    let mut full_text = String::new();
+
+    while let Some(chunk) = stream.next().await {
+        let chunk = match chunk { Ok(c) => c, Err(_) => break };
+        let text = String::from_utf8_lossy(&chunk);
+        for line in text.lines() {
+            let line = line.trim();
+            if !line.starts_with("data: ") { continue; }
+            let data = &line[6..];
+            if data == "[DONE]" || data.is_empty() { continue; }
+            if let Ok(v) = serde_json::from_str::<serde_json::Value>(data) {
+                // Claude SSE: content_block_delta with delta.text
+                if let Some(token) = v.get("delta").and_then(|d| d.get("text")).and_then(|t| t.as_str()) {
+                    full_text.push_str(token);
+                    let _ = app.emit("agent-token", agent::AgentTokenEvent {
+                        session_id: session_id.to_string(),
+                        token: token.to_string(),
+                    });
+                }
+            }
+        }
+    }
+
+    let _ = app.emit("agent-done", agent::AgentDoneEvent {
+        session_id: session_id.to_string(),
+        answer: full_text,
+    });
 }
 
 /// Call Open WebUI's OpenAI-compatible streaming API.
@@ -2739,38 +2838,48 @@ async fn build_system_optimize_prompt(_original: &str) -> String {
     // --- ACTIONS ---
     let mut actions: Vec<String> = Vec::new();
 
-    // 1. Fix swappiness if > 10
-    let swappiness: u32 = swappiness_before.trim().parse().unwrap_or(60);
-    if swappiness > 10 {
-        let r = run("sysctl -w vm.swappiness=10").await;
-        actions.push(format!("✅ vm.swappiness {} → 10: {}", swappiness, r.trim()));
+    // Check passwordless sudo access (NOPASSWD must be configured — see /etc/sudoers.d/nexus-terminal)
+    // NEVER use pkexec — it spawns GUI dialogs that can crash the desktop session.
+    let has_sudo = run("sudo -n true 2>/dev/null && echo ok").await.trim() == "ok";
+
+    if !has_sudo {
+        actions.push("⚠ No passwordless sudo available. To enable system optimization:\n  sudo visudo -f /etc/sudoers.d/nexus-terminal\n  Add: loufogle ALL=(ALL) NOPASSWD: /usr/sbin/sysctl, /sbin/swapoff, /sbin/swapon, /bin/sh -c echo*".to_string());
     } else {
-        actions.push(format!("✔ vm.swappiness already {}: no change", swappiness));
+        // 1. Fix swappiness if > 10
+        let swappiness: u32 = swappiness_before.trim().parse().unwrap_or(60);
+        if swappiness > 10 {
+            let r = run(&format!("sudo sysctl -w vm.swappiness=10")).await;
+            actions.push(format!("✅ vm.swappiness {} → 10: {}", swappiness, r.trim()));
+            // Make permanent across reboots
+            let _ = run("sudo sh -c 'grep -q vm.swappiness /etc/sysctl.conf && sed -i s/vm.swappiness.*/vm.swappiness=10/ /etc/sysctl.conf || echo vm.swappiness=10 >> /etc/sysctl.conf'").await;
+        } else {
+            actions.push(format!("✔ vm.swappiness already {}: no change", swappiness));
+        }
+
+        // 2. Flush swap to RAM if significant swap in use and enough RAM available
+        let swap_used_kb: u64 = run("grep SwapFree /proc/meminfo | awk '{print $2}'").await
+            .trim().parse().unwrap_or(0);
+        let swap_total_kb: u64 = run("grep SwapTotal /proc/meminfo | awk '{print $2}'").await
+            .trim().parse().unwrap_or(0);
+        let mem_available_kb: u64 = run("grep MemAvailable /proc/meminfo | awk '{print $2}'").await
+            .trim().parse().unwrap_or(0);
+        let swap_in_use_kb = swap_total_kb.saturating_sub(swap_used_kb);
+
+        if swap_in_use_kb > 1_000_000 && mem_available_kb > 4_000_000 {
+            let r = run("sudo swapoff -a && sudo swapon -a").await;
+            actions.push(format!("✅ Flushed {}GB of swap back to RAM: {}",
+                swap_in_use_kb / 1_000_000, if r.trim().is_empty() { "OK" } else { r.trim() }));
+        } else if swap_in_use_kb == 0 {
+            actions.push("✔ No swap in use: skip swapoff".to_string());
+        } else {
+            actions.push(format!("⚠ {}MB swap in use but only {}MB RAM available: skip swapoff (unsafe)",
+                swap_in_use_kb / 1024, mem_available_kb / 1024));
+        }
+
+        // 3. Drop page cache (use tee — sudo sh -c is not in sudoers and would block)
+        let r = run("sync && echo 1 | sudo tee /proc/sys/vm/drop_caches").await;
+        actions.push(format!("✅ Dropped page cache: {}", if r.trim().is_empty() { "OK" } else { r.trim() }));
     }
-
-    // 2. Flush swap to RAM if significant swap is in use and RAM is available
-    let swap_used_kb: u64 = run("grep SwapFree /proc/meminfo | awk '{print $2}'").await
-        .trim().parse().unwrap_or(0);
-    let swap_total_kb: u64 = run("grep SwapTotal /proc/meminfo | awk '{print $2}'").await
-        .trim().parse().unwrap_or(0);
-    let mem_available_kb: u64 = run("grep MemAvailable /proc/meminfo | awk '{print $2}'").await
-        .trim().parse().unwrap_or(0);
-    let swap_in_use_kb = swap_total_kb.saturating_sub(swap_used_kb);
-
-    if swap_in_use_kb > 1_000_000 && mem_available_kb > 4_000_000 {
-        let r = run("swapoff -a && swapon -a").await;
-        actions.push(format!("✅ Flushed {}GB of swap back to RAM: {}",
-            swap_in_use_kb / 1_000_000, if r.trim().is_empty() { "OK" } else { r.trim() }));
-    } else if swap_in_use_kb == 0 {
-        actions.push("✔ No swap in use: skip swapoff".to_string());
-    } else {
-        actions.push(format!("⚠ {}MB swap in use but only {}MB RAM available: skip swapoff (unsafe)",
-            swap_in_use_kb / 1024, mem_available_kb / 1024));
-    }
-
-    // 3. Drop page cache
-    let r = run("sync && echo 1 > /proc/sys/vm/drop_caches").await;
-    actions.push(format!("✅ Dropped page cache: {}", if r.trim().is_empty() { "OK" } else { r.trim() }));
 
     report.push_str("ACTIONS TAKEN:\n");
     for a in &actions { report.push_str(&format!("  {a}\n")); }
@@ -2825,7 +2934,12 @@ async fn augment_with_build_errors(original: &str, cwd: &str) -> String {
     }
 
     let pkg_cwd = if has_package { cwd.to_string() }
-        else if has_pkg_parent { std::path::Path::new(cwd).parent().unwrap().to_string_lossy().to_string() }
+        else if has_pkg_parent {
+            std::path::Path::new(cwd)
+                .parent()
+                .map(|p| p.to_string_lossy().to_string())
+                .unwrap_or_default()
+        }
         else { String::new() };
 
     if !pkg_cwd.is_empty() {
@@ -2859,24 +2973,57 @@ async fn augment_with_build_errors(original: &str, cwd: &str) -> String {
     )
 }
 
-/// Replace @path/to/file references in the message with actual file contents.
-/// Allows: "what's wrong with @src/agent.rs?" or "refactor @src/main.rs"
+/// Replace @path/to/file or @/path/to/image.png with file content or vision analysis.
+/// Text files: inject content inline.
+/// Images (png/jpg/gif/webp/bmp): analyze with llama3.2-vision:11b and inject description.
+/// This gives NexusTerminal the same "give me a file or picture" capability as Oz.
 async fn inject_file_references(message: &str) -> String {
     let mut result = message.to_string();
-    // Find all @word/path tokens
-    let re = regex::Regex::new(r"@([\w./\-]+)").unwrap();
+    let re = match regex::Regex::new(r"@([\w./\-]+)") {
+        Ok(r) => r,
+        Err(_) => return message.to_string(),
+    };
     let message_clone = message.to_string();
     let matches: Vec<_> = re.captures_iter(&message_clone).collect();
+
     for cap in matches {
-        let token = &cap[0]; // e.g. "@src/agent.rs"
-        let path = &cap[1];  // e.g. "src/agent.rs"
-        if let Ok(content) = tokio::fs::read_to_string(path).await {
-            let truncated = if content.len() > 16_000 {
-                format!("{}\n[... truncated at 16KB ...]", &content[..16_000])
-            } else { content };
-            let replacement = format!("\n=== @{} ===\n```\n{}\n```\n", path, truncated);
-            result = result.replace(token, &replacement);
-        }
+        let token = &cap[0];
+        let path = &cap[1];
+
+        // Detect image files
+        let lower = path.to_lowercase();
+        let is_image = lower.ends_with(".png") || lower.ends_with(".jpg")
+            || lower.ends_with(".jpeg") || lower.ends_with(".gif")
+            || lower.ends_with(".webp") || lower.ends_with(".bmp")
+            || lower.ends_with(".tiff");
+
+        let replacement = if is_image {
+            // Read image, base64 encode, send to vision model
+            match tokio::fs::read(path).await {
+                Ok(data) => {
+                    let b64 = base64::engine::general_purpose::STANDARD.encode(&data);
+                    let prompt = format!("Describe this image in detail. If it contains code, errors, terminal output, or text, transcribe it exactly. Be specific.");
+                    match crate::vision_commands::query_vision_ai(prompt, b64, None, None, None).await {
+                        Ok(desc) => format!("\n=== @{} (image analysis) ===\n{}\n", path, desc),
+                        Err(e) => format!("\n=== @{} (image — vision failed: {}) ===\n", path, e),
+                    }
+                }
+                Err(e) => format!("\n=== @{} (cannot read: {}) ===\n", path, e),
+            }
+        } else {
+            // Text file
+            match tokio::fs::read_to_string(path).await {
+                Ok(content) => {
+                    let truncated = if content.len() > 16_000 {
+                        format!("{}\n[... truncated at 16KB ...]", &content[..16_000])
+                    } else { content };
+                    format!("\n=== @{} ===\n```\n{}\n```\n", path, truncated)
+                }
+                Err(e) => format!("\n=== @{} (cannot read: {}) ===\n", path, e),
+            }
+        };
+
+        result = result.replace(token, &replacement);
     }
     result
 }
@@ -2885,6 +3032,16 @@ async fn inject_file_references(message: &str) -> String {
 /// Injected into every agent request so the agent already knows what's broken.
 async fn gather_project_context(cwd: &str) -> String {
     let mut parts: Vec<String> = Vec::new();
+
+    // Inject ~/.nexus/context.md — persistent infrastructure/rules context
+    // This is what gives the agent the same "knows your setup" capability as Oz.
+    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    let ctx_path = format!("{}/.nexus/context.md", home);
+    if let Ok(ctx) = tokio::fs::read_to_string(&ctx_path).await {
+        if !ctx.trim().is_empty() {
+            parts.push(format!("=== ~/.nexus/context.md (infrastructure knowledge) ===\n{}", ctx.trim()));
+        }
+    }
 
     // Project type detection — tell the agent exactly what kind of project this is
     let has_cargo = std::path::Path::new(cwd).join("Cargo.toml").exists();
@@ -2907,56 +3064,6 @@ async fn gather_project_context(cwd: &str) -> String {
         let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
         if !s.is_empty() {
             parts.push(format!("=== git status ===\n{}", s));
-        }
-    }
-
-    // Detect project type and run build check
-    let cargo_toml = std::path::Path::new(cwd).join("Cargo.toml");
-    let package_json = std::path::Path::new(cwd).join("package.json");
-    let pyproject = std::path::Path::new(cwd).join("pyproject.toml");
-
-    if cargo_toml.exists() {
-        if let Ok(Ok(out)) = tokio::time::timeout(
-            std::time::Duration::from_secs(30),
-            tokio::process::Command::new("cargo")
-                .args(["check", "--message-format=short", "2>&1"])
-                .current_dir(cwd)
-                .output()
-        ).await {
-            let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
-            if !stderr.is_empty() && !out.status.success() {
-                let truncated = if stderr.len() > 3000 { format!("{}\n[...]", &stderr[..3000]) } else { stderr };
-                parts.push(format!("=== cargo check errors ===\n{}", truncated));
-            }
-        }
-    } else if package_json.exists() {
-        if let Ok(Ok(out)) = tokio::time::timeout(
-            std::time::Duration::from_secs(30),
-            tokio::process::Command::new("sh")
-                .arg("-c")
-                .arg("npx tsc --noEmit 2>&1 || npm run build 2>&1")
-                .current_dir(cwd)
-                .output()
-        ).await {
-            let combined = format!("{}{}",
-                String::from_utf8_lossy(&out.stdout),
-                String::from_utf8_lossy(&out.stderr));
-            let combined = combined.trim().to_string();
-            if !combined.is_empty() && !out.status.success() {
-                let truncated = if combined.len() > 3000 { format!("{}\n[...]", &combined[..3000]) } else { combined };
-                parts.push(format!("=== build errors ===\n{}", truncated));
-            }
-        }
-    } else if pyproject.exists() {
-        if let Ok(Ok(out)) = tokio::time::timeout(
-            std::time::Duration::from_secs(15),
-            tokio::process::Command::new("python")
-                .args(["-m", "py_compile", "."])
-                .current_dir(cwd)
-                .output()
-        ).await {
-            let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
-            if !stderr.is_empty() { parts.push(format!("=== python errors ===\n{}", stderr)); }
         }
     }
 

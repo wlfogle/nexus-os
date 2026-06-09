@@ -16,9 +16,7 @@ use core::arch::naked_asm;
 pub extern "x86-interrupt" fn timer_isr_naked(
     _frame: x86_64::structures::idt::InterruptStackFrame
 ) {
-    // SAFETY: naked function — no Rust prologue/epilogue.
-    unsafe {
-        naked_asm!(
+    naked_asm!(
             // ── Save all caller/callee-saved GP registers ─────────────────
             "push rbp",
             "push rax",
@@ -69,5 +67,4 @@ pub extern "x86-interrupt" fn timer_isr_naked(
             // ── Return to the next process (RIP/CS/RFLAGS/RSP/SS on stack)
             "iretq",
         );
-    }
 }

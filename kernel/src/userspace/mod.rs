@@ -15,7 +15,6 @@
 
 use crate::memory::{paging, physical};
 use crate::process;
-use crate::scheduler;
 use crate::ipc;
 
 /// User-space code page.  Placed above 512 MB to avoid Limine's identity map.

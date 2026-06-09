@@ -1,3 +1,47 @@
+# WARP.md — awesome-stack
+
+## Project Overview
+The homelab infrastructure stack: 65+ Docker services (media, automation, networking, AI)
+running in Proxmox LXC containers. Part of the NexusOS monorepo.
+
+## Session Continuity
+Before starting work, read `/home/loufogle/nexus-os/WARP.md` for the full NexusOS context.
+
+## Services
+- **Media**: Jellyfin, Sonarr, Radarr, Prowlarr, Bazarr, Overseerr
+- **Download**: qBittorrent, SABnzbd, NZBGet, Zurg + rclone (Real-Debrid)
+- **Networking**: Traefik, Nginx Proxy Manager, WireGuard, AdGuard Home
+- **Automation**: Home Assistant, n8n, Homebridge
+- **Monitoring**: Grafana, Prometheus, Portainer
+- **AI**: Ollama, Open WebUI, LocalAI
+
+## Key Paths
+- Docker configs: `docker/`
+- Proxmox LXC scripts: `lxc/`
+- Traefik config: `docker/traefik/`
+- HA config: `docker/homeassistant/`
+
+## Common Commands
+```bash
+# Start all services
+docker compose up -d
+
+# Check service status
+docker ps --format 'table {{.Names}}\t{{.Status}}'
+
+# SSH into Proxmox server
+ssh proxmox
+
+# View logs
+docker logs -f <service-name>
+```
+
+## Infrastructure
+- Host: Proxmox VE on i9-13900HX + RTX 4080 + 64GB DDR5
+- LXC container: privileged, GPU passthrough for Jellyfin transcoding
+- Storage: ZFS pool for media, NVMe for containers
+- Remote access: Tailscale + WireGuard
+
 you were here:
 
 no, it's not on another terminal

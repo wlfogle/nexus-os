@@ -235,15 +235,25 @@ impl TerminalManager {
                     Ok(n) if n > 0 => {
                         let output = String::from_utf8_lossy(&buffer[..n]);
                         debug!("Terminal {} output: {}", terminal_id, output);
-                        
-                        // Emit output to frontend via Tauri events
+
                         if let Some(app_handle) = APP_HANDLE.get() {
+                            // Emit raw output to frontend
                             let event = TerminalOutputEvent {
                                 terminal_id: terminal_id.clone(),
                                 data: output.to_string(),
                             };
                             if let Err(e) = app_handle.emit("terminal-output", &event) {
                                 error!("Failed to emit terminal output: {}", e);
+                            }
+
+                            // Parse OSC 7 (shell cwd notification) — fish/zsh/bash emit this
+                            // on every prompt: \x1b]7;file://hostname/path\x07
+                            // Use it to keep workingDirectory in sync with the real shell cwd.
+                            if let Some(cwd) = extract_osc7_cwd(&output) {
+                                let _ = app_handle.emit("terminal-cwd", serde_json::json!({
+                                    "terminal_id": terminal_id,
+                                    "cwd": cwd,
+                                }));
                             }
                         }
                     }
@@ -393,6 +403,48 @@ fn osc133_bootstrap(shell: &str) -> String {
             "stty echo\n",
         ).to_string()
     }
+}
+
+/// Extract the working directory from an OSC 7 escape sequence.
+/// Fish, zsh, and bash all emit \x1b]7;file://hostname/absolute/path\x07
+/// on every prompt display, giving us a reliable cwd signal without polling.
+fn extract_osc7_cwd(output: &str) -> Option<String> {
+    let marker = "\x1b]7;";
+    let start = output.find(marker)?;
+    let rest = &output[start + marker.len()..];
+    // Sequence ends with BEL (\x07) or ST (\x1b\\)
+    let end = rest.find('\x07')
+        .or_else(|| rest.find("\x1b\\\\"))
+        .unwrap_or_else(|| rest.len().min(512));
+    let uri = &rest[..end];
+    // URI format: file://hostname/absolute/path
+    // Strip "file://" then skip the hostname up to the first "/"
+    let after_scheme = uri.strip_prefix("file://")?;
+    let path = if let Some(slash) = after_scheme.find('/') {
+        &after_scheme[slash..]
+    } else {
+        return None;
+    };
+    if path.is_empty() || !path.starts_with('/') {
+        return None;
+    }
+    // Decode common percent-encoded chars (spaces are the main one on Linux)
+    let decoded = path.replace("%20", " ")
+        .replace("%21", "!")
+        .replace("%23", "#")
+        .replace("%24", "$")
+        .replace("%25", "%")
+        .replace("%26", "&")
+        .replace("%27", "'")
+        .replace("%28", "(")
+        .replace("%29", ")")
+        .replace("%2B", "+")
+        .replace("%2C", ",")
+        .replace("%3D", "=")
+        .replace("%40", "@")
+        .replace("%5B", "[")
+        .replace("%5D", "]");
+    Some(decoded)
 }
 
 impl Default for TerminalManager {

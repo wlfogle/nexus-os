@@ -47,6 +47,9 @@ SECTIONS {
         *(.bss .bss.*)
     } :data
 
+    /* End-of-kernel marker — used by the installer to calculate kernel size */
+    PROVIDE(__kernel_end = .);
+
     /* ── Discard unwanted sections ─────────────────────────────────────── */
     /DISCARD/ : {
         *(.eh_frame)

@@ -24,6 +24,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c4512299f36f043ab09a583e57bceb5a5aab7a73db1805848e8fef3c9e8c78b3"
 
 [[package]]
+name = "fatfs"
+version = "0.4.0"
+source = "git+https://github.com/rafalh/rust-fatfs#c4b88477b22ca7e5131fbd8891f62a5deaa88e6e"
+dependencies = [
+ "bitflags",
+ "log",
+]
+
+[[package]]
 name = "limine"
 version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -48,10 +57,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "log"
+version = "0.4.30"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "616ec5685824bcc94416c6d4a7a446eea774a31efd7062c8480ba6fd06d7a6e5"
+
+[[package]]
 name = "nexus-kernel"
-version = "0.5.0"
+version = "0.5.3"
 dependencies = [
  "aarch64-cpu",
+ "fatfs",
  "limine",
  "linked_list_allocator",
  "spin",

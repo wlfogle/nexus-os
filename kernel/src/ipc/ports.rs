@@ -11,7 +11,7 @@
 //!   "nexus.term"  — NexusTerminal IPC bridge (Phase 6)
 
 use spin::Mutex;
-use super::{ipc_send, Message, IpcError, ANY};
+use super::{ipc_send, Message, IpcError};
 use crate::scheduler;
 
 const MAX_PORTS: usize = 32;

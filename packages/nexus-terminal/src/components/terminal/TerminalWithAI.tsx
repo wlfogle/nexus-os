@@ -7,7 +7,7 @@ import { SearchAddon } from '@xterm/addon-search';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { TerminalTab } from '../../types/terminal';
-import { addError, addTerminalBlock } from '../../store/slices/terminalTabSlice';
+import { addError, addTerminalBlock, updateTabWorkingDirectory } from '../../store/slices/terminalTabSlice';
 import EnhancedAIAssistant from '../ai/EnhancedAIAssistant';
 import { useInputRouting } from '../../hooks/useInputRouting';
 import { terminalLogger } from '../../utils/logger';
@@ -139,9 +139,11 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     //   \x1b]133;C\x07  = output start (command running)
     //   \x1b]133;D;N\x07 = command end, N = exit code
     let unlistenTerminalOutput: (() => void) | null = null;
+    let unlistenTerminalCwd: (() => void) | null = null;
     const capturedTerminalId = tab.terminalId;
     const capturedTabId = tab.id;
-    const capturedCwd = tab.workingDirectory;
+    // cwdRef tracks the live shell cwd — updated by OSC 7 events
+    const cwdRef = { current: tab.workingDirectory };
 
     // OSC 133 parser state
     let osc133State: 'prompt' | 'input' | 'output' = 'prompt';
@@ -204,7 +206,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
                 command: cmd,
                 output: out,
                 exitCode,
-                cwd: capturedCwd,
+                cwd: cwdRef.current,
                 timestamp: new Date().toISOString(),
               }
             }));
@@ -229,9 +231,24 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
         terminalLogger.error('Failed to set up terminal output listener', err as Error, 'listener_setup_failed', { terminalId: tab.terminalId });
       });
 
+    // Listen for OSC 7 cwd notifications from the PTY backend.
+    // Fish emits \x1b]7;file://hostname/path\x07 on every prompt — this keeps
+    // workingDirectory in sync with the real shell cwd so the agent always
+    // knows where the user is.
+    listen<{ terminal_id: string; cwd: string }>('terminal-cwd', (event) => {
+      const { terminal_id, cwd } = event.payload;
+      if (terminal_id !== capturedTerminalId) return;
+      if (!cwd || !cwd.startsWith('/')) return;
+      cwdRef.current = cwd;
+      dispatch(updateTabWorkingDirectory({ tabId: capturedTabId, cwd }));
+    })
+      .then((unlisten) => { unlistenTerminalCwd = unlisten; })
+      .catch(() => { /* non-fatal */ });
+
     return () => {
       resizeObserver?.disconnect();
       if (unlistenTerminalOutput) unlistenTerminalOutput();
+      if (unlistenTerminalCwd) unlistenTerminalCwd();
       if (terminal.current) {
         terminal.current.dispose();
         terminal.current = null;
@@ -952,7 +969,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
                 disabled={isAILoading}
               />
             </div>
-            <span style={{ fontSize: 10, color: '#4b5563' }}>! shell · * ai · ** deep · > webui · @file</span>
+            <span style={{ fontSize: 10, color: '#4b5563' }}>{'! shell · * ai · ** deep · > webui · @file'}</span>
             {/* Camera button — capture screen + ask vision AI */}
             <button
               onClick={() => handleScreenshot()}
