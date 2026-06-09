@@ -2572,8 +2572,12 @@ async fn agent_chat_stream(
         message
     };
 
-    let is_scan = is_scan_fix_request(&message);
     let is_sys_optimize = is_system_optimize_request(&message);
+    // NOTE: No pre-flight cargo check / npm build here.
+    // Warp's approach (ref: crates/ai/src/agent/action/mod.rs RequestCommandOutput):
+    // the agent calls run_cmd with 'cargo check' itself as a tool call on the
+    // existing PTY. Running builds before the LLM starts created a 26-second
+    // stall AND caused a race condition that spawned a second PTY session.
 
     tokio::spawn(async move {
         // System optimization: pre-collect all metrics so model acts on numbers, not guesses
@@ -2584,26 +2588,6 @@ async fn agent_chat_stream(
             });
             build_system_optimize_prompt(&message).await
         } else { message };
-
-        // Emit a status token immediately so the UI shows activity
-        if is_scan {
-            let _ = app.emit("agent-token", agent::AgentTokenEvent {
-                session_id: session_id.clone(),
-                token: "⏳ Running pre-flight checks (cargo check + npm build)…\n".to_string(),
-            });
-        }
-
-        // Pre-flight (runs in background, doesn't block the command)
-        let message = if is_scan {
-            let augmented = augment_with_build_errors(&message, &working_dir).await;
-            let _ = app.emit("agent-token", agent::AgentTokenEvent {
-                session_id: session_id.clone(),
-                token: "✅ Pre-flight done. Sending to NexusAI…\n\n".to_string(),
-            });
-            augmented
-        } else {
-            message
-        };
 
         // Auto-gather context (also in background)
         let auto_context = gather_project_context(&working_dir).await;
