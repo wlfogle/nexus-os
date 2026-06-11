@@ -39,11 +39,12 @@ Use: hardware_info, process_list, list_services, systemctl_cmd
 ## Code fix workflow
 1. list_dir or file_tree the target path to understand the project
 2. Detect project type (Cargo.toml → Rust, package.json → Node/TS)
-3. run_cmd: `cargo check 2>&1` or `npx tsc --noEmit 2>&1`
+3. run_cmd: `cargo check 2>&1` or `npx tsc --noEmit 2>&1` to get compiler errors
 4. For each error: read_file the failing file, edit_file minimal fix
-5. run_cmd to verify fix
-6. Iterate until all errors pass, then git_commit
-7. Report: 1 paragraph, what was broken, what you changed
+5. run_cmd to verify fix. Iterate until all pass, then git_commit
+6. For deep AI code review: analyze_code(path, type) — types: errors|style|security|performance|cleanup|all
+7. For AI-powered autofix: autofix_code(path, dry_run=true) first to preview, then dry_run=false to apply
+8. Report: 1 paragraph, what was broken, what you changed
 
 ## Rules
 - Always use the injected "Current working directory" for paths
@@ -57,6 +58,8 @@ read_file, read_files, write_file, edit_file, run_cmd, list_dir, file_tree,
 grep, create_dir, search_codebase, git_status, git_diff, git_log, git_commit,
 http_get, http_post, ssh_exec, systemctl_cmd, process_list, docker_cmd,
 list_services, hardware_info, proxmox_list,
+analyze_code(path, analysis_type) — AI code review: errors|style|security|performance|cleanup|all,
+autofix_code(path, dry_run) — AI rewrites file with fixes; always dry_run=true first,
 screenshot — capture the screen and see it with llama3.2-vision:11b"#;
 
 // ── Ollama native function-calling types ──────────────────────────────────────
@@ -554,6 +557,40 @@ NEVER call this with empty cmd.",
                         "args": {"type": "object", "description": "Arguments to pass to the tool"}
                     },
                     "required": ["server", "tool"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "analyze_code",
+                description: "Analyze a source code file using AI for a specific issue type. Use this for deep AI-powered code review beyond what a compiler reports.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string", "description": "Absolute path to the source file to analyze"},
+                        "analysis_type": {
+                            "type": "string",
+                            "description": "What to look for: 'errors' (bugs/logic), 'style' (formatting/best practices), 'security' (vulnerabilities), 'performance' (bottlenecks), 'cleanup' (dead/stub/zombie code), 'all' (comprehensive)",
+                            "enum": ["errors", "style", "security", "performance", "cleanup", "all"]
+                        }
+                    },
+                    "required": ["path", "analysis_type"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "autofix_code",
+                description: "Have AI automatically fix all issues in a source file. Creates a .bak backup then rewrites the file with fixes applied. Use dry_run=true first to preview changes.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string", "description": "Absolute path to the source file to fix"},
+                        "dry_run": {"type": "boolean", "description": "If true, show what would change without writing the file (default false)"}
+                    },
+                    "required": ["path"]
                 }),
             },
         },
@@ -1262,8 +1299,139 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str) -> S
             }
         }
 
+        "analyze_code" => {
+            let path = args["path"].as_str().unwrap_or("");
+            let analysis_type = args["analysis_type"].as_str().unwrap_or("errors");
+            if path.is_empty() { return "ERROR: path is required".to_string(); }
+
+            let content = match tokio::fs::read_to_string(path).await {
+                Ok(c) => c,
+                Err(e) => return format!("ERROR reading {}: {}", path, e),
+            };
+            let ext = std::path::Path::new(path).extension()
+                .and_then(|e| e.to_str()).unwrap_or("text");
+            let language = match ext {
+                "rs" => "Rust", "ts" | "tsx" => "TypeScript", "js" | "jsx" => "JavaScript",
+                "py" => "Python", "go" => "Go", "java" => "Java",
+                "cpp" | "cc" | "cxx" => "C++", "c" => "C", _ => ext,
+            };
+            let code = if content.len() > 24_000 {
+                format!("{}\n... [truncated at 24KB]", &content[..24_000])
+            } else { content };
+            let prompt = match analysis_type {
+                "errors" => format!("Analyze this {language} code for syntax errors, type errors, logic issues, and bugs. Be specific with line numbers.\n\n```{ext}\n{code}\n```\n\nList all errors/bugs with exact line numbers and explanations."),
+                "style" => format!("Analyze this {language} code for style issues, naming conventions, formatting, and best practices.\n\n```{ext}\n{code}\n```"),
+                "security" => format!("Analyze this {language} code for security vulnerabilities, unsafe operations, and input validation issues. Prioritize by severity.\n\n```{ext}\n{code}\n```"),
+                "performance" => format!("Analyze this {language} code for performance bottlenecks, inefficient algorithms, and optimization opportunities. Give specific fixes.\n\n```{ext}\n{code}\n```"),
+                "cleanup" => format!("Analyze this {language} code for dead code, stub functions, unused variables/imports, and zombie code that can be removed.\n\nFor each finding state: exact line numbers, why it's unused/stub, whether it's safe to remove.\n\n```{ext}\n{code}\n```"),
+                _ => format!("Analyze this {language} code comprehensively: errors, security, performance, style, and dead code cleanup.\n\n```{ext}\n{code}\n```"),
+            };
+            let ollama_host = std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+            let ollama_port = std::env::var("OLLAMA_PORT").unwrap_or_else(|_| "11434".to_string());
+            let model = std::env::var("AGENT_MODEL").unwrap_or_else(|_| "hermes3:8b".to_string());
+            let url = format!("http://{}:{}/api/generate", ollama_host, ollama_port);
+            let client = reqwest::Client::builder().timeout(Duration::from_secs(120))
+                .build().unwrap_or_else(|_| reqwest::Client::new());
+            let body = serde_json::json!({
+                "model": model, "prompt": prompt, "stream": false,
+                "options": { "temperature": 0.1, "num_predict": 2048 }
+            });
+            match client.post(&url).json(&body).send().await {
+                Ok(resp) if resp.status().is_success() => {
+                    match resp.json::<serde_json::Value>().await {
+                        Ok(data) => {
+                            let analysis = data["response"].as_str().unwrap_or("No response").to_string();
+                            format!("=== Code Analysis ({analysis_type}) ===\nFile: {path}\nLanguage: {language}\n\n{analysis}")
+                        }
+                        Err(e) => format!("ERROR: {}", e),
+                    }
+                }
+                Ok(resp) => format!("ERROR: Ollama returned {}", resp.status()),
+                Err(e) => format!("ERROR: {}", e),
+            }
+        }
+
+        "autofix_code" => {
+            let path = args["path"].as_str().unwrap_or("");
+            let dry_run = args["dry_run"].as_bool().unwrap_or(false);
+            if path.is_empty() { return "ERROR: path is required".to_string(); }
+
+            let content = match tokio::fs::read_to_string(path).await {
+                Ok(c) => c,
+                Err(e) => return format!("ERROR reading {}: {}", path, e),
+            };
+            if content.len() > 50_000 {
+                return format!("ERROR: file too large ({}KB > 50KB). Use edit_file for targeted fixes.",
+                    content.len() / 1024);
+            }
+            let ext = std::path::Path::new(path).extension()
+                .and_then(|e| e.to_str()).unwrap_or("text");
+            let prompt = format!(
+                "Fix all issues in this {ext} code. Return ONLY the fixed code in a ```{ext} code block. No explanations.\n\n```{ext}\n{content}\n```"
+            );
+            let ollama_host = std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+            let ollama_port = std::env::var("OLLAMA_PORT").unwrap_or_else(|_| "11434".to_string());
+            let model = std::env::var("AGENT_MODEL").unwrap_or_else(|_| "hermes3:8b".to_string());
+            let url = format!("http://{}:{}/api/generate", ollama_host, ollama_port);
+            let client = reqwest::Client::builder().timeout(Duration::from_secs(120))
+                .build().unwrap_or_else(|_| reqwest::Client::new());
+            let body = serde_json::json!({
+                "model": model, "prompt": prompt, "stream": false,
+                "options": { "temperature": 0.05, "num_predict": 4096 }
+            });
+            let response_text = match client.post(&url).json(&body).send().await {
+                Ok(resp) if resp.status().is_success() => {
+                    match resp.json::<serde_json::Value>().await {
+                        Ok(data) => data["response"].as_str().unwrap_or("").to_string(),
+                        Err(e) => return format!("ERROR: {}", e),
+                    }
+                }
+                Ok(resp) => return format!("ERROR: Ollama returned {}", resp.status()),
+                Err(e) => return format!("ERROR: {}", e),
+            };
+            let fixed = extract_code_block(&response_text, ext);
+            if fixed.trim().is_empty() { return "No changes suggested.".to_string(); }
+            if fixed.trim() == content.trim() { return format!("No changes needed for {path}"); }
+            if dry_run {
+                return format!("=== Dry run: {} ===\nProposed fixed code ({} lines):\n```{ext}\n{}\n```\nRun with dry_run=false to apply.",
+                    path, fixed.lines().count(), fixed);
+            }
+            let backup = format!("{}.bak", path);
+            if let Err(e) = tokio::fs::write(&backup, &content).await {
+                return format!("ERROR: backup failed: {}", e);
+            }
+            match tokio::fs::write(path, &fixed).await {
+                Ok(_) => format!("OK: fixed {path} ({} lines → {} lines). Backup: {backup}",
+                    content.lines().count(), fixed.lines().count()),
+                Err(e) => format!("ERROR writing {path}: {} (backup at {backup})", e),
+            }
+        }
+
         other => format!("ERROR: unknown tool '{}'", other),
     }
+}
+
+/// Extract a fenced code block from model output.
+/// Tries language-specific fence first, then plain ```, then returns empty.
+fn extract_code_block(text: &str, lang: &str) -> String {
+    // Try ```lang\n...\n```
+    let fence = format!("```{}", lang);
+    if let Some(start) = text.find(&fence) {
+        let after = &text[start + fence.len()..];
+        let after = after.trim_start_matches(|c: char| c != '\n');
+        let after = after.trim_start_matches('\n');
+        if let Some(end) = after.find("```") {
+            return after[..end].to_string();
+        }
+    }
+    // Try plain ```\n...\n```
+    if let Some(start) = text.find("```\n") {
+        let after = &text[start + 4..];
+        if let Some(end) = after.find("```") {
+            return after[..end].to_string();
+        }
+    }
+    String::new()
 }
 
 // ── Main agent entry point (blocking) ────────────────────────────────────────
