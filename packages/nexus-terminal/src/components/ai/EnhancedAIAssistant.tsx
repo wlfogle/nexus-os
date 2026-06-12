@@ -5,14 +5,14 @@ import { Eye, Search, Brain, Camera, BookOpen, Zap, AlertTriangle, CheckCircle, 
 import { selectActiveTab, addAIMessage } from '../../store/slices/terminalTabSlice';
 import { ragService } from '../../services/ragService';
 import { visionService, ScreenAnalysis } from '../../services/visionService';
-import { useInputRouting } from '../../hooks/useInputRouting';
+// useInputRouting import removed — hook was called with discarded result (no side effects)
 import { cn } from '../../lib/utils';
 import { aiLogger } from '../../utils/logger';
 import './ai-scrollbars.css';
 
 interface EnhancedAIAssistantProps {
   className?: string;
-  onSwitchToTerminal?: () => void;
+  // onSwitchToTerminal removed — prop was never used in the component body
 }
 
 interface AICapability {
@@ -54,7 +54,8 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
   const activeTab = useSelector(selectActiveTab);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  useInputRouting(); // keep hook alive for side effects
+  // useInputRouting() removed — return values were discarded and the hook
+  // has no initialization side effects; calling it served no purpose.
   const [capabilities, setCapabilities] = useState<AICapability[]>([
     {
       id: 'rag',
@@ -236,8 +237,12 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
       }
     };
     
-    // Start screen monitoring for proactive assistance
+    // Start screen monitoring for proactive assistance.
+    // Return a cleanup that stops it when capabilities changes or component unmounts.
     visionService.startScreenMonitoring(handleScreenChange, 10000);
+    return () => {
+      try { visionService.stopScreenMonitoring?.(); } catch { /* non-fatal */ }
+    };
   }, [capabilities]);
 
   const handleProactiveSuggestion = async (suggestion: string, context: any) => {
@@ -277,8 +282,13 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
       return analysis;
     } catch (error) {
       aiLogger.error('Screen capture failed', error as Error, 'capture_failed');
-      // Show error to user
-      alert(`Screen capture failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // Show error in AI conversation instead of native alert()
+      if (activeTab) {
+        dispatch(addAIMessage({
+          tabId: activeTab.id,
+          message: { role: 'assistant', content: `❌ Screen capture failed: ${error instanceof Error ? error.message : 'Unknown error'}`, timestamp: new Date() }
+        }));
+      }
       throw error;
     }
   };

@@ -24,7 +24,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 interface NewTabModalProps {
   onCreateTab: (config: NewTabConfig) => void;
   onClose: () => void;
-  isOpen?: boolean;
+  // isOpen removed — was declared but never read inside the component
 }
 
 export const NewTabModal: React.FC<NewTabModalProps> = ({ onCreateTab, onClose }) => {
