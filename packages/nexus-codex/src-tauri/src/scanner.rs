@@ -97,3 +97,37 @@ pub fn scan_local(config: &Config) -> Vec<(PathBuf, DocType, u64)> {
 
     results
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn doc_type_extensions() {
+        assert_eq!(doc_type_for_extension("md"), Some(DocType::Markdown));
+        assert_eq!(doc_type_for_extension("MD"), Some(DocType::Markdown));
+        assert_eq!(doc_type_for_extension("markdown"), Some(DocType::Markdown));
+        assert_eq!(doc_type_for_extension("txt"), Some(DocType::Text));
+        assert_eq!(doc_type_for_extension("pdf"), Some(DocType::Pdf));
+        assert_eq!(doc_type_for_extension("rst"), Some(DocType::Rst));
+        assert_eq!(doc_type_for_extension("adoc"), Some(DocType::Adoc));
+        assert_eq!(doc_type_for_extension("asciidoc"), Some(DocType::Adoc));
+        assert_eq!(doc_type_for_extension("rs"), None);
+        assert_eq!(doc_type_for_extension("py"), None);
+        assert_eq!(doc_type_for_extension(""), None);
+    }
+
+    #[test]
+    fn excluded_path_matching() {
+        let excluded = vec![
+            "node_modules".to_string(),
+            "target".to_string(),
+            ".git".to_string(),
+        ];
+        assert!(is_excluded("/home/user/project/node_modules/lodash/README.md", &excluded));
+        assert!(is_excluded("/home/user/project/target/debug/foo", &excluded));
+        assert!(is_excluded("/home/user/project/.git/config", &excluded));
+        assert!(!is_excluded("/home/user/project/src/README.md", &excluded));
+        assert!(!is_excluded("/home/user/my-target-project/README.md", &excluded));
+    }
+}

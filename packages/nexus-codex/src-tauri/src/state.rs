@@ -32,8 +32,9 @@ pub fn new_registry() -> SharedScanRegistry {
 
 pub type SharedConfig = Arc<Mutex<Config>>;
 
-pub fn new_config() -> SharedConfig {
-    Arc::new(Mutex::new(Config::default()))
+/// Create a new config state from an already-loaded Config.
+pub fn wrap_config(cfg: Config) -> SharedConfig {
+    Arc::new(Mutex::new(cfg))
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

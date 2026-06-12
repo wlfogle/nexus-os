@@ -196,6 +196,86 @@ pub fn export_markdown(report: &Report, output_path: &str) -> Result<String> {
     Ok(absolute_path(output_path))
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{DocResult, DocSource, DocStatus, DocType};
+
+    fn make_doc(status: DocStatus, source: DocSource, repo: Option<&str>, is_pdf: bool) -> DocResult {
+        DocResult {
+            path: "/tmp/test.md".to_string(),
+            repo: repo.map(|s| s.to_string()),
+            repo_url: None,
+            source,
+            doc_type: if is_pdf { DocType::Pdf } else { DocType::Markdown },
+            status,
+            confidence: 0.9,
+            staleness_score: 0.5,
+            reason: "test".to_string(),
+            evidence: "test evidence".to_string(),
+            suggested_rewrite: None,
+            last_modified: None,
+            last_commit_date: None,
+            related_code_age_days: None,
+            file_size_bytes: 1024,
+        }
+    }
+
+    #[test]
+    fn summary_counts_correctly() {
+        let results = vec![
+            make_doc(DocStatus::Current,    DocSource::Local,  Some("repo-a"), false),
+            make_doc(DocStatus::Stale,      DocSource::Local,  Some("repo-a"), false),
+            make_doc(DocStatus::Outdated,   DocSource::Github, Some("repo-b"), false),
+            make_doc(DocStatus::Orphaned,   DocSource::Local,  None,           true),
+            make_doc(DocStatus::NeedsReview,DocSource::Github, Some("repo-c"), true),
+        ];
+        let config = Config::default();
+        let report = build_report("test-id", "llama3", &config, results, 42.0);
+        let s = &report.summary;
+        assert_eq!(s.total, 5);
+        assert_eq!(s.current, 1);
+        assert_eq!(s.stale, 1);
+        assert_eq!(s.outdated, 1);
+        assert_eq!(s.orphaned, 1);
+        assert_eq!(s.needs_review, 1);
+        assert_eq!(s.local_repos_scanned, 1); // only "repo-a"
+        assert_eq!(s.github_repos_scanned, 2); // "repo-b" and "repo-c"
+        assert_eq!(s.pdfs_scanned, 2);
+        assert!((s.scan_duration_secs - 42.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn export_markdown_round_trip() {
+        let config = Config::default();
+        let results = vec![make_doc(DocStatus::Stale, DocSource::Local, Some("test-repo"), false)];
+        let report = build_report("scan-001", "qwen2.5", &config, results, 1.5);
+        let path = "/tmp/nexus_codex_test_report.md";
+        let written = export_markdown(&report, path).expect("export_markdown failed");
+        let content = std::fs::read_to_string(path).expect("could not read output");
+        assert!(content.contains("Nexus Codex"));
+        assert!(content.contains("scan-001"));
+        assert!(content.contains("qwen2.5"));
+        assert!(content.contains("Stale"));
+        assert!(!written.is_empty());
+    }
+
+    #[test]
+    fn export_json_is_valid() {
+        let config = Config::default();
+        let results = vec![make_doc(DocStatus::Current, DocSource::Github, Some("repo"), false)];
+        let report = build_report("scan-002", "mistral", &config, results, 0.5);
+        let path = "/tmp/nexus_codex_test_report.json";
+        export_json(&report, path).expect("export_json failed");
+        let content = std::fs::read_to_string(path).expect("could not read output");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&content).expect("output is not valid JSON");
+        assert_eq!(parsed["scan_id"], "scan-002");
+        assert_eq!(parsed["model_used"], "mistral");
+        assert_eq!(parsed["summary"]["total"], 1);
+    }
+}
+
 /// Serialize the report to pretty JSON and write it to `output_path`.
 pub fn export_json(report: &Report, output_path: &str) -> Result<String> {
     let json = serde_json::to_string_pretty(report)

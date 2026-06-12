@@ -174,6 +174,91 @@ fn parse_status(raw: &str) -> DocStatus {
 /// Sends a focused prompt to Ollama's `/api/generate` endpoint with
 /// `format: "json"` so the model returns a structured classification. If the
 /// model's confidence is below 0.5, the status is forced to `NeedsReview`.
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::OllamaModel;
+
+    fn make_model(name: &str, size_gb: f32, score: f32) -> OllamaModel {
+        OllamaModel {
+            name: name.to_string(),
+            size_gb,
+            score,
+            recommended: false,
+            family: "test".to_string(),
+        }
+    }
+
+    #[test]
+    fn score_ordering() {
+        assert!(score_model("qwen2.5-coder", 0) > score_model("codestral", 0));
+        assert!(score_model("codestral", 0) > score_model("deepseek-coder", 0));
+        assert!(score_model("deepseek-coder", 0) > score_model("codellama", 0));
+        assert!(score_model("llama3.1", 0) > score_model("llama3", 0));
+        assert!(score_model("mistral", 0) > score_model("gemma", 0));
+    }
+
+    #[test]
+    fn size_bonus_applied() {
+        // A 10 GB model gets +1.0 bonus (10 * 0.1)
+        let score_0gb = score_model("mistral", 0);
+        let score_10gb = score_model("mistral", 10_000_000_000);
+        assert!((score_10gb - score_0gb - 1.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn parse_status_known_values() {
+        assert_eq!(parse_status("current"), DocStatus::Current);
+        assert_eq!(parse_status("STALE"), DocStatus::Stale);
+        assert_eq!(parse_status("outdated"), DocStatus::Outdated);
+        assert_eq!(parse_status("orphaned"), DocStatus::Orphaned);
+        assert_eq!(parse_status("needs_review"), DocStatus::NeedsReview);
+        assert_eq!(parse_status("garbage"), DocStatus::NeedsReview);
+    }
+
+    #[test]
+    fn select_model_override() {
+        let models = vec![
+            make_model("llama3", 4.0, 5.0),
+            make_model("qwen2.5", 8.0, 10.5),
+        ];
+        // Override selects the named model even if it is not recommended.
+        assert_eq!(
+            select_model(&models, Some("llama3")),
+            Some("llama3".to_string())
+        );
+    }
+
+    #[test]
+    fn select_model_recommended() {
+        let mut models = vec![
+            make_model("llama3", 4.0, 5.0),
+            make_model("qwen2.5", 8.0, 10.5),
+        ];
+        models[1].recommended = true;
+        assert_eq!(
+            select_model(&models, None),
+            Some("qwen2.5".to_string())
+        );
+    }
+
+    #[test]
+    fn select_model_no_models() {
+        assert_eq!(select_model(&[], None), None);
+    }
+
+    #[test]
+    fn select_model_invalid_override_falls_back() {
+        let mut models = vec![make_model("llama3", 4.0, 5.0)];
+        models[0].recommended = true;
+        // Override names a model that is not in the list.
+        assert_eq!(
+            select_model(&models, Some("nonexistent")),
+            Some("llama3".to_string())
+        );
+    }
+}
+
 pub async fn analyze_doc(
     ollama_url: &str,
     model: &str,

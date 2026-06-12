@@ -117,6 +117,28 @@ pub fn get_file_git_age(path: &Path) -> Option<String> {
 /// Return how many days have elapsed since the most recent commit touching `dir`.
 ///
 /// Uses `git log --format=%aI -1 -- <dir>` and compares to the current time.
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn repo_name_from_https_url() {
+        assert_eq!(repo_name_from_url("https://github.com/wlfogle/nexus-os.git"), "nexus-os");
+        assert_eq!(repo_name_from_url("https://github.com/wlfogle/nexus-os"), "nexus-os");
+    }
+
+    #[test]
+    fn repo_name_from_ssh_url() {
+        assert_eq!(repo_name_from_url("git@github.com:wlfogle/nexus-os.git"), "nexus-os");
+        assert_eq!(repo_name_from_url("git@github.com:wlfogle/nexus-os"), "nexus-os");
+    }
+
+    #[test]
+    fn repo_name_trailing_slash() {
+        assert_eq!(repo_name_from_url("https://github.com/wlfogle/nexus-os/"), "nexus-os");
+    }
+}
+
 pub fn get_dir_latest_code_age(dir: &Path) -> Option<i64> {
     let work_dir: PathBuf = if dir.is_dir() {
         dir.to_path_buf()

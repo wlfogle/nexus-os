@@ -20,7 +20,7 @@ pub fn run() {
         .setup(|app| {
             // Load persisted config (falls back to defaults if absent)
             let cfg = config::load_config().unwrap_or_default();
-            app.manage(std::sync::Arc::new(std::sync::Mutex::new(cfg)));
+            app.manage(state::wrap_config(cfg));
             app.manage(state::new_registry());
             Ok(())
         })
