@@ -564,7 +564,7 @@ NEVER call this with empty cmd.",
             kind: "function",
             function: ToolFunction {
                 name: "analyze_code",
-                description: "Analyze a source code file using AI for a specific issue type. Use this for deep AI-powered code review beyond what a compiler reports.",
+                description: "Analyze a SINGLE source code FILE (not a directory) using AI for a specific issue type. Use this for deep AI-powered code review of one file. For scanning a directory or project for errors use run_cmd with cargo check or npx tsc instead.",
                 parameters: serde_json::json!({
                     "type": "object",
                     "properties": {
@@ -1304,6 +1304,89 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str) -> S
             let analysis_type = args["analysis_type"].as_str().unwrap_or("errors");
             if path.is_empty() { return "ERROR: path is required".to_string(); }
 
+            // If path is a DIRECTORY: run the compiler/type-checker for the project type.
+            // This is the correct approach for 'scan /path for errors' — same as Warp's
+            // RequestCommandOutput with `cargo check` or `npx tsc --noEmit`.
+            if std::path::Path::new(path).is_dir() {
+                let has_cargo = std::path::Path::new(path).join("Cargo.toml").exists();
+                let has_package = std::path::Path::new(path).join("package.json").exists();
+                let mut results: Vec<String> = Vec::new();
+
+                if has_cargo {
+                    match tokio::time::timeout(
+                        Duration::from_secs(120),
+                        tokio::process::Command::new("cargo")
+                            .args(["check", "--message-format=short", "2>&1"])
+                            .current_dir(path)
+                            .output()
+                    ).await {
+                        Ok(Ok(out)) => {
+                            let combined = format!("{}{}",
+                                String::from_utf8_lossy(&out.stdout),
+                                String::from_utf8_lossy(&out.stderr));
+                            let trimmed = combined.trim();
+                            let label = if out.status.success() {
+                                format!("cargo check: PASSED (0 errors)")
+                            } else {
+                                let t = if trimmed.len() > 8000 { &trimmed[..8000] } else { trimmed };
+                                format!("cargo check errors:\n{}", t)
+                            };
+                            results.push(label);
+                        }
+                        Ok(Err(e)) => results.push(format!("cargo check failed to run: {}", e)),
+                        Err(_) => results.push("cargo check timed out after 120s".to_string()),
+                    }
+                }
+
+                if has_package {
+                    match tokio::time::timeout(
+                        Duration::from_secs(60),
+                        tokio::process::Command::new("sh")
+                            .arg("-c").arg("npx tsc --noEmit 2>&1")
+                            .current_dir(path)
+                            .output()
+                    ).await {
+                        Ok(Ok(out)) => {
+                            let combined = String::from_utf8_lossy(&out.stdout).to_string();
+                            let trimmed = combined.trim();
+                            let label = if out.status.success() {
+                                "npx tsc: PASSED (0 type errors)".to_string()
+                            } else {
+                                let t = if trimmed.len() > 8000 { &trimmed[..8000] } else { trimmed };
+                                format!("TypeScript errors:\n{}", t)
+                            };
+                            results.push(label);
+                        }
+                        Ok(Err(e)) => results.push(format!("tsc failed to run: {}", e)),
+                        Err(_) => results.push("tsc timed out after 60s".to_string()),
+                    }
+                }
+
+                if !has_cargo && !has_package {
+                    // Generic: grep for obvious error patterns and TODO/FIXME markers
+                    let cmd = format!(
+                        "grep -rn --include='*.rs' --include='*.ts' --include='*.py' --include='*.go' \
+                         'TODO\\|FIXME\\|HACK\\|XXX\\|panic!\\|unimplemented!' '{}' 2>/dev/null | head -50",
+                        path
+                    );
+                    match tokio::process::Command::new("sh").arg("-c").arg(&cmd).output().await {
+                        Ok(out) => {
+                            let r = String::from_utf8_lossy(&out.stdout).to_string();
+                            results.push(if r.trim().is_empty() {
+                                "No TODO/FIXME/HACK markers found".to_string()
+                            } else {
+                                format!("Markers found:\n{}", r)
+                            });
+                        }
+                        Err(e) => results.push(format!("grep failed: {}", e)),
+                    }
+                }
+
+                return format!("=== Directory scan: {} ===\nAnalysis: {}\n\n{}",
+                    path, analysis_type, results.join("\n\n"));
+            }
+
+            // Single FILE path: read and send to Ollama for AI analysis
             let content = match tokio::fs::read_to_string(path).await {
                 Ok(c) => c,
                 Err(e) => return format!("ERROR reading {}: {}", path, e),

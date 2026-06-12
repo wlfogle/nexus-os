@@ -15,8 +15,8 @@ class OllamaCodeCheckerGUI:
         self.root.title("Ollama Code Checker")
         self.root.geometry("900x700")
         
-        # Configuration
-        self.models_path = "/run/media/garuda/73cf9511-0af0-4ac4-9d83-ee21eb17ff5d/models"
+        # Configuration — auto-detect models path from environment or common locations
+        self.models_path = self._detect_models_path()
         
         # Variables
         self.analysis_running = False
@@ -29,6 +29,31 @@ class OllamaCodeCheckerGUI:
         self.setup_ui()
         self.load_available_models()
         self.start_ollama_service()
+    
+    def _detect_models_path(self):
+        """Auto-detect Ollama models path from env var or common locations."""
+        # 1. Respect OLLAMA_MODELS env var if set
+        env_path = os.environ.get("OLLAMA_MODELS", "")
+        if env_path and os.path.isdir(env_path):
+            return env_path
+        
+        # 2. Scan common external drive mount points for models directory
+        user = os.environ.get("USER", os.path.basename(Path.home()))
+        scan_roots = [
+            f"/media/{user}",
+            f"/run/media/{user}",
+            "/mnt",
+        ]
+        for root in scan_roots:
+            if not os.path.isdir(root):
+                continue
+            for drive in os.listdir(root):
+                candidate = os.path.join(root, drive, "models")
+                if os.path.isdir(candidate):
+                    return candidate
+        
+        # 3. Default Ollama models location
+        return str(Path.home() / ".ollama" / "models")
     
     def setup_ui(self):
         # Main frame
@@ -77,7 +102,11 @@ class OllamaCodeCheckerGUI:
         target_frame.grid(row=3, column=1, columnspan=2, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
         target_frame.columnconfigure(0, weight=1)
         
-        self.target_var = tk.StringVar(value="/home/garuda/nexus-terminal")
+        # Default target to nexus-os packages dir if it exists, otherwise home
+        _default_target = str(Path.home() / "nexus-os" / "packages" / "nexus-terminal")
+        if not os.path.isdir(_default_target):
+            _default_target = str(Path.cwd())
+        self.target_var = tk.StringVar(value=_default_target)
         self.target_entry = ttk.Entry(target_frame, textvariable=self.target_var, font=('Arial', 9))
         self.target_entry.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, 10))
         
