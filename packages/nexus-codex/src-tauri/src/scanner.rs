@@ -5,7 +5,7 @@ use ignore::WalkBuilder;
 use crate::types::{Config, DocType};
 
 /// Map a file extension to a [`DocType`], if it is a documentation file we care about.
-fn doc_type_for_extension(ext: &str) -> Option<DocType> {
+pub(crate) fn doc_type_for_extension(ext: &str) -> Option<DocType> {
     match ext.to_ascii_lowercase().as_str() {
         "md" | "markdown" => Some(DocType::Markdown),
         "txt" => Some(DocType::Text),
