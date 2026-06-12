@@ -1304,20 +1304,62 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str) -> S
             let analysis_type = args["analysis_type"].as_str().unwrap_or("errors");
             if path.is_empty() { return "ERROR: path is required".to_string(); }
 
-            // If path is a DIRECTORY: run the compiler/type-checker for the project type.
-            // This is the correct approach for 'scan /path for errors' — same as Warp's
-            // RequestCommandOutput with `cargo check` or `npx tsc --noEmit`.
+            // If path is a DIRECTORY: find all project roots and run real compiler checks.
+            // Handles both single projects (has Cargo.toml/package.json at root) and
+            // monorepos (recursively finds up to 8 project roots in subdirectories).
             if std::path::Path::new(path).is_dir() {
-                let has_cargo = std::path::Path::new(path).join("Cargo.toml").exists();
-                let has_package = std::path::Path::new(path).join("package.json").exists();
                 let mut results: Vec<String> = Vec::new();
 
-                if has_cargo {
+                // Helper: locate Cargo.toml dirs (excluding build outputs)
+                let find_cargo_dirs = async |root: &str| -> Vec<String> {
+                    let cmd = format!(
+                        "find '{}' -name 'Cargo.toml' \
+                         -not -path '*/target/*' -not -path '*/.git/*' \
+                         -not -path '*/node_modules/*' 2>/dev/null | head -8",
+                        root
+                    );
+                    match tokio::process::Command::new("sh").arg("-c").arg(&cmd).output().await {
+                        Ok(out) => String::from_utf8_lossy(&out.stdout)
+                            .lines()
+                            .filter_map(|l| std::path::Path::new(l.trim()).parent()
+                                .map(|p| p.to_string_lossy().to_string()))
+                            .collect(),
+                        Err(_) => vec![],
+                    }
+                };
+
+                // Helper: locate package.json dirs (excluding node_modules)
+                let find_package_dirs = async |root: &str| -> Vec<String> {
+                    let cmd = format!(
+                        "find '{}' -name 'package.json' \
+                         -not -path '*/node_modules/*' -not -path '*/.git/*' \
+                         2>/dev/null | head -5",
+                        root
+                    );
+                    match tokio::process::Command::new("sh").arg("-c").arg(&cmd).output().await {
+                        Ok(out) => String::from_utf8_lossy(&out.stdout)
+                            .lines()
+                            .filter_map(|l| std::path::Path::new(l.trim()).parent()
+                                .map(|p| p.to_string_lossy().to_string()))
+                            .collect(),
+                        Err(_) => vec![],
+                    }
+                };
+
+                let cargo_dirs = find_cargo_dirs(path).await;
+                let package_dirs = find_package_dirs(path).await;
+
+                // Run cargo check in each Rust project root
+                for dir in &cargo_dirs {
+                    let short = std::path::Path::new(dir)
+                        .strip_prefix(path).unwrap_or(std::path::Path::new(dir))
+                        .display().to_string();
+                    let prefix = if short.is_empty() { String::new() } else { format!("[{}] ", short) };
                     match tokio::time::timeout(
-                        Duration::from_secs(120),
+                        Duration::from_secs(90),
                         tokio::process::Command::new("cargo")
-                            .args(["check", "--message-format=short", "2>&1"])
-                            .current_dir(path)
+                            .args(["check", "--message-format=short"])
+                            .current_dir(dir)
                             .output()
                     ).await {
                         Ok(Ok(out)) => {
@@ -1325,65 +1367,56 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str) -> S
                                 String::from_utf8_lossy(&out.stdout),
                                 String::from_utf8_lossy(&out.stderr));
                             let trimmed = combined.trim();
-                            let label = if out.status.success() {
-                                format!("cargo check: PASSED (0 errors)")
+                            results.push(if out.status.success() {
+                                format!("{}cargo check: ✅ PASSED", prefix)
                             } else {
-                                let t = if trimmed.len() > 8000 { &trimmed[..8000] } else { trimmed };
-                                format!("cargo check errors:\n{}", t)
-                            };
-                            results.push(label);
+                                let t = if trimmed.len() > 4000 { &trimmed[..4000] } else { trimmed };
+                                format!("{}cargo check ❌ ERRORS:\n{}", prefix, t)
+                            });
                         }
-                        Ok(Err(e)) => results.push(format!("cargo check failed to run: {}", e)),
-                        Err(_) => results.push("cargo check timed out after 120s".to_string()),
+                        Ok(Err(e)) => results.push(format!("{}cargo check failed to run: {}", prefix, e)),
+                        Err(_) => results.push(format!("{}cargo check timed out (90s)", prefix)),
                     }
                 }
 
-                if has_package {
+                // Run tsc in each TypeScript project root
+                for dir in &package_dirs {
+                    let short = std::path::Path::new(dir)
+                        .strip_prefix(path).unwrap_or(std::path::Path::new(dir))
+                        .display().to_string();
+                    let prefix = if short.is_empty() { String::new() } else { format!("[{}] ", short) };
                     match tokio::time::timeout(
                         Duration::from_secs(60),
                         tokio::process::Command::new("sh")
                             .arg("-c").arg("npx tsc --noEmit 2>&1")
-                            .current_dir(path)
+                            .current_dir(dir)
                             .output()
                     ).await {
                         Ok(Ok(out)) => {
                             let combined = String::from_utf8_lossy(&out.stdout).to_string();
                             let trimmed = combined.trim();
-                            let label = if out.status.success() {
-                                "npx tsc: PASSED (0 type errors)".to_string()
+                            results.push(if out.status.success() {
+                                format!("{}tsc: ✅ PASSED", prefix)
                             } else {
-                                let t = if trimmed.len() > 8000 { &trimmed[..8000] } else { trimmed };
-                                format!("TypeScript errors:\n{}", t)
-                            };
-                            results.push(label);
-                        }
-                        Ok(Err(e)) => results.push(format!("tsc failed to run: {}", e)),
-                        Err(_) => results.push("tsc timed out after 60s".to_string()),
-                    }
-                }
-
-                if !has_cargo && !has_package {
-                    // Generic: grep for obvious error patterns and TODO/FIXME markers
-                    let cmd = format!(
-                        "grep -rn --include='*.rs' --include='*.ts' --include='*.py' --include='*.go' \
-                         'TODO\\|FIXME\\|HACK\\|XXX\\|panic!\\|unimplemented!' '{}' 2>/dev/null | head -50",
-                        path
-                    );
-                    match tokio::process::Command::new("sh").arg("-c").arg(&cmd).output().await {
-                        Ok(out) => {
-                            let r = String::from_utf8_lossy(&out.stdout).to_string();
-                            results.push(if r.trim().is_empty() {
-                                "No TODO/FIXME/HACK markers found".to_string()
-                            } else {
-                                format!("Markers found:\n{}", r)
+                                let t = if trimmed.len() > 4000 { &trimmed[..4000] } else { trimmed };
+                                format!("{}tsc ❌ ERRORS:\n{}", prefix, t)
                             });
                         }
-                        Err(e) => results.push(format!("grep failed: {}", e)),
+                        Ok(Err(e)) => results.push(format!("{}tsc failed: {}", prefix, e)),
+                        Err(_) => results.push(format!("{}tsc timed out (60s)", prefix)),
                     }
                 }
 
-                return format!("=== Directory scan: {} ===\nAnalysis: {}\n\n{}",
-                    path, analysis_type, results.join("\n\n"));
+                if results.is_empty() {
+                    results.push(
+                        "No Rust (Cargo.toml) or TypeScript (package.json) projects found.\n\
+                         Use run_cmd with a specific command to check other project types.".to_string()
+                    );
+                }
+
+                return format!("=== Directory scan: {} ===\nChecked: {} Rust + {} TS projects\n\n{}",
+                    path, cargo_dirs.len(), package_dirs.len(),
+                    results.join("\n\n"));
             }
 
             // Single FILE path: read and send to Ollama for AI analysis
