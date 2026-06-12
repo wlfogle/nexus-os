@@ -7,7 +7,8 @@ RELEASE="/home/loufogle/nexus-os/packages/nexus-terminal/src-tauri/target/releas
 DIR="/home/loufogle/nexus-os/packages/nexus-terminal"
 
 if [ -f "$RELEASE" ]; then
-  exec "$RELEASE"
+  # cd to package root so the binary finds .env, icons, and other assets
+  cd "$DIR" && exec "$RELEASE"
 else
   cd "$DIR" && exec npm run tauri dev
 fi
