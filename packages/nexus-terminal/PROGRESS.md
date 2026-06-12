@@ -329,6 +329,16 @@ Icon: `src-tauri/icons/128x128.png` — used by both entries.
 | `get_execution_order` returned reversed topological order | Removed incorrect `order.reverse()` call |
 | `isShellCommand("?")` returned `true` (shell) | Strip trailing `?,!.,` before pattern checks — mirrors Warp parser.rs line 32 (`WordDelimiter::Separator`) |
 
+## Phase 3 — ollama-code-checker Integration (2026-06-12)
+
+### Fixes & Improvements from standalone ollama-code-checker study
+| Fix | Root Cause | Result |
+|-----|-----------|--------|
+| Question card never appeared on dir scan | `"\u274c"` is invalid Rust escape syntax; app compiled with old binary | Fixed: use literal `'❌'` char — card now fires unconditionally |
+| Single-file AI analysis model refusals | Soft prompt let models say "please provide code" | Fixed: forceful prefix + 13-phrase unhelpful-response detection + automatic retry |
+| `autofix_code` only handled single files | Directory path returned error | Fixed: directory mode finds all code files recursively, large-codebase guard (>20 files → ask user) |
+| Autofix prompt too vague | Old: "Fix all issues" | New: explicit list (syntax, unused imports, commented-out code, style, performance) |
+
 ## Remaining Known Issues
 - OSC 133 hooks disabled (removed to fix display noise)
 - `NewTabModal.tsx` / `TerminalTabManager.tsx` placeholder components still unused

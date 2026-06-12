@@ -1510,9 +1510,61 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
                     );
                 }
 
-                return format!("=== Directory scan: {} ===\nChecked: {} Rust + {} TS projects\n\n{}",
+                let summary = format!("=== Directory scan: {} ===\nChecked: {} Rust + {} TS projects\n\n{}",
                     path, cargo_dirs.len(), package_dirs.len(),
                     results.join("\n\n"));
+
+                // If any errors were found, automatically ask the user what to do.
+                // This is unconditional — no model cooperation required.
+                let has_errors = results.iter().any(|r| r.contains('❌') || r.contains("ERRORS"));
+                if has_errors && !session_id.is_empty() {
+                    // Count error lines for the question
+                    let error_count = results.iter().filter(|r| r.contains('❌') || r.contains("ERRORS")).count();
+                    let question = format!(
+                        "Found errors in {} project{}. What would you like to do?",
+                        error_count,
+                        if error_count == 1 { "" } else { "s" }
+                    );
+                    let options = vec![
+                        "Fix all errors".to_string(),
+                        "Report only".to_string(),
+                    ];
+
+                    // Emit question event — frontend shows buttons immediately
+                    if let Some(app) = crate::terminal::APP_HANDLE.get() {
+                        let _ = app.emit("agent-question", AgentQuestionEvent {
+                            session_id: session_id.to_string(),
+                            question: question.clone(),
+                            options: options.clone(),
+                        });
+                    }
+
+                    // Store oneshot and wait
+                    let (tx, rx) = tokio::sync::oneshot::channel::<String>();
+                    {
+                        let mut map = pending_answers().lock().unwrap_or_else(|e| e.into_inner());
+                        map.insert(session_id.to_string(), tx);
+                    }
+                    let user_choice = match tokio::time::timeout(Duration::from_secs(120), rx).await {
+                        Ok(Ok(answer)) => answer,
+                        _ => {
+                            let mut map = pending_answers().lock().unwrap_or_else(|e| e.into_inner());
+                            map.remove(session_id);
+                            "Report only".to_string()
+                        }
+                    };
+
+                    // Append the user's decision so the agent knows how to proceed
+                    return format!("{summary}\n\n║ USER DECISION: {user_choice} ║\n{}",
+                        if user_choice.to_lowercase().contains("fix") {
+                            "Now fix every error listed above: read each failing file, apply the minimal fix with edit_file, run cargo check / tsc to verify, iterate until all pass, then git_commit."
+                        } else {
+                            "User chose report only. Provide a concise summary of what was found without making any changes."
+                        }
+                    );
+                }
+
+                return summary;
             }
 
             // Single FILE path: read and send to Ollama for AI analysis
@@ -1530,37 +1582,84 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
             let code = if content.len() > 24_000 {
                 format!("{}\n... [truncated at 24KB]", &content[..24_000])
             } else { content };
-            let prompt = match analysis_type {
-                "errors" => format!("Analyze this {language} code for syntax errors, type errors, logic issues, and bugs. Be specific with line numbers.\n\n```{ext}\n{code}\n```\n\nList all errors/bugs with exact line numbers and explanations."),
-                "style" => format!("Analyze this {language} code for style issues, naming conventions, formatting, and best practices.\n\n```{ext}\n{code}\n```"),
-                "security" => format!("Analyze this {language} code for security vulnerabilities, unsafe operations, and input validation issues. Prioritize by severity.\n\n```{ext}\n{code}\n```"),
-                "performance" => format!("Analyze this {language} code for performance bottlenecks, inefficient algorithms, and optimization opportunities. Give specific fixes.\n\n```{ext}\n{code}\n```"),
-                "cleanup" => format!("Analyze this {language} code for dead code, stub functions, unused variables/imports, and zombie code that can be removed.\n\nFor each finding state: exact line numbers, why it's unused/stub, whether it's safe to remove.\n\n```{ext}\n{code}\n```"),
-                _ => format!("Analyze this {language} code comprehensively: errors, security, performance, style, and dead code cleanup.\n\n```{ext}\n{code}\n```"),
+            // Forceful prompt prefix — prevents smaller models from refusing to analyze
+            let base_prefix = format!(
+                "ANALYZE THIS {} CODE:\n\n```{}\n{}\n```\n\nYou must analyze the code above. Do not ask for more information — the code is right there. Analyze it now.\n\n",
+                language.to_uppercase(), ext, code
+            );
+            let task_suffix = match analysis_type {
+                "errors" => "TASK: Identify all syntax errors, type errors, logic issues, and potential bugs.\nFor each finding: exact line numbers, description, suggested fix.",
+                "style" => "TASK: Review code style, naming conventions, formatting, documentation quality, and best practice compliance.\nFor each finding: line numbers, description, recommended improvement.",
+                "security" => "TASK: Identify security vulnerabilities, unsafe operations, input validation issues, authentication problems, data exposure risks.\nFor each finding: line numbers, severity (High/Medium/Low), description, recommended fix.",
+                "performance" => "TASK: Identify performance bottlenecks, inefficient algorithms, memory issues, I/O optimization opportunities.\nFor each finding: line numbers, impact (High/Medium/Low), description, suggested optimization.",
+                "cleanup" => "TASK: Identify dead code, stub functions, unused variables/imports, zombie code, commented-out code, duplicate code.\nFor each finding: exact line numbers, why it is unused/stub, whether it is safe to remove.",
+                _ => "TASK: Comprehensive analysis — errors, security, performance, style, dead code.\nFor each finding: category, line numbers, description, priority (High/Medium/Low), recommended fix.",
             };
+            let prompt = format!("{base_prefix}{task_suffix}");
+
             let ollama_host = std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
             let ollama_port = std::env::var("OLLAMA_PORT").unwrap_or_else(|_| "11434".to_string());
             let model = std::env::var("AGENT_MODEL").unwrap_or_else(|_| "hermes3:8b".to_string());
             let url = format!("http://{}:{}/api/generate", ollama_host, ollama_port);
             let client = reqwest::Client::builder().timeout(Duration::from_secs(120))
                 .build().unwrap_or_else(|_| reqwest::Client::new());
-            let body = serde_json::json!({
-                "model": model, "prompt": prompt, "stream": false,
-                "options": { "temperature": 0.1, "num_predict": 2048 }
-            });
-            match client.post(&url).json(&body).send().await {
-                Ok(resp) if resp.status().is_success() => {
-                    match resp.json::<serde_json::Value>().await {
-                        Ok(data) => {
-                            let analysis = data["response"].as_str().unwrap_or("No response").to_string();
-                            format!("=== Code Analysis ({analysis_type}) ===\nFile: {path}\nLanguage: {language}\n\n{analysis}")
+
+            // Helper to call Ollama generate
+            let call_ollama = |p: String| {
+                let client2 = client.clone();
+                let url2 = url.clone();
+                let model2 = model.clone();
+                async move {
+                    let body = serde_json::json!({
+                        "model": model2, "prompt": p, "stream": false,
+                        "options": { "temperature": 0.1, "num_predict": 2048 }
+                    });
+                    match client2.post(&url2).json(&body).send().await {
+                        Ok(resp) if resp.status().is_success() => {
+                            match resp.json::<serde_json::Value>().await {
+                                Ok(data) => Ok(data["response"].as_str().unwrap_or("").to_string()),
+                                Err(e) => Err(format!("parse error: {}", e)),
+                            }
                         }
-                        Err(e) => format!("ERROR: {}", e),
+                        Ok(resp) => Err(format!("Ollama returned {}", resp.status())),
+                        Err(e) => Err(format!("{}", e)),
                     }
                 }
-                Ok(resp) => format!("ERROR: Ollama returned {}", resp.status()),
+            };
+
+            // Unhelpful-response phrases that indicate the model didn't actually analyze the code
+            let unhelpful = [
+                "i don't have access", "i cannot access", "i'm unable to see",
+                "i can't see", "no code provided", "code is not provided",
+                "i need to see", "please provide", "provide me with",
+                "i'd be happy to help", "sure, i can analyze",
+                "please provide the file", "it appears to be incomplete",
+                "cannot provide a detailed analysis",
+            ];
+
+            let analysis = match call_ollama(prompt).await {
+                Ok(text) => {
+                    let lower = text.to_lowercase();
+                    let is_unhelpful = unhelpful.iter().any(|p| lower.contains(p));
+                    if is_unhelpful || text.trim().is_empty() {
+                        // Retry with an even simpler direct prompt
+                        let retry_prompt = format!(
+                            "Here is {language} code to analyze:\n\n{code}\n\n\
+                             Find any errors, bugs, style issues, security problems, or dead code. \
+                             Be specific about what you find."
+                        );
+                        match call_ollama(retry_prompt).await {
+                            Ok(t) if !t.trim().is_empty() => format!("[retried — model initially refused]\n{}", t),
+                            Ok(_) => "No analysis produced after retry.".to_string(),
+                            Err(e) => format!("ERROR on retry: {}", e),
+                        }
+                    } else {
+                        text
+                    }
+                }
                 Err(e) => format!("ERROR: {}", e),
-            }
+            };
+            format!("=== Code Analysis ({analysis_type}) ===\nFile: {path}\nLanguage: {language}\n\n{analysis}")
         }
 
         "autofix_code" => {
@@ -1568,6 +1667,139 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
             let dry_run = args["dry_run"].as_bool().unwrap_or(false);
             if path.is_empty() { return "ERROR: path is required".to_string(); }
 
+            let ollama_host = std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+            let ollama_port = std::env::var("OLLAMA_PORT").unwrap_or_else(|_| "11434".to_string());
+            let model = std::env::var("AGENT_MODEL").unwrap_or_else(|_| "hermes3:8b".to_string());
+            let url = format!("http://{}:{}/api/generate", ollama_host, ollama_port);
+            let client = reqwest::Client::builder().timeout(Duration::from_secs(120))
+                .build().unwrap_or_else(|_| reqwest::Client::new());
+
+            // ── Directory mode: find all code files and fix each one ──────────
+            if std::path::Path::new(path).is_dir() {
+                let exts = ["rs", "ts", "tsx", "js", "jsx", "py", "go", "java", "cpp", "c", "h"];
+                let skip_dirs = ["node_modules", "target", "build", "dist", ".git", "__pycache__"];
+
+                let mut code_files: Vec<std::path::PathBuf> = Vec::new();
+                let mut stack = vec![std::path::PathBuf::from(path)];
+                while let Some(dir) = stack.pop() {
+                    let mut rd = match tokio::fs::read_dir(&dir).await {
+                        Ok(r) => r, Err(_) => continue,
+                    };
+                    while let Ok(Some(entry)) = rd.next_entry().await {
+                        let p = entry.path();
+                        if p.is_dir() {
+                            let name = p.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                            if !skip_dirs.contains(&name) { stack.push(p); }
+                        } else if let Some(e) = p.extension().and_then(|e| e.to_str()) {
+                            if exts.contains(&e) {
+                                // Skip files > 50 KB (too large for safe AI rewrite)
+                                if p.metadata().map(|m| m.len()).unwrap_or(0) < 50_000 {
+                                    code_files.push(p);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if code_files.is_empty() {
+                    return format!("No code files found in {}. Checked: {}",
+                        path, exts.join(", "));
+                }
+
+                // Large-codebase guard: ask user before processing many files
+                if code_files.len() > 20 && !session_id.is_empty() {
+                    let question = format!(
+                        "Found {} files to autofix in {}. This will rewrite all of them with AI fixes and create .bak backups. Continue?",
+                        code_files.len(), path
+                    );
+                    let options = vec!["Fix all files".to_string(), "Cancel".to_string()];
+                    if let Some(app) = crate::terminal::APP_HANDLE.get() {
+                        let _ = app.emit("agent-question", AgentQuestionEvent {
+                            session_id: session_id.to_string(),
+                            question: question.clone(),
+                            options: options.clone(),
+                        });
+                    }
+                    let (tx, rx) = tokio::sync::oneshot::channel::<String>();
+                    {
+                        let mut map = pending_answers().lock().unwrap_or_else(|e| e.into_inner());
+                        map.insert(session_id.to_string(), tx);
+                    }
+                    let answer = match tokio::time::timeout(Duration::from_secs(120), rx).await {
+                        Ok(Ok(a)) => a,
+                        _ => {
+                            let mut map = pending_answers().lock().unwrap_or_else(|e| e.into_inner());
+                            map.remove(session_id);
+                            "Cancel".to_string()
+                        }
+                    };
+                    if !answer.to_lowercase().contains("fix") {
+                        return format!("Autofix cancelled. ({} files would have been processed)", code_files.len());
+                    }
+                }
+
+                let total = code_files.len();
+                let mut fixed_count = 0usize;
+                let mut skipped_count = 0usize;
+                let mut results: Vec<String> = Vec::new();
+
+                for file_path in &code_files {
+                    let fstr = file_path.to_string_lossy().to_string();
+                    let content = match tokio::fs::read_to_string(file_path).await {
+                        Ok(c) => c, Err(e) => { results.push(format!("SKIP {fstr}: read error: {e}")); skipped_count += 1; continue; }
+                    };
+                    if content.trim().is_empty() { skipped_count += 1; continue; }
+                    let ext = file_path.extension().and_then(|e| e.to_str()).unwrap_or("text");
+                    let prompt = format!(
+                        "Fix the issues in this {ext} code:\n\n```{ext}\n{}\n```\n\nFix: syntax errors, remove unused imports/variables, remove commented-out code, improve style, optimize performance.\nReturn ONLY the fixed code in a ```{ext} code block. No explanations.",
+                        if content.len() > 30_000 { &content[..30_000] } else { &content }
+                    );
+                    let body = serde_json::json!({
+                        "model": model, "prompt": prompt, "stream": false,
+                        "options": { "temperature": 0.05, "num_predict": 4096 }
+                    });
+                    let response_text = match client.post(&url).json(&body).send().await {
+                        Ok(resp) if resp.status().is_success() => {
+                            match resp.json::<serde_json::Value>().await {
+                                Ok(data) => data["response"].as_str().unwrap_or("").to_string(),
+                                Err(_) => { skipped_count += 1; continue; }
+                            }
+                        }
+                        _ => { skipped_count += 1; continue; }
+                    };
+                    let fixed = extract_code_block(&response_text, ext);
+                    if fixed.trim().is_empty() || fixed.trim() == content.trim() {
+                        results.push(format!("OK (no changes): {fstr}"));
+                        continue;
+                    }
+                    if dry_run {
+                        results.push(format!("DRY RUN would fix: {fstr} ({} → {} lines)",
+                            content.lines().count(), fixed.lines().count()));
+                        fixed_count += 1;
+                        continue;
+                    }
+                    let backup = format!("{}.bak", fstr);
+                    if tokio::fs::write(&backup, &content).await.is_ok() {
+                        if tokio::fs::write(file_path, &fixed).await.is_ok() {
+                            results.push(format!("✅ Fixed: {fstr} ({} → {} lines)",
+                                content.lines().count(), fixed.lines().count()));
+                            fixed_count += 1;
+                        } else {
+                            results.push(format!("❌ Write failed: {fstr} (backup kept at {backup})"));
+                            skipped_count += 1;
+                        }
+                    } else {
+                        results.push(format!("❌ Backup failed, skipped: {fstr}"));
+                        skipped_count += 1;
+                    }
+                }
+
+                let mode = if dry_run { "Dry run" } else { "Autofix" };
+                return format!("=== {} complete: {} ===\nFixed: {}/{}  Skipped: {}\n\n{}",
+                    mode, path, fixed_count, total, skipped_count, results.join("\n"));
+            }
+
+            // ── Single file mode ──────────────────────────────────────────────
             let content = match tokio::fs::read_to_string(path).await {
                 Ok(c) => c,
                 Err(e) => return format!("ERROR reading {}: {}", path, e),
@@ -1579,14 +1811,8 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
             let ext = std::path::Path::new(path).extension()
                 .and_then(|e| e.to_str()).unwrap_or("text");
             let prompt = format!(
-                "Fix all issues in this {ext} code. Return ONLY the fixed code in a ```{ext} code block. No explanations.\n\n```{ext}\n{content}\n```"
+                "Fix the issues in this {ext} code:\n\n```{ext}\n{content}\n```\n\nFix: syntax errors, remove unused imports/variables, remove commented-out code, improve style, optimize performance.\nReturn ONLY the fixed code in a ```{ext} code block. No explanations."
             );
-            let ollama_host = std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
-            let ollama_port = std::env::var("OLLAMA_PORT").unwrap_or_else(|_| "11434".to_string());
-            let model = std::env::var("AGENT_MODEL").unwrap_or_else(|_| "hermes3:8b".to_string());
-            let url = format!("http://{}:{}/api/generate", ollama_host, ollama_port);
-            let client = reqwest::Client::builder().timeout(Duration::from_secs(120))
-                .build().unwrap_or_else(|_| reqwest::Client::new());
             let body = serde_json::json!({
                 "model": model, "prompt": prompt, "stream": false,
                 "options": { "temperature": 0.05, "num_predict": 4096 }
