@@ -4,7 +4,15 @@ set -euo pipefail
 SVG="$(dirname "$0")/../src-tauri/icons/nexus-codex.svg"
 SVG="$(realpath "$SVG")"
 ICONS="$(dirname "$SVG")"
-BINARY="$(realpath "$(dirname "$0")/../src-tauri/target/debug/nexus-codex")"
+# Prefer release binary; fall back to debug if release hasn't been built yet
+RELEASE="$(dirname "$0")/../src-tauri/target/release/nexus-codex"
+DEBUG="$(dirname "$0")/../src-tauri/target/debug/nexus-codex"
+if [ -f "$RELEASE" ]; then
+    BINARY="$(realpath "$RELEASE")"
+else
+    BINARY="$(realpath "$DEBUG")"
+    echo "  (using debug binary — run 'npm run tauri build -- --no-bundle' for release)"
+fi
 
 echo "SVG:    $SVG"
 echo "ICONS:  $ICONS"
