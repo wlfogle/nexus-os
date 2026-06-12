@@ -60,7 +60,7 @@ git clone https://github.com/wlfogle/ai-sysadmin-supreme.git
 cd ai-sysadmin-supreme
 
 # Install system dependencies
-sudo pacman -S nodejs npm rust cargo webkit2gtk-4.0
+sudo apt -S nodejs npm rust cargo webkit2gtk-4.0
 
 # Build frontend
 npm install && npm run build
