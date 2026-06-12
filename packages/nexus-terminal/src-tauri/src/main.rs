@@ -3013,6 +3013,17 @@ async fn get_agent_model(state: State<'_, AppState>) -> Result<String, String> {
     Ok(config.ai.agent_model.clone())
 }
 
+/// Deliver the user's answer to a paused ask_user tool call.
+/// Called by the frontend when the user clicks a question button.
+#[tauri::command]
+async fn answer_agent_question(session_id: String, answer: String) -> Result<(), String> {
+    if agent::deliver_answer(&session_id, answer) {
+        Ok(())
+    } else {
+        Err(format!("No pending question for session '{}'", session_id))
+    }
+}
+
 // ── run_cmd_capture — run a command and return stdout/stderr/exit_code ─────────
 /// Used by the self-healing loop to get clean error output for the agent.
 #[tauri::command]
@@ -3754,6 +3765,7 @@ async fn main() {
             agent_chat,
             agent_chat_stream,
             get_agent_model,
+            answer_agent_question,
             // Alias persistence
             load_aliases,
             save_aliases,

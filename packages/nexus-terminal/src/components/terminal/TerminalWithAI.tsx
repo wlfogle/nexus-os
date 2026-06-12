@@ -419,6 +419,44 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     return actions;
   };
 
+  // ── Agent question prompt (ask_user tool) ───────────────────────────────
+  const [agentQuestion, setAgentQuestion] = useState<{
+    sessionId: string;
+    question: string;
+    options: string[];
+  } | null>(null);
+
+  // Listen for agent-question events (ask_user tool pausing the agent loop)
+  useEffect(() => {
+    const setup = async () => {
+      const unlisten = await listen<{ session_id: string; question: string; options: string[] }>(
+        'agent-question',
+        ({ payload }) => {
+          setAgentQuestion({
+            sessionId: payload.session_id,
+            question: payload.question,
+            options: payload.options,
+          });
+        }
+      );
+      return unlisten;
+    };
+    let unlisten: (() => void) | null = null;
+    setup().then(u => { unlisten = u; }).catch(() => {});
+    return () => { if (unlisten) unlisten(); };
+  }, []);
+
+  const handleAgentAnswer = async (option: string) => {
+    if (!agentQuestion) return;
+    const { sessionId } = agentQuestion;
+    setAgentQuestion(null); // dismiss immediately
+    try {
+      await invoke('answer_agent_question', { sessionId, answer: option });
+    } catch (e) {
+      console.error('[NexusTerminal] answer_agent_question failed:', e);
+    }
+  };
+
   // ── Unified input state ────────────────────────────────────────────────────
   const [unifiedInput, setUnifiedInput] = useState('');
   const [inputMode, setInputMode] = useState<'shell' | 'ai' | 'detecting'>('detecting');
@@ -886,6 +924,49 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
           </div>
         )}
       </div>
+
+      {/* ── Agent question card (ask_user tool) ─────────────────────── */}
+      {agentQuestion && (
+        <div style={{
+          flexShrink: 0, padding: '10px 14px',
+          background: 'rgba(124,58,237,0.12)',
+          borderTop: '1px solid rgba(124,58,237,0.4)',
+          display: 'flex', flexDirection: 'column', gap: 8,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+            <span style={{ fontSize: 13, color: '#c4b5fd', fontFamily: 'monospace', lineHeight: 1.4 }}>
+              🤖 {agentQuestion.question}
+            </span>
+            <button
+              onClick={() => {
+                // Cancel the question — agent will timeout and report only
+                setAgentQuestion(null);
+              }}
+              style={{ color: '#6b7280', fontSize: 11, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}
+            >
+              ✕
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {agentQuestion.options.map((opt, i) => (
+              <button
+                key={i}
+                onClick={() => handleAgentAnswer(opt)}
+                style={{
+                  fontSize: 12, padding: '5px 14px', borderRadius: 6,
+                  background: i === 0 ? '#7c3aed' : 'transparent',
+                  color: i === 0 ? '#fff' : '#a78bfa',
+                  border: `1px solid ${i === 0 ? '#7c3aed' : '#7c3aed'}`,
+                  cursor: 'pointer', fontWeight: i === 0 ? 600 : 400,
+                  transition: 'all 0.1s',
+                }}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Error banner: "Fix this?" ─────────────────────────────── */}
       {errorState && !isHealing && (

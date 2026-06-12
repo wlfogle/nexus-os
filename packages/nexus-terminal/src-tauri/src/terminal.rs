@@ -10,8 +10,8 @@ use tracing::{debug, error, info};
 use uuid::Uuid;
 use tauri::{AppHandle, Emitter};
 
-// Global app handle for event emission
-static APP_HANDLE: OnceLock<AppHandle> = OnceLock::new();
+// Global app handle for event emission — pub so agent.rs can emit ask_user questions
+pub static APP_HANDLE: OnceLock<AppHandle> = OnceLock::new();
 
 /// Initialize the global app handle for event emission
 pub fn init_app_handle(app_handle: AppHandle) {

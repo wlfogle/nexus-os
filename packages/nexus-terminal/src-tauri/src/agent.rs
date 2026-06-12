@@ -4,10 +4,36 @@ use anyhow::Result;
 use futures::StreamExt;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 use std::time::Duration;
 use tauri::Emitter;
 use tracing::{debug, info, warn};
+
+// ── ask_user: global map of pending question answers ─────────────────────────────
+// When the agent calls ask_user, it stores a oneshot sender here keyed by
+// session_id. The answer_agent_question Tauri command resolves it when the
+// user clicks a button in the UI.
+static PENDING_ANSWERS: std::sync::OnceLock<
+    std::sync::Mutex<HashMap<String, tokio::sync::oneshot::Sender<String>>>
+> = std::sync::OnceLock::new();
+
+pub fn pending_answers()
+    -> &'static std::sync::Mutex<HashMap<String, tokio::sync::oneshot::Sender<String>>>
+{
+    PENDING_ANSWERS.get_or_init(|| std::sync::Mutex::new(HashMap::new()))
+}
+
+/// Deliver the user's answer to a waiting ask_user call.
+/// Called by the answer_agent_question Tauri command.
+pub fn deliver_answer(session_id: &str, answer: String) -> bool {
+    let mut map = pending_answers().lock().unwrap_or_else(|e| e.into_inner());
+    if let Some(tx) = map.remove(session_id) {
+        let _ = tx.send(answer);
+        true
+    } else {
+        false
+    }
+}
 
 const MAX_STEPS: usize = 50;  // More steps = more thorough fixes
 
@@ -19,6 +45,10 @@ const SYSTEM_PROMPT: &str = r#"You are NexusAI — the autonomous agent of Nexus
 - NEVER write steps for the user to follow. YOU execute the steps.
 - After every tool result: ask yourself "Is the task 100% done?" If no, call another tool.
 - NEVER produce a text response while there are still actions to take.
+- When the user says 'scan for errors' (without 'fix'): scan, then call ask_user with the findings
+  and options ['Fix all errors', 'Report only']. Wait for the user's choice before proceeding.
+- When the user says 'fix errors' or 'scan and fix': scan then fix directly without asking.
+- Only call ask_user when you need a decision; never ask for trivial or read-only operations.
 
 ## Tool selection — MOST IMPORTANT RULE
 Choose the correct tool based on what the user is asking about:
@@ -60,6 +90,7 @@ http_get, http_post, ssh_exec, systemctl_cmd, process_list, docker_cmd,
 list_services, hardware_info, proxmox_list,
 analyze_code(path, analysis_type) — AI code review: errors|style|security|performance|cleanup|all,
 autofix_code(path, dry_run) — AI rewrites file with fixes; always dry_run=true first,
+ask_user(question, options) — show clickable buttons to the user and WAIT for their answer,
 screenshot — capture the screen and see it with llama3.2-vision:11b"#;
 
 // ── Ollama native function-calling types ──────────────────────────────────────
@@ -169,6 +200,14 @@ pub struct AgentDoneEvent {
 pub struct AgentErrorEvent {
     pub session_id: String,
     pub error: String,
+}
+
+/// Emitted when the agent calls ask_user — frontend renders clickable buttons.
+#[derive(Debug, Clone, Serialize)]
+pub struct AgentQuestionEvent {
+    pub session_id: String,
+    pub question: String,
+    pub options: Vec<String>,
 }
 
 // ── Streaming chunk types ────────────────────────────────────────────────────
@@ -597,6 +636,28 @@ NEVER call this with empty cmd.",
         Tool {
             kind: "function",
             function: ToolFunction {
+                name: "ask_user",
+                description: "Ask the user a question and wait for their answer before proceeding. \
+Use this when user confirmation is needed (e.g. after finding errors: ask 'Fix all 3 errors?'). \
+The agent loop PAUSES until the user clicks a button in the UI. \
+Always call this BEFORE making destructive changes or when the user said 'scan' but not 'fix'.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "question": {"type": "string", "description": "The question to present to the user"},
+                        "options": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Clickable options (e.g. ['Fix all errors', 'Report only', 'Cancel'])"
+                        }
+                    },
+                    "required": ["question", "options"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
                 name: "screenshot",
                 description: "Capture the screen and analyze it with llama3.2-vision:11b. Use this to see what is on the screen, diagnose visual errors, or understand the current UI state.",
                 parameters: serde_json::json!({
@@ -626,7 +687,7 @@ fn normalize_args(args: &serde_json::Value) -> serde_json::Value {
 
 // ── Tool execution ───────────────────────────────────────────────────────────
 
-async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str) -> String {
+async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, session_id: &str) -> String {
     match name {
         "read_file" => {
             let path = args["path"].as_str().unwrap_or("");
@@ -1289,6 +1350,41 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str) -> S
             }
         }
 
+        "ask_user" => {
+            let question = args["question"].as_str().unwrap_or("Proceed?");
+            let options: Vec<String> = args["options"].as_array()
+                .map(|a| a.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+                .unwrap_or_else(|| vec!["Yes".to_string(), "No".to_string()]);
+
+            // Emit agent-question event — frontend renders clickable buttons
+            if let Some(app) = crate::terminal::APP_HANDLE.get() {
+                let _ = app.emit("agent-question", AgentQuestionEvent {
+                    session_id: session_id.to_string(),
+                    question: question.to_string(),
+                    options: options.clone(),
+                });
+            }
+
+            // Store oneshot sender; will be resolved by answer_agent_question command
+            let (tx, rx) = tokio::sync::oneshot::channel::<String>();
+            {
+                let mut map = pending_answers().lock().unwrap_or_else(|e| e.into_inner());
+                map.insert(session_id.to_string(), tx);
+            }
+
+            // Block agent loop until user answers (or 120s timeout)
+            match tokio::time::timeout(Duration::from_secs(120), rx).await {
+                Ok(Ok(answer)) => answer,
+                Ok(Err(_)) => "cancelled".to_string(),
+                Err(_) => {
+                    // Clean up on timeout
+                    let mut map = pending_answers().lock().unwrap_or_else(|e| e.into_inner());
+                    map.remove(session_id);
+                    "timeout — no response after 120s. Proceeding with report only.".to_string()
+                }
+            }
+        }
+
         "screenshot" => {
             let prompt = args["prompt"].as_str().unwrap_or("Describe what you see on the screen");
             match crate::vision_commands::capture_and_ask(
@@ -1706,7 +1802,7 @@ pub async fn run_agent(
                     ),
                 });
 
-                let result = exec_tool(&tc.function.name, &args, cwd).await;
+                let result = exec_tool(&tc.function.name, &args, cwd, "").await;
                 debug!("Tool result: {} chars", result.len());
 
                 steps.push(AgentStep {
@@ -1976,7 +2072,7 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
                     },
                 );
 
-                let result = exec_tool(&tc.function.name, &args, cwd).await;
+                let result = exec_tool(&tc.function.name, &args, cwd, session_id).await;
 
                 let _ = app.emit(
                     "agent-tool-result",
