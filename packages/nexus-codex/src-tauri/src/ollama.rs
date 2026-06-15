@@ -271,22 +271,33 @@ pub async fn analyze_doc(
     let doc_excerpt: String = doc_content.chars().take(12_000).collect();
     let code_excerpt: String = nearby_code_snippet.chars().take(4_000).collect();
 
+    // Inject the real current date so the model doesn't confuse past dates with
+    // "future" dates due to training-data cutoff bias.
+    let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
+
     let prompt = format!(
-        "You are a documentation auditor. Classify the freshness of the documentation \
-file below relative to its codebase.\n\n\
+        "You are a documentation auditor. Today's date is {today}. \
+Classify the freshness of the documentation file below relative to its codebase.\n\n\
+IMPORTANT rules:\n\
+- Do NOT classify a document as outdated solely because it has a past timestamp or date. \
+Dates in the past are normal. Only classify as outdated if the CONTENT is wrong or misleading.\n\
+- Third-party library files (e.g. inside node_modules, vendor, or changelogs from \
+external packages) are usually 'current' — they reflect what is pinned in the project.\n\
+- License files are always 'current'.\n\
+- A document with a 2025 or 2026 date is NOT in the future — today is {today}.\n\n\
 Repository: {repo_name}\n\
 File: {file_path}\n\n\
 Classify the document into exactly one status:\n\
-- \"current\": accurately reflects the current code/project state\n\
-- \"stale\": partially outdated but salvageable\n\
-- \"outdated\": significantly behind and misleading\n\
-- \"orphaned\": has no related code or project to correspond with\n\
-- \"needs_review\": cannot be classified reliably\n\n\
+- \"current\": content accurately reflects the code/project state\n\
+- \"stale\": content partially outdated or missing recent changes\n\
+- \"outdated\": content is significantly wrong or misleading\n\
+- \"orphaned\": no related code or project found to correspond with\n\
+- \"needs_review\": cannot classify reliably (low information, ambiguous)\n\n\
 Respond ONLY with a JSON object using exactly these keys:\n\
 {{\n  \"status\": \"current|stale|outdated|orphaned|needs_review\",\n  \
 \"confidence\": 0.0-1.0,\n  \"staleness_score\": 0.0-1.0,\n  \
-\"reason\": \"short explanation\",\n  \"evidence\": \"specific evidence from the text or code\",\n  \
-\"suggested_rewrite\": \"optional improved version or null\"\n}}\n\n\
+\"reason\": \"one sentence\",\n  \"evidence\": \"specific text or code that supports the classification\",\n  \
+\"suggested_rewrite\": null\n}}\n\n\
 === DOCUMENT CONTENT ===\n{doc_excerpt}\n\n\
 === NEARBY CODE ===\n{code_excerpt}\n"
     );

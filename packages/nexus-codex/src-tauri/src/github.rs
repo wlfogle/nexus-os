@@ -9,6 +9,31 @@ use crate::types::DocType;
 /// Maximum remote file size we are willing to download for analysis (5 MB).
 const MAX_REMOTE_FILE_BYTES: u64 = 5 * 1024 * 1024;
 
+/// Path segments that indicate generated/vendor/noise directories.
+/// Any tree entry whose path contains one of these segments is skipped.
+const REMOTE_EXCLUDED_SEGMENTS: &[&str] = &[
+    "node_modules",
+    ".git",
+    "vendor",
+    "target",
+    "dist",
+    "build",
+    "out",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "Pods",
+    ".next",
+    ".nuxt",
+    "coverage",
+];
+
+/// Returns true if any component of a GitHub tree path matches a noise segment.
+fn is_remote_excluded(path: &str) -> bool {
+    path.split('/')
+        .any(|component| REMOTE_EXCLUDED_SEGMENTS.contains(&component))
+}
+
 /// A GitHub repository owned by the configured user.
 #[derive(Debug, Clone)]
 pub struct GithubRepo {
@@ -156,6 +181,11 @@ pub async fn fetch_repo_docs(repo: &GithubRepo, token: &str) -> Result<Vec<Githu
     let mut docs = Vec::new();
     for entry in tree.tree {
         if entry.entry_type != "blob" {
+            continue;
+        }
+
+        // Skip generated / vendor / noise directories.
+        if is_remote_excluded(&entry.path) {
             continue;
         }
 
