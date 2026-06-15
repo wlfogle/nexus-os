@@ -223,6 +223,42 @@ pub async fn fetch_repo_docs(repo: &GithubRepo, token: &str) -> Result<Vec<Githu
     Ok(docs)
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn node_modules_excluded() {
+        assert!(is_remote_excluded("node_modules/lodash/README.md"));
+        assert!(is_remote_excluded("src/node_modules/react/CHANGELOG.md"));
+        assert!(is_remote_excluded("packages/app/node_modules/webpack/LICENSE.md"));
+    }
+
+    #[test]
+    fn vendor_excluded() {
+        assert!(is_remote_excluded("vendor/github.com/pkg/errors/README.md"));
+        assert!(is_remote_excluded("Pods/Alamofire/README.md"));
+    }
+
+    #[test]
+    fn build_artefacts_excluded() {
+        assert!(is_remote_excluded("dist/docs/index.md"));
+        assert!(is_remote_excluded("build/reports/coverage.txt"));
+        assert!(is_remote_excluded("target/doc/README.md"));
+        assert!(is_remote_excluded("coverage/lcov.info.txt"));
+    }
+
+    #[test]
+    fn normal_docs_not_excluded() {
+        assert!(!is_remote_excluded("README.md"));
+        assert!(!is_remote_excluded("docs/setup.md"));
+        assert!(!is_remote_excluded("packages/my-app/README.md"));
+        assert!(!is_remote_excluded("src/components/Button/README.md"));
+        // 'distribution' contains 'dist' as a substring but is not a path component
+        assert!(!is_remote_excluded("docs/distribution-guide.md"));
+    }
+}
+
 /// Download the raw text content of a documentation file from its `download_url`.
 pub async fn download_content(download_url: &str, token: &str) -> Result<String> {
     let client = client(token)?;
