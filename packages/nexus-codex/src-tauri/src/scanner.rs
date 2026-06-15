@@ -46,12 +46,12 @@ pub fn scan_local(config: &Config) -> Vec<(PathBuf, DocType, u64)> {
         }
 
         let walker = WalkBuilder::new(&root_path)
-            .hidden(false)
-            .git_ignore(true)
+            .hidden(true)        // skip dot-directories and dot-files
+            .git_ignore(true)    // honour .gitignore files
             .git_global(true)
             .git_exclude(true)
             .parents(true)
-            .follow_links(false)
+            .follow_links(false) // never follow symlinks (avoids infinite loops)
             .build();
 
         for entry in walker {
@@ -122,12 +122,15 @@ mod tests {
         let excluded = vec![
             "node_modules".to_string(),
             "target".to_string(),
-            ".git".to_string(),
+            "Pictures".to_string(),
+            "Steam".to_string(),
         ];
         assert!(is_excluded("/home/user/project/node_modules/lodash/README.md", &excluded));
         assert!(is_excluded("/home/user/project/target/debug/foo", &excluded));
-        assert!(is_excluded("/home/user/project/.git/config", &excluded));
+        assert!(is_excluded("/home/user/Pictures/holiday/README.md", &excluded));
+        assert!(is_excluded("/home/user/Steam/steamapps/README.md", &excluded));
         assert!(!is_excluded("/home/user/project/src/README.md", &excluded));
+        // 'my-target-project' contains 'target' as a substring but NOT as a path component
         assert!(!is_excluded("/home/user/my-target-project/README.md", &excluded));
     }
 }
