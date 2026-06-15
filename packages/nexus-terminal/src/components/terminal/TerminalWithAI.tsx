@@ -424,18 +424,23 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     sessionId: string;
     question: string;
     options: string[];
+    data?: { kind?: string; scan_path?: string };
   } | null>(null);
 
   // Listen for agent-question events (ask_user tool pausing the agent loop)
   useEffect(() => {
     const setup = async () => {
-      const unlisten = await listen<{ session_id: string; question: string; options: string[] }>(
+      const unlisten = await listen<{
+        session_id: string; question: string; options: string[];
+        data?: { kind?: string; scan_path?: string };
+      }>(
         'agent-question',
         ({ payload }) => {
           setAgentQuestion({
             sessionId: payload.session_id,
             question: payload.question,
             options: payload.options,
+            data: payload.data,
           });
         }
       );
@@ -448,8 +453,60 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
 
   const handleAgentAnswer = async (option: string) => {
     if (!agentQuestion) return;
-    const { sessionId } = agentQuestion;
+    const { sessionId, data } = agentQuestion;
     setAgentQuestion(null); // dismiss immediately
+
+    // If this is a scan_and_fix question and the user picked Fix,
+    // invoke the Rust fix engine directly — bypasses the model entirely.
+    if (
+      data?.kind === 'scan_and_fix' &&
+      data.scan_path &&
+      option.toLowerCase().includes('fix')
+    ) {
+      const fixSessionId = `fix_${Date.now()}`;
+      const streamId = `fix_stream_${Date.now()}`;
+      setAiBlocks(prev => [...prev, {
+        id: streamId, role: 'assistant', content: '', streaming: '🔧 Fix engine starting…'
+      }]);
+      setIsAILoading(true);
+
+      // Listen for fix-progress events
+      const uFix = await listen<{
+        session_id: string; stage: string; message: string;
+        done: boolean; errors_found: number; errors_fixed: number;
+      }>('fix-progress', ({ payload }) => {
+        if (payload.session_id !== fixSessionId) return;
+        const icon = payload.stage === 'done' ? '✅' :
+                     payload.stage === 'fixing' ? '🔧' :
+                     payload.stage === 'verifying' ? '🔍' : '⏳';
+        setAiBlocks(prev => prev.map(b =>
+          b.id === streamId
+            ? { ...b, streaming: payload.done ? undefined : `${icon} ${payload.message}`,
+                content: payload.done ? payload.message : '' }
+            : b
+        ));
+        if (payload.done) { setIsAILoading(false); uFix(); }
+      });
+
+      await listen<{ session_id: string; answer: string }>('agent-done', ({ payload }) => {
+        if (payload.session_id !== fixSessionId) return;
+        setAiBlocks(prev => prev.map(b =>
+          b.id === streamId ? { ...b, content: payload.answer, streaming: undefined } : b
+        ));
+        setIsAILoading(false);
+      });
+
+      invoke('scan_and_fix', { scanPath: data.scan_path, sessionId: fixSessionId })
+        .catch(() => {
+          setAiBlocks(prev => prev.map(b =>
+            b.id === streamId ? { ...b, content: '❌ Fix engine failed to start', streaming: undefined } : b
+          ));
+          setIsAILoading(false);
+        });
+      return;
+    }
+
+    // Default: deliver answer to the waiting ask_user / analyze_code handler
     try {
       await invoke('answer_agent_question', { sessionId, answer: option });
     } catch (e) {

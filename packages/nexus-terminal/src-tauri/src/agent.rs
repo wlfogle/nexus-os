@@ -9,6 +9,8 @@ use std::time::Duration;
 use tauri::Emitter;
 use tracing::{debug, info, warn};
 
+use crate::model_router::{select_model, TaskKind};
+
 // ── ask_user: global map of pending question answers ─────────────────────────────
 // When the agent calls ask_user, it stores a oneshot sender here keyed by
 // session_id. The answer_agent_question Tauri command resolves it when the
@@ -203,11 +205,14 @@ pub struct AgentErrorEvent {
 }
 
 /// Emitted when the agent calls ask_user — frontend renders clickable buttons.
+/// `data` carries extra context for the frontend (e.g. scan_path for fix_engine).
 #[derive(Debug, Clone, Serialize)]
 pub struct AgentQuestionEvent {
     pub session_id: String,
     pub question: String,
     pub options: Vec<String>,
+    /// Optional JSON context for the frontend (e.g. {"kind":"scan_and_fix","scan_path":"/…"})
+    pub data: Option<serde_json::Value>,
 }
 
 // ── Streaming chunk types ────────────────────────────────────────────────────
@@ -1362,6 +1367,7 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
                     session_id: session_id.to_string(),
                     question: question.to_string(),
                     options: options.clone(),
+                    data: None,
                 });
             }
 
@@ -1530,12 +1536,19 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
                         "Report only".to_string(),
                     ];
 
-                    // Emit question event — frontend shows buttons immediately
+                    // Emit question event — frontend shows buttons immediately.
+                    // Include scan_path so the frontend can call scan_and_fix directly
+                    // without routing through the model (which ignores tool instructions).
+                    info!("analyze_code: has_errors={} session_id={:?}", has_errors, session_id);
                     if let Some(app) = crate::terminal::APP_HANDLE.get() {
                         let _ = app.emit("agent-question", AgentQuestionEvent {
                             session_id: session_id.to_string(),
                             question: question.clone(),
                             options: options.clone(),
+                            data: Some(serde_json::json!({
+                                "kind": "scan_and_fix",
+                                "scan_path": path,
+                            })),
                         });
                     }
 
@@ -1554,14 +1567,27 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
                         }
                     };
 
-                    // Append the user's decision so the agent knows how to proceed
-                    return format!("{summary}\n\n║ USER DECISION: {user_choice} ║\n{}",
-                        if user_choice.to_lowercase().contains("fix") {
-                            "Now fix every error listed above: read each failing file, apply the minimal fix with edit_file, run cargo check / tsc to verify, iterate until all pass, then git_commit."
-                        } else {
-                            "User chose report only. Provide a concise summary of what was found without making any changes."
+                    // If user chose Fix: spawn the Rust fix engine directly.
+                    // This bypasses the model entirely — small local models cannot
+                    // reliably chain read_file → edit_file → cargo check loops.
+                    if user_choice.to_lowercase().contains("fix") {
+                        if let Some(app) = crate::terminal::APP_HANDLE.get() {
+                            let app2 = app.clone();
+                            let sid = session_id.to_string();
+                            let sp = path.to_string();
+                            let ollama_host = std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+                            let ollama_port = std::env::var("OLLAMA_PORT").unwrap_or_else(|_| "11434".to_string());
+                            let ollama_url = format!("http://{}:{}", ollama_host, ollama_port);
+                            tokio::spawn(async move {
+                                crate::fix_engine::scan_and_fix(app2, sid, sp, ollama_url).await;
+                            });
+                            return format!("{summary}\n\n[Fix engine launched — watch the AI panel for live progress.]");
                         }
-                    );
+                        // Fallback if APP_HANDLE not available
+                        return format!("{summary}\n\n║ USER DECISION: Fix all errors ║\nNow fix every error listed above: read each failing file, apply the minimal fix with edit_file, run cargo check / tsc to verify, iterate until all pass, then git_commit.");
+                    } else {
+                        return format!("{summary}\n\n║ USER DECISION: Report only ║\nUser chose report only. Provide a concise summary of what was found without making any changes.");
+                    }
                 }
 
                 return summary;
@@ -1599,8 +1625,10 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
 
             let ollama_host = std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
             let ollama_port = std::env::var("OLLAMA_PORT").unwrap_or_else(|_| "11434".to_string());
-            let model = std::env::var("AGENT_MODEL").unwrap_or_else(|_| "hermes3:8b".to_string());
-            let url = format!("http://{}:{}/api/generate", ollama_host, ollama_port);
+            let ollama_base = format!("http://{}:{}", ollama_host, ollama_port);
+            // Code analysis: use deepseek-coder / granite-code priority chain
+            let model = select_model(TaskKind::CodeAnalysis, &ollama_base).await;
+            let url = format!("{}/api/generate", ollama_base);
             let client = reqwest::Client::builder().timeout(Duration::from_secs(120))
                 .build().unwrap_or_else(|_| reqwest::Client::new());
 
@@ -1669,8 +1697,10 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
 
             let ollama_host = std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
             let ollama_port = std::env::var("OLLAMA_PORT").unwrap_or_else(|_| "11434".to_string());
-            let model = std::env::var("AGENT_MODEL").unwrap_or_else(|_| "hermes3:8b".to_string());
-            let url = format!("http://{}:{}/api/generate", ollama_host, ollama_port);
+            let ollama_base = format!("http://{}:{}", ollama_host, ollama_port);
+            // Code fix: use codestral / deepseek-coder-v2 priority chain
+            let model = select_model(TaskKind::CodeFix, &ollama_base).await;
+            let url = format!("{}/api/generate", ollama_base);
             let client = reqwest::Client::builder().timeout(Duration::from_secs(120))
                 .build().unwrap_or_else(|_| reqwest::Client::new());
 
@@ -1718,6 +1748,7 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
                             session_id: session_id.to_string(),
                             question: question.clone(),
                             options: options.clone(),
+                            data: None,
                         });
                     }
                     let (tx, rx) = tokio::sync::oneshot::channel::<String>();

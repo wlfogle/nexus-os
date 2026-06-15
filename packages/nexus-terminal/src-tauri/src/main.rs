@@ -13,6 +13,8 @@ use tracing::info;
 
 mod agent;
 mod ai;
+mod model_router;
+mod fix_engine;
 mod input_classifier;
 mod prediction;
 mod git;
@@ -3024,6 +3026,37 @@ async fn answer_agent_question(session_id: String, answer: String) -> Result<(),
     }
 }
 
+/// Run the Rust-driven scan → fix → verify → commit loop.
+/// Fire-and-forget: returns immediately, emits fix-progress + agent-done events.
+#[tauri::command]
+async fn scan_and_fix(
+    scan_path: String,
+    session_id: String,
+    state: State<'_, AppState>,
+    app: tauri::AppHandle,
+) -> Result<(), String> {
+    let config = state.config.read().await;
+    let ollama_url = config.ai.ollama_url.clone();
+    drop(config);
+    tokio::spawn(async move {
+        fix_engine::scan_and_fix(app, session_id, scan_path, ollama_url).await;
+    });
+    Ok(())
+}
+
+/// Return the best available model name for a given task kind.
+/// `task` values: "tool", "code", "analysis", "deep", "vision", "fast", "embed"
+#[tauri::command]
+async fn get_model_for_task(
+    task: String,
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    let config = state.config.read().await;
+    let ollama_url = config.ai.ollama_url.clone();
+    drop(config);
+    Ok(model_router::select_model_by_name(&task, &ollama_url).await)
+}
+
 // ── run_cmd_capture — run a command and return stdout/stderr/exit_code ─────────
 /// Used by the self-healing loop to get clean error output for the agent.
 #[tauri::command]
@@ -3766,6 +3799,9 @@ async fn main() {
             agent_chat_stream,
             get_agent_model,
             answer_agent_question,
+            // Fix engine + model router
+            scan_and_fix,
+            get_model_for_task,
             // Alias persistence
             load_aliases,
             save_aliases,

@@ -339,10 +339,51 @@ Icon: `src-tauri/icons/128x128.png` — used by both entries.
 | `autofix_code` only handled single files | Directory path returned error | Fixed: directory mode finds all code files recursively, large-codebase guard (>20 files → ask user) |
 | Autofix prompt too vague | Old: "Fix all issues" | New: explicit list (syntax, unused imports, commented-out code, style, performance) |
 
+## Phase 4 — Oz-Style Infrastructure (2026-06-15)
+
+### Insight from Warp source (AGPL-3.0)
+Warp separates model roles: `model`, `coding_model`, `cli_agent_model`, `computer_use_model`.
+Small local models that can't reliably chain tool-calls can still generate correct code for one bounded task.
+The fix: encode the workflow in Rust, use the model only for generation.
+
+### New: Task-Specific Model Router (`model_router.rs`)
+| TaskKind | Env Override | Auto-priority chain |
+|----------|-------------|---------------------|
+| ToolUse | `AGENT_TOOL_MODEL` | hermes3:8b → llama3.1:8b → nous-hermes2:10.7b |
+| CodeFix | `AGENT_CODE_MODEL` | codestral:22b → deepseek-coder-v2:16b → qwen2.5-coder:7b → yi-coder:9b |
+| CodeAnalysis | `AGENT_ANALYSIS_MODEL` | deepseek-coder-v2:16b → granite-code → ... |
+| DeepReason | `AGENT_DEEP_MODEL` | llama3.3:70b → mixtral:8x7b → phi4 |
+| Vision | `VISION_MODEL` | llama3.2-vision:11b → llava:13b → ... |
+| FastChat | `AGENT_FAST_MODEL` | llama3.2:3b → phi3.5:3.8b → ... |
+| Embed | `EMBED_MODEL` | nomic-embed-text → all-minilm |
+- Queries Ollama `/api/tags`, caches 60s, validates overrides against installed models
+- `analyze_code` (single file) now uses CodeAnalysis model
+- `autofix_code` now uses CodeFix model
+
+### New: Rust Fix Engine (`fix_engine.rs`)
+Full scan → parse → fix → verify → commit loop in Rust. Model only generates code.
+- Parses `cargo check --message-format=json` into structured `CompilerError` records
+- Parses `tsc --noEmit` output into file/line/message records
+- For each error file: reads content, asks CodeFix model for corrected file, writes .bak + applies
+- Re-runs compiler after each fix, iterates up to 5 times until all pass
+- Commits with co-author attribution when all projects pass
+- Streams `fix-progress` events (stage, message, counts) to frontend in real time
+
+### Frontend: Fix button → fix engine (TerminalWithAI.tsx)
+- `AgentQuestionEvent` now carries `data: {kind, scan_path}` from backend
+- When Fix is clicked on a scan_and_fix question: invokes `scan_and_fix` Tauri command directly
+- Live progress renders in AI overlay: ⏳ scanning → 🔧 fixing → 🔍 verifying → ✅ done
+- Report only: still routes through `answer_agent_question` as before
+
+### New Tauri commands
+- `scan_and_fix(scan_path, session_id)` — fire-and-forget, streams events
+- `get_model_for_task(task)` — returns selected model name for task kind
+
 ## Remaining Known Issues
 - OSC 133 hooks disabled (removed to fix display noise)
 - `NewTabModal.tsx` / `TerminalTabManager.tsx` placeholder components still unused
 - Open WebUI pip install pending in CT-300 (large deps)
+- Question card session_id diagnosis: debug log added, will confirm in next run
 
 ---
 
