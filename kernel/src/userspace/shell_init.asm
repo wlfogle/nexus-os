@@ -413,9 +413,9 @@ fn_dispatch:
 ; =============================================================================
 
 str_banner:
-    db  27, '[2J'                               ; ESC [ 2 J — erase display
-    db  27, '[H'                                ; ESC [ H   — cursor home
-    db  "NexusOS v0.6 -- AI-Native OS", 13, 10
+    db  "======================================", 13, 10
+    db  "  NexusOS v0.6 -- AI-Native OS", 13, 10
+    db  "======================================", 13, 10
     db  "Type 'help' for available commands.", 13, 10
     db  13, 10
 str_banner_len equ $ - str_banner
@@ -453,7 +453,7 @@ str_uname:
 str_uname_len equ $ - str_uname
 
 str_clear:
-    db  27, '[2J', 27, '[H'
+    db  13, 10, "[screen clear not supported on framebuffer console]", 13, 10
 str_clear_len equ $ - str_clear
 
 str_ps_hdr:
