@@ -221,11 +221,11 @@ disk-laptop:
 run-install-laptop: iso-laptop
 	@test -f $(DISK_LAPTOP) || $(MAKE) disk-laptop
 	@echo "==> Installer boot: ISO + VirtIO disk [laptop]"
-	@echo "    Watch for 'Installation complete!' then shut down the VM (Ctrl-C)."
+	@echo "    Watch for 'Installation complete!' then Ctrl-C."
 	$(QEMU_X86) \
+	    -boot d \
 	    -cdrom $(BUILD_DIR)/nexusos-laptop.iso \
-	    -drive file=$(DISK_LAPTOP),id=hd0,format=qcow2,if=none \
-	    -device virtio-blk-pci,drive=hd0,disable-legacy=off,disable-modern=on \
+	    -drive file=$(DISK_LAPTOP),if=virtio \
 	    -m 4G -cpu host -enable-kvm \
 	    -serial stdio -display none \
 	    -no-reboot -no-shutdown
@@ -235,8 +235,7 @@ run-installed-laptop:
 	@test -f $(DISK_LAPTOP) || { echo "ERROR: run 'make run-install-laptop' first"; exit 1; }
 	@echo "==> Booting installed NexusOS from disk [laptop]"
 	$(QEMU_X86) \
-	    -drive file=$(DISK_LAPTOP),id=hd0,format=qcow2,if=none \
-	    -device virtio-blk-pci,drive=hd0,disable-legacy=off,disable-modern=on \
+	    -drive file=$(DISK_LAPTOP),if=virtio \
 	    -bios $(OVMF) \
 	    -m 4G -cpu host -enable-kvm \
 	    -serial stdio -display none \
