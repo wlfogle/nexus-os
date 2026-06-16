@@ -48,6 +48,9 @@ pub const SYS_READ_CHAR:     u64 = 13; // read_char() → u8 (blocks until key)
 pub const SYS_READ_CHAR_NB:  u64 = 14; // read_char_nb() → u8 or -1 if empty
 pub const SYS_DISK_READ:     u64 = 15; // disk_read(lba, buf_ptr, num_sectors) → 0 or -err
 pub const SYS_DISK_WRITE:    u64 = 16; // disk_write(lba, buf_ptr, num_sectors) → 0 or -err
+// ── Phase 6.1: ring-3 filesystem access ──────────────────────────────────────
+pub const SYS_FS_LIST:       u64 = 17; // fs_list(buf_ptr, cap) → bytes (newline-separated names)
+pub const SYS_FS_READ:       u64 = 18; // fs_read(name_ptr (NUL-term), buf_ptr, cap) → bytes read
 
 // ─── MSR addresses ───────────────────────────────────────────────────────────
 
@@ -390,6 +393,43 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
             match crate::drivers::virtio::blk::write_sectors(lba, buf) {
                 Ok(())  => 0,
                 Err(_)  => -5, // EIO
+            }
+        }
+
+        // ── SYS_FS_LIST ──────────────────────────────────────────────────
+        // fs_list(buf_ptr, cap) → bytes written (newline-separated names)
+        SYS_FS_LIST => {
+            let buf_ptr = a1 as *mut u8;
+            let cap     = a2 as usize;
+            if cap == 0 { return 0; }
+            let buf = unsafe { core::slice::from_raw_parts_mut(buf_ptr, cap) };
+            match crate::fs::fat::list_root(buf) {
+                Ok(n)  => n as i64,
+                Err(_) => -5, // EIO / not mounted
+            }
+        }
+
+        // ── SYS_FS_READ ──────────────────────────────────────────────────
+        // fs_read(name_ptr (NUL-terminated), buf_ptr, cap) → bytes read
+        SYS_FS_READ => {
+            let name_ptr = a1 as *const u8;
+            let buf_ptr  = a2 as *mut u8;
+            let cap      = a3 as usize;
+            if cap == 0 { return 0; }
+            // Bounded scan of the NUL-terminated filename (max 255 bytes).
+            let mut nlen = 0usize;
+            unsafe {
+                while nlen < 255 && *name_ptr.add(nlen) != 0 { nlen += 1; }
+            }
+            let name_slice = unsafe { core::slice::from_raw_parts(name_ptr, nlen) };
+            let name = match core::str::from_utf8(name_slice) {
+                Ok(s)  => s,
+                Err(_) => return -22, // EINVAL
+            };
+            let buf = unsafe { core::slice::from_raw_parts_mut(buf_ptr, cap) };
+            match crate::fs::fat::read_file(name, buf) {
+                Ok(n)  => n as i64,
+                Err(_) => -2, // ENOENT
             }
         }
 

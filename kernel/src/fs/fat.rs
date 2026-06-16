@@ -321,6 +321,30 @@ pub fn write_file(path: &str, data: &[u8]) -> Result<(), &'static str> {
     result
 }
 
+/// List the root directory, writing newline-separated entry names into `buf`.
+/// Returns the number of bytes written.  Stops early if `buf` fills up.
+pub fn list_root(buf: &mut [u8]) -> Result<usize, &'static str> {
+    let guard = FS.lock();
+    let fs    = guard.as_ref().ok_or("FAT32: not mounted")?;
+    let mut total = 0usize;
+    // Explicit block: root + iterator are dropped before the guard is released.
+    {
+        let root = fs.root_dir();
+        for entry in root.iter() {
+            let entry = entry.map_err(|_| "FAT32: dir read error")?;
+            let name  = entry.file_name();      // alloc::string::String (lfn feature)
+            let nb    = name.as_bytes();
+            // Need room for the name plus a trailing newline.
+            if total + nb.len() + 1 > buf.len() { break; }
+            buf[total..total + nb.len()].copy_from_slice(nb);
+            total += nb.len();
+            buf[total] = b'\n';
+            total += 1;
+        }
+    }
+    Ok(total)
+}
+
 /// Returns `true` if a FAT filesystem is currently mounted.
 pub fn is_mounted() -> bool {
     FS.lock().is_some()

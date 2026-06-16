@@ -53,9 +53,9 @@ const USER_INIT_CODE: &[u8] =
 // If the binary ever exceeds this, add additional page mappings in
 // spawn_user_init() before increasing this limit.
 const _SHELL_SIZE_CHECK: () = assert!(
-    USER_INIT_CODE.len() <= 4096,
-    "shell_init.bin exceeds one code page (4096 bytes) — \
-     add more page mappings in spawn_user_init()"
+    USER_INIT_CODE.len() <= 16384,
+    "shell_init.bin exceeds four code pages (16384 bytes) — \
+     raise this limit (spawn_user_init already maps as many pages as needed)"
 );
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -76,24 +76,32 @@ const _SHELL_SIZE_CHECK: () = assert!(
 pub fn spawn_user_init() -> u64 {
     const PAGE_SIZE: u64 = 4096;
 
-    // ── 1. Allocate + map code page ──────────────────────────────────────
-    let code_phys = physical::alloc_frame();
-    paging::map_page(USER_CODE_BASE, code_phys, USER_CODE_FLAGS);
+    // ── 1. Allocate + map as many user-exec code pages as the binary needs ──
+    // alloc_frame() returns arbitrary (non-contiguous) physical frames, so we
+    // map each page individually and copy that page's slice into its own frame
+    // via the HHDM mapping.  The virtual addresses stay contiguous from
+    // USER_CODE_BASE upward, which is all the ring-3 code requires.
+    let code_len  = USER_INIT_CODE.len() as u64;
+    let num_pages = (code_len + PAGE_SIZE - 1) / PAGE_SIZE;
+    for i in 0..num_pages {
+        let page_phys = physical::alloc_frame();
+        paging::map_page(USER_CODE_BASE + i * PAGE_SIZE, page_phys, USER_CODE_FLAGS);
 
-    // Copy init code to the mapped page
-    let code_virt = paging::phys_to_virt(code_phys) as *mut u8;
-    unsafe {
-        core::ptr::copy_nonoverlapping(
-            USER_INIT_CODE.as_ptr(),
-            code_virt,
-            USER_INIT_CODE.len(),
-        );
-        // Zero the rest of the page
-        core::ptr::write_bytes(
-            code_virt.add(USER_INIT_CODE.len()),
-            0,
-            PAGE_SIZE as usize - USER_INIT_CODE.len(),
-        );
+        let dst   = paging::phys_to_virt(page_phys) as *mut u8;
+        let start = (i * PAGE_SIZE) as usize;
+        let end   = (((i + 1) * PAGE_SIZE).min(code_len)) as usize;
+        let chunk = end - start;
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                USER_INIT_CODE.as_ptr().add(start),
+                dst,
+                chunk,
+            );
+            // Zero any tail of the final page beyond the binary.
+            if chunk < PAGE_SIZE as usize {
+                core::ptr::write_bytes(dst.add(chunk), 0, PAGE_SIZE as usize - chunk);
+            }
+        }
     }
 
     // ── 2. Allocate + map stack page ─────────────────────────────────────

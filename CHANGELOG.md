@@ -2,6 +2,23 @@
 
 All notable changes to the NexusOS from-scratch Rust microkernel.
 
+## [0.6.1] - 2026-06-16
+
+### ✨ Added — Phase 6.1: ring-3 filesystem access
+- **`SYS_FS_LIST` (17)** — `fs_list(buf, cap)` lists the mounted FAT32 root
+  directory, writing newline-separated entry names into a user buffer.
+  Backed by new `fs::fat::list_root()`.
+- **`SYS_FS_READ` (18)** — `fs_read(name, buf, cap)` reads a file by name from
+  the FAT32 root into a user buffer. Bridges to existing `fs::fat::read_file()`.
+- **Shell `ls` and `cat <file>` commands** in `shell_init.asm`, using a new
+  2 KiB stack-resident FS buffer. `help` updated to list them.
+
+### 🔄 Changed
+- `userspace::spawn_user_init()` now maps as many user-exec code pages as the
+  shell binary needs (was hard-coded to one 4 KiB page), copying each page into
+  its own physical frame. Size guard raised to 16 KiB.
+- Shell `version` now reports Phase 6.
+
 ## [0.6.0] - 2026-06-15
 
 ### ✨ Added — Ring-3 Interactive Shell

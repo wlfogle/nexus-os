@@ -39,10 +39,13 @@ BITS 64
 %define SYS_GETPID     3
 %define SYS_SLEEP      9
 %define SYS_READ_CHAR  13
+%define SYS_FS_LIST    17
+%define SYS_FS_READ    18
 
-; ── Buffer sizes (must both fit on one 4 096-byte stack page) ────────────────
+; ── Buffer sizes (must all fit on one 4 096-byte stack page) ─────────────
 %define CMD_BUF_SIZE   256
 %define NUM_BUF_SIZE    32
+%define FS_BUF_SIZE   2048
 
 ; =============================================================================
 ; _start — ring-3 entry point.  RSP = USER_STACK_TOP on first call.
@@ -51,7 +54,7 @@ _start:
     ; Allocate two mutable buffers on the stack.
     ;   [rsp + 0 .. rsp+CMD_BUF_SIZE)            -> cmd_buf
     ;   [rsp + CMD_BUF_SIZE .. rsp+CMD_BUF_SIZE+NUM_BUF_SIZE)  -> num_buf
-    sub  rsp, CMD_BUF_SIZE + NUM_BUF_SIZE
+    sub  rsp, CMD_BUF_SIZE + NUM_BUF_SIZE + FS_BUF_SIZE
     mov  r14, rsp                       ; r14 = &cmd_buf (persistent)
 
     ; ── Boot banner ──────────────────────────────────────────────────────────
@@ -388,6 +391,63 @@ fn_dispatch:
     jmp  $                      ; unreachable — kernel marks process Dead
 .nr:
 
+    ; ── ls ───────────────────────────────────────────────────────────────────
+    mov  rdi, r12
+    lea  rsi, [rel kw_ls]
+    mov  rdx, 2
+    call fn_match
+    test rax, rax
+    jnz  .nls
+    mov  rax, SYS_FS_LIST
+    lea  rdi, [r13 + NUM_BUF_SIZE]      ; arg1 = fs_buf
+    mov  rsi, FS_BUF_SIZE               ; arg2 = capacity
+    syscall                             ; rax = bytes written (or -err)
+    test rax, rax
+    js   .fs_err
+    lea  rsi, [r13 + NUM_BUF_SIZE]
+    mov  rdx, rax
+    call fn_write
+    jmp  .fin
+.nls:
+
+    ; ── cat <file> ────────────────────────────────────────────────────────────
+    mov  rdi, r12
+    lea  rsi, [rel kw_cat]
+    mov  rdx, 3
+    call fn_match
+    test rax, rax
+    jnz  .ncat
+    lea  rdi, [r12 + 3]                 ; advance past "cat"
+    cmp  byte [rdi], ' '
+    jne  .cat_usage                     ; "cat" with no space → usage
+    inc  rdi                            ; skip the single space
+    cmp  byte [rdi], 0
+    je   .cat_usage                     ; "cat " with no filename → usage
+    mov  rax, SYS_FS_READ               ; rdi already = filename (arg1, NUL-term)
+    lea  rsi, [r13 + NUM_BUF_SIZE]      ; arg2 = fs_buf
+    mov  rdx, FS_BUF_SIZE               ; arg3 = capacity
+    syscall                             ; rax = bytes read (or -err)
+    test rax, rax
+    js   .fs_err
+    lea  rsi, [r13 + NUM_BUF_SIZE]
+    mov  rdx, rax
+    call fn_write
+    lea  rsi, [rel str_nl]              ; trailing newline
+    mov  rdx, 1
+    call fn_write
+    jmp  .fin
+.cat_usage:
+    lea  rsi, [rel str_cat_usage]
+    mov  rdx, str_cat_usage_len
+    call fn_write
+    jmp  .fin
+.fs_err:
+    lea  rsi, [rel str_fs_err]
+    mov  rdx, str_fs_err_len
+    call fn_write
+    jmp  .fin
+.ncat:
+
     ; ── Unknown command ───────────────────────────────────────────────────────
     lea  rsi, [rel str_unk_pfx]
     mov  rdx, str_unk_pfx_len
@@ -436,20 +496,22 @@ str_help:
     db  "  version  - OS version string", 13, 10
     db  "  uname    - system information", 13, 10
     db  "  echo <x> - print argument to screen", 13, 10
+    db  "  ls       - list files on the disk", 13, 10
+    db  "  cat <f>  - print a file's contents", 13, 10
     db  "  ps       - list running processes", 13, 10
     db  "  clear    - clear the screen", 13, 10
     db  "  reboot   - exit shell and reboot", 13, 10
 str_help_len equ $ - str_help
 
 str_version:
-    db  "NexusOS v0.6.0", 13, 10
+    db  "NexusOS v0.6.1", 13, 10
     db  "Kernel:  nexus-kernel (Rust, Limine boot protocol)", 13, 10
-    db  "Phase:   5  -- Ring-3 userspace | IPC | Syscall interface", 13, 10
+    db  "Phase:   6  -- Ring-3 FS (ls/cat) | IPC | Syscall interface", 13, 10
     db  "Arch:    x86_64", 13, 10
 str_version_len equ $ - str_version
 
 str_uname:
-    db  "NexusOS nexus-kernel 0.6.0 x86_64", 13, 10
+    db  "NexusOS nexus-kernel 0.6.1 x86_64", 13, 10
 str_uname_len equ $ - str_uname
 
 str_clear:
@@ -474,6 +536,14 @@ str_unk_pfx:
     db  "nexus: command not found: "
 str_unk_pfx_len equ $ - str_unk_pfx
 
+str_fs_err:
+    db  "fs: error (disk not mounted or file not found)", 13, 10
+str_fs_err_len equ $ - str_fs_err
+
+str_cat_usage:
+    db  "usage: cat <file>", 13, 10
+str_cat_usage_len equ $ - str_cat_usage
+
 ; ── Command keyword literals (length matched, no null terminator needed) ─────
 kw_help:    db  "help"
 kw_version: db  "version"
@@ -482,3 +552,5 @@ kw_clear:   db  "clear"
 kw_echo:    db  "echo"
 kw_ps:      db  "ps"
 kw_reboot:  db  "reboot"
+kw_ls:      db  "ls"
+kw_cat:     db  "cat"

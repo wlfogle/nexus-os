@@ -21,7 +21,7 @@ Phases 1–5 verified on QEMU + KVM. Ring-3 interactive shell boots.
 | 4 | ✓ Done | `syscall`/`sysretq` fast path, ring-3 user process via IRETQ |
 | 5 | ✓ Done | AI Core daemon (nexus.ai), PS/2 keyboard, VirtIO-blk, FAT32, self-installer, ring-3 shell (`nexus>`) |
 
-Syscall table (16 implemented, all in `kernel/src/syscall/mod.rs`):
+Syscall table (18 implemented, all in `kernel/src/syscall/mod.rs`):
 
 | # | Name | Description |
 |---|------|-------------|
@@ -41,6 +41,8 @@ Syscall table (16 implemented, all in `kernel/src/syscall/mod.rs`):
 | 14 | SYS_READ_CHAR_NB | → u8 or -1 if no key queued |
 | 15 | SYS_DISK_READ | disk_read(lba, buf, sectors) |
 | 16 | SYS_DISK_WRITE | disk_write(lba, buf, sectors) |
+| 17 | SYS_FS_LIST | fs_list(buf, cap) → bytes (newline-separated names) |
+| 18 | SYS_FS_READ | fs_read(name, buf, cap) → bytes read |
 
 ---
 
@@ -68,10 +70,12 @@ Syscall table (16 implemented, all in `kernel/src/syscall/mod.rs`):
 Load and execute Linux x86_64 static ELF binaries by translating Linux
 syscalls → NexusOS IPC. Milestone: `echo`, `ls`, `cat` static ELFs run natively.
 
-### Phase 6.1 — VFS + FAT32 from ring-3
+### Phase 6.1 — FAT32 from ring-3 *(partially done: v0.6.1)*
 
-Virtual filesystem layer: `ls /boot`, `cat /boot/limine.conf` from the
-ring-3 shell via SYS_DISK_READ + FAT32 path parsing in user-space.
+The ring-3 shell can now `ls` the disk root and `cat` a file via two new
+syscalls (SYS_FS_LIST=17, SYS_FS_READ=18) bridging to the kernel FAT32 driver.
+Remaining: subdirectory path parsing (`ls /boot`) and a user-space VFS layer
+built on SYS_DISK_READ.
 
 ### Phase 6.2 — Network stack
 
