@@ -22,7 +22,7 @@ use core::sync::atomic::Ordering;
 static BOOTX64_EFI: &[u8] = include_bytes!("../../../limine/bin/BOOTX64.EFI");
 
 static LIMINE_CONF: &[u8] =
-    b"# NexusOS Boot Configuration\ntimeout: 5\ndefault_entry: 1\n\n/NexusOS\n    protocol: limine\n    path: boot():/boot/nexus-kernel\n    cmdline: target=laptop\n";
+    b"# NexusOS Boot Configuration\ntimeout: 5\ndefault_entry: 1\n\n/NexusOS Laptop\n    protocol: limine\n    path: boot():/boot/nexus-kernel\n    cmdline: target=laptop loglevel=info\n";
 
 /// EFI shell startup script: auto-launches Limine when OVMF has no saved
 /// boot entry for this disk (first power-on after install). After Limine
@@ -59,7 +59,7 @@ pub extern "C" fn task_installer() -> ! {
 
     kprintln!();
     kprintln!("╔══════════════════════════════════════════╗");
-    kprintln!("║        NexusOS Installer v0.5            ║");
+    kprintln!("║        NexusOS Installer v0.6            ║");
     kprintln!("║  World's First AI-Native OS              ║");
     kprintln!("╚══════════════════════════════════════════╝");
     kprintln!();
