@@ -182,7 +182,14 @@ pub extern "C" fn _start() -> ! {
     // VirtIO vendor 0x1AF4; device 0x1001 = legacy blk, 0x1042 = transitional
     const VIRTIO_VENDOR: u16 = 0x1AF4;
     match drivers::pci::find(&[(VIRTIO_VENDOR, 0x1001), (VIRTIO_VENDOR, 0x1042)]) {
-        Some(dev) => {
+        Some(mut dev) => {
+            // Enable I/O space + bus-master BEFORE re-reading BAR0.
+            // OVMF on first boot with q35 may leave BAR0=0 even for I/O-capable
+            // transitional devices; enabling I/O space first causes the device to
+            // respond to subsequent BAR reads with the correct value.
+            dev.enable_io_and_busmaster();
+            // Re-read BAR0 after enabling I/O space.
+            dev.bar0 = drivers::pci::read32(dev.bus, dev.dev, dev.func, 0x10);
             kprintln!("[disk] PCI {:02x}:{:02x}.{} vendor={:#06x} device={:#06x} BAR0={:#010x}",
                       dev.bus, dev.dev, dev.func,
                       dev.vendor_id, dev.device_id, dev.bar0);
@@ -191,7 +198,6 @@ pub extern "C" fn _start() -> ! {
                 kprintln!("[disk] MMIO addr={:#010x} — needs MMIO VirtIO transport",
                           dev.bar0 & !0xF);
             } else {
-                dev.enable_io_and_busmaster();
                 match drivers::virtio::blk::init(dev.io_base()) {
                     Ok(sectors) => {
                         let gib = sectors / (2 * 1024 * 1024);
