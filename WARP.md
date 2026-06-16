@@ -8,7 +8,7 @@ this repository.
 NexusOS is a **from-scratch Rust microkernel** — the world's first AI-native
 operating system.  No Linux.  No glibc.  No distro assumptions.
 
-**Current state: v0.5.3 — Phases 1–5.3 verified (QEMU + KVM).**  
+**Current state: v0.6.0 — Phases 1–5 verified (QEMU + KVM). Ring-3 interactive shell boots.**  
 **Next: Phase 5.4 — Boot from installed disk; VirtIO-vsock → Ollama**
 
 The old Ubuntu/distro material is preserved under `legacy/` but is never built.
@@ -54,7 +54,8 @@ make bahamut && make iso-bahamut                   # AArch64
 | `scheduler` | 2 | Round-robin preemptive, TSS.RSP0 + PERCPU updates |
 | `ipc/{mod,ports}` | 3 | Message queues (depth=8), blocking send/recv, named ports |
 | `syscall` | 4 | STAR/LSTAR/FMASK/EFER, GS-relative naked entry, 9 syscalls |
-| `userspace` | 4 | Ring-3 page mapping in PML4[1], nexus-init machine code |
+| `userspace` | 4 | Ring-3 page mapping in PML4[1], NASM shell binary (shell_init.asm) |
+| `build.rs`  | 6 | Assembles userspace/shell_init.asm → OUT_DIR/shell_init.bin via NASM |
 
 ## Phase 5: AI Core (In Progress)
 

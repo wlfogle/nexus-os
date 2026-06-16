@@ -226,13 +226,6 @@ pub extern "C" fn _start() -> ! {
 
     scheduler::init();                      // register idle process
 
-    // ── Phase 3: IPC echo server + client ────────────────────────────
-    scheduler::spawn(b"echo-server", task_echo_server)
-        .expect("failed to spawn echo-server");
-    scheduler::spawn(b"echo-client", task_echo_client)
-        .expect("failed to spawn echo-client");
-    kprintln!("[ipc]  echo-server and echo-client spawned");
-
     // ── Phase 4: Syscall interface + user-space process ───────────────
     syscall::init();
     let user_pid = userspace::spawn_user_init();
@@ -242,9 +235,6 @@ pub extern "C" fn _start() -> ! {
     scheduler::spawn(b"nexus-ai", task_nexus_ai)
         .expect("failed to spawn nexus-ai");
     kprintln!("[ai]   nexus-ai AI Core daemon spawned");
-    scheduler::spawn(b"kbd-echo", task_keyboard_echo)
-        .expect("failed to spawn kbd-echo");
-    kprintln!("[kbd]  keyboard echo task spawned");
 
     // ── NexusOS Installer ───────────────────────────────────────────────
     // Runs only when disk is unformatted (first boot from ISO).
@@ -258,9 +248,9 @@ pub extern "C" fn _start() -> ! {
     arch::enable_interrupts();
     kprintln!("[arch] Interrupts enabled — scheduler is LIVE");
     kprintln!();
-    kprintln!("NexusOS v{} — Phase 5: AI Core + PS/2 keyboard active.",
+    kprintln!("NexusOS v{} — Phase 5: Ring-3 shell + AI Core + PS/2 keyboard active.",
               env!("CARGO_PKG_VERSION"));
-    kprintln!("[kbd]  PS/2 keyboard online — type to interact");
+    kprintln!("[kbd]  PS/2 keyboard online — nexus-shell ready");
 
     // Idle loop — preempted every 10 ms
     loop {
@@ -299,35 +289,6 @@ macro_rules! kprintln {
     ($($arg:tt)*)   => ($crate::kprint!("{}\n", format_args!($($arg)*)));
 }
 
-// ─── Phase 5: Keyboard echo kernel task ──────────────────────────────────────────
-
-/// Kernel thread that echoes keystrokes to serial + framebuffer.
-/// Proves the full ring-0 keyboard input pipeline:
-///   IRQ1 fires → scancode translated → key buffered → BlockedOnKey process woken
-///   → this task reads the char → prints it
-extern "C" fn task_keyboard_echo() -> ! {
-    kprintln!("[kbd]  keyboard echo task running — type something!");
-    loop {
-        // Block until a key arrives (IRQ1 wakes us)
-        while !io::keyboard::has_key() {
-            process::set_state(scheduler::current_id(),
-                               process::ProcessState::BlockedOnKey);
-            unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
-            process::set_state(scheduler::current_id(),
-                               process::ProcessState::Running);
-        }
-        if let Some(ch) = io::keyboard::try_read() {
-            match ch {
-                b'\n' | 13 => kprintln!(),
-                8          => kprint!("\x08 \x08"),  // backspace: erase
-                27         => kprintln!("[ESC]"),
-                c if c >= 32 => kprint!("{}", c as char),
-                _          => {}
-            }
-        }
-    }
-}
-
 // ─── Phase 5: AI Core kernel thread ────────────────────────────────────────────
 
 /// AI Core daemon — registers the `nexus.ai` port and serves inference requests.
@@ -360,86 +321,6 @@ extern "C" fn task_nexus_ai() -> ! {
         let reply = Message::with_str(req.from, MSG_AI_RESPONSE, &reply_text);
         ipc_send(req.from, reply).ok();
         kprintln!("[nexus-ai] response sent to pid={}", req.from);
-    }
-}
-
-// ─── Kernel tasks (Phase 3 IPC demo) ──────────────────────────────────────────────
-
-/// Echo server — registers port "nexus.echo", receives any message, echoes back.
-/// This is the prototype for AI Core, filesystem, and network servers.
-extern "C" fn task_echo_server() -> ! {
-    use ipc::{ipc_recv, ipc_send, Message, ANY, MSG_PONG};
-    use ipc::ports::port_register;
-
-    port_register(b"nexus.echo").expect("echo-server: port register failed");
-    kprintln!("[echo-server] registered port 'nexus.echo'");
-
-    let mut req = Message::new(0, 0);
-    loop {
-        // Block until a message arrives from any sender
-        ipc_recv(ANY, &mut req).expect("echo-server: recv failed");
-
-        kprintln!("[echo-server] got MSG {:04x} from pid={} len={}: {}",
-                  req.msg_type, req.from, req.len, req.as_str());
-
-        // Echo back: type PONG, same payload
-        let reply = Message::with_str(req.from, MSG_PONG, req.as_str());
-        ipc_send(req.from, reply).ok();
-    }
-}
-
-/// Echo client — looks up the echo server by port, sends pings every 2 seconds.
-extern "C" fn task_echo_client() -> ! {
-    use ipc::{ipc_recv, ipc_send, Message, MSG_PING};
-    use ipc::ports::port_find;
-
-    // Wait a moment for the server to register its port
-    for _ in 0..50 {
-        unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
-    }
-
-    let mut seq: u32 = 0;
-    let mut reply = Message::new(0, 0);
-
-    loop {
-        // Find the echo server's PID via the port registry
-        let server_pid = loop {
-            if let Some(pid) = port_find(b"nexus.echo") {
-                break pid;
-            }
-            unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
-        };
-
-        // Build ping with a sequence number in the payload
-        seq = seq.wrapping_add(1);
-        // Write seq number as text into a small buffer
-        let mut buf = [0u8; 16];
-        let s = seq;
-        let digits = [
-            b'p', b'i', b'n', b'g', b'#',
-            b'0' + ((s / 10000) % 10) as u8,
-            b'0' + ((s / 1000)  % 10) as u8,
-            b'0' + ((s / 100)   % 10) as u8,
-            b'0' + ((s / 10)    % 10) as u8,
-            b'0' + (s % 10)           as u8,
-        ];
-        buf[..digits.len()].copy_from_slice(&digits);
-        let text = core::str::from_utf8(&buf[..digits.len()]).unwrap_or("?");
-
-        let ping = Message::with_str(server_pid, MSG_PING, text);
-        kprintln!("[echo-client] -> pid={} MSG_PING '{}'", server_pid, text);
-
-        ipc_send(server_pid, ping).expect("echo-client: send failed");
-
-        // Wait for the echo reply
-        ipc_recv(server_pid, &mut reply).expect("echo-client: recv failed");
-        kprintln!("[echo-client] <- MSG_PONG '{}' (round-trip OK)", reply.as_str());
-
-        // Pause ~2 seconds (200 ticks at 100 Hz)
-        let start = timer::ticks();
-        while timer::ticks().wrapping_sub(start) < 200 {
-            unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
-        }
     }
 }
 

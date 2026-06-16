@@ -35,87 +35,28 @@ const USER_DATA_FLAGS: u64 = paging::flags::PRESENT
 /// User code flags: Present + User-accessible (executable, so no NX).
 const USER_CODE_FLAGS: u64 = paging::flags::PRESENT | paging::flags::USER;
 
-// ─── Embedded user-space init program ────────────────────────────────────────
+// ─── Embedded user-space shell ───────────────────────────────────────────────
 //
-// The "nexus-init" program runs in ring 3.  It demonstrates the full
-// ring-3 → ring-0 → ring-3 syscall round-trip.
+// `shell_init.bin` is a flat 64-bit x86_64 binary assembled at build time
+// from `src/userspace/shell_init.asm` by `build.rs` using NASM (-f bin).
 //
-// Program logic (hand-assembled x86_64):
-//   1. mov rax, SYS_GETPID (3); syscall  → rax = our PID
-//   2. loop:
-//        mov rax, SYS_WRITE (2)
-//        mov rdi, 1          (stdout)
-//        lea rsi, [rip+msg]
-//        mov rdx, msg_len
-//        syscall
-//        mov rax, SYS_SLEEP (9)
-//        mov rdi, 200        (~2 seconds)
-//        syscall
-//        jmp loop
+// It is position-independent (all data references use RIP-relative [rel …]
+// addressing) and fits in a single 4 KiB code page.  Mutable state
+// (cmd_buf, num_buf) lives on the writable stack page.
 //
-// Machine code generated from the above (position-independent):
+// Syscalls used (all implemented in kernel/src/syscall/mod.rs):
+//   SYS_EXIT=1  SYS_WRITE=2  SYS_GETPID=3  SYS_SLEEP=9  SYS_READ_CHAR=13
+const USER_INIT_CODE: &[u8] =
+    include_bytes!(concat!(env!("OUT_DIR"), "/shell_init.bin"));
 
-// Minimal test code to isolate the fault:
-// [0-6] mov rax, 3 (SYS_GETPID)
-// [7-8] syscall
-// [9]   f4 hlt  (ring-3 HLT causes #GP — proves we got past the syscall)
-//
-// OLD LAYOUT COMMENT (kept for reference):
-//
-//   [0-6]   mov rax, 3 (SYS_GETPID)
-//   [7-8]   syscall                          RIP_after = 9
-//   [9-11]  mov r12, rax
-//   [12-18] mov rax, 2 (SYS_WRITE)  ← LOOP_START
-//   [19-25] mov rdi, 1
-//   [26-32] lea rsi, [rip+30]               rip_after=33 + 30 = 63 = msg start ✓
-//   [33-39] mov rdx, 32 (msg length)
-//   [40-41] syscall                          RIP_after = 42 (code continues below)
-//   [42-48] mov rax, 9 (SYS_SLEEP)
-//   [49-55] mov rdi, 200
-//   [56-57] syscall                          RIP_after = 58 (code continues)
-//   [58-62] jmp LOOP_START                  rel = 12 - 63 = -51 = 0xFFFF_FFCD
-//   [63-94] msg (32 bytes)  ← data only, never executed
-// User-space init — ring-3 process that calls SYS_WRITE every 2 seconds.
-//
-// Code is position-independent; msg comes AFTER the jmp so all syscall
-// return addresses land in executable code, not data.
-//
-// Byte layout:
-//   [0-6]   mov rax, 3 (SYS_GETPID)
-//   [7-8]   syscall                      rip_after=9
-//   [9-11]  mov r12, rax                  (save our pid)
-//   [12-18] mov rax, 2 (SYS_WRITE)   ← LOOP_START
-//   [19-25] mov rdi, 1                   (fd = stdout)
-//   [26-32] lea rsi, [rip+30]            rip_after=33, target=63 = msg
-//   [33-39] mov rdx, 32                  (msg length)
-//   [40-41] syscall                      rip_after=42 (code)
-//   [42-48] mov rax, 9 (SYS_SLEEP)
-//   [49-55] mov rdi, 200                 (~2 seconds)
-//   [56-57] syscall                      rip_after=58 (code)
-//   [58-62] jmp LOOP_START              rel = 12 - 63 = -51
-//   [63-94] msg (32 bytes, data only)
-const USER_INIT_CODE: &[u8] = &[
-    // SYS_GETPID
-    0x48, 0xc7, 0xc0, 0x03, 0x00, 0x00, 0x00,  // [0]  mov rax, 3
-    0x0f, 0x05,                                  // [7]  syscall
-    0x49, 0x89, 0xc4,                            // [9]  mov r12, rax
-    // SYS_WRITE loop
-    0x48, 0xc7, 0xc0, 0x02, 0x00, 0x00, 0x00,  // [12] mov rax, 2
-    0x48, 0xc7, 0xc7, 0x01, 0x00, 0x00, 0x00,  // [19] mov rdi, 1
-    0x48, 0x8d, 0x35, 0x1e, 0x00, 0x00, 0x00,  // [26] lea rsi, [rip+30] → 63
-    0x48, 0xc7, 0xc2, 0x20, 0x00, 0x00, 0x00,  // [33] mov rdx, 32
-    0x0f, 0x05,                                  // [40] syscall → rip=42
-    // SYS_SLEEP
-    0x48, 0xc7, 0xc0, 0x09, 0x00, 0x00, 0x00,  // [42] mov rax, 9
-    0x48, 0xc7, 0xc7, 0xc8, 0x00, 0x00, 0x00,  // [49] mov rdi, 200
-    0x0f, 0x05,                                  // [56] syscall → rip=58
-    // jmp LOOP_START: rel = 12 - (58+5) = 12 - 63 = -51 = 0xFFFF_FFCD
-    0xe9, 0xcd, 0xff, 0xff, 0xff,               // [58] jmp -51
-    // msg data (32 bytes, never executed, only referenced by lea)
-    b'[', b'n', b'e', b'x', b'u', b's', b'-', b'i', b'n', b'i', b't',
-    b']', b' ', b'H', b'e', b'l', b'l', b'o', b' ', b'f', b'r',
-    b'o', b'm', b' ', b'r', b'i', b'n', b'g', b' ', b'3', b'!', b'\n',
-];
+// Compile-time guard: the kernel maps exactly one 4 KiB page for the shell.
+// If the binary ever exceeds this, add additional page mappings in
+// spawn_user_init() before increasing this limit.
+const _SHELL_SIZE_CHECK: () = assert!(
+    USER_INIT_CODE.len() <= 4096,
+    "shell_init.bin exceeds one code page (4096 bytes) — \
+     add more page mappings in spawn_user_init()"
+);
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
