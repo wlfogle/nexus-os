@@ -63,6 +63,7 @@ const IA32_EFER:           u32 = 0xC000_0080;
 const IA32_STAR:           u32 = 0xC000_0081;
 const IA32_LSTAR:          u32 = 0xC000_0082;
 const IA32_FMASK:          u32 = 0xC000_0084;
+const IA32_GS_BASE:        u32 = 0xC000_0101;
 const IA32_KERNEL_GS_BASE: u32 = 0xC000_0102;
 
 // ─── Per-CPU data (single CPU, accessed via GS after swapgs) ─────────────────
@@ -119,9 +120,17 @@ pub fn init() {
         //    0x200 = IF (interrupt flag) — disable interrupts during syscall
         Msr::new(IA32_FMASK).write(0x200);
 
-        // 5. KERNEL_GS_BASE: points to our PerCpu struct
-        //    `swapgs` on syscall entry makes GS.base = &PERCPU
-        Msr::new(IA32_KERNEL_GS_BASE).write(&raw const PERCPU as u64);
+        // 5. GS base: keep GS.base = &PERCPU at ALL times (ring 0 and ring 3).
+        //    The syscall stub does NOT swapgs, which avoids the swapgs
+        //    re-entrancy hazard: when one ring-3 process blocks *inside* a
+        //    syscall (GS would be swapped) and the scheduler runs another
+        //    ring-3 process that also issues a syscall, a swapgs-based design
+        //    reads the wrong shadow MSR and loads a garbage kernel stack.
+        //    We also point the swapgs-shadow MSR at &PERCPU so any stray
+        //    swapgs is harmless.  User programs here do not use GS.
+        let percpu = &raw const PERCPU as u64;
+        Msr::new(IA32_GS_BASE).write(percpu);
+        Msr::new(IA32_KERNEL_GS_BASE).write(percpu);
     }
     crate::kprintln!("[syscall] STAR/LSTAR/FMASK/EFER/KERNEL_GS_BASE configured");
 }
@@ -152,16 +161,19 @@ global_asm!(
     ".global _nexus_syscall_entry",
     "_nexus_syscall_entry:",
 
-    // After swapgs, GS.base = &PERCPU (IA32_KERNEL_GS_BASE).
-    // Use GS-relative addressing (gs:[offset]) to access PERCPU fields —
-    // this is the correct x86_64 idiom and avoids any linker symbol ambiguity.
-    "swapgs",
-
+    // GS.base is permanently &PERCPU (set in init; no swapgs — see init() note).
+    // Use GS-relative addressing (gs:[offset]) to access PERCPU fields.
     // PERCPU layout (must match PerCpu struct offsets):
     //   gs:[0]  = kernel_rsp   (offset 0)
     //   gs:[8]  = user_rsp     (offset 8)
-    "mov qword ptr gs:[8], rsp",   // save user RSP to PERCPU.user_rsp
-    "mov rsp, qword ptr gs:[0]",   // load kernel RSP from PERCPU.kernel_rsp
+    "mov qword ptr gs:[8], rsp",   // transient stash of user RSP (IF=0: no preemption)
+    "mov rsp, qword ptr gs:[0]",   // switch to this process's kernel stack
+
+    // Save the user RSP on THIS process's kernel stack — NOT the shared
+    // PERCPU.user_rsp slot — so it survives the syscall blocking and another
+    // process issuing its own syscall in the meantime (e.g. SYS_EXEC's child).
+    "push qword ptr gs:[8]",       // [deepest] saved user RSP
+    "sub rsp, 8",                  // 16-byte alignment padding (keep call aligned)
 
     // Save user return state (needed for sysretq)
     "push r11",          // user RFLAGS
@@ -198,13 +210,13 @@ global_asm!(
     "pop rcx",           // user RIP  → RCX (used by sysretq)
     "pop r11",           // user RFLAGS → R11 (used by sysretq)
 
-    // Restore user RSP (GS still active — use GS-relative read)
-    "mov rsp, qword ptr gs:[8]",
+    // Restore user RSP from THIS process's kernel stack (per-process, safe
+    // across blocking/preemption).  Drop the alignment padding first.
+    "add rsp, 8",                  // discard alignment padding
+    "pop rsp",                     // restore user RSP
 
-    // Swap GS back to user GS before returning
-    "swapgs",
-
-    // Return to user space (restores RIP from RCX, RFLAGS from R11)
+    // Return to user space (restores RIP from RCX, RFLAGS from R11).
+    // No swapgs: GS.base remains &PERCPU in ring 3 as well.
     "sysretq",
 );
 
@@ -473,7 +485,10 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
             // Parse + map the ELF segments into the shared user address space.
             let entry = match crate::exec::load_elf(&buf[..n]) {
                 Ok(l)  => l.entry,
-                Err(_) => return -8, // ENOEXEC
+                Err(e) => {
+                    crate::kprintln!("[exec] load_elf failed: {}", e);
+                    return -8; // ENOEXEC
+                }
             };
 
             // Fresh user stack for the child, then spawn it ring-3.
