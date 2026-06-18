@@ -139,7 +139,7 @@ UEFI or BIOS firmware
               Phase 4 — Syscall + User Space
              12. STAR/LSTAR/FMASK/EFER + swapgs PERCPU entry
              13. First ring-3 process (IRETQ → USER_CODE_BASE)
-             14. 16 syscalls live (SYS_EXIT … SYS_DISK_WRITE)
+             14. 19 syscalls live (SYS_EXIT … SYS_EXEC)
              15. Idle loop (preempted every 10 ms)
 
               Phase 5 — AI Core + Drivers + Shell
@@ -149,7 +149,12 @@ UEFI or BIOS firmware
              19. PS/2 keyboard (IRQ1, ring-buffer, BlockedOnKey)
              20. FAT32 via fatfs crate (sector-buffered DiskIo adapter)
              21. Installer: GPT + FAT32 ESP + BOOTX64.EFI + kernel ELF → disk
-             22. ring-3 shell: `nexus>` prompt, SYS_READ_CHAR, 7 commands
+             22. ring-3 shell: `nexus>` prompt, SYS_READ_CHAR, 10 commands
+                 (help/version/uname/echo/ls/cat/run/ps/clear/reboot)
+
+              Phase 6 — Filesystem + Program Execution
+             23. ls / cat from ring-3 (SYS_FS_LIST / SYS_FS_READ)
+             24. ELF64 loader + SYS_EXEC: `run HELLO.ELF` runs a ring-3 program
 ```
 
 ## Phase Roadmap
@@ -161,6 +166,8 @@ UEFI or BIOS firmware
 | 3 | **Done** | IPC ring-buffers, blocking send/recv, named port registry | `ping#00007 round-trip OK` |
 | 4 | **Done** | `syscall`/`sysretq`, ring-3 user process, SYS_WRITE/SLEEP/IPC | `Hello from ring 3!` |
 | 5 | **Done** | AI Core (nexus.ai), PS/2 keyboard, VirtIO-blk, FAT32, installer, ring-3 shell | `nexus>` prompt |
+| 6.1 | **Done** | Ring-3 filesystem access — `ls` / `cat` via SYS_FS_LIST/SYS_FS_READ | `nexus> ls` lists ESP |
+| 6 | **Core done** | ELF64 loader + `SYS_EXEC` + parent/child wait; `run HELLO.ELF` | ring-3 ELF prints + exits |
 | 5.4 | **Next** | Boot from installed disk (OVMF); VirtIO-vsock → Ollama HTTP | — |
 
 ## Test VM

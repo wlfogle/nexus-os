@@ -41,6 +41,7 @@ BITS 64
 %define SYS_READ_CHAR  13
 %define SYS_FS_LIST    17
 %define SYS_FS_READ    18
+%define SYS_EXEC       19
 
 ; ── Buffer sizes (must all fit on one 4 096-byte stack page) ─────────────
 %define CMD_BUF_SIZE   256
@@ -448,6 +449,36 @@ fn_dispatch:
     jmp  .fin
 .ncat:
 
+    ; ── run <file> ────────────────────────────────────────────────────────
+    mov  rdi, r12
+    lea  rsi, [rel kw_run]
+    mov  rdx, 3
+    call fn_match
+    test rax, rax
+    jnz  .nrun
+    lea  rdi, [r12 + 3]                 ; advance past "run"
+    cmp  byte [rdi], ' '
+    jne  .run_usage                     ; "run" with no space → usage
+    inc  rdi                            ; skip the single space
+    cmp  byte [rdi], 0
+    je   .run_usage                     ; "run " with no filename → usage
+    mov  rax, SYS_EXEC                  ; rdi already = filename (arg1, NUL-term)
+    syscall                             ; rax = child exit code (or -err); blocks
+    test rax, rax
+    js   .run_err
+    jmp  .fin
+.run_err:
+    lea  rsi, [rel str_run_err]
+    mov  rdx, str_run_err_len
+    call fn_write
+    jmp  .fin
+.run_usage:
+    lea  rsi, [rel str_run_usage]
+    mov  rdx, str_run_usage_len
+    call fn_write
+    jmp  .fin
+.nrun:
+
     ; ── Unknown command ───────────────────────────────────────────────────────
     lea  rsi, [rel str_unk_pfx]
     mov  rdx, str_unk_pfx_len
@@ -498,6 +529,7 @@ str_help:
     db  "  echo <x> - print argument to screen", 13, 10
     db  "  ls       - list files on the disk", 13, 10
     db  "  cat <f>  - print a file's contents", 13, 10
+    db  "  run <f>  - load and run an ELF program", 13, 10
     db  "  ps       - list running processes", 13, 10
     db  "  clear    - clear the screen", 13, 10
     db  "  reboot   - exit shell and reboot", 13, 10
@@ -544,6 +576,14 @@ str_cat_usage:
     db  "usage: cat <file>", 13, 10
 str_cat_usage_len equ $ - str_cat_usage
 
+str_run_usage:
+    db  "usage: run <file>", 13, 10
+str_run_usage_len equ $ - str_run_usage
+
+str_run_err:
+    db  "run: failed to load program (not found or not a valid ELF)", 13, 10
+str_run_err_len equ $ - str_run_err
+
 ; ── Command keyword literals (length matched, no null terminator needed) ─────
 kw_help:    db  "help"
 kw_version: db  "version"
@@ -554,3 +594,4 @@ kw_ps:      db  "ps"
 kw_reboot:  db  "reboot"
 kw_ls:      db  "ls"
 kw_cat:     db  "cat"
+kw_run:     db  "run"

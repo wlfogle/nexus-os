@@ -51,6 +51,11 @@ pub const SYS_DISK_WRITE:    u64 = 16; // disk_write(lba, buf_ptr, num_sectors) 
 // ── Phase 6.1: ring-3 filesystem access ──────────────────────────────────────
 pub const SYS_FS_LIST:       u64 = 17; // fs_list(buf_ptr, cap) → bytes (newline-separated names)
 pub const SYS_FS_READ:       u64 = 18; // fs_read(name_ptr (NUL-term), buf_ptr, cap) → bytes read
+// ── Phase 6: program execution ────────────────────────────────────────────────
+pub const SYS_EXEC:          u64 = 19; // exec(name_ptr (NUL-term)) → child exit code or -err
+
+/// Largest program image SYS_EXEC will load from disk (1 MiB).
+const MAX_PROG_BYTES: usize = 1024 * 1024;
 
 // ─── MSR addresses ───────────────────────────────────────────────────────────
 
@@ -212,10 +217,17 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
     match num {
         // ── SYS_EXIT ──────────────────────────────────────────────────────
         SYS_EXIT => {
-            let pid = scheduler::current_id();
-            crate::kprintln!("[syscall] SYS_EXIT pid={} status={}", pid, a1 as i64);
+            let pid  = scheduler::current_id();
+            let code = a1 as i64;
+            crate::kprintln!("[syscall] SYS_EXIT pid={} status={}", pid, code);
             process::set_state(pid, process::ProcessState::Dead);
             ipc::inbox_free(pid);
+            // If a parent is blocked in SYS_EXEC waiting on us, wake it with our
+            // exit code so `run` can return.
+            let parent = process::get_parent(pid);
+            if parent != 0 {
+                process::deliver_child_exit(parent, pid, code);
+            }
             // Yield — scheduler will pick another process
             unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
             0
@@ -430,6 +442,58 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
             match crate::fs::fat::read_file(name, buf) {
                 Ok(n)  => n as i64,
                 Err(_) => -2, // ENOENT
+            }
+        }
+
+        // ── SYS_EXEC ──────────────────────────────────────────────────────
+        // exec(name_ptr (NUL-terminated)) → child exit code, or negative error.
+        // Loads a static ELF64 from the FAT32 root, spawns it as a ring-3
+        // process, and blocks the caller until the child exits.
+        SYS_EXEC => {
+            let name_ptr = a1 as *const u8;
+            let mut nlen = 0usize;
+            unsafe {
+                while nlen < 255 && *name_ptr.add(nlen) != 0 { nlen += 1; }
+            }
+            let name = match core::str::from_utf8(
+                unsafe { core::slice::from_raw_parts(name_ptr, nlen) }
+            ) {
+                Ok(s)  => s,
+                Err(_) => return -22, // EINVAL
+            };
+
+            // Read the program image off the disk into a heap buffer.
+            let mut buf = alloc::vec::Vec::<u8>::new();
+            buf.resize(MAX_PROG_BYTES, 0);
+            let n = match crate::fs::fat::read_file(name, &mut buf) {
+                Ok(n)  => n,
+                Err(_) => return -2, // ENOENT
+            };
+
+            // Parse + map the ELF segments into the shared user address space.
+            let entry = match crate::exec::load_elf(&buf[..n]) {
+                Ok(l)  => l.entry,
+                Err(_) => return -8, // ENOEXEC
+            };
+
+            // Fresh user stack for the child, then spawn it ring-3.
+            crate::exec::map_user_stack(crate::exec::EXEC_STACK_TOP);
+            let child = match process::spawn_ring3(b"program", entry, crate::exec::EXEC_STACK_TOP) {
+                Some(c) => c,
+                None    => return -11, // EAGAIN — no free process slot
+            };
+            ipc::inbox_alloc(child);
+
+            // Block the caller until the child exits (SYS_EXIT wakes us).
+            let parent = scheduler::current_id();
+            process::set_wait_child(parent, child);
+            loop {
+                if let Some(code) = process::take_child_result(parent) {
+                    return code;
+                }
+                process::set_state(parent, process::ProcessState::BlockedOnChild);
+                unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
+                process::set_state(parent, process::ProcessState::Running);
             }
         }
 

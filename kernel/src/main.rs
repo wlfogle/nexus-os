@@ -22,6 +22,7 @@ extern "C" {
 
 pub mod arch;
 pub mod drivers;
+pub mod exec;
 pub mod fs;
 pub mod installer;
 pub mod io;

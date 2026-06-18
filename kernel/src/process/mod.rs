@@ -31,6 +31,9 @@ pub enum ProcessState {
     BlockedOnSend,
     /// Waiting for keyboard input — scheduler skips; IRQ1 handler wakes.
     BlockedOnKey,
+    /// Waiting for a spawned child process to exit (SYS_EXEC) — scheduler skips;
+    /// the child's SYS_EXIT wakes the parent via `deliver_child_exit`.
+    BlockedOnChild,
 }
 
 /// Process Control Block.
@@ -43,6 +46,14 @@ pub struct Process {
     /// Top of the kernel stack (fixed; used to reset RSP on syscall entry).
     pub kernel_stack_top: u64,
     pub name:  [u8; 32],
+    /// PID of the process that spawned this one via SYS_EXEC (0 = none).
+    pub parent: u64,
+    /// PID of the child this process is currently waiting on (0 = none).
+    pub wait_for: u64,
+    /// Set true when the awaited child has exited; consumed by the parent.
+    pub child_done: bool,
+    /// Exit code reported by the awaited child.
+    pub last_exit: i64,
     /// Kernel stack storage (lives inside the PCB for simplicity).
     pub stack: [u8; KSTACK_SIZE],
 }
@@ -55,6 +66,10 @@ impl Process {
             rsp:              0,
             kernel_stack_top: 0,
             name:             [0u8; 32],
+            parent:           0,
+            wait_for:         0,
+            child_done:       false,
+            last_exit:        0,
             stack:            [0u8; KSTACK_SIZE],
         }
     }
@@ -226,6 +241,52 @@ pub fn get_kernel_stack_top(id: u64) -> Option<u64> {
     table.iter()
         .find(|p| p.id == id)
         .map(|p| p.kernel_stack_top)
+}
+
+// ─── Parent / child-wait machinery (Phase 6 SYS_EXEC) ─────────────────────────
+
+/// Record `parent` as the parent of `child`, and mark `parent` as waiting on
+/// `child`.  Clears any stale child-exit result on the parent.
+pub fn set_wait_child(parent: u64, child: u64) {
+    let mut table = TABLE.lock();
+    for p in table.iter_mut() {
+        if p.id == child  { p.parent = parent; }
+        if p.id == parent { p.wait_for = child; p.child_done = false; p.last_exit = 0; }
+    }
+}
+
+/// Return the parent PID of `child` (0 if none).
+pub fn get_parent(child: u64) -> u64 {
+    let table = TABLE.lock();
+    table.iter().find(|p| p.id == child).map(|p| p.parent).unwrap_or(0)
+}
+
+/// Called from a child's SYS_EXIT: if `parent` is waiting on `child`, record the
+/// exit code, flag completion, and make the parent Ready again.
+pub fn deliver_child_exit(parent: u64, child: u64, code: i64) {
+    let mut table = TABLE.lock();
+    if let Some(p) = table.iter_mut().find(|p| p.id == parent) {
+        if p.wait_for == child {
+            p.last_exit   = code;
+            p.child_done  = true;
+            p.wait_for    = 0;
+            if p.state == ProcessState::BlockedOnChild {
+                p.state = ProcessState::Ready;
+            }
+        }
+    }
+}
+
+/// If `pid`'s awaited child has exited, consume and return its exit code.
+pub fn take_child_result(pid: u64) -> Option<i64> {
+    let mut table = TABLE.lock();
+    let p = table.iter_mut().find(|p| p.id == pid)?;
+    if p.child_done {
+        p.child_done = false;
+        Some(p.last_exit)
+    } else {
+        None
+    }
 }
 
 /// Return IDs of all Ready or Running processes, in table order.
