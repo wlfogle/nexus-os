@@ -231,6 +231,11 @@ pub extern "C" fn _start() -> ! {
     timer::init();                          // PIC remap + PIT 100 Hz
     kprintln!("[timer] PIC remapped, PIT running at {} Hz", timer::TIMER_HZ);
 
+    // PS/2 keyboard controller (i8042): bring it into a known-good state so
+    // scancodes + IRQ1 reach the kernel after the UEFI/Limine handoff.
+    io::keyboard::init();
+    kprintln!("[kbd]  i8042 initialised — scanning enabled, IRQ1 unmasked");
+
     scheduler::init();                      // register idle process
 
     // ── Phase 4: Syscall interface + user-space process ───────────────
