@@ -2,6 +2,29 @@
 
 All notable changes to the NexusOS from-scratch Rust microkernel.
 
+## [0.6.2] - 2026-06-18
+
+### ✨ Added — Phase 6: ELF64 program execution
+- **`kernel/src/exec/mod.rs`** — static ELF64 loader: validates the header,
+  maps every `PT_LOAD` segment into the shared user half (per-page alloc +
+  copy via the HHDM alias, `.bss` zeroed), and returns the entry point.
+- **`SYS_EXEC` (19)** — `exec(name)` reads a program off the FAT32 root, loads
+  it, spawns it as a ring-3 process, and blocks the caller until the child
+  exits, returning its exit code.
+- **Parent/child wait** in `process` — new `BlockedOnChild` state plus
+  `set_wait_child` / `deliver_child_exit` / `take_child_result`; `SYS_EXIT`
+  now wakes a waiting parent with the child's exit code.
+- **`paging::unmap_page`** — clears a 4 KiB PTE and returns the freed frame,
+  making repeat `run` of the fixed-address program safe.
+- **Reference program `userspace/hello.asm`** — a real static ELF64 (linked at
+  0x8040000000 via `ld`), embedded in the kernel and written to the ESP as
+  `HELLO.ELF` by the installer.
+- **Shell `run <file>` command** loads and runs an ELF from disk.
+### 🔧 VM
+- `nexusos-install` libvirt domain: added the legacy/transitional VirtIO
+  overrides (`virtio-blk/net-pci.disable-modern=on`, `disable-legacy=off`) so
+  the kernel's legacy VirtIO-blk driver detects the disk (matches `nexusos`).
+
 ## [0.6.1] - 2026-06-16
 
 ### ✨ Added — Phase 6.1: ring-3 filesystem access

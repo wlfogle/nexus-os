@@ -21,7 +21,7 @@ Phases 1–5 verified on QEMU + KVM. Ring-3 interactive shell boots.
 | 4 | ✓ Done | `syscall`/`sysretq` fast path, ring-3 user process via IRETQ |
 | 5 | ✓ Done | AI Core daemon (nexus.ai), PS/2 keyboard, VirtIO-blk, FAT32, self-installer, ring-3 shell (`nexus>`) |
 
-Syscall table (18 implemented, all in `kernel/src/syscall/mod.rs`):
+Syscall table (19 implemented, all in `kernel/src/syscall/mod.rs`):
 
 | # | Name | Description |
 |---|------|-------------|
@@ -43,6 +43,7 @@ Syscall table (18 implemented, all in `kernel/src/syscall/mod.rs`):
 | 16 | SYS_DISK_WRITE | disk_write(lba, buf, sectors) |
 | 17 | SYS_FS_LIST | fs_list(buf, cap) → bytes (newline-separated names) |
 | 18 | SYS_FS_READ | fs_read(name, buf, cap) → bytes read |
+| 19 | SYS_EXEC | exec(name) → child exit code (loads + runs a static ELF64) |
 
 ---
 
@@ -65,10 +66,19 @@ Syscall table (18 implemented, all in `kernel/src/syscall/mod.rs`):
 
 ## Mid-term
 
-### Phase 6 — Linux ELF personality server
+### Phase 6 — ELF program execution *(core done: v0.6.2)*
 
-Load and execute Linux x86_64 static ELF binaries by translating Linux
-syscalls → NexusOS IPC. Milestone: `echo`, `ls`, `cat` static ELFs run natively.
+The kernel now loads and runs **static ELF64** programs from the FAT32 disk:
+`exec/mod.rs` parses the ELF header + `PT_LOAD` segments, maps them into the
+user half, and `SYS_EXEC` (19) spawns the image as a ring-3 process while the
+caller blocks on a real parent/child wait.  The shell `run HELLO.ELF` command
+executes the bundled reference program (`userspace/hello.asm`, linked at
+0x8040000000, written to the ESP by the installer).
+
+Remaining for full Phase 6: a **Linux** personality server (translate Linux
+syscalls → NexusOS IPC so unmodified Linux ELFs run), per-process address
+spaces (CR3 switching) so programs can link at the conventional base, and
+dynamic-linker support.
 
 ### Phase 6.1 — FAT32 from ring-3 *(partially done: v0.6.1)*
 

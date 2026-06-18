@@ -536,14 +536,14 @@ str_help:
 str_help_len equ $ - str_help
 
 str_version:
-    db  "NexusOS v0.6.1", 13, 10
+    db  "NexusOS v0.6.2", 13, 10
     db  "Kernel:  nexus-kernel (Rust, Limine boot protocol)", 13, 10
-    db  "Phase:   6  -- Ring-3 FS (ls/cat) | IPC | Syscall interface", 13, 10
+    db  "Phase:   6  -- ELF exec (run) + FS (ls/cat) | IPC | Syscalls", 13, 10
     db  "Arch:    x86_64", 13, 10
 str_version_len equ $ - str_version
 
 str_uname:
-    db  "NexusOS nexus-kernel 0.6.1 x86_64", 13, 10
+    db  "NexusOS nexus-kernel 0.6.2 x86_64", 13, 10
 str_uname_len equ $ - str_uname
 
 str_clear:
