@@ -6,9 +6,10 @@
 //!   Code:  USER_CODE_BASE  = 0x0000_0040_0000  (4 MB, mapped PRESENT|USER|EXEC)
 //!   Stack: USER_STACK_TOP  = 0x0000_7FFF_F000  (1 page below 128 TB boundary)
 //!
-//! Phase 4 shares the kernel's page tables — no separate address space yet.
-//! The user code page is marked user-accessible; the kernel remains protected.
-//! Separate page tables per process come in Phase 5.
+//! Each user process owns a private PML4 (via `paging::alloc_user_pml4`) that
+//! shares the kernel higher half but has a private user half; the shell's code
+//! and stack are mapped into it with `paging::map_page_in`.  The scheduler
+//! loads the process's PML4 into CR3 on every switch.
 //!
 //! First entry uses IRETQ (not sysretq) because we're going ring-0 → ring-3
 //! for the FIRST time, not returning from a syscall.
@@ -76,6 +77,11 @@ const _SHELL_SIZE_CHECK: () = assert!(
 pub fn spawn_user_init() -> u64 {
     const PAGE_SIZE: u64 = 4096;
 
+    // ── 0. Allocate a private address space for the shell ─────────────────
+    // The new PML4 shares the entire kernel higher half but has an empty user
+    // half; the shell's code + stack are mapped into it below via map_page_in.
+    let pml4 = paging::alloc_user_pml4();
+
     // ── 1. Allocate + map as many user-exec code pages as the binary needs ──
     // alloc_frame() returns arbitrary (non-contiguous) physical frames, so we
     // map each page individually and copy that page's slice into its own frame
@@ -85,7 +91,7 @@ pub fn spawn_user_init() -> u64 {
     let num_pages = (code_len + PAGE_SIZE - 1) / PAGE_SIZE;
     for i in 0..num_pages {
         let page_phys = physical::alloc_frame();
-        paging::map_page(USER_CODE_BASE + i * PAGE_SIZE, page_phys, USER_CODE_FLAGS);
+        paging::map_page_in(pml4, USER_CODE_BASE + i * PAGE_SIZE, page_phys, USER_CODE_FLAGS);
 
         let dst   = paging::phys_to_virt(page_phys) as *mut u8;
         let start = (i * PAGE_SIZE) as usize;
@@ -106,11 +112,11 @@ pub fn spawn_user_init() -> u64 {
 
     // ── 2. Allocate + map stack page ─────────────────────────────────────
     let stack_phys = physical::alloc_frame();
-    paging::map_page(USER_STACK_TOP - PAGE_SIZE, stack_phys, USER_DATA_FLAGS);
+    paging::map_page_in(pml4, USER_STACK_TOP - PAGE_SIZE, stack_phys, USER_DATA_FLAGS);
 
     // ── 3. Create PCB with ring-3 initial interrupt frame ─────────────────
     // We call process::spawn_user which sets up CS=0x23/SS=0x1B
-    let id = spawn_user_process(b"nexus-init", USER_CODE_BASE, USER_STACK_TOP)
+    let id = spawn_user_process(b"nexus-init", USER_CODE_BASE, USER_STACK_TOP, pml4)
         .expect("failed to spawn user init");
 
     // ── 4. Allocate IPC inbox ─────────────────────────────────────────────
@@ -122,10 +128,9 @@ pub fn spawn_user_init() -> u64 {
     id
 }
 
-/// Allocate a process with a ring-3 initial interrupt frame.
-fn spawn_user_process(name: &[u8], user_rip: u64, user_rsp_top: u64) -> Option<u64> {
-    use process::MAX_PROCS;
-    use core::sync::atomic::Ordering;
+/// Allocate a process with a ring-3 initial interrupt frame in address space
+/// `pml4_phys`.
+fn spawn_user_process(name: &[u8], user_rip: u64, user_rsp_top: u64, pml4_phys: u64) -> Option<u64> {
 
     // We build the PCB manually via the same mechanism as process::spawn,
     // but with ring-3 CS/SS selectors and user RSP.
@@ -142,5 +147,5 @@ fn spawn_user_process(name: &[u8], user_rip: u64, user_rsp_top: u64) -> Option<u
 
     // We need access to the process table internals — use the public spawn
     // then patch the stack frame.  Easier: just call process::spawn_ring3.
-    process::spawn_ring3(name, user_rip, user_rsp_top)
+    process::spawn_ring3(name, user_rip, user_rsp_top, pml4_phys)
 }

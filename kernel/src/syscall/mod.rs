@@ -256,8 +256,10 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
             if fd != 1 { return -22; } // EINVAL
             if len > 4096 { return -7; } // E2BIG
 
-            // Safety: buf_ptr is from user space.  Phase 4 runs user in same
-            // address space as kernel (no separate page tables yet — Phase 5).
+            // Safety: buf_ptr is from the calling process's user half, which is
+            // mapped in the address space active during this syscall (the
+            // caller's own PML4).  The kernel higher half is shared, so the
+            // copy below reads valid user memory.
             let slice = unsafe { core::slice::from_raw_parts(ptr, len) };
             if let Ok(s) = core::str::from_utf8(slice) {
                 crate::kprint!("{}", s);
@@ -482,20 +484,31 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
                 Err(_) => return -2, // ENOENT
             };
 
-            // Parse + map the ELF segments into the shared user address space.
-            let entry = match crate::exec::load_elf(&buf[..n]) {
+            // Build a private address space for the child: a fresh PML4 that
+            // shares the kernel higher half but has an empty user half.
+            let child_pml4 = crate::memory::paging::alloc_user_pml4();
+
+            // Parse + map the ELF segments into the child's address space.
+            let entry = match crate::exec::load_elf(child_pml4, &buf[..n]) {
                 Ok(l)  => l.entry,
                 Err(e) => {
                     crate::kprintln!("[exec] load_elf failed: {}", e);
+                    unsafe { crate::memory::paging::free_user_pml4(child_pml4); }
                     return -8; // ENOEXEC
                 }
             };
 
-            // Fresh user stack for the child, then spawn it ring-3.
-            crate::exec::map_user_stack(crate::exec::EXEC_STACK_TOP);
-            let child = match process::spawn_ring3(b"program", entry, crate::exec::EXEC_STACK_TOP) {
+            // Fresh user stack for the child, then spawn it ring-3 in its own
+            // address space.
+            crate::exec::map_user_stack(child_pml4, crate::exec::EXEC_STACK_TOP);
+            let child = match process::spawn_ring3(
+                b"program", entry, crate::exec::EXEC_STACK_TOP, child_pml4,
+            ) {
                 Some(c) => c,
-                None    => return -11, // EAGAIN — no free process slot
+                None    => {
+                    unsafe { crate::memory::paging::free_user_pml4(child_pml4); }
+                    return -11; // EAGAIN — no free process slot
+                }
             };
             ipc::inbox_alloc(child);
 
@@ -504,6 +517,9 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
             process::set_wait_child(parent, child);
             loop {
                 if let Some(code) = process::take_child_result(parent) {
+                    // The child is Dead and we are running in the parent's
+                    // address space again; reclaim the child's private space.
+                    unsafe { crate::memory::paging::free_user_pml4(child_pml4); }
                     return code;
                 }
                 process::set_state(parent, process::ProcessState::BlockedOnChild);

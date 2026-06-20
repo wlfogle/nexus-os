@@ -2,25 +2,26 @@
 //!
 //! A minimal but complete static **ELF64** loader.  It parses an in-memory ELF
 //! image (already read from the FAT32 disk by the caller), maps every `PT_LOAD`
-//! segment into the shared user address space, zeroes any `.bss` tail, and
+//! segment into the target process's address space, zeroes any `.bss` tail, and
 //! returns the entry point so the caller can spawn a ring-3 process.
 //!
-//! # Address-space model (Phase 6.x)
+//! # Address-space model
 //!
-//! NexusOS still runs every process in one shared page table (per-process CR3
-//! switching is a later phase).  Executed programs therefore must link into a
-//! dedicated slice of the user half that does not collide with the resident
-//! shell (which lives at `userspace::USER_CODE_BASE` = 512 GiB, PDPT[0] of
-//! PML4[1]).  The reference test program links at [`EXEC_BASE`] (PDPT[1] of
-//! PML4[1]); its stack uses [`EXEC_STACK_TOP`] (PDPT[5]).  All three live in
-//! PML4[1], which Limine never identity-maps, so `map_page` can manage them.
+//! Each executed program runs in its **own** address space: the caller builds a
+//! fresh PML4 with [`crate::memory::paging::alloc_user_pml4`] (sharing the
+//! kernel higher half but with a private user half) and passes its physical
+//! address to [`load_elf`] and [`map_user_stack`], which map through the HHDM
+//! into that table via `map_page_in`.  The program image links at [`EXEC_BASE`]
+//! and its stack uses [`EXEC_STACK_TOP`]; both live in PML4[1], which Limine
+//! never identity-maps.  Because the user half is private, a program never
+//! collides with the resident shell even when they pick overlapping addresses.
 //!
 //! # Re-entrancy
 //!
 //! `run` is synchronous: the shell blocks until the child exits, so only one
-//! loaded program exists at a time.  Each load first unmaps any page it is
-//! about to use (freeing the previous program's frame), which makes repeated
-//! `run` invocations safe without leaking the fixed-address region.
+//! loaded program exists at a time.  The child's address space is reclaimed in
+//! full (see `free_user_pml4`) once it exits, so repeated `run` invocations do
+//! not leak frames.
 
 use crate::memory::{paging, physical};
 
@@ -51,13 +52,14 @@ pub struct Loaded {
     pub entry: u64,
 }
 
-/// Parse and map a static ELF64 image.  Returns the entry point on success.
+/// Parse and map a static ELF64 image into the address space rooted at
+/// `pml4_phys`.  Returns the entry point on success.
 ///
-/// The image is mapped into the current (shared) address space using
+/// The image is mapped into the target process's private address space using
 /// user-accessible pages.  File contents are copied through each frame's HHDM
 /// alias — never through the read-only user virtual address — so this works
-/// regardless of CR0.WP.
-pub fn load_elf(data: &[u8]) -> Result<Loaded, &'static str> {
+/// regardless of CR0.WP and regardless of which PML4 is currently active.
+pub fn load_elf(pml4_phys: u64, data: &[u8]) -> Result<Loaded, &'static str> {
     // ── ELF header validation ────────────────────────────────────────────────
     if data.len() < 64 {
         return Err("elf: image smaller than ELF header");
@@ -137,7 +139,7 @@ pub fn load_elf(data: &[u8]) -> Result<Loaded, &'static str> {
             // Free any frame previously mapped here (repeat-run safety), then
             // allocate a fresh, zeroed frame and copy this page's file bytes
             // into it via the HHDM alias (writable kernel mapping).
-            if let Some(old) = paging::unmap_page(v) {
+            if let Some(old) = paging::unmap_page_in(pml4_phys, v) {
                 unsafe { physical::free_frame(old); }
             }
             let frame = physical::alloc_frame();
@@ -159,7 +161,7 @@ pub fn load_elf(data: &[u8]) -> Result<Loaded, &'static str> {
                 }
             }
 
-            paging::map_page(v, frame, flags);
+            paging::map_page_in(pml4_phys, v, frame, flags);
             v += PAGE;
         }
         loaded_any = true;
@@ -175,16 +177,18 @@ pub fn load_elf(data: &[u8]) -> Result<Loaded, &'static str> {
     Ok(Loaded { entry: e_entry })
 }
 
-/// (Re)map a single fresh, zeroed, user-writable stack page just below `top`.
-/// Returns the lowest stack address mapped.
-pub fn map_user_stack(top: u64) -> u64 {
+/// (Re)map a single fresh, zeroed, user-writable stack page just below `top`
+/// in the address space rooted at `pml4_phys`.  Returns the lowest stack
+/// address mapped.
+pub fn map_user_stack(pml4_phys: u64, top: u64) -> u64 {
     let page = top - PAGE;
-    if let Some(old) = paging::unmap_page(page) {
+    if let Some(old) = paging::unmap_page_in(pml4_phys, page) {
         unsafe { physical::free_frame(old); }
     }
     let frame = physical::alloc_frame();
     unsafe { core::ptr::write_bytes(paging::phys_to_virt(frame) as *mut u8, 0, PAGE as usize); }
-    paging::map_page(
+    paging::map_page_in(
+        pml4_phys,
         page,
         frame,
         paging::flags::PRESENT | paging::flags::WRITABLE
