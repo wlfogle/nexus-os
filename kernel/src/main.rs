@@ -28,6 +28,7 @@ pub mod installer;
 pub mod io;
 pub mod ipc;
 pub mod memory;
+pub mod net;
 pub mod panic;
 pub mod process;
 pub mod scheduler;
@@ -263,6 +264,12 @@ pub extern "C" fn _start() -> ! {
     kprintln!("NexusOS v{} — Phase 5: Ring-3 shell + AI Core + PS/2 keyboard active.",
               env!("CARGO_PKG_VERSION"));
     kprintln!("[kbd]  PS/2 keyboard online — nexus-shell ready");
+
+    // ── Phase 7: Networking ──────────────────────────────────────────────
+    // Run after interrupts are enabled so the PIT millisecond clock advances
+    // (smoltcp's DHCP retransmit timers depend on it). Discovers a VirtIO-net
+    // device, brings the link up, and demonstrates a DHCP/ARP round-trip.
+    net::init();
 
     // Idle loop — preempted every 10 ms
     loop {
