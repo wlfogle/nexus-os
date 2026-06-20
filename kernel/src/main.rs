@@ -211,6 +211,16 @@ pub extern "C" fn _start() -> ! {
         None => kprintln!("[disk] no VirtIO-blk device found"),
     }
 
+    // ── 7.55. NVMe + AHCI (SATA) block controllers ───────────────────────────
+    // Real-disk drivers via memory-mapped PCI BARs.  Each detects its
+    // controller class, logs model/capacity, and reads sector 0.
+    if !drivers::nvme::init() {
+        kprintln!("[nvme] no NVMe controller found");
+    }
+    if !drivers::ahci::init() {
+        kprintln!("[ahci] no AHCI SATA controller found");
+    }
+
     // ── 7.6. FAT32 filesystem ─────────────────────────────────────────────────
     // Must run after framebuffer (to display the [fs] line) and after disk driver.
     let fs_msg = fs::fat::init();
