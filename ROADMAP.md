@@ -44,6 +44,8 @@ Syscall table (19 implemented, all in `kernel/src/syscall/mod.rs`):
 | 17 | SYS_FS_LIST | fs_list(buf, cap) → bytes (newline-separated names) |
 | 18 | SYS_FS_READ | fs_read(name, buf, cap) → bytes read |
 | 19 | SYS_EXEC | exec(name) → child exit code (loads + runs a static ELF64) |
+| 20 | SYS_FS_LIST_PATH | fs_list_path(path, buf, cap) → bytes (subdir listing) |
+| 21 | SYS_FS_READ_PATH | fs_read_path(path, buf, cap) → bytes read (subdir file) |
 
 ---
 
@@ -80,12 +82,15 @@ syscalls → NexusOS IPC so unmodified Linux ELFs run), per-process address
 spaces (CR3 switching) so programs can link at the conventional base, and
 dynamic-linker support.
 
-### Phase 6.1 — FAT32 from ring-3 *(partially done: v0.6.1)*
-
-The ring-3 shell can now `ls` the disk root and `cat` a file via two new
-syscalls (SYS_FS_LIST=17, SYS_FS_READ=18) bridging to the kernel FAT32 driver.
-Remaining: subdirectory path parsing (`ls /boot`) and a user-space VFS layer
-built on SYS_DISK_READ.
+### Phase 6.1 — FAT32 from ring-3 *(subdir paths done: v0.6.2)*
+The ring-3 shell can `ls` the disk root and `cat` a file via SYS_FS_LIST=17 /
+SYS_FS_READ=18, and now also list/read files in **subdirectories** via the
+path-aware VFS layer (`kernel/src/fs/vfs.rs`) and two new syscalls
+(SYS_FS_LIST_PATH=20, SYS_FS_READ_PATH=21).  `fatfs` resolves `/`-separated
+components from `root_dir()` (`open_dir`/`open_file`), so `ls /EFI/BOOT`,
+`ls /boot`, and `cat /EFI/BOOT/limine.conf` all work from the `nexus>` prompt.
+Remaining: a user-space VFS abstraction built directly on SYS_DISK_READ and
+write-path operations (mkdir/rm from the shell).
 
 ### Phase 6.2 — Network stack
 

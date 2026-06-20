@@ -275,9 +275,14 @@ pub fn mkdir(path: &str) -> Result<(), &'static str> {
     result
 }
 
-/// Read an entire file at `path` into `buf`.
-/// Returns the number of bytes read.
-pub fn read_file(path: &str, buf: &mut [u8]) -> Result<usize, &'static str> {
+/// Read an entire file at `path` into `buf`, returning the number of bytes read.
+///
+/// `path` is `/`-separated and resolved relative to the volume root; the
+/// `fatfs` `open_file` walker trims a leading `/` and descends through each
+/// directory component, so both `HELLO.ELF` and `EFI/BOOT/limine.conf` resolve
+/// correctly.  This is the single read implementation used by both the
+/// root-relative `read_file` and the path-aware VFS layer.
+pub fn read_path(path: &str, buf: &mut [u8]) -> Result<usize, &'static str> {
     let guard = FS.lock();
     let fs    = guard.as_ref().ok_or("FAT32: not mounted")?;
     // Explicit block: root + file are dropped before guard is released.
@@ -296,6 +301,12 @@ pub fn read_file(path: &str, buf: &mut [u8]) -> Result<usize, &'static str> {
         Ok(total)
     };
     result
+}
+
+/// Read an entire file at `path` (root-relative name) into `buf`.
+/// Returns the number of bytes read.  Used by SYS_FS_READ and SYS_EXEC.
+pub fn read_file(path: &str, buf: &mut [u8]) -> Result<usize, &'static str> {
+    read_path(path, buf)
 }
 
 /// Create or overwrite the file at `path` with `data`.
@@ -321,16 +332,30 @@ pub fn write_file(path: &str, data: &[u8]) -> Result<(), &'static str> {
     result
 }
 
-/// List the root directory, writing newline-separated entry names into `buf`.
-/// Returns the number of bytes written.  Stops early if `buf` fills up.
-pub fn list_root(buf: &mut [u8]) -> Result<usize, &'static str> {
+/// List the directory at `rel` (root-relative, `/`-separated; `""` == root),
+/// writing newline-separated entry names into `buf`.  Returns the number of
+/// bytes written.  Stops early if `buf` fills up.
+///
+/// `rel` must already be normalized (no leading/trailing `/`).  For the root we
+/// iterate `root_dir()` directly; otherwise we descend via `open_dir`.  Both
+/// `root` and any opened subdirectory share the filesystem borrow `'a`, and
+/// `Dir::iter` clones the directory stream rather than borrowing the `Dir`, so
+/// the resulting iterator outlives the temporary `Dir` value safely.
+pub fn list_path(rel: &str, buf: &mut [u8]) -> Result<usize, &'static str> {
     let guard = FS.lock();
     let fs    = guard.as_ref().ok_or("FAT32: not mounted")?;
     let mut total = 0usize;
-    // Explicit block: root + iterator are dropped before the guard is released.
+    // Explicit block: root + subdir + iterator are dropped before the guard.
     {
         let root = fs.root_dir();
-        for entry in root.iter() {
+        let subdir;                       // kept alive for the iterator's scope
+        let iter = if rel.is_empty() {
+            root.iter()
+        } else {
+            subdir = root.open_dir(rel).map_err(|_| "FAT32: dir not found")?;
+            subdir.iter()
+        };
+        for entry in iter {
             let entry = entry.map_err(|_| "FAT32: dir read error")?;
             let name  = entry.file_name();      // alloc::string::String (lfn feature)
             let nb    = name.as_bytes();
@@ -343,6 +368,12 @@ pub fn list_root(buf: &mut [u8]) -> Result<usize, &'static str> {
         }
     }
     Ok(total)
+}
+
+/// List the root directory, writing newline-separated entry names into `buf`.
+/// Returns the number of bytes written.  Used by SYS_FS_LIST.
+pub fn list_root(buf: &mut [u8]) -> Result<usize, &'static str> {
+    list_path("", buf)
 }
 
 /// Returns `true` if a FAT filesystem is currently mounted.

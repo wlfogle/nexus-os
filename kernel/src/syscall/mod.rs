@@ -53,6 +53,9 @@ pub const SYS_FS_LIST:       u64 = 17; // fs_list(buf_ptr, cap) → bytes (newli
 pub const SYS_FS_READ:       u64 = 18; // fs_read(name_ptr (NUL-term), buf_ptr, cap) → bytes read
 // ── Phase 6: program execution ────────────────────────────────────────────────
 pub const SYS_EXEC:          u64 = 19; // exec(name_ptr (NUL-term)) → child exit code or -err
+// ── Phase 6.1: subdirectory path-aware filesystem access ─────────────────────
+pub const SYS_FS_LIST_PATH:  u64 = 20; // fs_list_path(path_ptr (NUL-term), buf_ptr, cap) → bytes
+pub const SYS_FS_READ_PATH:  u64 = 21; // fs_read_path(path_ptr (NUL-term), buf_ptr, cap) → bytes read
 
 /// Largest program image SYS_EXEC will load from disk (1 MiB).
 const MAX_PROG_BYTES: usize = 1024 * 1024;
@@ -452,6 +455,60 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
             };
             let buf = unsafe { core::slice::from_raw_parts_mut(buf_ptr, cap) };
             match crate::fs::fat::read_file(name, buf) {
+                Ok(n)  => n as i64,
+                Err(_) => -2, // ENOENT
+            }
+        }
+
+        // ── SYS_FS_LIST_PATH ─────────────────────────────────────────────
+        // fs_list_path(path_ptr (NUL-terminated, <=255), buf_ptr, cap)
+        //   → bytes written (newline-separated names). Path is `/`-separated;
+        //     `/` or empty lists the volume root.
+        SYS_FS_LIST_PATH => {
+            let path_ptr = a1 as *const u8;
+            let buf_ptr  = a2 as *mut u8;
+            let cap      = a3 as usize;
+            if cap == 0 { return 0; }
+            // Bounded scan of the NUL-terminated path (max 255 bytes).
+            let mut plen = 0usize;
+            unsafe {
+                while plen < 255 && *path_ptr.add(plen) != 0 { plen += 1; }
+            }
+            let path = match core::str::from_utf8(
+                unsafe { core::slice::from_raw_parts(path_ptr, plen) }
+            ) {
+                Ok(s)  => s,
+                Err(_) => return -22, // EINVAL
+            };
+            let buf = unsafe { core::slice::from_raw_parts_mut(buf_ptr, cap) };
+            match crate::fs::vfs::list(path, buf) {
+                Ok(n)  => n as i64,
+                Err(_) => -2, // ENOENT / not a directory / not mounted
+            }
+        }
+
+        // ── SYS_FS_READ_PATH ─────────────────────────────────────────────
+        // fs_read_path(path_ptr (NUL-terminated, <=255), buf_ptr, cap)
+        //   → bytes read. Path is `/`-separated and may name a file in any
+        //     subdirectory (e.g. /EFI/BOOT/limine.conf).
+        SYS_FS_READ_PATH => {
+            let path_ptr = a1 as *const u8;
+            let buf_ptr  = a2 as *mut u8;
+            let cap      = a3 as usize;
+            if cap == 0 { return 0; }
+            // Bounded scan of the NUL-terminated path (max 255 bytes).
+            let mut plen = 0usize;
+            unsafe {
+                while plen < 255 && *path_ptr.add(plen) != 0 { plen += 1; }
+            }
+            let path = match core::str::from_utf8(
+                unsafe { core::slice::from_raw_parts(path_ptr, plen) }
+            ) {
+                Ok(s)  => s,
+                Err(_) => return -22, // EINVAL
+            };
+            let buf = unsafe { core::slice::from_raw_parts_mut(buf_ptr, cap) };
+            match crate::fs::vfs::read(path, buf) {
                 Ok(n)  => n as i64,
                 Err(_) => -2, // ENOENT
             }
