@@ -197,6 +197,50 @@ run-bahamut: iso-bahamut
 	    -serial stdio -display none \
 	    -no-reboot -no-shutdown
 
+# ─── Install disk image + QEMU install/boot targets ────────────────────────────
+#
+# Workflow:
+#   make disk-laptop          — create 8 GB QCOW2 target disk
+#   make run-install-laptop   — boot ISO + disk (installer writes kernel to disk)
+#   make run-installed-laptop — boot from installed disk only (OVMF, no ISO)
+#
+# The VirtIO-blk device uses legacy I/O-port mode (disable-modern=on) so the
+# kernel's legacy BAR0 driver can initialise it.
+
+DISK_LAPTOP := $(BUILD_DIR)/nexusos-laptop.qcow2
+OVMF        := /usr/share/OVMF/OVMF_CODE.fd
+
+.PHONY: disk-laptop
+disk-laptop:
+	@echo "==> Creating 8 GiB install target [laptop]"
+	@mkdir -p $(BUILD_DIR)
+	qemu-img create -f qcow2 $(DISK_LAPTOP) 8G
+	@echo "==> $(DISK_LAPTOP) ready"
+
+.PHONY: run-install-laptop
+run-install-laptop: iso-laptop
+	@test -f $(DISK_LAPTOP) || $(MAKE) disk-laptop
+	@echo "==> Installer boot: ISO + VirtIO disk [laptop]"
+	@echo "    Watch for 'Installation complete!' then Ctrl-C."
+	$(QEMU_X86) \
+	    -boot d \
+	    -cdrom $(BUILD_DIR)/nexusos-laptop.iso \
+	    -drive file=$(DISK_LAPTOP),if=virtio \
+	    -m 4G -cpu host -enable-kvm \
+	    -serial stdio -display none \
+	    -no-reboot -no-shutdown
+
+.PHONY: run-installed-laptop
+run-installed-laptop:
+	@test -f $(DISK_LAPTOP) || { echo "ERROR: run 'make run-install-laptop' first"; exit 1; }
+	@echo "==> Booting installed NexusOS from disk [laptop]"
+	$(QEMU_X86) \
+	    -drive file=$(DISK_LAPTOP),if=virtio \
+	    -bios $(OVMF) \
+	    -m 4G -cpu host -enable-kvm \
+	    -serial stdio -display none \
+	    -no-reboot -no-shutdown
+
 # ─── Utilities ─────────────────────────────────────────────────────────────────
 .PHONY: clean clean-all
 clean:

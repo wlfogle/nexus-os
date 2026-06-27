@@ -191,3 +191,50 @@ pub fn map_page(virt: u64, phys: u64, page_flags: u64) {
         );
     }
 }
+
+/// Unmap a single 4 KiB page if it is present, returning the physical frame it
+/// pointed at (so the caller can free it).  Returns `None` if the page — or any
+/// intermediate table, or a huge-page mapping — is not a plain 4 KiB mapping.
+///
+/// Intermediate page tables are left in place (they may map sibling pages); only
+/// the final PTE is cleared.
+pub fn unmap_page(virt: u64) -> Option<u64> {
+    assert_eq!(virt & 0xFFF, 0, "unmap_page: virt not page-aligned");
+
+    let pml4 = unsafe { &mut *(phys_to_virt(active_pml4_phys()) as *mut PageTable) };
+    let l4 = pml4_idx(virt);
+    if pml4.0[l4] & flags::PRESENT == 0 { return None; }
+
+    let pdpt = unsafe { &mut *(phys_to_virt(pml4.0[l4] & !0xFFF) as *mut PageTable) };
+    let l3 = pdpt_idx(virt);
+    if pdpt.0[l3] & flags::PRESENT == 0 || pdpt.0[l3] & flags::HUGE != 0 { return None; }
+
+    let pd = unsafe { &mut *(phys_to_virt(pdpt.0[l3] & !0xFFF) as *mut PageTable) };
+    let l2 = pd_idx(virt);
+    if pd.0[l2] & flags::PRESENT == 0 || pd.0[l2] & flags::HUGE != 0 { return None; }
+
+    let pt = unsafe { &mut *(phys_to_virt(pd.0[l2] & !0xFFF) as *mut PageTable) };
+    let l1 = pt_idx(virt);
+    if pt.0[l1] & flags::PRESENT == 0 { return None; }
+
+    let phys = pt.0[l1] & !0xFFF;
+    pt.0[l1] = 0;
+
+    #[cfg(target_arch = "x86_64")]
+    unsafe {
+        core::arch::asm!("invlpg [{}]", in(reg) virt, options(nostack, preserves_flags));
+    }
+    #[cfg(target_arch = "aarch64")]
+    unsafe {
+        core::arch::asm!(
+            "dsb ishst",
+            "tlbi vaae1is, {}",
+            "dsb ish",
+            "isb",
+            in(reg) virt >> 12,
+            options(nostack),
+        );
+    }
+
+    Some(phys)
+}

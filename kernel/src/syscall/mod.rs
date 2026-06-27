@@ -48,6 +48,14 @@ pub const SYS_READ_CHAR:     u64 = 13; // read_char() → u8 (blocks until key)
 pub const SYS_READ_CHAR_NB:  u64 = 14; // read_char_nb() → u8 or -1 if empty
 pub const SYS_DISK_READ:     u64 = 15; // disk_read(lba, buf_ptr, num_sectors) → 0 or -err
 pub const SYS_DISK_WRITE:    u64 = 16; // disk_write(lba, buf_ptr, num_sectors) → 0 or -err
+// ── Phase 6.1: ring-3 filesystem access ──────────────────────────────────────
+pub const SYS_FS_LIST:       u64 = 17; // fs_list(buf_ptr, cap) → bytes (newline-separated names)
+pub const SYS_FS_READ:       u64 = 18; // fs_read(name_ptr (NUL-term), buf_ptr, cap) → bytes read
+// ── Phase 6: program execution ────────────────────────────────────────────────
+pub const SYS_EXEC:          u64 = 19; // exec(name_ptr (NUL-term)) → child exit code or -err
+
+/// Largest program image SYS_EXEC will load from disk (1 MiB).
+const MAX_PROG_BYTES: usize = 1024 * 1024;
 
 // ─── MSR addresses ───────────────────────────────────────────────────────────
 
@@ -55,6 +63,7 @@ const IA32_EFER:           u32 = 0xC000_0080;
 const IA32_STAR:           u32 = 0xC000_0081;
 const IA32_LSTAR:          u32 = 0xC000_0082;
 const IA32_FMASK:          u32 = 0xC000_0084;
+const IA32_GS_BASE:        u32 = 0xC000_0101;
 const IA32_KERNEL_GS_BASE: u32 = 0xC000_0102;
 
 // ─── Per-CPU data (single CPU, accessed via GS after swapgs) ─────────────────
@@ -111,9 +120,17 @@ pub fn init() {
         //    0x200 = IF (interrupt flag) — disable interrupts during syscall
         Msr::new(IA32_FMASK).write(0x200);
 
-        // 5. KERNEL_GS_BASE: points to our PerCpu struct
-        //    `swapgs` on syscall entry makes GS.base = &PERCPU
-        Msr::new(IA32_KERNEL_GS_BASE).write(&raw const PERCPU as u64);
+        // 5. GS base: keep GS.base = &PERCPU at ALL times (ring 0 and ring 3).
+        //    The syscall stub does NOT swapgs, which avoids the swapgs
+        //    re-entrancy hazard: when one ring-3 process blocks *inside* a
+        //    syscall (GS would be swapped) and the scheduler runs another
+        //    ring-3 process that also issues a syscall, a swapgs-based design
+        //    reads the wrong shadow MSR and loads a garbage kernel stack.
+        //    We also point the swapgs-shadow MSR at &PERCPU so any stray
+        //    swapgs is harmless.  User programs here do not use GS.
+        let percpu = &raw const PERCPU as u64;
+        Msr::new(IA32_GS_BASE).write(percpu);
+        Msr::new(IA32_KERNEL_GS_BASE).write(percpu);
     }
     crate::kprintln!("[syscall] STAR/LSTAR/FMASK/EFER/KERNEL_GS_BASE configured");
 }
@@ -144,16 +161,19 @@ global_asm!(
     ".global _nexus_syscall_entry",
     "_nexus_syscall_entry:",
 
-    // After swapgs, GS.base = &PERCPU (IA32_KERNEL_GS_BASE).
-    // Use GS-relative addressing (gs:[offset]) to access PERCPU fields —
-    // this is the correct x86_64 idiom and avoids any linker symbol ambiguity.
-    "swapgs",
-
+    // GS.base is permanently &PERCPU (set in init; no swapgs — see init() note).
+    // Use GS-relative addressing (gs:[offset]) to access PERCPU fields.
     // PERCPU layout (must match PerCpu struct offsets):
     //   gs:[0]  = kernel_rsp   (offset 0)
     //   gs:[8]  = user_rsp     (offset 8)
-    "mov qword ptr gs:[8], rsp",   // save user RSP to PERCPU.user_rsp
-    "mov rsp, qword ptr gs:[0]",   // load kernel RSP from PERCPU.kernel_rsp
+    "mov qword ptr gs:[8], rsp",   // transient stash of user RSP (IF=0: no preemption)
+    "mov rsp, qword ptr gs:[0]",   // switch to this process's kernel stack
+
+    // Save the user RSP on THIS process's kernel stack — NOT the shared
+    // PERCPU.user_rsp slot — so it survives the syscall blocking and another
+    // process issuing its own syscall in the meantime (e.g. SYS_EXEC's child).
+    "push qword ptr gs:[8]",       // [deepest] saved user RSP
+    "sub rsp, 8",                  // 16-byte alignment padding (keep call aligned)
 
     // Save user return state (needed for sysretq)
     "push r11",          // user RFLAGS
@@ -190,13 +210,13 @@ global_asm!(
     "pop rcx",           // user RIP  → RCX (used by sysretq)
     "pop r11",           // user RFLAGS → R11 (used by sysretq)
 
-    // Restore user RSP (GS still active — use GS-relative read)
-    "mov rsp, qword ptr gs:[8]",
+    // Restore user RSP from THIS process's kernel stack (per-process, safe
+    // across blocking/preemption).  Drop the alignment padding first.
+    "add rsp, 8",                  // discard alignment padding
+    "pop rsp",                     // restore user RSP
 
-    // Swap GS back to user GS before returning
-    "swapgs",
-
-    // Return to user space (restores RIP from RCX, RFLAGS from R11)
+    // Return to user space (restores RIP from RCX, RFLAGS from R11).
+    // No swapgs: GS.base remains &PERCPU in ring 3 as well.
     "sysretq",
 );
 
@@ -209,10 +229,17 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
     match num {
         // ── SYS_EXIT ──────────────────────────────────────────────────────
         SYS_EXIT => {
-            let pid = scheduler::current_id();
-            crate::kprintln!("[syscall] SYS_EXIT pid={} status={}", pid, a1 as i64);
+            let pid  = scheduler::current_id();
+            let code = a1 as i64;
+            crate::kprintln!("[syscall] SYS_EXIT pid={} status={}", pid, code);
             process::set_state(pid, process::ProcessState::Dead);
             ipc::inbox_free(pid);
+            // If a parent is blocked in SYS_EXEC waiting on us, wake it with our
+            // exit code so `run` can return.
+            let parent = process::get_parent(pid);
+            if parent != 0 {
+                process::deliver_child_exit(parent, pid, code);
+            }
             // Yield — scheduler will pick another process
             unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
             0
@@ -390,6 +417,98 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
             match crate::drivers::virtio::blk::write_sectors(lba, buf) {
                 Ok(())  => 0,
                 Err(_)  => -5, // EIO
+            }
+        }
+
+        // ── SYS_FS_LIST ──────────────────────────────────────────────────
+        // fs_list(buf_ptr, cap) → bytes written (newline-separated names)
+        SYS_FS_LIST => {
+            let buf_ptr = a1 as *mut u8;
+            let cap     = a2 as usize;
+            if cap == 0 { return 0; }
+            let buf = unsafe { core::slice::from_raw_parts_mut(buf_ptr, cap) };
+            match crate::fs::fat::list_root(buf) {
+                Ok(n)  => n as i64,
+                Err(_) => -5, // EIO / not mounted
+            }
+        }
+
+        // ── SYS_FS_READ ──────────────────────────────────────────────────
+        // fs_read(name_ptr (NUL-terminated), buf_ptr, cap) → bytes read
+        SYS_FS_READ => {
+            let name_ptr = a1 as *const u8;
+            let buf_ptr  = a2 as *mut u8;
+            let cap      = a3 as usize;
+            if cap == 0 { return 0; }
+            // Bounded scan of the NUL-terminated filename (max 255 bytes).
+            let mut nlen = 0usize;
+            unsafe {
+                while nlen < 255 && *name_ptr.add(nlen) != 0 { nlen += 1; }
+            }
+            let name_slice = unsafe { core::slice::from_raw_parts(name_ptr, nlen) };
+            let name = match core::str::from_utf8(name_slice) {
+                Ok(s)  => s,
+                Err(_) => return -22, // EINVAL
+            };
+            let buf = unsafe { core::slice::from_raw_parts_mut(buf_ptr, cap) };
+            match crate::fs::fat::read_file(name, buf) {
+                Ok(n)  => n as i64,
+                Err(_) => -2, // ENOENT
+            }
+        }
+
+        // ── SYS_EXEC ──────────────────────────────────────────────────────
+        // exec(name_ptr (NUL-terminated)) → child exit code, or negative error.
+        // Loads a static ELF64 from the FAT32 root, spawns it as a ring-3
+        // process, and blocks the caller until the child exits.
+        SYS_EXEC => {
+            let name_ptr = a1 as *const u8;
+            let mut nlen = 0usize;
+            unsafe {
+                while nlen < 255 && *name_ptr.add(nlen) != 0 { nlen += 1; }
+            }
+            let name = match core::str::from_utf8(
+                unsafe { core::slice::from_raw_parts(name_ptr, nlen) }
+            ) {
+                Ok(s)  => s,
+                Err(_) => return -22, // EINVAL
+            };
+
+            // Read the program image off the disk into a heap buffer.
+            let mut buf = alloc::vec::Vec::<u8>::new();
+            buf.resize(MAX_PROG_BYTES, 0);
+            let n = match crate::fs::fat::read_file(name, &mut buf) {
+                Ok(n)  => n,
+                Err(_) => return -2, // ENOENT
+            };
+
+            // Parse + map the ELF segments into the shared user address space.
+            let entry = match crate::exec::load_elf(&buf[..n]) {
+                Ok(l)  => l.entry,
+                Err(e) => {
+                    crate::kprintln!("[exec] load_elf failed: {}", e);
+                    return -8; // ENOEXEC
+                }
+            };
+
+            // Fresh user stack for the child, then spawn it ring-3.
+            crate::exec::map_user_stack(crate::exec::EXEC_STACK_TOP);
+            let child = match process::spawn_ring3(b"program", entry, crate::exec::EXEC_STACK_TOP) {
+                Some(c) => c,
+                None    => return -11, // EAGAIN — no free process slot
+            };
+            ipc::inbox_alloc(child);
+
+            // Block the caller until the child exits (SYS_EXIT wakes us).
+            let parent = scheduler::current_id();
+            process::set_wait_child(parent, child);
+            loop {
+                if let Some(code) = process::take_child_result(parent) {
+                    return code;
+                }
+                process::set_state(parent, process::ProcessState::BlockedOnChild);
+                unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
+                process::set_state(parent, process::ProcessState::Running);
             }
         }
 

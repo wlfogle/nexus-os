@@ -10,9 +10,78 @@ use x86_64::instructions::port::Port;
 
 // ─── PS/2 I/O ports ──────────────────────────────────────────────────────────
 
-const PS2_DATA:   u16 = 0x60;
-const PS2_STATUS: u16 = 0x64;
+const PS2_DATA:   u16 = 0x60; // data port (read scancode / write to device)
+const PS2_STATUS: u16 = 0x64; // status (read) / command (write) port
 const OBF_BIT:    u8  = 0x01; // Output Buffer Full — data ready to read
+const IBF_BIT:    u8  = 0x02; // Input Buffer Full — controller not ready for a write
+
+// ─── i8042 controller initialisation ─────────────────────────────────────────
+//
+// After UEFI/Limine hand off, the PS/2 keyboard is often left with scanning
+// disabled and/or the controller's first-port interrupt (IRQ1) masked, so no
+// scancodes reach the kernel.  `init()` brings the 8042 into a known-good state:
+// flush stale bytes, enable the first port, enable IRQ1 in the config byte
+// (keeping scancode translation on so we stay in set 1), and tell the keyboard
+// to start scanning.  Called once at boot before interrupts are enabled.
+
+/// Spin until the controller's input buffer is clear (safe to write a byte).
+#[inline]
+fn wait_input_clear() {
+    let mut status = Port::<u8>::new(PS2_STATUS);
+    let mut spins = 0u32;
+    while unsafe { status.read() } & IBF_BIT != 0 && spins < 100_000 {
+        spins += 1;
+    }
+}
+
+/// Drain every pending byte from the output buffer (discard).
+#[inline]
+fn flush_output() {
+    let mut status = Port::<u8>::new(PS2_STATUS);
+    let mut data   = Port::<u8>::new(PS2_DATA);
+    let mut spins  = 0u32;
+    while unsafe { status.read() } & OBF_BIT != 0 && spins < 100_000 {
+        let _ = unsafe { data.read() };
+        spins += 1;
+    }
+}
+
+/// Initialise the 8042 PS/2 controller + keyboard.
+pub fn init() {
+    unsafe {
+        let mut data   = Port::<u8>::new(PS2_DATA);
+        let mut cmd    = Port::<u8>::new(PS2_STATUS); // 0x64 = command on write
+        let mut status = Port::<u8>::new(PS2_STATUS);
+
+        // 1. Disable both ports so devices don't interfere during setup.
+        wait_input_clear(); cmd.write(0xAD); // disable first  port
+        wait_input_clear(); cmd.write(0xA7); // disable second port (ignored if none)
+
+        // 2. Flush any stale byte sitting in the output buffer.
+        flush_output();
+
+        // 3. Read the controller config byte (cmd 0x20), enable first-port IRQ
+        //    (bit 0) and scancode translation (bit 6), disable second-port IRQ.
+        wait_input_clear(); cmd.write(0x20);
+        let mut spins = 0u32;
+        while status.read() & OBF_BIT == 0 && spins < 100_000 { spins += 1; }
+        let mut cfg = data.read();
+        cfg |=  1 << 0; // enable first-port (keyboard) interrupt → IRQ1
+        cfg &= !(1 << 1); // disable second-port interrupt
+        cfg |=  1 << 6; // translation on → controller emits scancode set 1
+        wait_input_clear(); cmd.write(0x60);  // "write config byte"
+        wait_input_clear(); data.write(cfg);
+
+        // 4. Enable the first PS/2 port.
+        wait_input_clear(); cmd.write(0xAE);
+
+        // 5. Tell the keyboard to enable scanning (0xF4); swallow its ACK (0xFA).
+        wait_input_clear(); data.write(0xF4);
+        spins = 0;
+        while status.read() & OBF_BIT == 0 && spins < 100_000 { spins += 1; }
+        flush_output();
+    }
+}
 
 // ─── Modifier state ───────────────────────────────────────────────────────────
 
