@@ -230,14 +230,17 @@ def _collect_repo(repo, files):
             files.append(full)
 
 
-def scan(roots, nexus):
-    """Scope = YOUR git repos (wlfogle/local; not nexus-os, not third-party) plus
-    loose files sitting directly in each root. Toolchain/data trees that are not
-    git repos (Android SDK, go module cache, Wine/game prefixes, redroid-data,
-    ...) are intentionally ignored."""
+def scan(roots, nexus, include_repos=False):
+    """Default scope = LOOSE files sitting directly in each root (the actually
+    scattered snippets). Your git repos are NOT harvested unless include_repos
+    is set, because moving files out of a healthy repo is destructive. The
+    nexus-os destination and third-party clones are always skipped, and non-repo
+    toolchain/data trees (Android SDK, go cache, Wine/game prefixes, ...) are
+    ignored."""
     nexus_abs = os.path.abspath(nexus)
     files = []
     skipped_thirdparty = []
+    skipped_repos = []
     for root in roots:
         root = os.path.abspath(os.path.expanduser(root))
         if not os.path.isdir(root):
@@ -256,15 +259,18 @@ def scan(roots, nexus):
                         pass
                 continue
             if not os.path.isdir(p) or not os.path.isdir(os.path.join(p, ".git")):
-                continue  # only descend into git repos
+                continue  # non-repo dir: ignore (avoids toolchain/data trees)
             kind = discover_repo_kind(p, nexus_abs)
             if kind == "nexus":
                 continue
             if kind == "thirdparty":
                 skipped_thirdparty.append(p)
                 continue
-            _collect_repo(p, files)
-    return files, skipped_thirdparty
+            if include_repos:
+                _collect_repo(p, files)
+            else:
+                skipped_repos.append(p)
+    return files, skipped_thirdparty, skipped_repos
 
 
 # ----------------------------------------------------------------------------- classify
@@ -390,6 +396,8 @@ def main() -> int:
     ap.add_argument("--nexus", default=os.path.join(HOME, "nexus-os"), help="canonical repo")
     ap.add_argument("--report", default=os.path.join(HOME, "nexus-consolidate-report.md"))
     ap.add_argument("--apply", action="store_true", help="execute actions (default: dry-run)")
+    ap.add_argument("--include-repos", action="store_true",
+                    help="ALSO harvest files from inside your git repos (destructive; OFF by default)")
     args = ap.parse_args()
 
     if not os.path.isdir(args.nexus):
@@ -405,8 +413,9 @@ def main() -> int:
     print(f"  {len(nexus_hashes)} tracked files indexed", file=sys.stderr)
 
     print("scanning ...", file=sys.stderr)
-    files, skipped_tp = scan(args.roots, args.nexus)
-    print(f"  {len(files)} candidate files, {len(skipped_tp)} third-party repos skipped", file=sys.stderr)
+    files, skipped_tp, skipped_repos = scan(args.roots, args.nexus, include_repos=args.include_repos)
+    print(f"  {len(files)} candidate files; skipped {len(skipped_tp)} third-party + "
+          f"{len(skipped_repos)} of your repos (pass --include-repos to harvest them)", file=sys.stderr)
 
     results = []
     dup_groups = defaultdict(list)
