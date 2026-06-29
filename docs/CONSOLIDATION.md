@@ -1,5 +1,9 @@
 # NexusOS Repository Consolidation
 
+> ℹ **HISTORICAL (2026-04-07 snapshot).** This records the original consolidation; many repos
+> listed below have since been moved to the `archive/legacy` branch. For the **current**
+> component map see `docs/COMPONENT-INVENTORY.md` and `docs/NEXUS-OS-SOURCE-OF-TRUTH.md`.
+
 Consolidated on 2026-04-07. All NexusOS-related repos, scripts, docs, and config from the laptop are now in this monorepo.
 
 ## Monorepo Structure

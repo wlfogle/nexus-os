@@ -1,202 +1,41 @@
-# NexusOS Social Media Preview Campaign
+# NexusOS Social Media Preview
 
-## Reddit Post Template (r/linux, r/linuxgaming, r/selfhosted)
+> Current pitch. NexusOS is a **from-scratch, AI-native Rust microkernel** — **no Linux, no
+> glibc, no distro base**. v0.6.x boots to an interactive ring-3 shell (`nexus>`) in QEMU/KVM.
+> Dev host is Pop!_OS; the OS itself is built from `/` up. Dedicated to **Stella 🐕** and
+> **Max Jr. 🐱**.
 
-**Title:** 🎉 ALPHA RELEASED: NexusOS v1.0.0-alpha - Universal Linux Distribution with 15+ Package Formats & AI Companions
-
-**Content:**
-```markdown
-Hey r/linux! 👋
-
-🎉 **ALPHA RELEASE**: NexusOS v1.0.0-alpha "Universal Foundation" is here!
-
-The world's FIRST truly universal Linux distribution that breaks down package barriers:
-
-🎆 **Revolutionary Features:**
-✨ **15+ Package Formats** - PKG, DEB, RPM, Flatpak, Snap, AppImage, APK, NIX, and more
-📦 **80,000+ Packages** - Access software from Arch, Debian, Fedora, Ubuntu, Alpine, etc.
-🐕 **Stella (AI Security Guardian)** - Package validation & system security
-🐱 **Max Jr. (AI Performance Optimizer)** - System optimization & monitoring
-🎮 **Pop!_OS NVIDIA Foundation** - Built on acclaimed gaming optimizations
-📺 **65+ Media Services** - Complete self-hosting infrastructure
-
-**What you can do RIGHT NOW:**
-```bash
-nexuspkg install firefox                    # Auto-detects best source
-nexuspkg install --format deb spotify      # Force Debian package
-nexuspkg install --format flatpak org.gimp.GIMP  # Flatpak from any distro
-nexuspkg search "media player"              # Search ALL repositories
-```
-
-**💾 Try the Alpha:** https://github.com/nexusos/nexusos/releases/tag/v1.0.0-alpha
-
-**Current Status:** Alpha released! Ready for community testing and feedback
-
-GitHub: [link]
-Development updates: [Discord/Twitter]
-
-What do you think? Would you try a Linux distro with friendly AI mascots? 🤔
-
-**Tech Stack:**
-- Base: Pop!_OS 22.04 NVIDIA  
-- Kernel: Pop!_OS kernel
-- AI: Python-based assistants
-- Desktop: NexusDE (hybrid X11/Wayland)
-- Media: Docker-based awesome-stack
-```
-
----
-
-## Twitter/X Thread Template
-
-**Tweet 1/6:**
-🚀 Introducing NexusOS - the world's first universal Linux distribution with AI mascot companions!
-
-Built on @system76 Pop!_OS NVIDIA + Universal packages + AI assistants
-
-Meet Stella 🐕 and Max Jr. 🐱 - your new Linux companions! 
-
-🧵Thread👇
-
-**Tweet 2/6:**
-🎮 Gaming Excellence: All the performance optimizations of Pop!_OS 22.04 LTS NVIDIA with Pop!_OS kernel
-
-📦 Universal Packages: Install software from Ubuntu, Fedora, Arch, Alpine - all through one package manager
-
-No more distribution lock-in! 
-
-**Tweet 3/6:**
-🐕 Meet Stella (Golden Retriever):
-• Security monitoring
-• Package management  
-• Digital Fortress privacy
-• Wags tail when installing packages!
-
-🐱 Meet Max Jr. (Cat):
-• Performance optimization
-• System monitoring
-• Hybrid GPU switching
-• Purrs when everything's perfect!
-
-**Tweet 4/6:**
-📺 Complete Media Center: 65+ services ready to deploy
-• Jellyfin, Plex media servers
-• Sonarr, Radarr automation  
-• Grafana monitoring
-• Complete awesome-stack integration
-
-One-click deployment of your entire homelab! 
-
-**Tweet 5/6:**
-🛠️ Tech Details:
-• Base: Pop!_OS 22.04 NVIDIA
-• Desktop: NexusDE (hybrid X11/Wayland)
-• AI: Python assistants with FastAPI
-• Universal Package Manager: C implementation
-• Media Stack: Docker containers
-
-Open source and looking for contributors!
-
-**Tweet 6/6:**
-🚀 Development Status:
-Phase 1: Core foundation (in progress)
-Phase 2: Desktop environment (2-6 weeks)  
-Phase 3: Distribution creation (2-6 months)
-Phase 4: Production polish (6-12 months)
-
-Join the journey: [GitHub] [Discord]
-
-#Linux #Gaming #AI #OpenSource
-
----
-
-## Discord Community Message Template
+## Reddit (r/osdev, r/rust, r/linux)
+**Title:** Building NexusOS — a from-scratch, AI-native Rust microkernel (boots to a ring-3 shell)
 
 ```markdown
-🚀 **NexusOS Development Announcement** 🚀
+NexusOS is a microkernel written from scratch in Rust — no Linux, no glibc, no distro base.
 
-Hey everyone! I'm working on something exciting and wanted to share with this awesome community.
+Where it is (v0.6.x, verified in QEMU + KVM):
+- Boot via Limine → GDT/IDT, paging, heap, framebuffer
+- Preemptive round-robin scheduler, PIC/PIT
+- IPC (named ports) + 19 syscalls, ring-3 user processes
+- PS/2 keyboard, VirtIO-blk, FAT32, ELF64 loader
+- Self-installer (GPT + FAT32 ESP + kernel) and an interactive ring-3 shell: `nexus>`
 
-**What is NexusOS?**
-A Linux distribution that combines the gaming excellence of Pop!_OS 22.04 NVIDIA with universal package compatibility and AI mascot assistants.
+AI-native plan: a native package manager (nexuspkg) with handlers for foreign formats
+(.deb/.rpm/.pkg.tar.zst/flatpak/snap/appimage/pip/npm/cargo), and AI companions wired in via IPC.
 
-**🐕 Stella (Golden Retriever)** - Security & Package Guardian  
-**🐱 Max Jr. (Cat)** - Performance & System Optimizer
+Two companions the OS is dedicated to:
+🐕 Stella — operations (orchestration, health)
+🐱 Max Jr. — security (hardening, monitoring)
 
-**Why it's different:**
-✅ Built on proven Pop!_OS NVIDIA base  
-✅ Install packages from ANY Linux distro  
-✅ Friendly AI that actually helps  
-✅ Complete media center (65+ services)  
-✅ Gaming + productivity + self-hosting in one  
-
-**Current progress:**
-🟢 Phase 1: Core foundation development  
-📝 All system architecture designed  
-💻 Components coded, now integrating  
-
-**Looking for:**
-👥 Early testers and feedback  
-💻 Developers (C++, Python, QML)  
-🎨 Creative input on AI mascots  
-🌟 Community building  
-
-**Links:**
-🐙 GitHub: [repository]  
-📢 Updates: [Twitter/Discord]  
-📧 Contact: [email]  
-
-What do you think? Excited to have AI mascot companions managing your Linux system? 😊
+Repo: https://github.com/wlfogle/nexus-os
 ```
 
----
+## Twitter/X
+- NexusOS: a from-scratch AI-native **Rust microkernel**. No Linux. No glibc. It already boots to an interactive `nexus>` shell in QEMU/KVM. 🦀
+- Built from `/` up: paging, scheduler, IPC, syscalls, ring-3 userspace, FAT32, ELF loader, self-installer — all in Rust.
+- Dedicated to its two companions: **Stella 🐕 (operations)** and **Max Jr. 🐱 (security)**.
+- Roadmap: disk boot → VirtIO-vsock → on-device AI; native `.nos` packages with handlers for every foreign format.
 
-## YouTube Video Script (5-10 minutes)
-
-**Title:** "NexusOS: The Linux Distribution with AI Mascot Companions - Development Preview"
-
-**Script Outline:**
+## GitHub repo description
 ```
-0:00 - Hook: "What if your Linux distro had adorable AI pets?"
-0:30 - Introduction to NexusOS concept
-1:00 - Meet Stella and Max Jr. (show ASCII art)
-2:00 - Universal package compatibility demo (concept)
-3:00 - Pop!_OS NVIDIA foundation benefits
-4:00 - Media center capabilities (65+ services)
-5:00 - Development roadmap and timeline
-6:00 - How to get involved/follow progress
-7:00 - Call to action: subscribe, join Discord, GitHub
-```
-
----
-
-## GitHub Repository Description
-
-**Repository Description:**
-```
-🚀 NexusOS - Universal AI-Native Linux Distribution
-
-The world's first Linux distribution with AI mascot companions. Built on Pop!_OS 22.04 LTS NVIDIA with universal package compatibility.
-
-🐕 Stella (Golden Retriever) - Security & Package Management
-🐱 Max Jr. (Cat) - Performance & System Optimization
-
-Features:
-• Universal package manager (DEB, RPM, Flatpak, Snap, etc.)
-• Complete media center (65+ services)
-• Gaming optimizations from Pop!_OS base
-• NexusDE hybrid X11/Wayland desktop
-• AI-powered system management
-
-Status: Phase 1 Development
-License: GPL-3.0+
-```
-
-**README.md badges:**
-```markdown
-[![Development Status](https://img.shields.io/badge/Status-Phase%201%20Development-yellow)](https://github.com/nexusos/nexusos)
-[![Base](https://img.shields.io/badge/Base-Pop!_OS%2022.04--blue)](https://pop.system76.com)
-[![AI Assistants](https://img.shields.io/badge/AI-Stella%20%26%20Max%20Jr.-purple)](https://github.com/nexusos/nexusos)
-[![Gaming](https://img.shields.io/badge/Gaming-linux--zen-green)](https://github.com/nexusos/nexusos)
-[![Media](https://img.shields.io/badge/Media-65%2B%20Services-orange)](https://github.com/nexusos/nexusos)
+NexusOS — a from-scratch, AI-native Rust microkernel (no Linux, no glibc).
+v0.6.x: boots to a ring-3 shell, FAT32 + ELF loader + self-installer. Dedicated to Stella 🐕 (operations) & Max Jr. 🐱 (security).
 ```

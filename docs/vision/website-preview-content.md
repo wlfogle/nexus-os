@@ -1,128 +1,32 @@
 # NexusOS Landing Page Content
 
-## Hero Section
-**🚀 NexusOS - The Future of Linux is Here**
+## Hero
+**NexusOS — an AI-native operating system, built from scratch.**
+A Rust microkernel with no Linux, no glibc, and no distro assumptions. It boots today to an
+interactive ring-3 shell (`nexus>`) in QEMU/KVM, and is dedicated to its two companions,
+**Stella 🐕** and **Max Jr. 🐱**.
 
-*The world's first universal Linux distribution with AI mascot companions*
+## What it is
+- **From-scratch Rust microkernel** — Limine boot, 4-level paging, heap, preemptive scheduler,
+  IPC with named ports, 19 syscalls, ring-3 userspace.
+- **Storage + execution** — VirtIO-blk, FAT32, an ELF64 loader (`run`), and a self-installer
+  (GPT + FAT32 ESP + kernel).
+- **AI-native by design** — a native package manager (`nexuspkg`) with handlers for foreign
+  formats, and AI companions wired into the OS over IPC.
 
-Built on Pop!_OS 22.04 NVIDIA • Universal Package Compatibility • AI-Powered • Complete Media Center
+## The companions (the OS is dedicated to them)
+- **Stella 🐕 — Operations:** system orchestration, health, package/operations help.
+- **Max Jr. 🐱 — Security:** hardening, monitoring, intrusion detection.
 
-[Join the Journey] [View Development] [Meet Stella & Max Jr.]
+## Status (v0.6.x)
+Phases 1–6 verified in QEMU + KVM (boot, scheduler, IPC, syscalls, ring-3 shell, FAT32, ELF
+loader, installer). Next: boot from installed disk, then VirtIO-vsock → on-device AI (Ollama).
 
----
+## Build
+```bash
+make setup            # Rust nightly targets + Limine
+make laptop && make iso-laptop
+make run-laptop       # boots in QEMU
+```
 
-## What Makes NexusOS Special
-
-### 🎮 **Gaming Excellence**
-Built on the acclaimed Pop!_OS 22.04 LTS NVIDIA with Pop!_OS kernel, maintaining all gaming optimizations while adding revolutionary universal package access.
-
-### 🐕🐱 **AI Mascot Companions** 
-Meet Stella (Golden Retriever) and Max Jr. (Cat) - your intelligent system assistants for security monitoring and performance optimization.
-
-### 📦 **Universal Packages**
-Install software from ANY Linux distribution - Ubuntu, Fedora, Arch, Alpine - all through one unified package manager.
-
-### 📺 **Complete Media Center**
-65+ ready-to-deploy services including Jellyfin, Plex, Sonarr, Radarr, Grafana, and complete awesome-stack integration.
-
----
-
-## Meet Your AI Companions
-
-### Stella 🐕 (Golden Retriever)
-**Security Guardian & Package Manager**
-- Monitors package installations for security
-- Manages Digital Fortress privacy suite  
-- Keeps your system safe and secure
-- Wags tail when installing packages!
-
-### Max Jr. 🐱 (Cat)
-**Performance Optimizer & System Monitor**
-- Optimizes gaming and system performance
-- Manages hybrid GPU switching
-- Provides optimization recommendations  
-- Purrs when system is running perfectly!
-
----
-
-## Development Progress
-
-🟢 **Phase 1: Core Foundation** (In Progress)
-- Pop!_OS base system integration
-- Universal package manager development
-- AI assistant implementation
-
-🟡 **Phase 2: Desktop Environment** (Planned)
-- NexusDE hybrid X11/Wayland desktop
-- AI mascot integration
-- Advanced theming system
-
-⚪ **Phase 3: Distribution Creation** (Future)
-- Bootable ISO creation
-- Installation system
-- Repository infrastructure
-
-⚪ **Phase 4: Production Polish** (Future)
-- Hardware compatibility testing
-- Performance optimization
-- Stable release preparation
-
----
-
-## Join the Community
-
-**🎯 Early Access Program**
-Be among the first to experience NexusOS. Join our developer preview program and help shape the future of Linux.
-
-[Join Discord] [Follow Development] [Subscribe for Updates]
-
-**📧 Stay Updated**
-Email: _______________
-[ ] Gaming features updates
-[ ] AI assistant development  
-[ ] Media center enhancements
-[ ] Release announcements
-
-[Subscribe]
-
----
-
-## For Developers
-
-**🛠️ Contributing**
-NexusOS is open source and welcomes contributors:
-- C/C++ for core systems
-- Python for AI assistants  
-- QML for desktop environment
-- Docker for media stack
-
-[View Repository] [Development Guide] [Join Contributors]
-
-**📋 Technical Details**
-- Base: Pop!_OS 22.04 LTS NVIDIA
-- Kernel: Pop!_OS kernel (NVIDIA-optimized)  
-- Desktop: NexusDE (hybrid X11/Wayland)
-- AI: Stella & Max Jr. assistants
-- Media: 65+ service awesome-stack
-
----
-
-## Coming Soon
-
-**🚀 Expected Timeline**
-- Developer Preview: 2-4 weeks
-- Alpha Release: 2-6 months  
-- Beta Release: 6-12 months
-- Stable Release: 12+ months
-
-**📢 Follow Development**
-- GitHub: Weekly code updates
-- Discord: Daily development chat
-- Twitter: Progress announcements
-- YouTube: Development vlogs (planned)
-
----
-
-*NexusOS - One OS, All Packages, Ultimate Freedom* 🚀
-
-**Built with ❤️ by the NexusOS Team**
+*NexusOS — AI-native from the first instruction.*
