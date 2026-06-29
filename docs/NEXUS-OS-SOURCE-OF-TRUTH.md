@@ -11,8 +11,13 @@
   a single LXC, **CT-300**.
 - **bulletproof-mediastack** — **FORERUNNER** (the original one-LXC-per-service
   topology). Reference + reusable code only; **not** the live topology.
-- **Legacy/superseded** (historical, do not treat as live): `homelab-media-stack`,
-  `awesome-stack`, `mediastack-control`.
+- **Legacy/superseded** (moved off `main` to the `archive/legacy` branch on 2026-06-29;
+  recover via `git checkout archive/legacy`): `homelab-media-stack`, `awesome-stack`,
+  `awesome-stack-optimization-suite`, `mediastack-control`, `media-stack-admin-scripts`,
+  `ai-powerhouse-setup`, `ai-sysadmin-supreme` (Stella's ancestry), `garuda-hello`,
+  `linux-gaming-vm-toolkit`, the Garuda/Calamares ZFS installer, the old `legacy/` tree,
+  and outdated docs (`DISTROWATCH_SUBMISSION.md`, `RELEASE_CHECKLIST.md`,
+  `UNIVERSAL_PACKAGE_MANAGER_SPEC.md`, `Analysis.md`).
 - **Third-party clones** (not ours; kept separate, never merged): `cockpit-file-sharing`,
   `rootAVD*` (3 copies), `waydroid_script`, `redroid-script`, `quickshare`, `w3se`,
   `HomeDockOS`, `hypervisor-launcher`, `win11-dev-proxmox-script`,
@@ -66,6 +71,9 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
 
 ## 6. Repo / code map (nexus-os)
 - `kernel/` — Rust microkernel (Phases 1–6 done; ring-3 shell, FAT32, ELF loader).
+- `core/services/` — **Stella 🐕 (operations)** + **Max Jr. 🐱 (security)** AI companion
+  services, coordinated by `nexus-orchestrator` (`stella.py`, `maxjr.py`,
+  `nexus-orchestrator.py` + systemd units). NexusOS is dedicated to them.
 - `core/`, `packages/` (nexus-terminal, nexus-codex, kvm-manager, ollama-manager-gui,
   ai-sysadmin-supreme, …), `legacy/`.
 - **Consolidation tool:** `nexus-os/scripts/nexus-consolidate.py` — scans `~`,

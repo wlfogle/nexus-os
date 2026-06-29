@@ -3,10 +3,11 @@
 NexusOS is a **from-scratch Rust microkernel** — no Linux, no glibc, no POSIX.
 If you've ever wanted to work on a real OS kernel, this is your chance.
 
-**Current state:** Phases 1–5.2 complete — the kernel boots, schedules
+**Current state:** Phases 1–6 (core) complete — the kernel boots, schedules
 processes preemptively, has IPC, syscalls, ring-3 userspace, a PS/2 keyboard
-driver, VirtIO-blk disk I/O, and a FAT32 filesystem. See `README.md` for the
-full boot sequence.
+driver, VirtIO-blk disk I/O, a FAT32 filesystem, an ELF64 loader (`run`), and a
+self-installer (GPT + FAT32 ESP + kernel). See `README.md` for the full boot
+sequence.
 
 ## Where you can help
 

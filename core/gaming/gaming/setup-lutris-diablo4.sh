@@ -1,1 +1,0 @@
-../all-scripts/setup-lutris-diablo4.sh

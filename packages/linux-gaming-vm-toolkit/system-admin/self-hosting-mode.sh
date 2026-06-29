@@ -1,1 +1,0 @@
-../all-scripts/self-hosting-mode.sh

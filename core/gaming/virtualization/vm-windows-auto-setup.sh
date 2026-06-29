@@ -1,1 +1,0 @@
-../all-scripts/vm-windows-auto-setup.sh

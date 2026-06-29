@@ -1,1 +1,0 @@
-../all-scripts/diablo4-complete-setup.ps1

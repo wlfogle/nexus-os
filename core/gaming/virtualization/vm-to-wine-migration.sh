@@ -1,1 +1,0 @@
-../all-scripts/vm-to-wine-migration.sh

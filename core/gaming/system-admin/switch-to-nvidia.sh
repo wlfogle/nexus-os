@@ -1,1 +1,0 @@
-../all-scripts/switch-to-nvidia.sh

@@ -1,1 +1,0 @@
-../all-scripts/opengl-force-mode.ps1
