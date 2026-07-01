@@ -7,6 +7,7 @@ Convert the current Python/GTK4 MobaLiveCD application to a modern Rust/Tauri/Re
 ## 📋 Current Issues This Would Solve
 
 ### GTK/Python Problems
+
 - ❌ GTK4/Adwaita widget management issues (AdwPreferencesGroup removal crashes)
 - ❌ Python dependency hell (psutil, gi, gobject-introspection)  
 - ❌ Complex GTK UI building and debugging
@@ -14,6 +15,7 @@ Convert the current Python/GTK4 MobaLiveCD application to a modern Rust/Tauri/Re
 - ❌ Memory leaks in long-running GTK applications
 
 ### Benefits of Rust/Tauri/React
+
 - ✅ **Memory Safety**: Rust eliminates segfaults and memory leaks
 - ✅ **Modern UI**: React with CSS/Tailwind instead of GTK theming
 - ✅ **Single Binary**: No Python runtime or GTK dependencies needed
@@ -25,28 +27,34 @@ Convert the current Python/GTK4 MobaLiveCD application to a modern Rust/Tauri/Re
 ## 🗺️ Implementation Roadmap
 
 ### Phase 1: Project Setup
+
 - [ ] Initialize Tauri project with React frontend
 - [ ] Set up TypeScript, Tailwind CSS, and build tools  
 - [ ] Configure Tauri permissions and security settings
 - [ ] Set up CI/CD pipeline for multi-platform builds
 
 ### Phase 2: Core Backend (Rust)
+
 - [ ] **NVMe Detection Module**
+  
   - Port `nvme_handler.py` to Rust using `sysfs` and `lsblk` parsing
   - Use `serde` for JSON serialization
   - Implement proper error handling with `anyhow` or `thiserror`
-  
+
 - [ ] **QEMU Runner Module**  
+  
   - Port `qemu_runner.py` to Rust using `std::process`
   - Implement AI-optimized profile detection
   - Handle process management and monitoring
-  
+
 - [ ] **USB Creator Module**
+  
   - Port USB creation functionality to Rust
   - Use `dd` or native block device operations
   - Add progress tracking and cancellation support
 
 ### Phase 3: Tauri Commands API
+
 ```rust
 #[tauri::command]
 async fn get_nvme_devices() -> Result<Vec<NVMeDevice>, String>
@@ -62,45 +70,56 @@ async fn create_usb(iso_path: String, usb_device: String) -> Result<(), String>
 ```
 
 ### Phase 4: React Frontend
+
 - [ ] **Main Application Layout**
+  
   - Clean, modern design with Tailwind CSS
   - Dark/light theme support
   - Responsive layout for different screen sizes
 
 - [ ] **Partition Selection Component**
+  
   - Tree view of NVMe devices and partitions
   - Visual indicators for bootable/ZFS/mounted partitions
   - Real-time refresh capabilities
-  
+
 - [ ] **QEMU Configuration Panel**
+  
   - AI-detected OS profiles with custom options
   - Resource allocation sliders (RAM, CPU cores)
   - Advanced QEMU options for power users
-  
+
 - [ ] **USB Creation Wizard**
+  
   - Step-by-step USB creation process
   - Progress tracking with cancellation
   - Device safety warnings and confirmations
 
 ### Phase 5: Advanced Features
+
 - [ ] **System Integration**
+  
   - File associations for ISO files
   - Desktop integration and notifications
   - Auto-privilege elevation when needed
 
 - [ ] **Enhanced Functionality**
+  
   - QEMU snapshot management
   - Network boot (PXE) support
   - Virtual machine templates and presets
   - Logging and diagnostics panel
 
 ### Phase 6: Testing & Distribution
+
 - [ ] **Testing Framework**
+  
   - Unit tests for Rust backend modules
   - Integration tests for Tauri commands
   - End-to-end tests for critical workflows
 
 - [ ] **Packaging & Distribution**
+  
   - AppImage for Linux
   - MSI installer for Windows  
   - DMG bundle for macOS
@@ -110,6 +129,7 @@ async fn create_usb(iso_path: String, usb_device: String) -> Result<(), String>
 ## 🛠️ Technical Architecture
 
 ### Backend (Rust)
+
 ```
 src/
 ├── main.rs              # Tauri main entry point
@@ -127,6 +147,7 @@ src/
 ```
 
 ### Frontend (React/TypeScript)
+
 ```
 src/
 ├── App.tsx             # Main application component
@@ -146,6 +167,7 @@ src/
 ## 🎯 Migration Strategy
 
 ### Gradual Migration Approach
+
 1. **Start with backend modules**: Port core functionality to Rust
 2. **Create parallel Tauri app**: Build alongside existing Python app
 3. **Feature parity testing**: Ensure all functionality works
@@ -153,6 +175,7 @@ src/
 5. **Full migration**: Replace Python version
 
 ### Data Compatibility
+
 - Maintain configuration file compatibility
 - Preserve user preferences and settings
 - Support existing QEMU profiles and templates
@@ -160,6 +183,7 @@ src/
 ## 🚧 Development Environment Setup
 
 ### Prerequisites
+
 ```bash
 # Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -175,6 +199,7 @@ npm install -g @tauri-apps/cli
 ```
 
 ### Development Workflow
+
 ```bash
 # Start development server with hot reload
 npm run tauri dev
@@ -190,17 +215,20 @@ npm test
 ## 📊 Expected Benefits
 
 ### Performance Improvements
+
 - **Startup time**: 3-5x faster than Python/GTK
 - **Memory usage**: 50-70% reduction in RAM usage  
 - **Binary size**: Single ~15MB executable vs 100MB+ Python environment
 
 ### User Experience
+
 - **Modern UI**: Clean, responsive interface
 - **Better error handling**: User-friendly error messages
 - **Consistent behavior**: Same experience across all platforms
 - **Auto-updates**: Built-in update mechanism
 
-### Developer Experience  
+### Developer Experience
+
 - **Type safety**: Rust + TypeScript prevent runtime errors
 - **Better testing**: Comprehensive test coverage
 - **Modern tooling**: IDE support, debugging, profiling
