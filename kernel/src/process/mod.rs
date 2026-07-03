@@ -54,6 +54,10 @@ pub struct Process {
     pub child_done: bool,
     /// Exit code reported by the awaited child.
     pub last_exit: i64,
+    /// Physical address of this process's PML4 (its private address space).
+    /// 0 means "none" — the process runs in the shared kernel address space
+    /// (all kernel threads).  The scheduler loads this into CR3 on switch.
+    pub pml4_phys: u64,
     /// Kernel stack storage (lives inside the PCB for simplicity).
     pub stack: [u8; KSTACK_SIZE],
 }
@@ -70,6 +74,7 @@ impl Process {
             wait_for:         0,
             child_done:       false,
             last_exit:        0,
+            pml4_phys:        0,
             stack:            [0u8; KSTACK_SIZE],
         }
     }
@@ -179,10 +184,12 @@ pub fn get_state(id: u64) -> ProcessState {
         .unwrap_or(ProcessState::Dead)
 }
 
-/// Spawn a user-space (ring-3) process.
+/// Spawn a user-space (ring-3) process in its own address space.
 /// The initial IRETQ frame uses user segment selectors so the CPU performs a
-/// full privilege-level switch on first schedule.
-pub fn spawn_ring3(name: &[u8], user_rip: u64, user_rsp: u64) -> Option<u64> {
+/// full privilege-level switch on first schedule.  `pml4_phys` is the private
+/// PML4 the scheduler loads into CR3 when this process runs (0 = shared kernel
+/// address space).
+pub fn spawn_ring3(name: &[u8], user_rip: u64, user_rsp: u64, pml4_phys: u64) -> Option<u64> {
     let id = NEXT_ID.fetch_add(1, Ordering::Relaxed);
     let mut table = TABLE.lock();
     let slot = table.iter_mut().find(|p| p.state == ProcessState::Dead)?;
@@ -216,9 +223,16 @@ pub fn spawn_ring3(name: &[u8], user_rip: u64, user_rsp: u64) -> Option<u64> {
     slot.id               = id;
     slot.rsp              = sp;
     slot.kernel_stack_top = stack_top;
+    slot.pml4_phys        = pml4_phys;
     slot.state            = ProcessState::Ready;
 
     Some(id)
+}
+
+/// Physical address of a process's private PML4 (0 = shared kernel space).
+pub fn get_pml4(id: u64) -> u64 {
+    let table = TABLE.lock();
+    table.iter().find(|p| p.id == id).map(|p| p.pml4_phys).unwrap_or(0)
 }
 
 /// Return IDs of all processes in BlockedOnKey state.

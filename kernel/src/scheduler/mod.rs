@@ -82,6 +82,19 @@ pub unsafe extern "C" fn scheduler_tick(current_rsp: u64) -> u64 {
         crate::arch::x86_64::gdt::update_rsp0(top);
     }
 
+    // Switch into the next process's address space.  User processes carry a
+    // private PML4; kernel threads (pml4 == 0) run in the shared kernel PML4.
+    // Every PML4 maps the full kernel higher half identically, so the kernel
+    // stack we are running on and the code after this call remain valid across
+    // the CR3 load.  The load also flushes stale user TLB entries.
+    let next_pml4 = process::get_pml4(next_id);
+    let target = if next_pml4 == 0 {
+        crate::memory::paging::kernel_pml4_phys()
+    } else {
+        next_pml4
+    };
+    crate::memory::paging::switch_address_space(target);
+
     // Return the next process's saved RSP
     process::get_rsp(next_id).unwrap_or(current_rsp)
 }
