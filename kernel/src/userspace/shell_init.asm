@@ -39,9 +39,11 @@ BITS 64
 %define SYS_GETPID     3
 %define SYS_SLEEP      9
 %define SYS_READ_CHAR  13
-%define SYS_FS_LIST    17
-%define SYS_FS_READ    18
-%define SYS_EXEC       19
+%define SYS_FS_LIST       17
+%define SYS_FS_READ       18
+%define SYS_EXEC          19
+%define SYS_FS_LIST_PATH  20
+%define SYS_FS_READ_PATH  21
 
 ; ── Buffer sizes (must all fit on one 4 096-byte stack page) ─────────────
 %define CMD_BUF_SIZE   256
@@ -392,13 +394,31 @@ fn_dispatch:
     jmp  $                      ; unreachable — kernel marks process Dead
 .nr:
 
-    ; ── ls ───────────────────────────────────────────────────────────────────
+    ; ── ls [path] ─────────────────────────────────────────────────────────────
     mov  rdi, r12
     lea  rsi, [rel kw_ls]
     mov  rdx, 2
     call fn_match
     test rax, rax
     jnz  .nls
+    lea  rdi, [r12 + 2]                 ; advance past "ls"
+    cmp  byte [rdi], ' '
+    jne  .ls_root                       ; bare "ls" → list root
+    inc  rdi                            ; skip the single space
+    cmp  byte [rdi], 0
+    je   .ls_root                       ; "ls " with no path → list root
+    ; Path-based listing: rdi = path (arg1, NUL-terminated)
+    mov  rax, SYS_FS_LIST_PATH
+    lea  rsi, [r13 + NUM_BUF_SIZE]      ; arg2 = fs_buf
+    mov  rdx, FS_BUF_SIZE               ; arg3 = capacity
+    syscall                             ; rax = bytes written (or -err)
+    test rax, rax
+    js   .fs_err
+    lea  rsi, [r13 + NUM_BUF_SIZE]
+    mov  rdx, rax
+    call fn_write
+    jmp  .fin
+.ls_root:
     mov  rax, SYS_FS_LIST
     lea  rdi, [r13 + NUM_BUF_SIZE]      ; arg1 = fs_buf
     mov  rsi, FS_BUF_SIZE               ; arg2 = capacity
@@ -424,7 +444,7 @@ fn_dispatch:
     inc  rdi                            ; skip the single space
     cmp  byte [rdi], 0
     je   .cat_usage                     ; "cat " with no filename → usage
-    mov  rax, SYS_FS_READ               ; rdi already = filename (arg1, NUL-term)
+    mov  rax, SYS_FS_READ_PATH          ; rdi already = path (arg1, NUL-term)
     lea  rsi, [r13 + NUM_BUF_SIZE]      ; arg2 = fs_buf
     mov  rdx, FS_BUF_SIZE               ; arg3 = capacity
     syscall                             ; rax = bytes read (or -err)
@@ -527,8 +547,8 @@ str_help:
     db  "  version  - OS version string", 13, 10
     db  "  uname    - system information", 13, 10
     db  "  echo <x> - print argument to screen", 13, 10
-    db  "  ls       - list files on the disk", 13, 10
-    db  "  cat <f>  - print a file's contents", 13, 10
+    db  "  ls [path]- list files (root or a subdirectory)", 13, 10
+    db  "  cat <f>  - print a file's contents (path ok)", 13, 10
     db  "  run <f>  - load and run an ELF program", 13, 10
     db  "  ps       - list running processes", 13, 10
     db  "  clear    - clear the screen", 13, 10
