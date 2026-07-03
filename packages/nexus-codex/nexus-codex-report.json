@@ -1,0 +1,80 @@
+{
+  "scan_id": "88bb1b71-08c2-4363-89bf-a1cee9457497",
+  "generated_at": "2026-06-12T19:28:58.871794872+00:00",
+  "model_used": "qwen2.5-coder:7b",
+  "config": {
+    "scan_roots": [
+      "/tmp/nexus-codex-test"
+    ],
+    "excluded_paths": [
+      ".git",
+      "node_modules",
+      "target",
+      "dist",
+      "build",
+      ".cache",
+      ".local/share/Steam",
+      ".local/share/containers",
+      "snap",
+      ".var",
+      ".mozilla",
+      ".config/google-chrome",
+      "Media",
+      "media"
+    ],
+    "github_enabled": false,
+    "github_username": "wlfogle",
+    "ollama_url": "http://localhost:11434",
+    "ollama_model_override": null,
+    "report_output_dir": "/home/loufogle/Documents/nexus-codex-reports",
+    "max_file_size_kb": 5120
+  },
+  "results": [
+    {
+      "path": "/tmp/nexus-codex-test/README.md",
+      "repo": null,
+      "repo_url": null,
+      "source": "local",
+      "doc_type": "markdown",
+      "status": "needs_review",
+      "confidence": 0.2,
+      "staleness_score": 0.7,
+      "reason": "The document is outdated and lacks relevant code evidence.",
+      "evidence": "The text refers to a specific hardware configuration (RTX 4080, i9-13900HX) that may not be current or accurate. The TODO items indicate tasks that have not been completed, suggesting the document has not been updated recently.",
+      "suggested_rewrite": null,
+      "last_modified": "2026-06-12T19:27:01.285301795+00:00",
+      "last_commit_date": null,
+      "related_code_age_days": null,
+      "file_size_bytes": 358
+    },
+    {
+      "path": "/tmp/nexus-codex-test/cyberpowerpc-manual.pdf",
+      "repo": null,
+      "repo_url": null,
+      "source": "local",
+      "doc_type": "pdf",
+      "status": "orphaned",
+      "confidence": 0.8,
+      "staleness_score": 1.0,
+      "reason": "The manual is in PDF format and does not appear to be directly related to any codebase. It lacks any reference to current project or repository details.",
+      "evidence": "No code references, no mention of specific project names, versions, or integration points.",
+      "suggested_rewrite": null,
+      "last_modified": "2026-06-12T19:26:46.455103184+00:00",
+      "last_commit_date": null,
+      "related_code_age_days": null,
+      "file_size_bytes": 851923
+    }
+  ],
+  "summary": {
+    "total": 2,
+    "current": 0,
+    "stale": 0,
+    "outdated": 0,
+    "orphaned": 1,
+    "needs_review": 1,
+    "local_repos_scanned": 0,
+    "github_repos_scanned": 0,
+    "pdfs_scanned": 1,
+    "scan_duration_secs": 6.016008901
+  }
+}

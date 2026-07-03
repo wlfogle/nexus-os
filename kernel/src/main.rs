@@ -22,11 +22,13 @@ extern "C" {
 
 pub mod arch;
 pub mod drivers;
+pub mod exec;
 pub mod fs;
 pub mod installer;
 pub mod io;
 pub mod ipc;
 pub mod memory;
+pub mod net;
 pub mod panic;
 pub mod process;
 pub mod scheduler;
@@ -182,7 +184,14 @@ pub extern "C" fn _start() -> ! {
     // VirtIO vendor 0x1AF4; device 0x1001 = legacy blk, 0x1042 = transitional
     const VIRTIO_VENDOR: u16 = 0x1AF4;
     match drivers::pci::find(&[(VIRTIO_VENDOR, 0x1001), (VIRTIO_VENDOR, 0x1042)]) {
-        Some(dev) => {
+        Some(mut dev) => {
+            // Enable I/O space + bus-master BEFORE re-reading BAR0.
+            // OVMF on first boot with q35 may leave BAR0=0 even for I/O-capable
+            // transitional devices; enabling I/O space first causes the device to
+            // respond to subsequent BAR reads with the correct value.
+            dev.enable_io_and_busmaster();
+            // Re-read BAR0 after enabling I/O space.
+            dev.bar0 = drivers::pci::read32(dev.bus, dev.dev, dev.func, 0x10);
             kprintln!("[disk] PCI {:02x}:{:02x}.{} vendor={:#06x} device={:#06x} BAR0={:#010x}",
                       dev.bus, dev.dev, dev.func,
                       dev.vendor_id, dev.device_id, dev.bar0);
@@ -191,7 +200,6 @@ pub extern "C" fn _start() -> ! {
                 kprintln!("[disk] MMIO addr={:#010x} — needs MMIO VirtIO transport",
                           dev.bar0 & !0xF);
             } else {
-                dev.enable_io_and_busmaster();
                 match drivers::virtio::blk::init(dev.io_base()) {
                     Ok(sectors) => {
                         let gib = sectors / (2 * 1024 * 1024);
@@ -202,6 +210,16 @@ pub extern "C" fn _start() -> ! {
             }
         }
         None => kprintln!("[disk] no VirtIO-blk device found"),
+    }
+
+    // ── 7.55. NVMe + AHCI (SATA) block controllers ───────────────────────────
+    // Real-disk drivers via memory-mapped PCI BARs.  Each detects its
+    // controller class, logs model/capacity, and reads sector 0.
+    if !drivers::nvme::init() {
+        kprintln!("[nvme] no NVMe controller found");
+    }
+    if !drivers::ahci::init() {
+        kprintln!("[ahci] no AHCI SATA controller found");
     }
 
     // ── 7.6. FAT32 filesystem ─────────────────────────────────────────────────
@@ -223,6 +241,11 @@ pub extern "C" fn _start() -> ! {
     // ── 9. Phase 2: PIC + PIT + Scheduler ───────────────────────────────
     timer::init();                          // PIC remap + PIT 100 Hz
     kprintln!("[timer] PIC remapped, PIT running at {} Hz", timer::TIMER_HZ);
+
+    // PS/2 keyboard controller (i8042): bring it into a known-good state so
+    // scancodes + IRQ1 reach the kernel after the UEFI/Limine handoff.
+    io::keyboard::init();
+    kprintln!("[kbd]  i8042 initialised — scanning enabled, IRQ1 unmasked");
 
     scheduler::init();                      // register idle process
 
@@ -251,6 +274,12 @@ pub extern "C" fn _start() -> ! {
     kprintln!("NexusOS v{} — Phase 5: Ring-3 shell + AI Core + PS/2 keyboard active.",
               env!("CARGO_PKG_VERSION"));
     kprintln!("[kbd]  PS/2 keyboard online — nexus-shell ready");
+
+    // ── Phase 7: Networking ──────────────────────────────────────────────
+    // Run after interrupts are enabled so the PIT millisecond clock advances
+    // (smoltcp's DHCP retransmit timers depend on it). Discovers a VirtIO-net
+    // device, brings the link up, and demonstrates a DHCP/ARP round-trip.
+    net::init();
 
     // Idle loop — preempted every 10 ms
     loop {

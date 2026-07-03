@@ -1,1 +1,0 @@
-../all-scripts/setup-user-network.sh

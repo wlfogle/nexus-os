@@ -22,7 +22,12 @@ use core::sync::atomic::Ordering;
 static BOOTX64_EFI: &[u8] = include_bytes!("../../../limine/bin/BOOTX64.EFI");
 
 static LIMINE_CONF: &[u8] =
-    b"# NexusOS Boot Configuration\ntimeout: 5\ndefault_entry: 1\n\n/NexusOS\n    protocol: limine\n    path: boot():/boot/nexus-kernel\n    cmdline: target=laptop\n";
+    b"# NexusOS Boot Configuration\ntimeout: 5\ndefault_entry: 1\n\n/NexusOS Laptop\n    protocol: limine\n    path: boot():/boot/nexus-kernel\n    cmdline: target=laptop loglevel=info\n";
+
+/// Reference user program (static ELF64), written to the ESP root so the
+/// ring-3 shell can `run HELLO.ELF` on an installed system.  Assembled and
+/// linked by build.rs (see kernel/src/userspace/hello.asm).
+static HELLO_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/hello.elf"));
 
 /// EFI shell startup script: auto-launches Limine when OVMF has no saved
 /// boot entry for this disk (first power-on after install). After Limine
@@ -59,7 +64,7 @@ pub extern "C" fn task_installer() -> ! {
 
     kprintln!();
     kprintln!("╔══════════════════════════════════════════╗");
-    kprintln!("║        NexusOS Installer v0.5            ║");
+    kprintln!("║        NexusOS Installer v0.6            ║");
     kprintln!("║  World's First AI-Native OS              ║");
     kprintln!("╚══════════════════════════════════════════╝");
     kprintln!();
@@ -103,6 +108,9 @@ fn run_install() -> Result<(), &'static str> {
 
     kprintln!("[install] Writing startup.nsh...");
     write_file_to_esp("startup.nsh", STARTUP_NSH)?;
+
+    kprintln!("[install] Writing HELLO.ELF ({} bytes)...", HELLO_ELF.len());
+    write_file_to_esp("HELLO.ELF", HELLO_ELF)?;
 
     Ok(())
 }

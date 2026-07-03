@@ -4,6 +4,7 @@
 //! The I/O base comes from PCI BAR0.
 
 pub mod blk;
+pub mod net;
 
 use x86_64::instructions::port::Port;
 
@@ -17,8 +18,13 @@ pub const REG_QUEUE_SELECT:    u16 = 0x0E; // W  u16
 pub const REG_QUEUE_NOTIFY:    u16 = 0x10; // W  u16
 pub const REG_DEVICE_STATUS:   u16 = 0x12; // RW u8
 pub const REG_ISR_STATUS:      u16 = 0x13; // R  u8  (read clears)
-// blk config (starts at offset 0x14 in legacy mode):
+// Device-specific config starts at offset 0x14 in legacy mode (MSI-X disabled).
+// blk config:
 pub const REG_BLK_CAPACITY:    u16 = 0x14; // R  u64 (lo u32 at 0x14, hi u32 at 0x18)
+// net config: 6-byte MAC at 0x14 (valid when VIRTIO_NET_F_MAC negotiated),
+// link status u16 at 0x1A (valid when VIRTIO_NET_F_STATUS negotiated).
+pub const REG_NET_MAC:         u16 = 0x14; // R  [u8; 6]
+pub const REG_NET_STATUS:      u16 = 0x1A; // R  u16
 
 // ─── Device status bits ───────────────────────────────────────────────────────
 
@@ -32,6 +38,22 @@ pub const STATUS_FAILED:      u8 = 0x80;
 
 pub const VIRTIO_BLK_F_RO:     u32 = 1 << 5;  // disk is read-only
 pub const VIRTIO_BLK_F_FLUSH:  u32 = 1 << 9;  // supports flush
+
+// ─── VirtIO feature bits (net) + transport ───────────────────────────────────
+
+pub const VIRTIO_NET_F_MAC:        u32 = 1 << 5;  // device provides a MAC in config
+pub const VIRTIO_NET_F_MRG_RXBUF:  u32 = 1 << 15; // mergeable RX buffers (12-byte hdr)
+pub const VIRTIO_NET_F_STATUS:     u32 = 1 << 16; // config status field is valid
+pub const VIRTIO_RING_F_EVENT_IDX: u32 = 1 << 29; // used/avail event index in ring
+
+/// Read the 6-byte MAC address from a VirtIO-net device's legacy config space.
+pub fn net_mac(base: u16) -> [u8; 6] {
+    let mut mac = [0u8; 6];
+    for (i, b) in mac.iter_mut().enumerate() {
+        *b = read8(base, REG_NET_MAC + i as u16);
+    }
+    mac
+}
 
 // ─── I/O helpers ─────────────────────────────────────────────────────────────
 

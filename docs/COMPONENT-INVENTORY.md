@@ -1,73 +1,50 @@
 # NexusOS Component Inventory
-NexusOS is the target operating system. The `wlfogle` repositories are component source, platform research, reference history, or separate specialty apps.
+NexusOS is a **from-scratch, AI-native Rust microkernel** (this repo). This file maps what
+**currently** lives in `/home/loufogle/nexus-os`. Anything superseded/old has been moved off
+`main` to the **`archive/legacy`** branch (recover via `git checkout archive/legacy`).
 
-## Source of truth
-`bulletproof-mediastack` is the first major NexusOS component. It prototypes the media/network module with:
-- CT-300 native Riven/RivenVFS/Jellyfin
-- VM-100 OpenWrt routing/DHCP/DNS control plane
-- Bahamut native AdGuard Home, Caddy + DuckDNS, and Vaultwarden
-- Real-Debrid-first acquisition that removes torrent VPN requirements
-- fish as the interactive Linux shell standard
+## The OS (kernel + boot)
+- `kernel/` — from-scratch Rust microkernel. v0.6.x, Phases 1–6: boot, preemptive scheduler,
+  IPC, syscalls, ring-3 shell (`nexus>`), FAT32, ELF64 loader, self-installer.
+- `drivers/`, `lib/`, `include/`, `limine/` — driver/support code and the Limine boot path.
+- `installer/` — NexusOS installer; `distro/os-release` — distro identity.
+- `scripts/`, `tests/`, `Makefile`, linker scripts — build, VM helpers, tests.
 
-## Core NexusOS component sources
-These repos contain code that should be preserved and mapped into NexusOS:
-- `bulletproof-mediastack` → `core/media-stack` and homelab provisioning
-- `mobalivecd-linux` → portable environment and Windows-app-style compatibility layer
-- `nexus-terminal` → terminal UX and AI command layer
-- `proxmox-infrastructure-admin` → Proxmox/LXC/VM management UI
-- `kvm-manager` → KVM/VM management UI
-- `OmnioSearch` → AI-enhanced local search
-- `Hyperion` → desktop power utilities
-- `eartrumpet-linux` → Linux audio UX component
-- `PortProton-Enhanced` → gaming/Wine/PortProton integration
-- `ollama-manager-gui` → local model management UI
-- `Ai-Coding-Assistant` → AI coding/userspace assistant
-- `ai-sysadmin-supreme` → AI sysadmin/Stella ancestry
-- `media-stack-admin-scripts` → admin/provisioning runbook source
+## Core userland (`core/`)
+- `core/services/` — **Stella 🐕 (operations)** + **Max Jr. 🐱 (security)** AI companions,
+  coordinated by `nexus-orchestrator` (`stella.py`, `maxjr.py`, `nexus-orchestrator.py` +
+  systemd units). **NexusOS is dedicated to them.**
+- `core/desktop/` — NexusDE desktop (QML) + branding/mascot art.
+- `core/branding/`, `core/security/`, `core/shell/`, `core/package-management/`,
+  `core/config/`, `core/bin/`, `core/ai/` (Ollama integration), `core/installer/`,
+  `core/media-stack/`.
 
-## Platform and installer research
-These repos feed installer, recovery, and platform-support modules:
-- `universal-zfs-installer`
-- `ultimate-zfs-installer`
-- `zfs-installer-enhanced`
-- `zfs-garuda-setup`
-- `garuda-media-stack`
-- `ultimate-garuda-powerhouse`
-- `garuda-ultimate-restore-system`
-- `ai-powerhouse-setup`
-- `calamares-zfs-integration`
-- `ultimate-rescue-usb`
-- `blendos-dragonized`
-- `blendos-dragonized-iso`
-- `blendos-awesome-stack`
-- `image-builder`
-- `kinoite-awesome-stack`
-- `i9-13900hx-optimizations`
-- `linux-gaming-vm-toolkit`
-- `awesome-stack-optimization-suite`
+## userspace/
+- `userspace/system/` — `nexuspkg` (native package manager + foreign-format handlers for
+  `.deb`/`.rpm`/`.pkg.tar.zst`/flatpak/snap/appimage/pip/npm/cargo), `nexus-ai-assistant`,
+  `nexus-setup-assistant`, system services.
+- `userspace/apps/` — desktop app components: `nexus-terminal`, `nexusbrowser`, `kvm-manager`,
+  `omniosearch`, `hyperion`, `eartrumpet`, `ollama-manager`, `portproton`, `proxmox-admin`,
+  `ai-coding-assistant`.
 
-## Historical/reference media stack repos
-These explain the path to the current design and should be clearly labeled as superseded unless specific code is promoted:
-- `homelab-media-stack`
-- `awesome-stack`
-- `proxmox-awesome-media-stack`
-- `proxmox-ultimate-media-server`
-- `grandma-media-stack`
-- `mediastack-control`
+## packages/ (component apps)
+`nexus-terminal`, `nexus-codex`, `nexus-brain`, `kvm-manager`, `OmnioSearch`, `Hyperion`,
+`eartrumpet-linux`, `ollama-manager-gui`, `ollama-code-checker`, `PortProton-Enhanced`,
+`mobalivecd-linux`, `i9-13900hx-optimizations`, `universal-zfs-installer`,
+`firestick-mediacontrol-app`, `mediastack-control-popos`.
 
-Historical content may mention WireGuard, wg-easy, Traefik, Authentik, Docker-first Bahamut, zurg, rclone, qBittorrent, or multi-CT *arr services. Those are not current NexusOS media/network architecture unless explicitly reintroduced.
+## Current media stack (external repo)
+`nexus-mediastack` — the current media stack, all services consolidated into one LXC
+(**CT-300**). See `docs/NEXUS-OS-SOURCE-OF-TRUTH.md`.
 
-## Separate specialty apps/tools
-Keep these separate unless explicitly promoted:
-- `disability-app-tauri`
-- `calibre-library-fixer`
-- `garuda-hello`
-- `note9-n960u1-android12`
-- `ADB-Toolbox`
-
-## Hardware TODOs
-- RGB keyboard lighting support is unresolved. Track it as a NexusOS hardware-support component, not as random cleanup debris.
-- Windows gaming VM stays gaming-only. Do not add WSL/dev toolchains there unless explicitly required.
+## Moved to `archive/legacy` (off `main`, 2026-06-29)
+Old/superseded repos and docs, kept for reference only: `ai-powerhouse-setup`, `awesome-stack`,
+`awesome-stack-optimization-suite`, `homelab-media-stack`, `mediastack-control`,
+`media-stack-admin-scripts`, `ai-sysadmin-supreme` (Stella's ancestry), `garuda-hello`,
+`linux-gaming-vm-toolkit`, the Garuda/Calamares ZFS installer, the old `legacy/` tree, and
+outdated docs (`DISTROWATCH_SUBMISSION.md`, `RELEASE_CHECKLIST.md`,
+`UNIVERSAL_PACKAGE_MANAGER_SPEC.md`, `Analysis.md`).
 
 ## Preservation rule
-Do not delete working source code during cleanup. Delete only generated/vendor output, stale duplicate artifacts, or dead operational configs with no unique source logic. Otherwise label, move, or map it into this inventory.
+Do not delete working source during cleanup — it lives on `archive/legacy`. Keep `main` to
+current NexusOS only.

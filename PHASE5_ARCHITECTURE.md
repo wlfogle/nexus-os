@@ -1,16 +1,22 @@
-# Phase 5: AI Core Server Architecture
+# Phase 5: AI Core Architecture — Implementation Reference
 
-**Status:** Planned  
-**Target Version:** v0.5.0  
-**Phases Complete:** 1–4 (v0.4.0)
+**Status:** Implemented (v0.6.0)  
+**Phases Complete:** 1–5
 
 ---
 
 ## Overview
 
-Phase 5 integrates **AI inference as a first-class system service** via IPC. The NexusOS kernel provides syscalls; user-space `nexus-ai` daemon handles Ollama HTTP integration and message routing.
+Phase 5 delivers **AI inference as a first-class system service** via IPC.
+The kernel provides the syscall interface; the ring-3 `nexus-ai` daemon handles
+Ollama HTTP integration and message routing.
 
-**Goal:** Ring-3 processes can query the AI Core for LLM inference without leaving the OS.
+Phase 5.0 (mock replies) is complete and verified.  
+Phase 5.1 (real Ollama HTTP via VirtIO-vsock) is the immediate next step.
+
+**Achieved:** Ring-3 processes can query the AI Core for LLM inference via IPC.
+The `nexus>` shell boots and is interactive. The self-installer writes the full
+stack to a VirtIO disk on first boot.
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -35,25 +41,27 @@ Phase 5 integrates **AI inference as a first-class system service** via IPC. The
 
 ## Kernel Changes (kernel/)
 
-### 1. New Syscalls (kernel/src/syscall/mod.rs)
-
-Add three syscalls to the existing `SYS_*` enum:
+### 1. Syscalls (kernel/src/syscall/mod.rs) — all implemented
 
 ```rust
-pub enum SyscallNumber {
-    // Existing (Phase 4)
-    SYS_WRITE = 1,
-    SYS_SLEEP = 2,
-    SYS_GETPID = 3,
-    SYS_IPC_SEND = 4,
-    SYS_IPC_RECV = 5,
-    SYS_IPCCTL = 6,
-    
-    // Phase 5 Additions
-    SYS_IPC_QUERY = 7,      // Query named port by name → port_id
-    SYS_IPC_TIMEOUT = 8,    // Set recv timeout (ms), 0 = blocking
-    SYS_GPU_MMAP = 9,       // Map GPU memory region for inference
-}
+// Phase 4 (base)
+pub const SYS_EXIT:          u64 = 1;
+pub const SYS_WRITE:         u64 = 2;   // fd=1 → serial
+pub const SYS_GETPID:        u64 = 3;
+pub const SYS_YIELD:         u64 = 4;
+pub const SYS_IPC_SEND:      u64 = 5;
+pub const SYS_IPC_RECV:      u64 = 6;
+pub const SYS_PORT_REGISTER: u64 = 7;
+pub const SYS_PORT_FIND:     u64 = 8;
+pub const SYS_SLEEP:         u64 = 9;
+// Phase 5
+pub const SYS_IPC_QUERY:     u64 = 10;
+pub const SYS_IPC_TIMEOUT:   u64 = 11;
+pub const SYS_GPU_MMAP:      u64 = 12;  // Phase 5.2 stub (reserved region)
+pub const SYS_READ_CHAR:     u64 = 13;  // blocks on BlockedOnKey, woken by IRQ1
+pub const SYS_READ_CHAR_NB:  u64 = 14;  // non-blocking
+pub const SYS_DISK_READ:     u64 = 15;  // VirtIO-blk sector read
+pub const SYS_DISK_WRITE:    u64 = 16;  // VirtIO-blk sector write
 ```
 
 ### 2. Syscall Handlers (kernel/src/syscall/handlers/)
@@ -465,19 +473,21 @@ struct ipc_message {
 
 ---
 
-## Implementation Checklist
+## Implementation Status
 
-- [ ] Add Phase 5 syscalls to kernel/src/syscall/mod.rs
-- [ ] Implement syscall handlers (ipc_query, ipc_timeout, gpu_mmap)
-- [ ] Update kernel/src/ipc/ports.rs with reserved port registry
-- [ ] Create userspace/nexus-ai/ with Cargo.toml
-- [ ] Implement nexus-ai IPC daemon (main.rs, ipc.rs)
-- [ ] Stub ollama_client.rs (HTTP later)
-- [ ] Embed nexus-ai binary in kernel
-- [ ] Update Phase 4 boot sequence to spawn nexus-ai
-- [ ] Write integration test (test-ai-core.sh)
-- [ ] Update README.md phase roadmap
-- [ ] Create GitHub tracking issues for 5.1–5.3
+- [x] Phase 5 syscalls added (SYS_IPC_QUERY, SYS_IPC_TIMEOUT, SYS_GPU_MMAP, SYS_READ_CHAR, SYS_READ_CHAR_NB, SYS_DISK_READ, SYS_DISK_WRITE)
+- [x] syscall handlers implemented
+- [x] ipc/ports.rs reserved port registry (nexus.ai, nexus.fs, nexus.gpu, nexus.net)
+- [x] nexus-ai kernel thread spawned at boot, IPC on nexus.ai port
+- [x] PS/2 keyboard driver (IRQ1, ring-buffer, BlockedOnKey → wake_blocked_on_key)
+- [x] VirtIO-blk disk driver (legacy I/O-port BAR0, 8-entry virtqueue)
+- [x] FAT32 filesystem (fatfs crate, sector-buffered DiskIo)
+- [x] Self-installer (GPT + FAT32 ESP + BOOTX64.EFI + limine.conf + kernel ELF → disk)
+- [x] ring-3 interactive shell (shell_init.asm NASM binary, 7 commands, SYS_READ_CHAR)
+- [ ] Phase 5.4: VirtIO-vsock driver
+- [ ] Phase 5.4: nexus-ai real HTTP POST to Ollama via vsock
+- [ ] Phase 5.4: shell `ai <prompt>` command
+- [ ] Phase 5.5: shell history, tab completion, framebuffer mirror
 
 ---
 

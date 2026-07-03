@@ -1,1 +1,0 @@
-../all-scripts/fix-diablo4-gpu-detection.sh

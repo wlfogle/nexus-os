@@ -1,1 +1,0 @@
-../all-scripts/virt-optimize.sh

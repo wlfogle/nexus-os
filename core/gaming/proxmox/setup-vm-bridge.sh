@@ -1,1 +1,0 @@
-../all-scripts/setup-vm-bridge.sh

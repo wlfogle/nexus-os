@@ -3,7 +3,7 @@
 > **The world's first AI-native operating system.**  
 > Built from scratch. No Linux. No glibc. No distro assumptions.
 
-**Current version: v0.5.3** — Phases 1–5.3 complete and verified (AI Core + keyboard + VirtIO-blk + FAT32 + installer + disk boot).
+**Current version: v0.6.0** — Phases 1–5 complete and verified. Ring-3 interactive shell (`nexus>`) boots. Installer writes GPT + FAT32 ESP + kernel to VirtIO disk.
 
 ## Architecture
 
@@ -33,20 +33,20 @@ Only four things — none are distro-specific:
 # 1. One-time setup — installs Rust nightly targets + builds Limine from source
 make setup
 
-# 2. Build all three kernels
-make all
-# or individually:
-make laptop
-make tiamat
-make bahamut
+# 2. Build + ISO (laptop target)
+make laptop && make iso-laptop   # → build/nexusos-laptop.iso
 
-# 3. Create bootable ISOs
-make iso-laptop
-make iso-tiamat
-make iso-bahamut
+# 3. Install to a disk image and boot (QEMU)
+make disk-laptop                  # creates build/nexusos-laptop.qcow2 (8 GB)
+make run-install-laptop           # boot ISO + disk: installer runs, writes kernel to disk
+make run-installed-laptop         # boot from installed disk only (OVMF)
 
-# 4. Test in QEMU
-make run-laptop
+# 4. Write to USB for bare-metal
+sudo dd if=build/nexusos-laptop.iso of=/dev/sdX bs=4M status=progress oflag=sync
+
+# Other targets
+make tiamat && make iso-tiamat
+make bahamut && make iso-bahamut
 make run-tiamat
 make run-bahamut
 ```
@@ -104,7 +104,9 @@ kernel/
     │   └── virtio/
     │       ├── mod.rs       VirtIO legacy I/O register helpers
     │       └── blk.rs       VirtIO-blk driver (8-entry virtqueue, polling)
-    └── userspace/           ring-3 process spawn, page mapping, init code
+    ├── userspace/
+    │   ├── mod.rs           ring-3 process spawn, page mapping, USER_CODE_BASE
+    │   └── shell_init.asm   ring-3 interactive shell (NASM flat bin, built by build.rs)
 ```
 
 ## Boot Sequence
@@ -136,20 +138,23 @@ UEFI or BIOS firmware
 
               Phase 4 — Syscall + User Space
              12. STAR/LSTAR/FMASK/EFER + swapgs PERCPU entry
-             13. First ring-3 process (nexus-init via IRETQ)
-             14. SYS_WRITE, SYS_SLEEP, SYS_GETPID, SYS_IPC_* live
+             13. First ring-3 process (IRETQ → USER_CODE_BASE)
+             14. 19 syscalls live (SYS_EXIT … SYS_EXEC)
              15. Idle loop (preempted every 10 ms)
 
-              Phase 5 — AI Core + Drivers
-             16. PCI scan -> VirtIO-blk detect -> disk capacity printed
+              Phase 5 — AI Core + Drivers + Shell
+             16. PCI scan → VirtIO-blk detect → disk capacity
              17. Register system ports (nexus.ai, nexus.fs, nexus.gpu)
-             18. Spawn nexus-ai daemon, AI Core listening on nexus.ai
+             18. Spawn nexus-ai daemon, IPC on nexus.ai port
              19. PS/2 keyboard (IRQ1, ring-buffer, BlockedOnKey)
-             20. SYS_DISK_READ/WRITE syscalls (15/16)
+             20. FAT32 via fatfs crate (sector-buffered DiskIo adapter)
+             21. Installer: GPT + FAT32 ESP + BOOTX64.EFI + kernel ELF → disk
+             22. ring-3 shell: `nexus>` prompt, SYS_READ_CHAR, 10 commands
+                 (help/version/uname/echo/ls/cat/run/ps/clear/reboot)
 
-              Phase 5.2/5.3 — FAT32 + Installer
-             21. FAT32 mounted (GPT ESP detected at LBA 34 on installed disk)
-             22. NexusOS installer writes GPT + FAT32 ESP + BOOTX64.EFI + kernel
+              Phase 6 — Filesystem + Program Execution
+             23. ls / cat from ring-3 (SYS_FS_LIST / SYS_FS_READ)
+             24. ELF64 loader + SYS_EXEC: `run HELLO.ELF` runs a ring-3 program
 ```
 
 ## Phase Roadmap
@@ -160,55 +165,28 @@ UEFI or BIOS firmware
 | 2 | **Done** | Preemptive scheduler, 8259A PIC, 8253 PIT, round-robin | `[task-demo] alive at 9s` |
 | 3 | **Done** | IPC ring-buffers, blocking send/recv, named port registry | `ping#00007 round-trip OK` |
 | 4 | **Done** | `syscall`/`sysretq`, ring-3 user process, SYS_WRITE/SLEEP/IPC | `Hello from ring 3!` |
-| 5.0 | **Done** | AI Core kernel thread, `nexus.ai` port, SYS_IPC_QUERY/TIMEOUT/GPU_MMAP, keyboard | `[nexus-ai] AI Core online` |
-| 5.1 | **Done** | PCI scanner, VirtIO-blk disk driver, SYS_DISK_READ/WRITE (15/16) | `[disk] VirtIO-blk: N GiB` |
-| 5.2 | **Done** | FAT32 filesystem via `fatfs` crate (sector-buffered DiskIo adapter) | `[fs] FAT32 mounted` |
-| 5.3 | **Done** | NexusOS installer: GPT + FAT32 ESP + BOOTX64.EFI + kernel + limine.conf | `[install] Installation complete!` → boots from disk ✓ |
-| 5.4 | **Next** | Boot from installed disk (GPT ESP detection); VirtIO-vsock → Ollama | — |
+| 5 | **Done** | AI Core (nexus.ai), PS/2 keyboard, VirtIO-blk, FAT32, installer, ring-3 shell | `nexus>` prompt |
+| 6.1 | **Done** | Ring-3 filesystem access — `ls` / `cat` via SYS_FS_LIST/SYS_FS_READ | `nexus> ls` lists ESP |
+| 6 | **Core done** | ELF64 loader + `SYS_EXEC` + parent/child wait; `run HELLO.ELF` | ring-3 ELF prints + exits |
+| 5.4 | **Next** | Boot from installed disk (OVMF); VirtIO-vsock → Ollama HTTP | — |
 
 ## Test VM
 
-A QEMU + KVM test VM is pre-configured under `scripts/vm/`:
+QEMU + KVM scripts live under `scripts/vm/`:
 
 ```bash
-# Quick ISO test (no GPU rebinding)
+# Quick ISO test
 ./scripts/vm/nexusos-vm-test.sh
 
-# RTX 4080 GPU passthrough (IOMMU Group 16, isolated)
+# RTX 4080 GPU passthrough (IOMMU Group 16)
 sudo ./scripts/vm/vfio-bind.sh
-./scripts/vm/nexusos-vm-gpu.sh --cdrom   # install
+./scripts/vm/nexusos-vm-gpu.sh --cdrom   # install run
 ./scripts/vm/nexusos-vm-gpu.sh           # boot installed
 sudo ./scripts/vm/vfio-unbind.sh
 ```
 
-VM disk image lives at `/media/loufogle/Data/vms/nexusos/nexusos.qcow2` (40 GB).
-A `libvirt` domain `nexusos` is registered in virt-manager for GUI access.
-
-## Phase 5 Development
-
-See [PHASE5_ARCHITECTURE.md](PHASE5_ARCHITECTURE.md) for:
-- Kernel syscall additions (SYS_IPC_QUERY, SYS_IPC_TIMEOUT, SYS_GPU_MMAP)
-- nexus-ai daemon implementation
-- IPC protocol specification
-- Phase 5.0–5.3 roadmap
-
-**Quick start for Phase 5:**
-
-```bash
-# Create feature branch
-git checkout -b phase/5-ai-core
-
-# Build with AI-Core (adds syscalls + port registry)
-cd kernel && make setup && make laptop && make iso-laptop && make run-laptop
-
-# In VM, nexus-ai should spawn and listen on nexus.ai port
-```
-
-## Legacy Code
-
-The original Ubuntu/Grub-based 32-bit C kernel, `CMakeLists.txt`, `config.mk`,
-and Arch ISO configs are archived under `legacy/`. They are not referenced by
-any current build target.
+Persistent VM disk: `/media/loufogle/Data/vms/nexusos/nexusos.qcow2` (40 GB).
+Libvirt domain `nexusos` is registered in virt-manager.
 
 ---
 

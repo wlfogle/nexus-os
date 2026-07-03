@@ -1,6 +1,0 @@
----
-- name: Manage Ollama container and LLM endpoints
-  hosts: ollama-ct
-  become: yes
-  roles:
-    - ollama

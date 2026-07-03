@@ -1,1 +1,0 @@
-../all-scripts/apply-vfio-setup.sh

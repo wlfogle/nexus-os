@@ -1,1 +1,0 @@
-../all-scripts/launch_battlenet_fixed.sh

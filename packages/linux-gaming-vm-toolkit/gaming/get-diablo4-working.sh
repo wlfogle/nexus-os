@@ -1,1 +1,0 @@
-../all-scripts/get-diablo4-working.sh

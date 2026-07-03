@@ -1,1 +1,0 @@
-../all-scripts/fix_wine_diablo4.sh

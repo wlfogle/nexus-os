@@ -1,1 +1,0 @@
-../all-scripts/create-proxmox-vm-final.sh

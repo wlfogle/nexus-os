@@ -1,1 +1,0 @@
-../all-scripts/README.md

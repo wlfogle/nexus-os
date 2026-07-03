@@ -1,1 +1,0 @@
-../all-scripts/launch-battlenet-wine.sh

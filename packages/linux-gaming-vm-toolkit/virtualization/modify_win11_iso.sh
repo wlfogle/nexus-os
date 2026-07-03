@@ -1,1 +1,0 @@
-../all-scripts/modify_win11_iso.sh

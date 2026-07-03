@@ -1,1 +1,0 @@
-../all-scripts/start-gaming-vm-new.sh

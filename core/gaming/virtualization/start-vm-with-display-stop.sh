@@ -1,1 +1,0 @@
-../all-scripts/start-vm-with-display-stop.sh
