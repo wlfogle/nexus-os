@@ -44,6 +44,10 @@ BITS 64
 %define SYS_EXEC          19
 %define SYS_FS_LIST_PATH  20
 %define SYS_FS_READ_PATH  21
+%define SYS_FS_MKDIR_PATH 22
+%define SYS_FS_WRITE_PATH 23
+%define SYS_FS_APPEND_PATH 24
+%define SYS_FS_REMOVE_PATH 25
 
 ; ── Buffer sizes (must all fit on one 4 096-byte stack page) ─────────────
 %define CMD_BUF_SIZE   256
@@ -499,6 +503,142 @@ fn_dispatch:
     jmp  .fin
 .nrun:
 
+    ; ── mkdir <path> ──────────────────────────────────────────────────────────
+    mov  rdi, r12
+    lea  rsi, [rel kw_mkdir]
+    mov  rdx, 5
+    call fn_match
+    test rax, rax
+    jnz  .nmkdir
+    lea  rdi, [r12 + 5]
+    cmp  byte [rdi], ' '
+    jne  .mkdir_usage
+    inc  rdi
+    cmp  byte [rdi], 0
+    je   .mkdir_usage
+    mov  rax, SYS_FS_MKDIR_PATH
+    syscall
+    test rax, rax
+    js   .fs_err
+    jmp  .fin
+.mkdir_usage:
+    lea  rsi, [rel str_mkdir_usage]
+    mov  rdx, str_mkdir_usage_len
+    call fn_write
+    jmp  .fin
+.nmkdir:
+
+    ; ── rm <path> ─────────────────────────────────────────────────────────────
+    mov  rdi, r12
+    lea  rsi, [rel kw_rm]
+    mov  rdx, 2
+    call fn_match
+    test rax, rax
+    jnz  .nrm
+    lea  rdi, [r12 + 2]
+    cmp  byte [rdi], ' '
+    jne  .rm_usage
+    inc  rdi
+    cmp  byte [rdi], 0
+    je   .rm_usage
+    mov  rax, SYS_FS_REMOVE_PATH
+    syscall
+    test rax, rax
+    js   .fs_err
+    jmp  .fin
+.rm_usage:
+    lea  rsi, [rel str_rm_usage]
+    mov  rdx, str_rm_usage_len
+    call fn_write
+    jmp  .fin
+.nrm:
+
+    ; ── write <path> <text> ──────────────────────────────────────────────────
+    mov  rdi, r12
+    lea  rsi, [rel kw_write]
+    mov  rdx, 5
+    call fn_match
+    test rax, rax
+    jnz  .nwrite
+    lea  rdi, [r12 + 5]
+    cmp  byte [rdi], ' '
+    jne  .write_usage
+    inc  rdi
+    cmp  byte [rdi], 0
+    je   .write_usage
+    mov  rbx, rdi                       ; rbx = path start
+.w_find_space:
+    cmp  byte [rdi], 0
+    je   .write_usage
+    cmp  byte [rdi], ' '
+    je   .w_found_space
+    inc  rdi
+    jmp  .w_find_space
+.w_found_space:
+    mov  byte [rdi], 0                  ; terminate path
+    inc  rdi                            ; rdi = data start
+    cmp  byte [rdi], 0
+    je   .write_usage
+    mov  rsi, rdi                       ; rsi = data
+    call fn_strlen                      ; rcx = data len
+    mov  rax, SYS_FS_WRITE_PATH
+    mov  rdi, rbx                       ; arg1 = path
+    ; rsi is already data pointer
+    mov  rdx, rcx                       ; arg3 = len
+    syscall
+    test rax, rax
+    js   .fs_err
+    jmp  .fin
+.write_usage:
+    lea  rsi, [rel str_write_usage]
+    mov  rdx, str_write_usage_len
+    call fn_write
+    jmp  .fin
+.nwrite:
+
+    ; ── append <path> <text> ─────────────────────────────────────────────────
+    mov  rdi, r12
+    lea  rsi, [rel kw_append]
+    mov  rdx, 6
+    call fn_match
+    test rax, rax
+    jnz  .nappend
+    lea  rdi, [r12 + 6]
+    cmp  byte [rdi], ' '
+    jne  .append_usage
+    inc  rdi
+    cmp  byte [rdi], 0
+    je   .append_usage
+    mov  rbx, rdi                       ; rbx = path start
+.a_find_space:
+    cmp  byte [rdi], 0
+    je   .append_usage
+    cmp  byte [rdi], ' '
+    je   .a_found_space
+    inc  rdi
+    jmp  .a_find_space
+.a_found_space:
+    mov  byte [rdi], 0                  ; terminate path
+    inc  rdi                            ; rdi = data start
+    cmp  byte [rdi], 0
+    je   .append_usage
+    mov  rsi, rdi                       ; rsi = data
+    call fn_strlen                      ; rcx = data len
+    mov  rax, SYS_FS_APPEND_PATH
+    mov  rdi, rbx                       ; arg1 = path
+    ; rsi is already data pointer
+    mov  rdx, rcx                       ; arg3 = len
+    syscall
+    test rax, rax
+    js   .fs_err
+    jmp  .fin
+.append_usage:
+    lea  rsi, [rel str_append_usage]
+    mov  rdx, str_append_usage_len
+    call fn_write
+    jmp  .fin
+.nappend:
+
     ; ── Unknown command ───────────────────────────────────────────────────────
     lea  rsi, [rel str_unk_pfx]
     mov  rdx, str_unk_pfx_len
@@ -550,6 +690,10 @@ str_help:
     db  "  ls [path]- list files (root or a subdirectory)", 13, 10
     db  "  cat <f>  - print a file's contents (path ok)", 13, 10
     db  "  run <f>  - load and run an ELF program", 13, 10
+    db  "  mkdir <p>- create a directory", 13, 10
+    db  "  write <p> <text> - overwrite/create file", 13, 10
+    db  "  append <p> <text> - append/create file", 13, 10
+    db  "  rm <p>  - remove file or empty directory", 13, 10
     db  "  ps       - list running processes", 13, 10
     db  "  clear    - clear the screen", 13, 10
     db  "  reboot   - exit shell and reboot", 13, 10
@@ -604,6 +748,22 @@ str_run_err:
     db  "run: failed to load program (not found or not a valid ELF)", 13, 10
 str_run_err_len equ $ - str_run_err
 
+str_mkdir_usage:
+    db  "usage: mkdir <path>", 13, 10
+str_mkdir_usage_len equ $ - str_mkdir_usage
+
+str_rm_usage:
+    db  "usage: rm <path>", 13, 10
+str_rm_usage_len equ $ - str_rm_usage
+
+str_write_usage:
+    db  "usage: write <path> <text>", 13, 10
+str_write_usage_len equ $ - str_write_usage
+
+str_append_usage:
+    db  "usage: append <path> <text>", 13, 10
+str_append_usage_len equ $ - str_append_usage
+
 ; ── Command keyword literals (length matched, no null terminator needed) ─────
 kw_help:    db  "help"
 kw_version: db  "version"
@@ -615,3 +775,7 @@ kw_reboot:  db  "reboot"
 kw_ls:      db  "ls"
 kw_cat:     db  "cat"
 kw_run:     db  "run"
+kw_mkdir:   db  "mkdir"
+kw_rm:      db  "rm"
+kw_write:   db  "write"
+kw_append:  db  "append"

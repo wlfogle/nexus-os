@@ -47,3 +47,39 @@ pub fn read(path: &str, buf: &mut [u8]) -> Result<usize, &'static str> {
     }
     fat::read_path(rel, buf)
 }
+
+/// Create a directory at `path`. Existing directories are accepted.
+pub fn mkdir(path: &str) -> Result<(), &'static str> {
+    let rel = normalize(path)?;
+    if rel.is_empty() {
+        return Err("vfs: cannot mkdir root");
+    }
+    fat::mkdir_path(rel)
+}
+
+/// Create or overwrite a file at `path`.
+pub fn write(path: &str, data: &[u8]) -> Result<(), &'static str> {
+    let rel = normalize(path)?;
+    if rel.is_empty() {
+        return Err("vfs: cannot write root");
+    }
+    fat::write_path(rel, data)
+}
+
+/// Append to a file at `path`, creating it if needed.
+pub fn append(path: &str, data: &[u8]) -> Result<(), &'static str> {
+    let rel = normalize(path)?;
+    if rel.is_empty() {
+        return Err("vfs: cannot append root");
+    }
+    fat::append_path(rel, data)
+}
+
+/// Remove a file or empty directory at `path`.
+pub fn remove(path: &str) -> Result<(), &'static str> {
+    let rel = normalize(path)?;
+    if rel.is_empty() {
+        return Err("vfs: cannot remove root");
+    }
+    fat::remove_path(rel)
+}

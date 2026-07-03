@@ -55,6 +55,10 @@ Syscall table (19 implemented, all in `kernel/src/syscall/mod.rs`):
 | 19 | SYS_EXEC | exec(name) → child exit code (loads + runs a static ELF64) |
 | 20 | SYS_FS_LIST_PATH | fs_list_path(path, buf, cap) → bytes (subdir listing) |
 | 21 | SYS_FS_READ_PATH | fs_read_path(path, buf, cap) → bytes read (subdir file) |
+| 22 | SYS_FS_MKDIR_PATH | fs_mkdir_path(path) → 0 or -errno (create directory) |
+| 23 | SYS_FS_WRITE_PATH | fs_write_path(path, buf, len) → bytes written (create/overwrite) |
+| 24 | SYS_FS_APPEND_PATH | fs_append_path(path, buf, len) → bytes written (append/create) |
+| 25 | SYS_FS_REMOVE_PATH | fs_remove_path(path) → 0 or -errno (remove file/empty dir) |
 
 ---
 
@@ -98,8 +102,11 @@ path-aware VFS layer (`kernel/src/fs/vfs.rs`) and two new syscalls
 (SYS_FS_LIST_PATH=20, SYS_FS_READ_PATH=21).  `fatfs` resolves `/`-separated
 components from `root_dir()` (`open_dir`/`open_file`), so `ls /EFI/BOOT`,
 `ls /boot`, and `cat /EFI/BOOT/limine.conf` all work from the `nexus>` prompt.
-Remaining: a user-space VFS abstraction built directly on SYS_DISK_READ and
-write-path operations (mkdir/rm from the shell).
+Write-path operations are now live too: SYS_FS_MKDIR_PATH=22,
+SYS_FS_WRITE_PATH=23, SYS_FS_APPEND_PATH=24, SYS_FS_REMOVE_PATH=25 back the
+shell `mkdir <p>`, `write <p> <text>`, `append <p> <text>`, and `rm <p>`
+commands.  Writes commit through `fatfs` to the FAT32 disk, so files created
+from the `nexus>` prompt persist across reboots.
 
 ### Phase 6.2 — Network stack
 

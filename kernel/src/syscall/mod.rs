@@ -57,6 +57,11 @@ pub const SYS_EXEC:          u64 = 19; // exec(name_ptr (NUL-term)) → child ex
 // ── Phase 6.1: subdirectory path-aware filesystem access ─────────────────────
 pub const SYS_FS_LIST_PATH:  u64 = 20; // fs_list_path(path_ptr (NUL-term), buf_ptr, cap) → bytes
 pub const SYS_FS_READ_PATH:  u64 = 21; // fs_read_path(path_ptr (NUL-term), buf_ptr, cap) → bytes read
+// ── Phase 6.2: writable VFS path operations ──────────────────────────────────
+pub const SYS_FS_MKDIR_PATH: u64 = 22; // fs_mkdir_path(path_ptr) → 0 or -err
+pub const SYS_FS_WRITE_PATH: u64 = 23; // fs_write_path(path_ptr, data_ptr, len) → bytes
+pub const SYS_FS_APPEND_PATH:u64 = 24; // fs_append_path(path_ptr, data_ptr, len) → bytes
+pub const SYS_FS_REMOVE_PATH:u64 = 25; // fs_remove_path(path_ptr) → 0 or -err
 
 /// Largest program image SYS_EXEC will load from disk (1 MiB).
 const MAX_PROG_BYTES: usize = 1024 * 1024;
@@ -548,6 +553,92 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
             match crate::fs::vfs::read(path, buf) {
                 Ok(n)  => n as i64,
                 Err(_) => -2, // ENOENT
+            }
+        }
+
+        // ── SYS_FS_MKDIR_PATH ────────────────────────────────────────────
+        // fs_mkdir_path(path_ptr (NUL-terminated, <=255)) → 0 or -err.
+        SYS_FS_MKDIR_PATH => {
+            let path_ptr = a1 as *const u8;
+            let mut plen = 0usize;
+            unsafe {
+                while plen < 255 && *path_ptr.add(plen) != 0 { plen += 1; }
+            }
+            let path = match core::str::from_utf8(
+                unsafe { core::slice::from_raw_parts(path_ptr, plen) }
+            ) {
+                Ok(s)  => s,
+                Err(_) => return -22,
+            };
+            match crate::fs::vfs::mkdir(path) {
+                Ok(()) => 0,
+                Err(_) => -5,
+            }
+        }
+
+        // ── SYS_FS_WRITE_PATH ────────────────────────────────────────────
+        // fs_write_path(path_ptr, data_ptr, len) → bytes written or -err.
+        SYS_FS_WRITE_PATH => {
+            let path_ptr = a1 as *const u8;
+            let data_ptr = a2 as *const u8;
+            let len      = (a3 as usize).min(4096);
+            let mut plen = 0usize;
+            unsafe {
+                while plen < 255 && *path_ptr.add(plen) != 0 { plen += 1; }
+            }
+            let path = match core::str::from_utf8(
+                unsafe { core::slice::from_raw_parts(path_ptr, plen) }
+            ) {
+                Ok(s)  => s,
+                Err(_) => return -22,
+            };
+            let data = unsafe { core::slice::from_raw_parts(data_ptr, len) };
+            match crate::fs::vfs::write(path, data) {
+                Ok(()) => len as i64,
+                Err(_) => -5,
+            }
+        }
+
+        // ── SYS_FS_APPEND_PATH ───────────────────────────────────────────
+        // fs_append_path(path_ptr, data_ptr, len) → bytes written or -err.
+        SYS_FS_APPEND_PATH => {
+            let path_ptr = a1 as *const u8;
+            let data_ptr = a2 as *const u8;
+            let len      = (a3 as usize).min(4096);
+            let mut plen = 0usize;
+            unsafe {
+                while plen < 255 && *path_ptr.add(plen) != 0 { plen += 1; }
+            }
+            let path = match core::str::from_utf8(
+                unsafe { core::slice::from_raw_parts(path_ptr, plen) }
+            ) {
+                Ok(s)  => s,
+                Err(_) => return -22,
+            };
+            let data = unsafe { core::slice::from_raw_parts(data_ptr, len) };
+            match crate::fs::vfs::append(path, data) {
+                Ok(()) => len as i64,
+                Err(_) => -5,
+            }
+        }
+
+        // ── SYS_FS_REMOVE_PATH ───────────────────────────────────────────
+        // fs_remove_path(path_ptr (NUL-terminated, <=255)) → 0 or -err.
+        SYS_FS_REMOVE_PATH => {
+            let path_ptr = a1 as *const u8;
+            let mut plen = 0usize;
+            unsafe {
+                while plen < 255 && *path_ptr.add(plen) != 0 { plen += 1; }
+            }
+            let path = match core::str::from_utf8(
+                unsafe { core::slice::from_raw_parts(path_ptr, plen) }
+            ) {
+                Ok(s)  => s,
+                Err(_) => return -22,
+            };
+            match crate::fs::vfs::remove(path) {
+                Ok(()) => 0,
+                Err(_) => -5,
             }
         }
 

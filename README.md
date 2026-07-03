@@ -160,6 +160,8 @@ UEFI or BIOS firmware
               Phase 6 — Filesystem + Program Execution
              23. ls / cat from ring-3 (SYS_FS_LIST / SYS_FS_READ)
              24. ELF64 loader + SYS_EXEC: `run HELLO.ELF` runs a ring-3 program
+             25. Writable FAT32 from ring-3: mkdir/write/append/rm persist to disk
+                 (SYS_FS_MKDIR_PATH/WRITE_PATH/APPEND_PATH/REMOVE_PATH = 22-25)
 ```
 
 ## Phase Roadmap

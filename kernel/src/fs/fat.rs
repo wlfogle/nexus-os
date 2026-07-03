@@ -261,6 +261,12 @@ pub fn format() -> Result<(), &'static str> {
 /// Create a directory at `path` (relative to root; no leading `/`).
 /// Silently succeeds if the directory already exists.
 pub fn mkdir(path: &str) -> Result<(), &'static str> {
+    mkdir_path(path)
+}
+
+/// Create a directory at `path` (root-relative, `/`-separated).
+/// Silently succeeds if the directory already exists.
+pub fn mkdir_path(path: &str) -> Result<(), &'static str> {
     let guard = FS.lock();
     let fs = guard.as_ref().ok_or("FAT32: not mounted")?;
     // Explicit block ensures root + created Dir are dropped before guard.
@@ -271,6 +277,42 @@ pub fn mkdir(path: &str) -> Result<(), &'static str> {
             Err(fatfs::Error::AlreadyExists) => Ok(()),
             Err(_)                           => Err("FAT32: mkdir failed"),
         }
+    };
+    result
+}
+
+/// Append `data` to the file at `path`, creating it if it does not exist.
+pub fn append_path(path: &str, data: &[u8]) -> Result<(), &'static str> {
+    let guard = FS.lock();
+    let fs    = guard.as_ref().ok_or("FAT32: not mounted")?;
+    let result = {
+        let root = fs.root_dir();
+        let mut file = match root.open_file(path) {
+            Ok(f) => f,
+            Err(_) => root.create_file(path).map_err(|_| "FAT32: create failed")?,
+        };
+        file.seek(SeekFrom::End(0)).map_err(|_| "FAT32: seek failed")?;
+        let mut written = 0usize;
+        while written < data.len() {
+            match file.write(&data[written..]) {
+                Ok(0) => { return Err("FAT32: disk full"); }
+                Ok(n) => written += n,
+                Err(_) => { return Err("FAT32: append error"); }
+            }
+        }
+        file.flush().map_err(|_| "FAT32: flush failed")?;
+        Ok(())
+    };
+    result
+}
+
+/// Remove a file or empty directory at `path`.
+pub fn remove_path(path: &str) -> Result<(), &'static str> {
+    let guard = FS.lock();
+    let fs    = guard.as_ref().ok_or("FAT32: not mounted")?;
+    let result = {
+        let root = fs.root_dir();
+        root.remove(path).map_err(|_| "FAT32: remove failed")
     };
     result
 }
@@ -311,6 +353,11 @@ pub fn read_file(path: &str, buf: &mut [u8]) -> Result<usize, &'static str> {
 
 /// Create or overwrite the file at `path` with `data`.
 pub fn write_file(path: &str, data: &[u8]) -> Result<(), &'static str> {
+    write_path(path, data)
+}
+
+/// Create or overwrite the file at `path` with `data`.
+pub fn write_path(path: &str, data: &[u8]) -> Result<(), &'static str> {
     let guard = FS.lock();
     let fs    = guard.as_ref().ok_or("FAT32: not mounted")?;
     // Explicit block: root + file are dropped before guard is released.
