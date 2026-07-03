@@ -17,15 +17,12 @@ gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw, Gio, GLib, GdkPixbuf
 from core.enhanced_qemu_runner import AIEnhancedQEMURunner
 
-@Gtk.Template(resource_path='/org/mobatek/mobalivecd/ui/enhanced_main_window.ui')
 class EnhancedMobaLiveCDWindow(Adw.ApplicationWindow):
-    """AI-Enhanced main application window"""
-    
-    __gtype_name__ = 'EnhancedMobaLiveCDWindow'
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        
+    """AI-Enhanced main application window"""  # <--- Ensure this is indented by 4 spaces
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
         # Initialize AI-enhanced QEMU runner
         try:
             self.qemu_runner = AIEnhancedQEMURunner()

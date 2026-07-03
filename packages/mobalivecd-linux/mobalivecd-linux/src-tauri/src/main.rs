@@ -5,22 +5,23 @@ use std::env;
 
 #[tauri::command]
 fn run_mobalivecd() -> String {
-    // 1. Define the directory and script path
-    let work_dir = "/home/loufogle/nexus-os/packages/mobalivecd-linux/mobalivecd-linux";
-    let script_path = format!("{}/mobalivecd.py", work_dir);
+    // 1. Corrected path: removing the redundant "mobalivecd-linux/" segment
+    let work_dir = "/home/loufogle/nexus-os/packages/mobalivecd-linux";
+    let script_path = format!("{}/enhanced_mobalivecd.py", work_dir);
 
-    // 2. Execute the script within its own directory context
-    let output = Command::new("python3")
+    // 2. Execute
+    let output = std::process::Command::new("python3")
     .arg(script_path)
     .current_dir(work_dir)
     .output();
 
-    // 3. Handle the result
+    // 3. Handle result
     match output {
         Ok(out) => {
             if out.status.success() {
                 String::from_utf8_lossy(&out.stdout).to_string()
             } else {
+                // This will tell us if Python found the file but failed to run it
                 format!("Script Error ({}): {}", out.status, String::from_utf8_lossy(&out.stderr))
             }
         }
