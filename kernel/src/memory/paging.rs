@@ -57,6 +57,15 @@ pub mod flags {
 
 const PAGE_SIZE: u64 = 4096;
 const ENTRY_COUNT: usize = 512;
+/// Bits 12..51 hold the physical address in x86_64 page-table entries.
+/// Higher bits are flags (notably NX at bit 63) and must never be passed to
+/// the physical frame allocator as part of an address.
+const ENTRY_ADDR_MASK: u64 = 0x000f_ffff_ffff_f000;
+
+#[inline]
+fn entry_addr(entry: u64) -> u64 {
+    entry & ENTRY_ADDR_MASK
+}
 
 /// A single page table (512 × 8-byte entries).
 #[repr(C, align(4096))]
@@ -88,7 +97,7 @@ fn active_pml4_phys() -> u64 {
     unsafe {
         core::arch::asm!("mov {}, cr3", out(reg) cr3, options(nomem, nostack));
     }
-    cr3 & !0xFFF   // low 12 bits are flags, not part of the address
+    entry_addr(cr3)   // low 12 bits are flags, not part of the address
 }
 
 #[cfg(target_arch = "aarch64")]
@@ -97,7 +106,7 @@ fn active_pml4_phys() -> u64 {
     unsafe {
         core::arch::asm!("mrs {}, ttbr1_el1", out(reg) ttbr1, options(nomem, nostack));
     }
-    ttbr1 & !0xFFF
+    entry_addr(ttbr1)
 }
 
 // ── Public interface ──────────────────────────────────────────────────────────
@@ -202,26 +211,26 @@ pub unsafe fn free_user_pml4(pml4_phys: u64) {
     for l4 in 1..KERNEL_PML4_LO {
         let e4 = pml4.0[l4];
         if e4 & flags::PRESENT == 0 || e4 & flags::HUGE != 0 { continue; }
-        let pdpt = unsafe { &mut *(phys_to_virt(e4 & !0xFFF) as *mut PageTable) };
+        let pdpt = unsafe { &mut *(phys_to_virt(entry_addr(e4)) as *mut PageTable) };
         for l3 in 0..ENTRY_COUNT {
             let e3 = pdpt.0[l3];
             if e3 & flags::PRESENT == 0 || e3 & flags::HUGE != 0 { continue; }
-            let pd = unsafe { &mut *(phys_to_virt(e3 & !0xFFF) as *mut PageTable) };
+            let pd = unsafe { &mut *(phys_to_virt(entry_addr(e3)) as *mut PageTable) };
             for l2 in 0..ENTRY_COUNT {
                 let e2 = pd.0[l2];
                 if e2 & flags::PRESENT == 0 || e2 & flags::HUGE != 0 { continue; }
-                let pt = unsafe { &mut *(phys_to_virt(e2 & !0xFFF) as *mut PageTable) };
+                let pt = unsafe { &mut *(phys_to_virt(entry_addr(e2)) as *mut PageTable) };
                 for l1 in 0..ENTRY_COUNT {
                     let e1 = pt.0[l1];
                     if e1 & flags::PRESENT != 0 {
-                        unsafe { super::physical::free_frame(e1 & !0xFFF); }
+                        unsafe { super::physical::free_frame(entry_addr(e1)); }
                     }
                 }
-                unsafe { super::physical::free_frame(e2 & !0xFFF); }
+                unsafe { super::physical::free_frame(entry_addr(e2)); }
             }
-            unsafe { super::physical::free_frame(e3 & !0xFFF); }
+            unsafe { super::physical::free_frame(entry_addr(e3)); }
         }
-        unsafe { super::physical::free_frame(e4 & !0xFFF); }
+        unsafe { super::physical::free_frame(entry_addr(e4)); }
     }
     unsafe { super::physical::free_frame(pml4_phys); }
 }
@@ -267,7 +276,7 @@ pub fn map_page_in(pml4_phys: u64, virt: u64, phys: u64, page_flags: u64) {
     } else if page_flags & flags::USER != 0 {
         pml4.0[l4] |= flags::USER; // set USER on existing entry
     }
-    let pdpt_phys = pml4.0[l4] & !0xFFF;
+    let pdpt_phys = entry_addr(pml4.0[l4]);
     let pdpt = unsafe { &mut *(phys_to_virt(pdpt_phys) as *mut PageTable) };
 
     let l3 = pdpt_idx(virt);
@@ -281,7 +290,7 @@ pub fn map_page_in(pml4_phys: u64, virt: u64, phys: u64, page_flags: u64) {
             l3 = l3, virt = virt);
         if page_flags & flags::USER != 0 { pdpt.0[l3] |= flags::USER; }
     }
-    let pd_phys = pdpt.0[l3] & !0xFFF;
+    let pd_phys = entry_addr(pdpt.0[l3]);
     let pd = unsafe { &mut *(phys_to_virt(pd_phys) as *mut PageTable) };
 
     let l2 = pd_idx(virt);
@@ -295,13 +304,13 @@ pub fn map_page_in(pml4_phys: u64, virt: u64, phys: u64, page_flags: u64) {
             l2 = l2, virt = virt);
         if page_flags & flags::USER != 0 { pd.0[l2] |= flags::USER; }
     }
-    let pt_phys = pd.0[l2] & !0xFFF;
+    let pt_phys = entry_addr(pd.0[l2]);
     let pt = unsafe { &mut *(phys_to_virt(pt_phys) as *mut PageTable) };
 
     let l1 = pt_idx(virt);
     let existing = pt.0[l1];
     if existing & flags::PRESENT != 0 {
-        let existing_phys = existing & !0xFFF;
+        let existing_phys = entry_addr(existing);
         assert_eq!(
             existing_phys, phys,
             "map_page: {:#x} already mapped to {:#x}, tried to map to {:#x}",
@@ -344,19 +353,19 @@ pub fn unmap_page_in(pml4_phys: u64, virt: u64) -> Option<u64> {
     let l4 = pml4_idx(virt);
     if pml4.0[l4] & flags::PRESENT == 0 { return None; }
 
-    let pdpt = unsafe { &mut *(phys_to_virt(pml4.0[l4] & !0xFFF) as *mut PageTable) };
+    let pdpt = unsafe { &mut *(phys_to_virt(entry_addr(pml4.0[l4])) as *mut PageTable) };
     let l3 = pdpt_idx(virt);
     if pdpt.0[l3] & flags::PRESENT == 0 || pdpt.0[l3] & flags::HUGE != 0 { return None; }
 
-    let pd = unsafe { &mut *(phys_to_virt(pdpt.0[l3] & !0xFFF) as *mut PageTable) };
+    let pd = unsafe { &mut *(phys_to_virt(entry_addr(pdpt.0[l3])) as *mut PageTable) };
     let l2 = pd_idx(virt);
     if pd.0[l2] & flags::PRESENT == 0 || pd.0[l2] & flags::HUGE != 0 { return None; }
 
-    let pt = unsafe { &mut *(phys_to_virt(pd.0[l2] & !0xFFF) as *mut PageTable) };
+    let pt = unsafe { &mut *(phys_to_virt(entry_addr(pd.0[l2])) as *mut PageTable) };
     let l1 = pt_idx(virt);
     if pt.0[l1] & flags::PRESENT == 0 { return None; }
 
-    let phys = pt.0[l1] & !0xFFF;
+    let phys = entry_addr(pt.0[l1]);
     pt.0[l1] = 0;
 
     #[cfg(target_arch = "x86_64")]

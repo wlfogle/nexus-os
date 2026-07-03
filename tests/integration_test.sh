@@ -13,15 +13,19 @@
 # Two modes:
 #   (default)      Headless QEMU boot, serial captured to a log, asserts the
 #                  real boot-log markers each subsystem prints. CI-friendly.
-#   --interactive  Launch the ISO in MobaLiveCD (GTK) for a human to drive the
-#                  shell (ls /EFI, cat /EFI/BOOT/limine.conf, run HELLO.ELF).
+#   --interactive  Repoint/start the existing `nexusos-install` libvirt VM for
+#                  a human to drive the shell with a real VirtIO disk attached
+#                  (ls /EFI, cat /EFI/BOOT/limine.conf, run HELLO.ELF).
+#   --mobalivecd    Launch the ISO in MobaLiveCD (GTK). This is ISO-only and is
+#                  useful for visual boot smoke tests, not filesystem/shell
+#                  tests that require an installed VirtIO disk.
 #
 # The kernel needs LEGACY/transitional VirtIO (I/O-port BAR), so the headless
 # run forces virtio-*-pci.disable-modern=on. NVMe/AHCI use MMIO BARs and are
 # attached with -device nvme / -device ich9-ahci.
 #
 # Usage:
-#   tests/integration_test.sh [--iso PATH] [--timeout N] [--interactive] [--keep]
+#   tests/integration_test.sh [--iso PATH] [--timeout N] [--interactive] [--mobalivecd] [--keep]
 # =============================================================================
 set -u
 
@@ -29,8 +33,10 @@ set -u
 ISO=""
 TIMEOUT=30
 INTERACTIVE=0
+MOBALIVECD=0
 KEEP=0
 MOBA="/home/loufogle/nexus-os/packages/mobalivecd-linux/enhanced_mobalivecd.py"
+LIBVIRT_DOMAIN="${LIBVIRT_DOMAIN:-nexusos-install}"
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SELF_DIR/.." && pwd)"
 BUILD_DIR="${BUILD_DIR:-out}"
@@ -40,6 +46,7 @@ while [[ $# -gt 0 ]]; do
     --iso)         ISO="$2"; shift 2 ;;
     --timeout)     TIMEOUT="$2"; shift 2 ;;
     --interactive) INTERACTIVE=1; shift ;;
+    --mobalivecd)   MOBALIVECD=1; shift ;;
     --keep)        KEEP=1; shift ;;
     -h|--help)     grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *)             echo "unknown arg: $1"; exit 2 ;;
@@ -61,27 +68,100 @@ if [[ -z "$ISO" || ! -f "$ISO" ]]; then
     || { echo "${RED}[fatal]${NC} build failed"; exit 1; }
   ISO="$REPO_ROOT/$BUILD_DIR/nexusos-laptop.iso"
 fi
+# Libvirt needs an absolute host path in the domain XML; shell users often pass
+# `--iso out/nexusos-laptop.iso` from the repo root.
+ISO="$(readlink -f "$ISO")"
 echo "${CYN}NexusOS Integration Test${NC}  ISO=$ISO"
 
-# ── Interactive mode: hand off to MobaLiveCD ─────────────────────────────────
-if [[ "$INTERACTIVE" -eq 1 ]]; then
-  echo "${CYN}[interactive]${NC} Launching ISO in MobaLiveCD for manual shell testing..."
-  echo "  At the nexus> prompt, verify: help | ls /EFI | cat /EFI/BOOT/limine.conf | run HELLO.ELF"
+# Temp workspace is used by both interactive XML editing and headless QEMU.
+WORK="$(mktemp -d /tmp/nexus-itest.XXXXXX)"
+cleanup() { pkill -f "qemu-system-x86_64.*$WORK" 2>/dev/null; [[ "$KEEP" -eq 1 ]] || rm -rf "$WORK"; }
+trap cleanup EXIT
+
+# ── Interactive modes ────────────────────────────────────────────────────────
+if [[ "$MOBALIVECD" -eq 1 ]]; then
+  echo "${CYN}[mobalivecd]${NC} Launching ISO-only visual smoke test..."
+  echo "  Note: MobaLiveCD does not attach the NexusOS test disk or legacy-VirtIO overrides."
+  echo "  For shell/filesystem verification use --interactive (libvirt $LIBVIRT_DOMAIN)."
   if [[ -f "$MOBA" ]]; then
     exec python3 "$MOBA" --quick-launch --memory 2 "$ISO"
   else
     echo "${RED}[error]${NC} MobaLiveCD not found at $MOBA"; exit 1
   fi
 fi
+if [[ "$INTERACTIVE" -eq 1 ]]; then
+  echo "${CYN}[interactive]${NC} Preparing libvirt VM '$LIBVIRT_DOMAIN' with ISO=$ISO"
+  if ! virsh dominfo "$LIBVIRT_DOMAIN" >/dev/null 2>&1; then
+    echo "${RED}[error]${NC} libvirt domain '$LIBVIRT_DOMAIN' not found"; exit 1
+  fi
+
+  # Force the VM off so QEMU re-opens the ISO and device model after XML edits.
+  virsh destroy "$LIBVIRT_DOMAIN" >/dev/null 2>&1 || true
+
+  XML="$WORK/${LIBVIRT_DOMAIN}.xml"
+  virsh dumpxml "$LIBVIRT_DOMAIN" > "$XML"
+  python3 - "$XML" "$ISO" <<'PY'
+import re, sys
+path, iso = sys.argv[1], sys.argv[2]
+xml = open(path).read()
+
+# Ensure qemu namespace exists (needed for legacy-VirtIO overrides).
+if "xmlns:qemu" not in xml:
+    xml = xml.replace("<domain type='kvm'>", "<domain type='kvm' xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>", 1)
+
+# Repoint the first CDROM source to the integration ISO. If the CDROM has no
+# source, insert one before its target.
+def replace_cdrom(m):
+    block = m.group(0)
+    if "<source file=" in block:
+        block = re.sub(r"<source file='[^']*'/>", f"<source file='{iso}'/>", block, count=1)
+    else:
+        block = block.replace("<target ", f"<source file='{iso}'/>\n      <target ", 1)
+    return block
+xml = re.sub(r"<disk type='file' device='cdrom'>.*?</disk>", replace_cdrom, xml, count=1, flags=re.S)
+
+# Remove USB keyboard so keypresses route to the PS/2 keyboard driver.
+xml = re.sub(r"[ \t]*<input type='keyboard' bus='usb'(?:/>|>.*?</input>)\n?", "", xml, flags=re.S)
+
+# Add legacy-VirtIO overrides if missing. They are idempotent.
+if "virtio-blk-pci.disable-modern=on" not in xml:
+    block = """  <qemu:commandline>
+    <qemu:arg value='-global'/>
+    <qemu:arg value='virtio-blk-pci.disable-modern=on'/>
+    <qemu:arg value='-global'/>
+    <qemu:arg value='virtio-blk-pci.disable-legacy=off'/>
+    <qemu:arg value='-global'/>
+    <qemu:arg value='virtio-net-pci.disable-modern=on'/>
+    <qemu:arg value='-global'/>
+    <qemu:arg value='virtio-net-pci.disable-legacy=off'/>
+  </qemu:commandline>
+</domain>
+"""
+    xml = xml.replace("</domain>\n", block, 1)
+
+open(path, "w").write(xml)
+PY
+
+  virsh define "$XML" >/dev/null
+  if ! virsh start "$LIBVIRT_DOMAIN" >/dev/null; then
+    echo "${RED}[error]${NC} failed to start '$LIBVIRT_DOMAIN' with ISO=$ISO"
+    exit 1
+  fi
+  echo "${GRN}[interactive]${NC} VM started. Open it in virt-manager if it is not already visible."
+  echo "  Verify at nexus>:"
+  echo "    ls /EFI              # expected: BOOT"
+  echo "    ls /EFI/BOOT         # expected: BOOTX64.EFI and limine.conf"
+  echo "    ls /boot             # expected: nexus-kernel"
+  echo "    cat /EFI/BOOT/limine.conf"
+  echo "    run HELLO.ELF"
+  exit 0
+fi
 
 # ── Headless boot: prepare throwaway devices ─────────────────────────────────
-WORK="$(mktemp -d /tmp/nexus-itest.XXXXXX)"
 LOG="$WORK/serial.log"
 BLK="$WORK/virtio-blk.qcow2"      # fresh blank disk -> installer path exercised
 NVME="$WORK/nvme.img"
 SATA="$WORK/sata.img"
-cleanup() { pkill -f "qemu-system-x86_64.*$WORK" 2>/dev/null; [[ "$KEEP" -eq 1 ]] || rm -rf "$WORK"; }
-trap cleanup EXIT
 
 qemu-img create -f qcow2 "$BLK" 256M >/dev/null 2>&1
 qemu-img create -f raw   "$NVME" 64M  >/dev/null 2>&1
