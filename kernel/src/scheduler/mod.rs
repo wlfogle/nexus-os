@@ -44,6 +44,7 @@ pub fn spawn(name: &[u8], entry: extern "C" fn() -> !) -> Option<u64> {
 /// Must only be called from the naked timer ISR with interrupts disabled.
 #[no_mangle]
 pub unsafe extern "C" fn scheduler_tick(current_rsp: u64) -> u64 {
+    #[cfg(target_arch = "x86_64")]
     crate::timer::pit::tick();
 
     let cur_id = CURRENT.load(Ordering::SeqCst);
@@ -77,7 +78,9 @@ pub unsafe extern "C" fn scheduler_tick(current_rsp: u64) -> u64 {
     CURRENT.store(next_id, Ordering::SeqCst);
 
     // Update PERCPU.kernel_rsp (for syscall entry) and TSS.RSP0 (for ring-3 interrupts)
+    #[cfg(target_arch = "x86_64")]
     crate::syscall::update_kernel_rsp(next_id);
+    #[cfg(target_arch = "x86_64")]
     if let Some(top) = crate::process::get_kernel_stack_top(next_id) {
         crate::arch::x86_64::gdt::update_rsp0(top);
     }

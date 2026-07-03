@@ -1,3 +1,4 @@
+#![cfg(target_arch = "x86_64")]
 //! NexusOS Syscall Interface — Phase 4 + Phase 5
 //!
 //! Phase 5 additions: SYS_IPC_QUERY(10), SYS_IPC_TIMEOUT(11), SYS_GPU_MMAP(12)
@@ -94,6 +95,48 @@ pub fn update_kernel_rsp(pid: u64) {
     // We re-export a helper from process module
     if let Some(top) = process::get_kernel_stack_top(pid) {
         unsafe { PERCPU.kernel_rsp = top; }
+    }
+}
+
+fn exit_current(pid: u64, code: i64) -> i64 {
+    crate::kprintln!("[syscall] SYS_EXIT pid={} status={}", pid, code);
+    process::set_state(pid, process::ProcessState::Dead);
+    ipc::inbox_free(pid);
+    let parent = process::get_parent(pid);
+    if parent != 0 {
+        process::deliver_child_exit(parent, pid, code);
+    }
+    unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
+    0
+}
+
+fn linux_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) -> i64 {
+    match num {
+        // Linux x86_64: write(fd, buf, len) = syscall 1.
+        1 => {
+            let fd  = a1;
+            let ptr = a2 as *const u8;
+            let len = a3 as usize;
+            if fd != 1 && fd != 2 { return -22; } // EINVAL
+            if len > 4096 { return -7; } // E2BIG
+            let slice = unsafe { core::slice::from_raw_parts(ptr, len) };
+            if let Ok(s) = core::str::from_utf8(slice) {
+                crate::kprint!("{}", s);
+            }
+            len as i64
+        }
+        // Linux x86_64: getpid() = 39.
+        39 => scheduler::current_id() as i64,
+        // Linux x86_64: exit(status)=60, exit_group(status)=231.
+        60 | 231 => exit_current(scheduler::current_id(), a1 as i64),
+        _ => {
+            crate::kprintln!(
+                "[linux] unsupported syscall {} from pid={}",
+                num,
+                scheduler::current_id(),
+            );
+            -38 // ENOSYS
+        }
     }
 }
 
@@ -229,23 +272,15 @@ global_asm!(
 /// Returns the value to place in user-space RAX (negative = errno-style error).
 #[no_mangle]
 pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) -> i64 {
+    if process::get_personality(scheduler::current_id()) == process::ProcessPersonality::Linux {
+        return linux_syscall_dispatch(num, a1, a2, a3);
+    }
     match num {
         // ── SYS_EXIT ──────────────────────────────────────────────────────
         SYS_EXIT => {
             let pid  = scheduler::current_id();
             let code = a1 as i64;
-            crate::kprintln!("[syscall] SYS_EXIT pid={} status={}", pid, code);
-            process::set_state(pid, process::ProcessState::Dead);
-            ipc::inbox_free(pid);
-            // If a parent is blocked in SYS_EXEC waiting on us, wake it with our
-            // exit code so `run` can return.
-            let parent = process::get_parent(pid);
-            if parent != 0 {
-                process::deliver_child_exit(parent, pid, code);
-            }
-            // Yield — scheduler will pick another process
-            unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
-            0
+            exit_current(pid, code)
         }
 
         // ── SYS_WRITE ─────────────────────────────────────────────────────
@@ -555,11 +590,17 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
                 }
             };
 
+            let personality = if entry < crate::userspace::USER_CODE_BASE {
+                process::ProcessPersonality::Linux
+            } else {
+                process::ProcessPersonality::Nexus
+            };
+
             // Fresh user stack for the child, then spawn it ring-3 in its own
             // address space.
             crate::exec::map_user_stack(child_pml4, crate::exec::EXEC_STACK_TOP);
             let child = match process::spawn_ring3(
-                b"program", entry, crate::exec::EXEC_STACK_TOP, child_pml4,
+                b"program", entry, crate::exec::EXEC_STACK_TOP, child_pml4, personality,
             ) {
                 Some(c) => c,
                 None    => {

@@ -21,17 +21,22 @@ extern "C" {
 // ─── Sub-modules ─────────────────────────────────────────────────────────────
 
 pub mod arch;
+#[cfg(target_arch = "x86_64")]
 pub mod drivers;
 pub mod exec;
+#[cfg(target_arch = "x86_64")]
 pub mod fs;
+#[cfg(target_arch = "x86_64")]
 pub mod installer;
 pub mod io;
 pub mod ipc;
 pub mod memory;
+#[cfg(target_arch = "x86_64")]
 pub mod net;
 pub mod panic;
 pub mod process;
 pub mod scheduler;
+#[cfg(target_arch = "x86_64")]
 pub mod syscall;
 pub mod timer;
 pub mod userspace;
@@ -122,17 +127,20 @@ pub extern "C" fn _start() -> ! {
     // KernelFileRequest gives us the exact bytes Limine read from disk, so
     // the installer writes a proper ELF rather than a raw memory image.
     // KernelFileRequest: Ptr<T>::get() → Option<&T>, Ptr<u8>::as_ptr() → Option<*mut u8>
-    if let Some(kfile_resp) = KFILE_REQUEST.get_response().get() {
-        if let Some(kfile) = kfile_resp.kernel_file.get() {
-            if let Some(base_ptr) = kfile.base.as_ptr() {
-                installer::KERNEL_ELF_BASE.store(
-                    base_ptr as u64,
-                    core::sync::atomic::Ordering::Relaxed,
-                );
-                installer::KERNEL_ELF_SIZE.store(
-                    kfile.length,
-                    core::sync::atomic::Ordering::Relaxed,
-                );
+    #[cfg(target_arch = "x86_64")]
+    {
+        if let Some(kfile_resp) = KFILE_REQUEST.get_response().get() {
+            if let Some(kfile) = kfile_resp.kernel_file.get() {
+                if let Some(base_ptr) = kfile.base.as_ptr() {
+                    installer::KERNEL_ELF_BASE.store(
+                        base_ptr as u64,
+                        core::sync::atomic::Ordering::Relaxed,
+                    );
+                    installer::KERNEL_ELF_SIZE.store(
+                        kfile.length,
+                        core::sync::atomic::Ordering::Relaxed,
+                    );
+                }
             }
         }
     }
@@ -180,52 +188,51 @@ pub extern "C" fn _start() -> ! {
         kprintln!("[fb]   Framebuffer console active");
     }
 
-    // ── 7.5. VirtIO-blk disk driver (after framebuffer so output is visible) ──
-    // VirtIO vendor 0x1AF4; device 0x1001 = legacy blk, 0x1042 = transitional
-    const VIRTIO_VENDOR: u16 = 0x1AF4;
-    match drivers::pci::find(&[(VIRTIO_VENDOR, 0x1001), (VIRTIO_VENDOR, 0x1042)]) {
-        Some(mut dev) => {
-            // Enable I/O space + bus-master BEFORE re-reading BAR0.
-            // OVMF on first boot with q35 may leave BAR0=0 even for I/O-capable
-            // transitional devices; enabling I/O space first causes the device to
-            // respond to subsequent BAR reads with the correct value.
-            dev.enable_io_and_busmaster();
-            // Re-read BAR0 after enabling I/O space.
-            dev.bar0 = drivers::pci::read32(dev.bus, dev.dev, dev.func, 0x10);
-            kprintln!("[disk] PCI {:02x}:{:02x}.{} vendor={:#06x} device={:#06x} BAR0={:#010x}",
-                      dev.bus, dev.dev, dev.func,
-                      dev.vendor_id, dev.device_id, dev.bar0);
-            if dev.bar0 & 1 == 0 {
-                kprintln!("[disk] BAR0 is MMIO (not I/O port) — legacy driver incompatible");
-                kprintln!("[disk] MMIO addr={:#010x} — needs MMIO VirtIO transport",
-                          dev.bar0 & !0xF);
-            } else {
-                match drivers::virtio::blk::init(dev.io_base()) {
-                    Ok(sectors) => {
-                        let gib = sectors / (2 * 1024 * 1024);
-                        kprintln!("[disk] VirtIO-blk: {} GiB ({} sectors)", gib, sectors);
+    #[cfg(target_arch = "x86_64")]
+    {
+        // ── 7.5. VirtIO-blk disk driver (after framebuffer so output is visible) ──
+        // VirtIO vendor 0x1AF4; device 0x1001 = legacy blk, 0x1042 = transitional
+        const VIRTIO_VENDOR: u16 = 0x1AF4;
+        match drivers::pci::find(&[(VIRTIO_VENDOR, 0x1001), (VIRTIO_VENDOR, 0x1042)]) {
+            Some(mut dev) => {
+                dev.enable_io_and_busmaster();
+                dev.bar0 = drivers::pci::read32(dev.bus, dev.dev, dev.func, 0x10);
+                kprintln!("[disk] PCI {:02x}:{:02x}.{} vendor={:#06x} device={:#06x} BAR0={:#010x}",
+                          dev.bus, dev.dev, dev.func,
+                          dev.vendor_id, dev.device_id, dev.bar0);
+                if dev.bar0 & 1 == 0 {
+                    kprintln!("[disk] BAR0 is MMIO (not I/O port) — legacy driver incompatible");
+                    kprintln!("[disk] MMIO addr={:#010x} — needs MMIO VirtIO transport",
+                              dev.bar0 & !0xF);
+                } else {
+                    match drivers::virtio::blk::init(dev.io_base()) {
+                        Ok(sectors) => {
+                            let gib = sectors / (2 * 1024 * 1024);
+                            kprintln!("[disk] VirtIO-blk: {} GiB ({} sectors)", gib, sectors);
+                        }
+                        Err(e) => kprintln!("[disk] VirtIO-blk init failed: {}", e),
                     }
-                    Err(e) => kprintln!("[disk] VirtIO-blk init failed: {}", e),
                 }
             }
+            None => kprintln!("[disk] no VirtIO-blk device found"),
         }
-        None => kprintln!("[disk] no VirtIO-blk device found"),
+
+        if !drivers::nvme::init() {
+            kprintln!("[nvme] no NVMe controller found");
+        }
+        if !drivers::ahci::init() {
+            kprintln!("[ahci] no AHCI SATA controller found");
+        }
+
+        let fs_msg = fs::fat::init();
+        kprintln!("[fs]   {}", fs_msg);
     }
 
-    // ── 7.55. NVMe + AHCI (SATA) block controllers ───────────────────────────
-    // Real-disk drivers via memory-mapped PCI BARs.  Each detects its
-    // controller class, logs model/capacity, and reads sector 0.
-    if !drivers::nvme::init() {
-        kprintln!("[nvme] no NVMe controller found");
+    #[cfg(target_arch = "aarch64")]
+    {
+        kprintln!("[bahamut] AArch64 network-edge skeleton: UART, memory, paging, heap online");
+        kprintln!("[bahamut] Disk installer, personalities, VFS, and networking services land after AArch64 IRQ/MMIO drivers");
     }
-    if !drivers::ahci::init() {
-        kprintln!("[ahci] no AHCI SATA controller found");
-    }
-
-    // ── 7.6. FAT32 filesystem ─────────────────────────────────────────────────
-    // Must run after framebuffer (to display the [fs] line) and after disk driver.
-    let fs_msg = fs::fat::init();
-    kprintln!("[fs]   {}", fs_msg);
 
     // ── 8. Feature-specific init ─────────────────────────────────────────────
     #[cfg(feature = "ai-hooks")]
@@ -238,48 +245,54 @@ pub extern "C" fn _start() -> ! {
         kprintln!("[srv]  Server mode: headless, service management hooks active");
     }
 
-    // ── 9. Phase 2: PIC + PIT + Scheduler ───────────────────────────────
-    timer::init();                          // PIC remap + PIT 100 Hz
-    kprintln!("[timer] PIC remapped, PIT running at {} Hz", timer::TIMER_HZ);
+    #[cfg(target_arch = "x86_64")]
+    {
+        // ── 9. Phase 2: PIC + PIT + Scheduler ───────────────────────────────
+        timer::init();                          // PIC remap + PIT 100 Hz
+        kprintln!("[timer] PIC remapped, PIT running at {} Hz", timer::TIMER_HZ);
 
-    // PS/2 keyboard controller (i8042): bring it into a known-good state so
-    // scancodes + IRQ1 reach the kernel after the UEFI/Limine handoff.
-    io::keyboard::init();
-    kprintln!("[kbd]  i8042 initialised — scanning enabled, IRQ1 unmasked");
+        io::keyboard::init();
+        kprintln!("[kbd]  i8042 initialised — scanning enabled, IRQ1 unmasked");
 
-    scheduler::init();                      // register idle process
+        scheduler::init();                      // register idle process
 
-    // ── Phase 4: Syscall interface + user-space process ───────────────
-    syscall::init();
-    let user_pid = userspace::spawn_user_init();
-    kprintln!("[user] nexus-init spawned as pid={} (ring 3)", user_pid);
+        // ── Phase 4: Syscall interface + user-space process ───────────────
+        syscall::init();
+        let user_pid = userspace::spawn_user_init();
+        kprintln!("[user] nexus-init spawned as pid={} (ring 3)", user_pid);
 
-    // ── Phase 5: AI Core kernel thread ──────────────────
-    scheduler::spawn(b"nexus-ai", task_nexus_ai)
-        .expect("failed to spawn nexus-ai");
-    kprintln!("[ai]   nexus-ai AI Core daemon spawned");
+        // ── Phase 5: AI Core kernel thread ──────────────────
+        scheduler::spawn(b"nexus-ai", task_nexus_ai)
+            .expect("failed to spawn nexus-ai");
+        kprintln!("[ai]   nexus-ai AI Core daemon spawned");
 
-    // ── NexusOS Installer ───────────────────────────────────────────────
-    // Runs only when disk is unformatted (first boot from ISO).
-    if !fs::fat::is_mounted() {
-        scheduler::spawn(b"installer", installer::task_installer)
-            .expect("failed to spawn installer");
-        kprintln!("[inst] NexusOS Installer spawned");
+        // ── NexusOS Installer ───────────────────────────────────────────────
+        // Runs only when disk is unformatted (first boot from ISO).
+        if !fs::fat::is_mounted() {
+            scheduler::spawn(b"installer", installer::task_installer)
+                .expect("failed to spawn installer");
+            kprintln!("[inst] NexusOS Installer spawned");
+        }
     }
 
     // Enable hardware interrupts — timer fires immediately
     arch::enable_interrupts();
     kprintln!("[arch] Interrupts enabled — scheduler is LIVE");
-    kprintln!();
-    kprintln!("NexusOS v{} — Phase 5: Ring-3 shell + AI Core + PS/2 keyboard active.",
-              env!("CARGO_PKG_VERSION"));
-    kprintln!("[kbd]  PS/2 keyboard online — nexus-shell ready");
+    #[cfg(target_arch = "x86_64")]
+    {
+        kprintln!();
+        kprintln!("NexusOS v{} — Phase 5: Ring-3 shell + AI Core + PS/2 keyboard active.",
+                  env!("CARGO_PKG_VERSION"));
+        kprintln!("[kbd]  PS/2 keyboard online — nexus-shell ready");
 
-    // ── Phase 7: Networking ──────────────────────────────────────────────
-    // Run after interrupts are enabled so the PIT millisecond clock advances
-    // (smoltcp's DHCP retransmit timers depend on it). Discovers a VirtIO-net
-    // device, brings the link up, and demonstrates a DHCP/ARP round-trip.
-    net::init();
+        net::init();
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    {
+        kprintln!();
+        kprintln!("NexusOS v{} — Bahamut AArch64 edge skeleton active.", env!("CARGO_PKG_VERSION"));
+    }
 
     // Idle loop — preempted every 10 ms
     loop {

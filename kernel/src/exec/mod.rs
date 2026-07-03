@@ -32,8 +32,10 @@ pub const EXEC_BASE: u64 = 0x0000_0080_4000_0000;
 /// Top of the stack handed to executed programs (PML4[1], PDPT[5]).
 pub const EXEC_STACK_TOP: u64 = 0x0000_0080_5000_0000;
 
-/// Lowest legal user virtual address (start of PML4[1]).
-const USER_REGION_LO: u64 = 0x0000_0080_0000_0000;
+/// Lowest legal user virtual address.  Keep the null/low guard page unmapped,
+/// but allow conventional static Linux ELF bases such as 0x400000 now that each
+/// process owns a private PML4[0].
+const USER_REGION_LO: u64 = 0x0000_0000_0040_0000;
 /// One past the highest legal user virtual address we accept for a segment.
 const USER_REGION_HI: u64 = 0x0000_0100_0000_0000;
 
@@ -110,7 +112,7 @@ pub fn load_elf(pml4_phys: u64, data: &[u8]) -> Result<Loaded, &'static str> {
             continue;
         }
         if p_vaddr < USER_REGION_LO || p_vaddr.saturating_add(p_memsz as u64) > USER_REGION_HI {
-            return Err("elf: segment outside user region (link at >= 0x8000000000)");
+            return Err("elf: segment outside user region (link at >= 0x400000)");
         }
         if p_filesz > p_memsz {
             return Err("elf: filesz exceeds memsz");

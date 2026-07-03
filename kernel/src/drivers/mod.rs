@@ -3,11 +3,16 @@
 //! Phase 5 (v0.5.1): VirtIO-blk disk driver via PCI BAR0 legacy interface.
 //! Phase 6 (storage): NVMe and AHCI (SATA) block drivers for real disks.
 
+#[cfg(target_arch = "x86_64")]
 pub mod pci;
+#[cfg(target_arch = "x86_64")]
 pub mod virtio;
+#[cfg(target_arch = "x86_64")]
 pub mod nvme;
+#[cfg(target_arch = "x86_64")]
 pub mod ahci;
 
+#[cfg(target_arch = "x86_64")]
 use pci::PciDevice;
 
 /// Scan the PCI bus for the first device matching a (class, subclass, prog-if)
@@ -16,6 +21,7 @@ use pci::PciDevice;
 ///
 /// The PCI class code lives in configuration register 0x08:
 ///   bits 31:24 = base class, 23:16 = subclass, 15:8 = prog-if, 7:0 = revision.
+#[cfg(target_arch = "x86_64")]
 pub fn find_by_class(class: u8, subclass: u8, prog_if: u8) -> Option<PciDevice> {
     for bus in 0u8..=255 {
         for dev in 0u8..32 {
@@ -64,6 +70,7 @@ pub fn find_by_class(class: u8, subclass: u8, prog_if: u8) -> Option<PciDevice> 
 
 /// Enable PCI memory space + bus-master for an MMIO device (command reg 0x04).
 /// VirtIO's helper only enables *I/O* space; NVMe/AHCI need *memory* space.
+#[cfg(target_arch = "x86_64")]
 pub fn enable_mem_and_busmaster(d: &PciDevice) {
     let cmd = pci::read16(d.bus, d.dev, d.func, 0x04);
     // bit 1 = memory space enable, bit 2 = bus master enable
@@ -73,6 +80,7 @@ pub fn enable_mem_and_busmaster(d: &PciDevice) {
 /// Read a 64-bit BAR pair starting at `bar_index` (0..=5), returning the
 /// physical base address with the low flag/type bits masked off.  Handles both
 /// 32-bit and 64-bit (type == 0b10) memory BARs.
+#[cfg(target_arch = "x86_64")]
 pub fn read_bar_addr(d: &PciDevice, bar_index: u8) -> u64 {
     let off = 0x10 + bar_index * 4;
     let low = pci::read32(d.bus, d.dev, d.func, off);
@@ -95,6 +103,7 @@ pub fn read_bar_addr(d: &PciDevice, bar_index: u8) -> u64 {
 /// the direct map.  Higher regions (64-bit BAR windows) are mapped explicitly
 /// as uncacheable pages — those PML4 paths are not pre-populated by Limine, so
 /// `map_page` creates fresh tables without any huge-page conflict.
+#[cfg(target_arch = "x86_64")]
 pub fn map_mmio(phys: u64, size: usize) -> u64 {
     use crate::memory::paging;
     const FOUR_GIB: u64 = 4 * 1024 * 1024 * 1024;

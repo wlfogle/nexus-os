@@ -6,6 +6,10 @@ No Linux. No glibc. No distro. One codebase, three build targets (laptop / tiama
 Build: `make laptop && make iso-laptop` → bootable install ISO.
 First boot onto a blank VirtIO disk runs `task_installer` automatically
 (GPT + FAT32 ESP + Limine UEFI bootloader + kernel ELF written to disk).
+Target installer ISOs are built separately:
+- `make iso-laptop` — control-center profile.
+- `make iso-tiamat` — media/file-share host profile.
+- `make iso-bahamut` — AArch64 Bahamut Lite network-edge profile.
 
 ---
 
@@ -20,6 +24,11 @@ Phases 1–5 verified on QEMU + KVM. Ring-3 interactive shell boots.
 | 3 | ✓ Done | IPC ring-buffers, blocking send/recv, named port registry |
 | 4 | ✓ Done | `syscall`/`sysretq` fast path, ring-3 user process via IRETQ |
 | 5 | ✓ Done | AI Core daemon (nexus.ai), PS/2 keyboard, VirtIO-blk, FAT32, self-installer, ring-3 shell (`nexus>`) |
+
+Current role profiles:
+- **Laptop** — control center for NexusTerminal, Cockpit, Ollama, Stella, Max Jr., and orchestration.
+- **Tiamat** — media/file-share host for nexus-mediastack/service roots.
+- **Bahamut** — NexusOS Lite AArch64 network-edge profile for Pi 4 / DietPi-class edge duties.
 
 Syscall table (19 implemented, all in `kernel/src/syscall/mod.rs`):
 

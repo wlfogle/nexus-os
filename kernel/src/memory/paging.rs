@@ -130,7 +130,7 @@ pub fn kernel_pml4_phys() -> u64 {
 }
 
 /// First higher-half PML4 index.  Indices 256..512 cover the canonical upper
-/// half (kernel image, HHDM, PERCPU, kernel stacks, heap); indices 1..256 are
+/// half (kernel image, HHDM, PERCPU, kernel stacks, heap); indices 0..256 are
 /// the user half that each process owns privately.
 const KERNEL_PML4_LO: usize = 256;
 
@@ -138,13 +138,13 @@ const KERNEL_PML4_LO: usize = 256;
 ///
 /// The new top-level table shares **all** kernel mappings: it copies the kernel
 /// PML4's higher-half entries (256..512 — kernel code/data, HHDM, PERCPU,
-/// kernel stacks, heap) plus the low identity map at PML4[0].  Those entries
-/// reference the *same* next-level tables as the kernel PML4, so the kernel
-/// half is byte-for-byte identical in every address space.  This is mandatory:
+/// kernel stacks, heap). Those entries reference the *same* next-level tables
+/// as the kernel PML4, so the kernel half is byte-for-byte identical in every
+/// address space.  This is mandatory:
 /// the first interrupt or syscall taken after a CR3 switch executes on a kernel
 /// stack and in kernel code that must be mapped, or the CPU triple-faults.
 ///
-/// The user half (PML4[1..256]) starts empty; per-process user pages are added
+/// The user half (PML4[0..256]) starts empty; per-process user pages are added
 /// with [`map_page_in`], giving each process a private user address space.
 ///
 /// On AArch64 this OS still runs a single shared address space, so this returns
@@ -159,8 +159,8 @@ pub fn alloc_user_pml4() -> u64 {
     unsafe { (phys_to_virt(new_phys) as *mut PageTable).write_bytes(0, 1) };
     let new = unsafe { &mut *(phys_to_virt(new_phys) as *mut PageTable) };
 
-    // Share the Limine low identity map and the entire kernel higher half.
-    new.0[0] = kernel.0[0];
+    // Share the entire kernel higher half.  Do NOT copy PML4[0]: conventional
+    // Linux ELF bases such as 0x400000 must be privately mappable there.
     for i in KERNEL_PML4_LO..ENTRY_COUNT {
         new.0[i] = kernel.0[i];
     }
@@ -195,9 +195,9 @@ pub fn switch_address_space(_pml4_phys: u64) {}
 
 /// Free a user address space previously built by [`alloc_user_pml4`].
 ///
-/// Walks only the private user half (PML4 indices 1..256), freeing every mapped
+/// Walks only the private user half (PML4 indices 0..256), freeing every mapped
 /// 4 KiB frame and every intermediate table, then frees the PML4 frame itself.
-/// Index 0 and 256..512 are shared with the kernel and are left untouched.
+/// Indices 256..512 are shared with the kernel and are left untouched.
 ///
 /// # Safety
 /// `pml4_phys` must not be the active address space and must not be in use by
@@ -208,7 +208,7 @@ pub unsafe fn free_user_pml4(pml4_phys: u64) {
         return;
     }
     let pml4 = unsafe { &mut *(phys_to_virt(pml4_phys) as *mut PageTable) };
-    for l4 in 1..KERNEL_PML4_LO {
+    for l4 in 0..KERNEL_PML4_LO {
         let e4 = pml4.0[l4];
         if e4 & flags::PRESENT == 0 || e4 & flags::HUGE != 0 { continue; }
         let pdpt = unsafe { &mut *(phys_to_virt(entry_addr(e4)) as *mut PageTable) };

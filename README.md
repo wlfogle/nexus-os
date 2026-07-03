@@ -12,9 +12,9 @@ Three build targets — one codebase, zero shared OS assumptions.
 
 | Target | Architecture | Memory | Features |
 |--------|-------------|--------|----------|
-| **laptop** | x86_64 | 4–64 GB | Framebuffer, AI hooks, full ACPI |
-| **tiamat** | x86_64 | 8–64 GB | Headless server, service hooks |
-| **bahamut** | AArch64 | 2 GB | Serial-only, minimal heap, edge node |
+| **laptop** | x86_64 | 4–64 GB | Control center: framebuffer, NexusTerminal, Cockpit/Ollama/Stella/Max Jr. hooks |
+| **tiamat** | x86_64 | 8–64 GB | Media/file-share host: server hooks, nexus-mediastack/service roots |
+| **bahamut** | AArch64 | 2 GB Pi 4 | NexusOS Lite edge profile: serial-only, minimal heap, network-role skeleton |
 
 ## Build Requirements
 
@@ -44,12 +44,17 @@ make run-installed-laptop         # boot from installed disk only (OVMF)
 # 4. Write to USB for bare-metal
 sudo dd if=build/nexusos-laptop.iso of=/dev/sdX bs=4M status=progress oflag=sync
 
-# Other targets
+# Other target installer ISOs
 make tiamat && make iso-tiamat
 make bahamut && make iso-bahamut
 make run-tiamat
 make run-bahamut
 ```
+
+Installed skeleton roles:
+- `laptop` → control-center profile (`/roles/laptop`, AI/Cockpit/Ollama service roots)
+- `tiamat` → media-center profile (`/roles/tiamat`, media/file-share/service roots)
+- `bahamut` → network-edge profile (`/roles/bahamut`, lightweight edge metadata)
 
 Output files land in `build/`:
 ```
@@ -57,8 +62,8 @@ build/nexus-kernel-laptop    # ELF binary (x86_64 full)
 build/nexus-kernel-tiamat    # ELF binary (x86_64 server)
 build/nexus-kernel-bahamut   # ELF binary (AArch64)
 build/nexusos-laptop.iso     # Bootable hybrid UEFI+BIOS ISO
-build/nexusos-tiamat.iso
-build/nexusos-bahamut.iso    # AArch64 UEFI ISO
+build/nexusos-tiamat.iso     # x86_64 media/file-share host installer ISO
+build/nexusos-bahamut.iso    # AArch64 UEFI Bahamut Lite edge ISO
 ```
 
 ## Kernel Source Structure

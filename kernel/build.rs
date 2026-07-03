@@ -20,6 +20,7 @@ fn main() {
     // Re-run the build script whenever the source changes.
     println!("cargo:rerun-if-changed=src/userspace/shell_init.asm");
     println!("cargo:rerun-if-changed=src/userspace/hello.asm");
+    println!("cargo:rerun-if-changed=src/userspace/linux_hello.asm");
     println!("cargo:rerun-if-changed=build.rs");
 
     let status = Command::new("nasm")
@@ -75,4 +76,35 @@ fn main() {
         .status()
         .unwrap_or_else(|e| panic!("Failed to run ld for hello.elf: {e}"));
     assert!(ld.success(), "ld failed to link hello.elf — see error output above");
+
+    // ── Linux ABI reference program: linux_hello.elf ────────────────────────
+    // Uses Linux x86_64 syscall numbers (write=1, exit=60) and links at the
+    // conventional static ELF base 0x400000.  This exercises the Linux syscall
+    // personality and the private low user half (PML4[0]).
+    let linux_src = PathBuf::from("src/userspace/linux_hello.asm");
+    let linux_obj = out_dir.join("linux_hello.o");
+    let linux_elf = out_dir.join("linux_hello.elf");
+
+    let nasm_linux = Command::new("nasm")
+        .args([
+            "-f", "elf64",
+            "-o", linux_obj.to_str().expect("OUT_DIR path is not valid UTF-8"),
+            linux_src.to_str().expect("linux_src path is not valid UTF-8"),
+        ])
+        .status()
+        .unwrap_or_else(|e| panic!("Failed to run nasm for linux_hello.asm: {e}"));
+    assert!(nasm_linux.success(), "nasm failed to assemble src/userspace/linux_hello.asm");
+
+    let ld_linux = Command::new("ld")
+        .args([
+            "-N",
+            "-Ttext=0x400000",
+            "-e", "_start",
+            "-melf_x86_64",
+            "-o", linux_elf.to_str().expect("OUT_DIR path is not valid UTF-8"),
+            linux_obj.to_str().expect("OUT_DIR path is not valid UTF-8"),
+        ])
+        .status()
+        .unwrap_or_else(|e| panic!("Failed to run ld for linux_hello.elf: {e}"));
+    assert!(ld_linux.success(), "ld failed to link linux_hello.elf — see error output above");
 }

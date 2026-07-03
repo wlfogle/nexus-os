@@ -27,7 +27,7 @@
 - **Tiamat** `192.168.12.242` — Proxmox VE host (Ryzen 5 3600, 32 GB, RX 580).
   Owns the 2 TB HDD at `/mnt/hdd/media`; the **file-share hub**.
 - **CT-300** `192.168.12.30` — consolidated media-stack LXC (Debian 12).
-- **Bahamut** `192.168.12.244` — Pi 4 (DietPi): AdGuard DNS, Caddy+DuckDNS,
+- **Bahamut** `192.168.12.244` — Pi 4 (**DietPi 10**): AdGuard DNS, Caddy+DuckDNS,
   Vaultwarden, PiVPN. Edge node (RAM-tight — keep it light).
 - **Laptop** `192.168.12.204` (wired) / `.172` (WiFi) — Pop!_OS, RTX 4080,
   **control center** (Cockpit, Ollama).

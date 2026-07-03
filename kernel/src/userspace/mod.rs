@@ -123,6 +123,7 @@ pub fn spawn_user_init() -> u64 {
     ipc::inbox_alloc(id);
 
     // ── 5. Prime PERCPU with this process's kernel stack top ──────────────
+    #[cfg(target_arch = "x86_64")]
     crate::syscall::update_kernel_rsp(id);
 
     id
@@ -147,5 +148,11 @@ fn spawn_user_process(name: &[u8], user_rip: u64, user_rsp_top: u64, pml4_phys: 
 
     // We need access to the process table internals — use the public spawn
     // then patch the stack frame.  Easier: just call process::spawn_ring3.
-    process::spawn_ring3(name, user_rip, user_rsp_top, pml4_phys)
+    process::spawn_ring3(
+        name,
+        user_rip,
+        user_rsp_top,
+        pml4_phys,
+        process::ProcessPersonality::Nexus,
+    )
 }

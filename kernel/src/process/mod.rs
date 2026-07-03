@@ -36,6 +36,15 @@ pub enum ProcessState {
     BlockedOnChild,
 }
 
+/// Syscall personality for a ring-3 process.
+/// Nexus-native binaries use the NexusOS syscall table (SYS_WRITE=2, etc.).
+/// Linux ABI binaries use Linux x86_64 syscall numbers (write=1, exit=60).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum ProcessPersonality {
+    Nexus,
+    Linux,
+}
+
 /// Process Control Block.
 #[repr(C)]
 pub struct Process {
@@ -58,6 +67,8 @@ pub struct Process {
     /// 0 means "none" — the process runs in the shared kernel address space
     /// (all kernel threads).  The scheduler loads this into CR3 on switch.
     pub pml4_phys: u64,
+    /// Syscall ABI used by this process.
+    pub personality: ProcessPersonality,
     /// Kernel stack storage (lives inside the PCB for simplicity).
     pub stack: [u8; KSTACK_SIZE],
 }
@@ -75,6 +86,7 @@ impl Process {
             child_done:       false,
             last_exit:        0,
             pml4_phys:        0,
+            personality:      ProcessPersonality::Nexus,
             stack:            [0u8; KSTACK_SIZE],
         }
     }
@@ -152,6 +164,16 @@ pub fn spawn(name: &[u8], entry: u64) -> Option<u64> {
     Some(id)
 }
 
+/// Syscall personality of a process. Defaults to Nexus for unknown/dead IDs.
+pub fn get_personality(id: u64) -> ProcessPersonality {
+    let table = TABLE.lock();
+    table
+        .iter()
+        .find(|p| p.id == id)
+        .map(|p| p.personality)
+        .unwrap_or(ProcessPersonality::Nexus)
+}
+
 /// Get the saved RSP of the currently-running process.
 /// Called from the context switch to snapshot where we are.
 pub fn get_rsp(id: u64) -> Option<u64> {
@@ -189,7 +211,13 @@ pub fn get_state(id: u64) -> ProcessState {
 /// full privilege-level switch on first schedule.  `pml4_phys` is the private
 /// PML4 the scheduler loads into CR3 when this process runs (0 = shared kernel
 /// address space).
-pub fn spawn_ring3(name: &[u8], user_rip: u64, user_rsp: u64, pml4_phys: u64) -> Option<u64> {
+pub fn spawn_ring3(
+    name: &[u8],
+    user_rip: u64,
+    user_rsp: u64,
+    pml4_phys: u64,
+    personality: ProcessPersonality,
+) -> Option<u64> {
     let id = NEXT_ID.fetch_add(1, Ordering::Relaxed);
     let mut table = TABLE.lock();
     let slot = table.iter_mut().find(|p| p.state == ProcessState::Dead)?;
@@ -224,6 +252,7 @@ pub fn spawn_ring3(name: &[u8], user_rip: u64, user_rsp: u64, pml4_phys: u64) ->
     slot.rsp              = sp;
     slot.kernel_stack_top = stack_top;
     slot.pml4_phys        = pml4_phys;
+    slot.personality      = personality;
     slot.state            = ProcessState::Ready;
 
     Some(id)
