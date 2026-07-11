@@ -1,7 +1,7 @@
 # NexusOS — Source of Truth
 
 > The single **current** reference for NexusOS + the media stack. If anything
-> elsewhere disagrees with this file, **this file wins**. Last updated 2026-06-27.
+> elsewhere disagrees with this file, **this file wins**. Last updated 2026-07-11.
 > Legacy/forerunner material is labeled as such so it is never mistaken for live.
 
 ## 1. Component hierarchy (what is current)
@@ -31,7 +31,10 @@
   Vaultwarden, PiVPN. Edge node (RAM-tight — keep it light).
 - **Laptop** `192.168.12.204` (wired) / `.172` (WiFi) — Pop!_OS, RTX 4080,
   **control center** (Cockpit, Ollama).
-- Gateway `.1` (T-Mobile KVD21, locked); Archer AX55 Pro `.234` (AP mode).
+- **Gateway:** Spectrum SAX1V1K `192.168.1.1` — WAN `74.134.128.100` (real public IP,
+  gigabit; migrated 2026-07-11 from T-Mobile KVD21 CGNAT).
+- **Archer AX55 Pro "Stella"** `192.168.12.1` — **Router mode** (was AP; now handles
+  DHCP, DNS push `192.168.12.244`, port-forward WireGuard UDP 51820 → Bahamut).
 - **Tailscale** tailnet `tail9d8b73.ts.net`; CT-300 node `100.115.82.71`.
 - Full device inventory (Fire TVs, phones, Echos, tablet, printer, HDHomeRun):
   `bulletproof-mediastack/docs/NETWORKING.md` → "Device Inventory".
