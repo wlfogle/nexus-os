@@ -161,16 +161,14 @@ iso-bahamut: bahamut
 	@mkdir -p $(BUILD_DIR)/iso-bahamut/boot/limine
 	@mkdir -p $(BUILD_DIR)/iso-bahamut/EFI/BOOT
 	cp $(BUILD_DIR)/nexus-kernel-bahamut   $(BUILD_DIR)/iso-bahamut/boot/nexus-kernel
+	cp $(BUILD_DIR)/nexus-kernel-bahamut   $(BUILD_DIR)/iso-bahamut/EFI/BOOT/nexus-kernel
 	cp iso_root/limine-bahamut.conf        $(BUILD_DIR)/iso-bahamut/boot/limine/limine.conf
-	cp iso_root/limine-bahamut.conf        $(BUILD_DIR)/iso-bahamut/EFI/BOOT/limine.conf
 	cp $(LIMINE_BIN)/BOOTAA64.EFI          $(BUILD_DIR)/iso-bahamut/EFI/BOOT/BOOTAA64.EFI
-	# startup.nsh: EFI shell auto-launches Limine if UEFI drops to shell
+	cp iso_root/limine-bahamut-uefi.conf   $(BUILD_DIR)/iso-bahamut/EFI/BOOT/limine.conf
 	printf '\\EFI\\BOOT\\BOOTAA64.EFI\r\n' > $(BUILD_DIR)/iso-bahamut/startup.nsh
-	# Build ISO: El Torito EFI entry points directly to BOOTAA64.EFI
 	$(XORRISO) -as mkisofs \
-	    -e EFI/BOOT/BOOTAA64.EFI \
-	    -no-emul-boot \
-	    -isohybrid-gpt-basdat \
+	    --efi-boot EFI/BOOT/BOOTAA64.EFI \
+	    -efi-boot-part --efi-boot-image --protective-msdos-label \
 	    $(BUILD_DIR)/iso-bahamut \
 	    -o $(BUILD_DIR)/nexusos-bahamut.iso
 	@echo "==> $(BUILD_DIR)/nexusos-bahamut.iso ready"
