@@ -159,18 +159,16 @@ iso-bahamut: bahamut
 	@echo "==> Creating bootable AArch64 UEFI ISO [bahamut]"
 	@rm -rf $(BUILD_DIR)/iso-bahamut
 	@mkdir -p $(BUILD_DIR)/iso-bahamut/boot/limine
+	@mkdir -p $(BUILD_DIR)/iso-bahamut/EFI/BOOT
 	cp $(BUILD_DIR)/nexus-kernel-bahamut   $(BUILD_DIR)/iso-bahamut/boot/nexus-kernel
 	cp iso_root/limine-bahamut.conf        $(BUILD_DIR)/iso-bahamut/boot/limine/limine.conf
-	# Create FAT image with BOOTAA64.EFI for UEFI El Torito boot
-	dd if=/dev/zero of=$(BUILD_DIR)/bahamut-efi.img bs=1M count=64 2>/dev/null
-	mformat -i $(BUILD_DIR)/bahamut-efi.img -F ::
-	mmd -i $(BUILD_DIR)/bahamut-efi.img ::EFI ::EFI/BOOT
-	mcopy -i $(BUILD_DIR)/bahamut-efi.img $(LIMINE_BIN)/BOOTAA64.EFI ::EFI/BOOT/
-	mcopy -i $(BUILD_DIR)/bahamut-efi.img iso_root/limine-bahamut.conf ::EFI/BOOT/limine.conf
-	@mkdir -p $(BUILD_DIR)/iso-bahamut/EFI
-	cp $(BUILD_DIR)/bahamut-efi.img $(BUILD_DIR)/iso-bahamut/EFI/bahamut-efi.img
+	cp iso_root/limine-bahamut.conf        $(BUILD_DIR)/iso-bahamut/EFI/BOOT/limine.conf
+	cp $(LIMINE_BIN)/BOOTAA64.EFI          $(BUILD_DIR)/iso-bahamut/EFI/BOOT/BOOTAA64.EFI
+	# startup.nsh: EFI shell auto-launches Limine if UEFI drops to shell
+	printf '\\EFI\\BOOT\\BOOTAA64.EFI\r\n' > $(BUILD_DIR)/iso-bahamut/startup.nsh
+	# Build ISO: El Torito EFI entry points directly to BOOTAA64.EFI
 	$(XORRISO) -as mkisofs \
-	    -e EFI/bahamut-efi.img \
+	    -e EFI/BOOT/BOOTAA64.EFI \
 	    -no-emul-boot \
 	    -isohybrid-gpt-basdat \
 	    $(BUILD_DIR)/iso-bahamut \
