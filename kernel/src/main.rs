@@ -98,22 +98,27 @@ static FB_REQUEST: FramebufferRequest = FramebufferRequest::new(0);
 /// Interrupts are DISABLED on entry.
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    // ── 1a. AArch64: get HHDM offset BEFORE UART init.
-    //   With Limine BaseRevision 6, MMIO is only accessible via HHDM
-    //   (not identity-mapped). Remap UART to hhdm_offset + 0x09000000
-    //   before any serial output attempt.
+    // ── 1a. AArch64: remap UART via HHDM before any access.
+    // Physical 0x09000000 is NOT identity-mapped by Limine BaseRevision 6.
+    // MMIO is only accessible via HHDM (hhdm_offset + phys).
+    // Get HHDM response (safe — it's in kernel address space) then remap.
     #[cfg(target_arch = "aarch64")]
     {
+        const UART_PHYS: usize = 0x0900_0000;
+        // Reading HHDM_REQUEST is safe: it's in .limine_requests which is
+        // mapped at 0xffffffff80000000+ (kernel virtual space, always valid).
         let hhdm_early = HHDM_REQUEST
             .get_response()
             .get()
             .map(|r| r.offset)
             .unwrap_or(0);
-        // If HHDM is non-zero, use hhdm+phys; otherwise fall back to phys
-        // (identity-mapped bootloaders like older Limine still work at 0).
         if hhdm_early != 0 {
-            io::uart::remap(hhdm_early as usize + 0x0900_0000);
+            // Remap UART to HHDM virtual address before init_early() writes to it.
+            io::uart::remap(hhdm_early as usize + UART_PHYS);
         }
+        // If hhdm_early == 0 (no HHDM response), fall through to physical
+        // address in init_early() — this would only happen with non-compliant
+        // bootloaders that identity-map MMIO.
     }
 
     // ── 1b. Early serial/UART output ────────────────────────────────────────
