@@ -53,10 +53,16 @@ use limine::{
     MemmapRequest,
     KernelAddressRequest,
     KernelFileRequest,
+    BaseRevision,
 };
 
 #[cfg(feature = "framebuffer")]
 use limine::FramebufferRequest;
+
+/// Limine base revision — minimum 6 required for AArch64 UEFI.
+#[used]
+#[link_section = ".limine_requests"]
+static BASE_REVISION: BaseRevision = BaseRevision::new(6);
 
 /// Higher-Half Direct Map: Limine maps all physical memory at this offset.
 #[used]
