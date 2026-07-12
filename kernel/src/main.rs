@@ -98,17 +98,34 @@ static FB_REQUEST: FramebufferRequest = FramebufferRequest::new(0);
 /// Interrupts are DISABLED on entry.
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    // ── 1. Early serial/UART output ─────────────────────────────────────────
+    // ── 1a. AArch64: get HHDM offset BEFORE UART init.
+    //   With Limine BaseRevision 6, MMIO is only accessible via HHDM
+    //   (not identity-mapped). Remap UART to hhdm_offset + 0x09000000
+    //   before any serial output attempt.
+    #[cfg(target_arch = "aarch64")]
+    {
+        let hhdm_early = HHDM_REQUEST
+            .get_response()
+            .get()
+            .map(|r| r.offset)
+            .unwrap_or(0);
+        // If HHDM is non-zero, use hhdm+phys; otherwise fall back to phys
+        // (identity-mapped bootloaders like older Limine still work at 0).
+        if hhdm_early != 0 {
+            io::uart::remap(hhdm_early as usize + 0x0900_0000);
+        }
+    }
+
+    // ── 1b. Early serial/UART output ────────────────────────────────────────
     // x86_64: COM1 port I/O — works immediately, no mapping needed.
-    // aarch64: PL011 UART — MMIO, needs physical address (Limine identity-maps
-    //          low memory before calling us, so physical == virtual here).
+    // aarch64: PL011 UART — remapped via HHDM above.
     io::init_early();
     kprintln!();
-    kprintln!("┌─────────────────────────────────────────┐");
-    kprintln!("│  NexusOS Kernel v{}  [{:^10}]  │",
+    kprintln!("\u{250c}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2510}");
+    kprintln!("\u{2502}  NexusOS Kernel v{}  [{:^10}]  \u{2502}",
               env!("CARGO_PKG_VERSION"), build_label());
-    kprintln!("│  World's First AI-Native OS             │");
-    kprintln!("└─────────────────────────────────────────┘");
+    kprintln!("\u{2502}  World's First AI-Native OS             \u{2502}");
+    kprintln!("\u{2514}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2518}");
     kprintln!();
 
     // ── 2. Collect Limine boot responses ────────────────────────────────────
