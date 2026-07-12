@@ -156,18 +156,23 @@ iso-tiamat: tiamat
 
 .PHONY: iso-bahamut
 iso-bahamut: bahamut
-	@echo "==> Creating bootable AArch64 ISO [bahamut]"
+	@echo "==> Creating bootable AArch64 UEFI ISO [bahamut]"
 	@rm -rf $(BUILD_DIR)/iso-bahamut
 	@mkdir -p $(BUILD_DIR)/iso-bahamut/boot/limine
-	@mkdir -p $(BUILD_DIR)/iso-bahamut/EFI/BOOT
 	cp $(BUILD_DIR)/nexus-kernel-bahamut   $(BUILD_DIR)/iso-bahamut/boot/nexus-kernel
 	cp iso_root/limine-bahamut.conf        $(BUILD_DIR)/iso-bahamut/boot/limine/limine.conf
-	cp $(LIMINE_BIN)/limine-uefi-cd.bin    $(BUILD_DIR)/iso-bahamut/boot/limine/
-	cp $(LIMINE_BIN)/BOOTAA64.EFI          $(BUILD_DIR)/iso-bahamut/EFI/BOOT/
-	cp iso_root/limine-bahamut.conf        $(BUILD_DIR)/iso-bahamut/EFI/BOOT/limine.conf
+	# Create FAT image with BOOTAA64.EFI for UEFI El Torito boot
+	dd if=/dev/zero of=$(BUILD_DIR)/bahamut-efi.img bs=1M count=64 2>/dev/null
+	mformat -i $(BUILD_DIR)/bahamut-efi.img -F ::
+	mmd -i $(BUILD_DIR)/bahamut-efi.img ::EFI ::EFI/BOOT
+	mcopy -i $(BUILD_DIR)/bahamut-efi.img $(LIMINE_BIN)/BOOTAA64.EFI ::EFI/BOOT/
+	mcopy -i $(BUILD_DIR)/bahamut-efi.img iso_root/limine-bahamut.conf ::EFI/BOOT/limine.conf
+	@mkdir -p $(BUILD_DIR)/iso-bahamut/EFI
+	cp $(BUILD_DIR)/bahamut-efi.img $(BUILD_DIR)/iso-bahamut/EFI/bahamut-efi.img
 	$(XORRISO) -as mkisofs \
-	    --efi-boot boot/limine/limine-uefi-cd.bin \
-	    -efi-boot-part --efi-boot-image --protective-msdos-label \
+	    -e EFI/bahamut-efi.img \
+	    -no-emul-boot \
+	    -isohybrid-gpt-basdat \
 	    $(BUILD_DIR)/iso-bahamut \
 	    -o $(BUILD_DIR)/nexusos-bahamut.iso
 	@echo "==> $(BUILD_DIR)/nexusos-bahamut.iso ready"
@@ -207,8 +212,10 @@ run-bahamut: iso-bahamut
 # The VirtIO-blk device uses legacy I/O-port mode (disable-modern=on) so the
 # kernel's legacy BAR0 driver can initialise it.
 
-DISK_LAPTOP := $(BUILD_DIR)/nexusos-laptop.qcow2
-OVMF        := /usr/share/OVMF/OVMF_CODE.fd
+DISK_LAPTOP  := $(BUILD_DIR)/nexusos-laptop.qcow2
+DISK_BAHAMUT := $(BUILD_DIR)/nexusos-bahamut.qcow2
+OVMF         := /usr/share/OVMF/OVMF_CODE.fd
+AAVMF        := /usr/share/AAVMF/AAVMF_CODE.fd
 
 .PHONY: disk-laptop
 disk-laptop:
@@ -238,6 +245,40 @@ run-installed-laptop:
 	    -drive file=$(DISK_LAPTOP),if=virtio \
 	    -bios $(OVMF) \
 	    -m 4G -cpu host -enable-kvm \
+	    -serial stdio -display none \
+	    -no-reboot -no-shutdown
+
+# ─── Bahamut (AArch64) install workflow ────────────────────────────────────────
+# VirtIO on AArch64 virt machine uses MMIO transport (-device virtio-blk-device)
+
+.PHONY: disk-bahamut
+disk-bahamut:
+	@echo "==> Creating 8 GiB install target [bahamut]"
+	@mkdir -p $(BUILD_DIR)
+	qemu-img create -f qcow2 $(DISK_BAHAMUT) 8G
+	@echo "==> $(DISK_BAHAMUT) ready"
+
+.PHONY: run-install-bahamut
+run-install-bahamut: iso-bahamut
+	@test -f $(DISK_BAHAMUT) || $(MAKE) disk-bahamut
+	@echo "==> Installer boot: ISO + VirtIO-MMIO disk [bahamut]"
+	@echo "    Watch serial for NexusOS Installer banner and 'Installation complete!'"
+	$(QEMU_ARM) -M virt -cpu cortex-a72 -m 2G \
+	    -bios $(AAVMF) \
+	    -cdrom $(BUILD_DIR)/nexusos-bahamut.iso \
+	    -drive file=$(DISK_BAHAMUT),if=none,id=hd0 \
+	    -device virtio-blk-device,drive=hd0 \
+	    -serial stdio -display none \
+	    -no-reboot -no-shutdown
+
+.PHONY: run-installed-bahamut
+run-installed-bahamut:
+	@test -f $(DISK_BAHAMUT) || { echo "ERROR: run 'make run-install-bahamut' first"; exit 1; }
+	@echo "==> Booting installed NexusOS from disk [bahamut]"
+	$(QEMU_ARM) -M virt -cpu cortex-a72 -m 2G \
+	    -bios $(AAVMF) \
+	    -drive file=$(DISK_BAHAMUT),if=none,id=hd0 \
+	    -device virtio-blk-device,drive=hd0 \
 	    -serial stdio -display none \
 	    -no-reboot -no-shutdown
 

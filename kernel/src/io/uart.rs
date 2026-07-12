@@ -22,6 +22,7 @@ const IMSC:   usize = 0x038;   // Interrupt Mask Set/Clear
 
 // FR bits
 const FR_TXFF: u32 = 1 << 5;   // Transmit FIFO full
+const FR_RXFE: u32 = 1 << 4;   // Receive FIFO empty
 const FR_BUSY: u32 = 1 << 3;   // UART busy
 
 // CR bits
@@ -72,9 +73,29 @@ impl Pl011Uart {
 
     fn write_byte(&self, byte: u8) {
         unsafe {
-            // Wait while TX FIFO is full
             while self.read_reg(FR) & FR_TXFF != 0 {}
             self.write_reg(DR, byte as u32);
+        }
+    }
+
+    /// Block until a byte is received, return it.
+    fn read_byte(&self) -> u8 {
+        unsafe {
+            while self.read_reg(FR) & FR_RXFE != 0 {
+                core::hint::spin_loop();
+            }
+            (self.read_reg(DR) & 0xFF) as u8
+        }
+    }
+
+    /// Non-blocking: return Some(byte) if available, None otherwise.
+    fn try_read_byte(&self) -> Option<u8> {
+        unsafe {
+            if self.read_reg(FR) & FR_RXFE != 0 {
+                None
+            } else {
+                Some((self.read_reg(DR) & 0xFF) as u8)
+            }
         }
     }
 }
@@ -110,4 +131,14 @@ pub fn remap(virtual_base: usize) {
 pub fn _print(args: fmt::Arguments) {
     use fmt::Write;
     UART.lock().write_fmt(args).expect("UART write failed");
+}
+
+/// Block until a character is received from UART RX.
+pub fn read_char() -> u8 {
+    UART.lock().read_byte()
+}
+
+/// Non-blocking read — returns None if RX FIFO empty.
+pub fn try_read_char() -> Option<u8> {
+    UART.lock().try_read_byte()
 }

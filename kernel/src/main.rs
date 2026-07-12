@@ -26,6 +26,8 @@ pub mod drivers;
 // AArch64 VirtIO-MMIO block driver (QEMU virt machine)
 #[cfg(target_arch = "aarch64")]
 pub mod virtio_mmio;
+#[cfg(all(target_arch = "aarch64", feature = "bahamut"))]
+pub mod bahamut_tui;
 pub mod exec;
 pub mod fs;
 pub mod installer;
@@ -306,10 +308,16 @@ pub extern "C" fn _start() -> ! {
     #[cfg(target_arch = "aarch64")]
     {
         kprintln!();
-        kprintln!("NexusOS v{} — Bahamut AArch64 edge skeleton active.", env!("CARGO_PKG_VERSION"));
+        kprintln!("NexusOS v{} — Bahamut AArch64 booting NexusOS Lite TUI...",
+                  env!("CARGO_PKG_VERSION"));
     }
 
-    // Idle loop — preempted every 10 ms
+    // AArch64 Bahamut: launch TUI (never returns)
+    #[cfg(all(target_arch = "aarch64", feature = "bahamut"))]
+    bahamut_tui::run();
+
+    // x86_64 or non-bahamut AArch64: idle loop
+    #[cfg(not(all(target_arch = "aarch64", feature = "bahamut")))]
     loop {
         arch::halt();
     }
