@@ -23,10 +23,11 @@ extern "C" {
 pub mod arch;
 #[cfg(target_arch = "x86_64")]
 pub mod drivers;
+// AArch64 VirtIO-MMIO block driver (QEMU virt machine)
+#[cfg(target_arch = "aarch64")]
+pub mod virtio_mmio;
 pub mod exec;
-#[cfg(target_arch = "x86_64")]
 pub mod fs;
-#[cfg(target_arch = "x86_64")]
 pub mod installer;
 pub mod io;
 pub mod ipc;
@@ -230,8 +231,22 @@ pub extern "C" fn _start() -> ! {
 
     #[cfg(target_arch = "aarch64")]
     {
-        kprintln!("[bahamut] AArch64 network-edge skeleton: UART, memory, paging, heap online");
-        kprintln!("[bahamut] Disk installer, personalities, VFS, and networking services land after AArch64 IRQ/MMIO drivers");
+        kprintln!("[bahamut] AArch64 network-edge: UART, memory, paging, heap online");
+
+        // ── AArch64 VirtIO-MMIO disk driver ─────────────────────────────────
+        let disk_sectors = virtio_mmio::init();
+
+        // ── FAT32 filesystem (shared with x86_64) ───────────────────────────
+        let fs_msg = fs::fat::init();
+        kprintln!("[fs]   {}", fs_msg);
+
+        // ── Installer (first boot from ISO — no formatted disk) ─────────────
+        if disk_sectors > 0 && !fs::fat::is_mounted() {
+            kprintln!("[inst] No formatted disk — spawning installer");
+            installer::task_installer_run();
+        } else if fs::fat::is_mounted() {
+            kprintln!("[inst] Disk already installed — booting normally");
+        }
     }
 
     // ── 8. Feature-specific init ─────────────────────────────────────────────

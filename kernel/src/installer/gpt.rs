@@ -12,7 +12,10 @@
 //! The ESP is then formatted as FAT32 by the caller.
 
 use super::crc32::crc32;
+#[cfg(target_arch = "x86_64")]
 use crate::drivers::virtio::blk::{write_sectors, capacity, SECTOR_SIZE};
+#[cfg(target_arch = "aarch64")]
+use crate::virtio_mmio::{write_sectors, capacity, SECTOR_SIZE};
 
 // ─── GUIDs (little-endian mixed-endian format as stored in GPT) ──────────────
 

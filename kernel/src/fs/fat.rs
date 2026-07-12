@@ -24,7 +24,11 @@ use fatfs::{
     IoBase, Read, Write, Seek, SeekFrom,
     NullTimeProvider, LossyOemCpConverter,
 };
+// Disk backend: x86_64 uses VirtIO I/O port driver; AArch64 uses VirtIO-MMIO.
+#[cfg(target_arch = "x86_64")]
 use crate::drivers::virtio::blk::{read_sectors, write_sectors, capacity, SECTOR_SIZE};
+#[cfg(target_arch = "aarch64")]
+use crate::virtio_mmio::{read_sectors, write_sectors, capacity, SECTOR_SIZE};
 
 // ─── I/O error type ──────────────────────────────────────────────────────────
 

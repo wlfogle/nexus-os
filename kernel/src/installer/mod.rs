@@ -15,12 +15,29 @@ pub mod gpt;
 use gpt::write_gpt;
 use alloc::format;
 use crate::{kprintln, fs};
-use crate::drivers::virtio::blk::capacity;
 use core::sync::atomic::Ordering;
+
+// Disk capacity: arch-conditional
+#[cfg(target_arch = "x86_64")]
+use crate::drivers::virtio::blk::capacity;
+#[cfg(target_arch = "aarch64")]
+use crate::virtio_mmio::capacity;
 
 // ─── Assets embedded at compile time ─────────────────────────────────────────
 
-static BOOTX64_EFI: &[u8] = include_bytes!("../../../limine/bin/BOOTX64.EFI");
+#[cfg(target_arch = "x86_64")]
+static BOOT_EFI: &[u8] = include_bytes!("../../../limine/bin/BOOTX64.EFI");
+#[cfg(target_arch = "aarch64")]
+static BOOT_EFI: &[u8] = include_bytes!("../../../limine/bin/BOOTAA64.EFI");
+
+#[cfg(target_arch = "x86_64")]
+const BOOT_EFI_NAME: &str = "EFI/BOOT/BOOTX64.EFI";
+#[cfg(target_arch = "aarch64")]
+const BOOT_EFI_NAME: &str = "EFI/BOOT/BOOTAA64.EFI";
+
+// Keep old name for compat — points to arch-correct binary above
+#[allow(dead_code)]
+static BOOTX64_EFI: &[u8] = BOOT_EFI;
 
 
 /// Reference user program (static ELF64), written to the ESP root so the
@@ -201,11 +218,11 @@ static HOME_README: &[u8] = b"NexusOS user home skeleton\n\
 Persistent user data begins here.  The current shell can list and read files;\n\
 write-path shell commands land in the next VFS milestone.\n";
 
-/// EFI shell startup script: auto-launches Limine when OVMF has no saved
-/// boot entry for this disk (first power-on after install). After Limine
-/// runs successfully, OVMF writes a permanent NVRAM entry and subsequent
-/// boots go directly to Limine without the shell.
+/// EFI shell startup script: auto-launches Limine on first power-on.
+#[cfg(target_arch = "x86_64")]
 static STARTUP_NSH: &[u8] = b"\\EFI\\BOOT\\BOOTX64.EFI\r\n";
+#[cfg(target_arch = "aarch64")]
+static STARTUP_NSH: &[u8] = b"\\EFI\\BOOT\\BOOTAA64.EFI\r\n";
 
 // ─── Kernel ELF globals (set by _start from KernelFileRequest) ───────────────
 // These hold the virtual address and byte-length of the original ELF file that
@@ -219,19 +236,30 @@ pub static KERNEL_ELF_SIZE: core::sync::atomic::AtomicU64 =
 
 // ─── Installer task ───────────────────────────────────────────────────────────
 
+/// Synchronous installer entry for AArch64 (no scheduler — called directly from boot).
+pub fn task_installer_run() {
+    installer_body();
+}
+
+/// Scheduler task entry for x86_64.
+#[cfg(target_arch = "x86_64")]
 pub extern "C" fn task_installer() -> ! {
     for _ in 0..100 {
         unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
     }
+    installer_body();
+    loop { unsafe { core::arch::asm!("hlt", options(nomem, nostack)); } }
+}
 
+fn installer_body() {
     if capacity() == 0 {
         kprintln!("[install] No disk — skipping.");
-        loop { unsafe { core::arch::asm!("hlt", options(nomem, nostack)); } }
+        return;
     }
 
     if fs::fat::is_mounted() {
         kprintln!("[install] Already installed.");
-        loop { unsafe { core::arch::asm!("hlt", options(nomem, nostack)); } }
+        return;
     }
 
     kprintln!();
@@ -252,8 +280,6 @@ pub extern "C" fn task_installer() -> ! {
         }
         Err(e) => kprintln!("[install] FAILED: {}", e),
     }
-
-    loop { unsafe { core::arch::asm!("hlt", options(nomem, nostack)); } }
 }
 
 fn run_install() -> Result<(), &'static str> {
@@ -277,8 +303,8 @@ fn run_install() -> Result<(), &'static str> {
         fs::fat::mkdir(dir)?;
     }
 
-    kprintln!("[install] Writing BOOTX64.EFI ({} KB)...", BOOTX64_EFI.len() / 1024);
-    write_file_to_esp("EFI/BOOT/BOOTX64.EFI", BOOTX64_EFI)?;
+    kprintln!("[install] Writing {} ({} KB)...", BOOT_EFI_NAME, BOOT_EFI.len() / 1024);
+    write_file_to_esp(BOOT_EFI_NAME, BOOT_EFI)?;
 
     kprintln!("[install] Writing nexus-kernel...");
     write_kernel()?;
