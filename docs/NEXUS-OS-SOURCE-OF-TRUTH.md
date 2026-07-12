@@ -1,7 +1,7 @@
 # NexusOS — Source of Truth
 
 > The single **current** reference for NexusOS + the media stack. If anything
-> elsewhere disagrees with this file, **this file wins**. Last updated 2026-07-11.
+> elsewhere disagrees with this file, **this file wins**. Last updated 2026-07-12.
 > Legacy/forerunner material is labeled as such so it is never mistaken for live.
 
 ## 1. Component hierarchy (what is current)
@@ -32,9 +32,12 @@
 - **Laptop** `192.168.12.204` (wired) / `.172` (WiFi) — Pop!_OS, RTX 4080,
   **control center** (Cockpit, Ollama).
 - **Gateway:** Spectrum SAX1V1K `192.168.1.1` — WAN `74.134.128.100` (real public IP,
-  gigabit; migrated 2026-07-11 from T-Mobile KVD21 CGNAT).
-- **Archer AX55 Pro "Stella"** `192.168.12.1` — **Router mode** (was AP; now handles
-  DHCP, DNS push `192.168.12.244`, port-forward WireGuard UDP 51820 → Bahamut).
+  gigabit; migrated 2026-07-11 from T-Mobile KVD21 CGNAT). 923 Mbps down/916 up.
+- **Archer AX55 Pro "Stella"** `192.168.12.254` — **Router mode** (LAN IP moved from
+  `.1` → `.254` on 2026-07-12). DHCP `192.168.12.100–200`, Primary DNS push
+  `192.168.12.244` (AdGuard — all LAN devices now filtered), Secondary DNS `1.1.1.1`,
+  port-forward WireGuard UDP 51820 → Bahamut. NAT Boost ON.
+  Admin: `http://192.168.12.254` | Password: see Vaultwarden.
 - **Tailscale** tailnet `tail9d8b73.ts.net`; CT-300 node `100.115.82.71`.
 - Full device inventory (Fire TVs, phones, Echos, tablet, printer, HDHomeRun):
   `bulletproof-mediastack/docs/NETWORKING.md` → "Device Inventory".
