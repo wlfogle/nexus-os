@@ -36,26 +36,23 @@ check_kernel() {
     fi
 }
 
-# Install NVIDIA drivers optimally
+# Install NVIDIA drivers optimally (NexusOS / nala)
 install_nvidia_drivers() {
     log_info "Installing NVIDIA drivers with performance optimizations..."
     
-    # Enable RPM Fusion repositories for NVIDIA drivers
-    sudo rpm-ostree install \
-        https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
-        https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm 2>/dev/null || true
-    
-    # Install NVIDIA driver packages
-    log_info "Installing NVIDIA proprietary drivers..."
-    sudo rpm-ostree install \
-        akmod-nvidia \
-        xorg-x11-drv-nvidia-cuda \
-        nvidia-settings \
-        nvidia-persistenced \
-        nvidia-modprobe \
-        nvidia-xconfig
-    
-    log_success "NVIDIA drivers installed. Reboot required."
+    # NexusOS uses nala (Pop!_OS apt wrapper) for package management
+    # System76/Pop!_OS ships NVIDIA drivers via their own OTA pipeline.
+    # If drivers are missing, install via nala:
+    if ! nvidia-smi &>/dev/null; then
+        log_info "Installing NVIDIA proprietary drivers via nala..."
+        sudo nala install -y \
+            nvidia-driver-580 \
+            nvidia-settings \
+            nvidia-utils-580
+        log_success "NVIDIA drivers installed. Reboot required."
+    else
+        log_success "NVIDIA drivers already present: $(nvidia-smi --query-gpu=driver_version --format=csv,noheader)"
+    fi
     
     # Create NVIDIA performance configuration
     create_nvidia_config
@@ -149,9 +146,8 @@ configure_nvidia_cuda() {
     log_info "Configuring NVIDIA CUDA for AI/ML optimization..."
     
     # Install CUDA toolkit
-    sudo rpm-ostree install \
-        cuda \
-        cuda-toolkit \
+    sudo nala install -y \
+        nvidia-cuda-toolkit \
         python3-pip
     
     # Create CUDA environment optimization
@@ -180,8 +176,8 @@ EOF
 install_wireguard() {
     log_info "Installing WireGuard with performance optimizations..."
     
-    # WireGuard is already compiled into our custom kernel, just install tools
-    sudo rpm-ostree install wireguard-tools
+    # WireGuard is already compiled into NexusOS kernel, just install tools
+    sudo nala install -y wireguard-tools
     
     # Create WireGuard performance configuration
     create_wireguard_config

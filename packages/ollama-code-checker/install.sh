@@ -40,7 +40,7 @@ chmod +x "$INSTALL_DIR/ollama-gui.py"
 # Check if Python tkinter is available
 if ! python3 -c "import tkinter" 2>/dev/null; then
     echo -e "${YELLOW}Warning: Python tkinter not found. GUI may not work.${NC}"
-    echo "Install with: sudo pacman -S tk (Arch) or sudo apt install python3-tkinter (Debian/Ubuntu)"
+    echo "Install with: sudo nala install python3-tkinter"
 fi
 
 # Add to PATH if needed

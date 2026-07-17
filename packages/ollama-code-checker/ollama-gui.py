@@ -115,7 +115,7 @@ class OllamaCodeCheckerGUI:
     
     def load_available_models(self):
         """Load available Ollama models"""
-        models_path = '/run/media/garuda/73cf9511-0af0-4ac4-9d83-ee21eb17ff5d/models'
+        models_path = '/media/loufogle/73cf9511-0af0-4ac4-9d83-ee21eb17ff5d/models'
         
         try:
             # Try to get models from manifest directory first (more reliable)
@@ -258,7 +258,7 @@ class OllamaCodeCheckerGUI:
             analysis_type = self.analysis_var.get()
             
             # Build command
-            cmd = ['/home/garuda/ollama-code-checker.sh']
+            cmd = ['/home/nexusos/ollama-code-checker.sh']
             cmd.extend(['-m', model])
             cmd.extend(['-t', analysis_type])
             
@@ -275,7 +275,7 @@ class OllamaCodeCheckerGUI:
             
             # Run the analysis
             env = os.environ.copy()
-            env['OLLAMA_MODELS'] = '/run/media/garuda/73cf9511-0af0-4ac4-9d83-ee21eb17ff5d/models'
+            env['OLLAMA_MODELS'] = '/media/loufogle/73cf9511-0af0-4ac4-9d83-ee21eb17ff5d/models'
             
             self.current_process = subprocess.Popen(
                 cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
