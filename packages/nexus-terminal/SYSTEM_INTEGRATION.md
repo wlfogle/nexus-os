@@ -8,7 +8,7 @@
 ```rust
 struct ModelManager {
     // Local Model Storage
-    model_path: PathBuf, // /run/media/garuda/73cf9511-0af0-4ac4-9d83-ee21eb17ff5d/models
+    model_path: PathBuf, // /media/loufogle/73cf9511-0af0-4ac4-9d83-ee21eb17ff5d/models
     ollama_models: HashMap<String, ModelConfig>,
     active_models: Vec<ActiveModel>,
     

@@ -95,7 +95,7 @@ const VirtualMachinesDashboard: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { executeAsync } = useAsyncOperation();
 
-  const PROXMOX_VM_PATH = '/run/media/garuda/Data/proxmox-ve.qcow2';
+  const PROXMOX_VM_PATH = '/media/loufogle/Data/vms/nexusos/proxmox-ve.qcow2';
 
   // Load data on component mount and set up intervals
   useEffect(() => {

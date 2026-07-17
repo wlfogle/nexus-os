@@ -459,7 +459,7 @@ async fn main() {
             
             // Test Proxmox detection
             tokio::spawn(async {
-                let proxmox_path = "/run/media/garuda/Data/proxmox-ve.qcow2";
+                let proxmox_path = "/media/loufogle/Data/vms/nexusos/proxmox-ve.qcow2";
                 match system_monitor::SystemMonitor::get_proxmox_vm_info(proxmox_path) {
                     Ok(info) => info!("Proxmox VM detected: {} GB, running: {}", info.size_gb, info.is_running),
                     Err(e) => error!("Failed to detect Proxmox VM: {}", e),

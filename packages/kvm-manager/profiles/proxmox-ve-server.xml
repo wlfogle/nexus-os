@@ -40,7 +40,7 @@
     <!-- Main Proxmox VE disk (qcow2) -->
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2' cache='writeback'/>
-      <source file='/run/media/garuda/Data/proxmox-ve.qcow2'/>
+      <source file='/media/loufogle/Data/vms/nexusos/proxmox-ve.qcow2'/>
       <target dev='vda' bus='virtio'/>
       <address type='pci' domain='0x0000' bus='0x04' slot='0x00' function='0x0'/>
     </disk>

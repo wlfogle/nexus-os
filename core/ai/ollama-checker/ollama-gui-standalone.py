@@ -16,7 +16,7 @@ class OllamaCodeCheckerGUI:
         self.root.geometry("900x700")
         
         # Configuration
-        self.models_path = "/run/media/garuda/73cf9511-0af0-4ac4-9d83-ee21eb17ff5d/models"
+        self.models_path = "/media/loufogle/73cf9511-0af0-4ac4-9d83-ee21eb17ff5d/models"
         
         # Variables
         self.analysis_running = False

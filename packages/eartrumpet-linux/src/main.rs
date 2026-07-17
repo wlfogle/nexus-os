@@ -246,7 +246,7 @@ fn build_ui(app: &Application) -> ApplicationWindow {
 
 fn main() {
     let app = Application::builder()
-        .application_id("dev.ultimate_garuda.eartrumpet")
+        .application_id("dev.nexusos.eartrumpet")
         .build();
 
     app.connect_activate(|app| {

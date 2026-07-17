@@ -111,7 +111,7 @@ setup_network_qdisc() {
     log_info "Setting up advanced network queue disciplines..."
     
     # Create network optimization script
-    sudo tee /usr/local/bin/optimize-network-queues > /dev/null << EOF
+    sudo tee /usr/local/bin/optimize-network-queues > /dev/null << 'EOF'
 #!/bin/bash
 # Advanced Network Queue Discipline Setup for WireGuard Dual-Role
 
@@ -181,7 +181,7 @@ create_server_config() {
     
     local server_private=$(sudo cat /etc/wireguard/keys/server_private.key)
     
-    sudo tee /etc/wireguard/wg-server.conf > /dev/null << EOF
+    sudo tee /etc/wireguard/wg-server.conf > /dev/null << 'EOF'
 [Interface]
 # Server Configuration - Globe Hopper Style
 PrivateKey = $server_private
@@ -227,7 +227,7 @@ create_client_config() {
     
     local client_private=$(sudo cat /etc/wireguard/keys/client_private.key)
     
-    sudo tee /etc/wireguard/wg-client.conf > /dev/null << EOF
+    sudo tee /etc/wireguard/wg-client.conf > /dev/null << 'EOF'
 [Interface]
 # Client Configuration - Connect to external WireGuard servers
 PrivateKey = $client_private
@@ -350,7 +350,7 @@ add_server_client() {
     
     # Create client config
     sudo mkdir -p /etc/wireguard/clients
-    sudo tee "/etc/wireguard/clients/$client_name.conf" << EOF
+    sudo tee "/etc/wireguard/clients/$client_name.conf" << 'EOF'
 [Interface]
 PrivateKey = $client_private
 Address = $client_ip/32
@@ -377,7 +377,7 @@ rotate_keys() {
     # This would integrate with the existing awesome-stack rotation logic
     if [[ -f "/home/lou/github-repos/awesome-stack/wireguard-tools/server/wireguard-rotate.sh" ]]; then
         echo "Using awesome-stack rotation script..."
-        /home/lou/github-repos/awesome-stack/wireguard-tools/server/wireguard-rotate.sh garuda-host
+        /opt/nexus-os/scripts/networking/wireguard-rotate.sh nexusos-host
     else
         echo "Manual key rotation required - awesome-stack tools not found"
     fi
