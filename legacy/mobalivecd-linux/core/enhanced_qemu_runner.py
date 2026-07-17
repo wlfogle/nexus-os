@@ -416,7 +416,7 @@ class AIEnhancedQEMURunner:
             r'debian.*live': 'debian',
             r'systemrescue': 'systemrescue',
             r'win.*\d+': 'windows',
-            r'garuda.*gaming': 'gaming',
+            r'pop-os|nexusos': 'gaming',  # was: garuda gaming (not NexusOS)
             r'fedora.*workstation': 'debian',  # Use Debian profile as base
             r'ubuntu.*desktop': 'debian',
             r'mint.*cinnamon': 'debian',
@@ -543,8 +543,8 @@ class AIEnhancedQEMURunner:
             if '-bios' not in ' '.join(profile.special_flags or []):
                 # Check for OVMF availability (Arch/Garuda Linux paths)
                 ovmf_paths = [
-                    '/usr/share/edk2/x64/OVMF_CODE.4m.fd',  # Arch/Garuda Linux
-                    '/usr/share/edk2/x64/OVMF.4m.fd',       # Arch/Garuda Linux alternative
+                    '/usr/share/edk2/x64/OVMF_CODE.4m.fd',  # Arch Linux
+                    '/usr/share/edk2/x64/OVMF.4m.fd',       # Arch Linux alternative
                     '/usr/share/ovmf/OVMF.fd',              # Generic path
                     '/usr/share/edk2-ovmf/OVMF_CODE.fd',    # Ubuntu/Debian path
                     '/usr/share/qemu/edk2-x86_64-code.fd'   # CentOS/RHEL path

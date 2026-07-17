@@ -64,9 +64,7 @@ A modern, feature-rich KVM virtualization manager built with React, TypeScript, 
 - **Node.js** ≥ 18.0.0
 - **Rust** (latest stable)
 - **System Dependencies**:
-  - Linux: `libvirt-daemon`, `qemu-system-x86`
-  - macOS: QEMU via Homebrew
-  - Windows: QEMU for Windows
+  - NexusOS / Linux: `libvirt-daemon`, `qemu-system-x86`
 
 ### **Development Setup**
 

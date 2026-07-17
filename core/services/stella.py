@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """
-Stella — NexusOS Security Guardian
-Real-time security monitoring: ports, firewall, logins, updates, Docker health
-FastAPI service on port 8601
+Stella 🐕 — NexusOS Operations Companion
+Real-time operations monitoring: ports, firewall, logins, updates, disk health,
+and native systemd service status.
+Native systemd stack only — no Docker/Podman.
+FastAPI service on port 8601.
 """
 
 import logging
@@ -23,15 +25,15 @@ if Path("/var/log/nexus-os").exists():
 
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [STELLA] %(levelname)s %(message)s",
+    format="%(asctime)s [STELLA 🐕] %(levelname)s %(message)s",
     handlers=_log_handlers,
 )
 logger = logging.getLogger("stella")
 
 app = FastAPI(
-    title="Stella — NexusOS Security Guardian",
-    version="2025.1",
-    description="Real-time security monitoring for NexusOS",
+    title="Stella 🐕 — NexusOS Operations Companion",
+    version="2026.1",
+    description="Real-time operations monitoring for NexusOS (native systemd stack)",
 )
 app.add_middleware(
     CORSMiddleware,
@@ -43,7 +45,7 @@ app.add_middleware(
 _start_time = datetime.now()
 
 # ═══════════════════════════════════════════════════════════════════════════
-# SECURITY SCAN FUNCTIONS
+# OPERATIONS MONITORING FUNCTIONS
 # ═══════════════════════════════════════════════════════════════════════════
 
 
@@ -122,52 +124,51 @@ def check_firewall() -> Dict:
 
 
 def check_package_updates() -> Dict:
-    """Check for available package and security updates."""
-    try:
-        result = subprocess.run(
-            ["apt", "list", "--upgradable"],
-            capture_output=True, text=True, timeout=30,
-            env={**os.environ, "LANG": "C"},
-        )
-        if result.returncode == 0:
-            lines = [l for l in result.stdout.strip().split("\n") if "/" in l]
-            security = [l for l in lines if "security" in l.lower()]
-            return {
-                "total_upgradable": len(lines),
-                "security_updates": len(security),
-                "packages": lines[:50],
-            }
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        pass
+    """Check for available package updates (nala preferred, apt fallback)."""
+    for cmd in (["nala", "list", "--upgradable"], ["apt", "list", "--upgradable"]):
+        try:
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=30,
+                env={**os.environ, "LANG": "C"},
+            )
+            if result.returncode == 0:
+                lines = [ln for ln in result.stdout.strip().split("\n") if "/" in ln]
+                security = [ln for ln in lines if "security" in ln.lower()]
+                return {
+                    "total_upgradable": len(lines),
+                    "security_updates": len(security),
+                    "packages": lines[:50],
+                }
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            continue
     return {"total_upgradable": 0, "security_updates": 0, "packages": []}
 
 
-def check_docker_health() -> List[Dict]:
-    """Check health of all Docker containers."""
-    try:
-        result = subprocess.run(
-            ["docker", "ps", "-a", "--format",
-             "{{.Names}}\t{{.Status}}\t{{.Image}}\t{{.Ports}}"],
-            capture_output=True, text=True, timeout=10,
-        )
-        if result.returncode != 0:
-            return []
-        containers: List[Dict] = []
-        for line in result.stdout.strip().split("\n"):
-            if not line.strip():
-                continue
-            parts = line.split("\t")
-            if len(parts) >= 3:
-                containers.append({
-                    "name": parts[0],
-                    "status": parts[1],
-                    "image": parts[2],
-                    "ports": parts[3] if len(parts) > 3 else "",
-                    "healthy": parts[1].startswith("Up"),
-                })
-        return containers
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        return []
+def check_systemd_services() -> List[Dict]:
+    """Check status of key native systemd services on this host and CT-300."""
+    services_to_check = [
+        # Laptop/local
+        "ollama", "sunshine-appimage",
+        # CT-300 media stack (checked via systemctl if on CT-300, info-only otherwise)
+        "riven", "riven-frontend", "jellyfin", "caddy", "n8n", "aria2",
+        "riven-aria2-bridge", "scraped-to-aria2.timer",
+        "postgresql", "redis-server", "crowdsec",
+    ]
+    results = []
+    for svc in services_to_check:
+        try:
+            r = subprocess.run(
+                ["systemctl", "is-active", svc],
+                capture_output=True, text=True, timeout=3,
+            )
+            results.append({
+                "service": svc,
+                "active": r.stdout.strip() == "active",
+                "state": r.stdout.strip(),
+            })
+        except Exception:
+            results.append({"service": svc, "active": False, "state": "unavailable"})
+    return results
 
 
 def check_disk_space() -> List[Dict]:
@@ -193,7 +194,7 @@ def check_disk_space() -> List[Dict]:
 
 
 def generate_recommendations() -> List[Dict]:
-    """Generate security recommendations based on current system state."""
+    """Generate operations recommendations based on current system state."""
     recs: List[Dict] = []
 
     fw = check_firewall()
@@ -262,7 +263,7 @@ async def health():
     return {
         "service": "stella",
         "status": "running",
-        "version": "2025.1",
+        "version": "2026.1",
         "timestamp": datetime.now().isoformat(),
         "uptime_seconds": int((datetime.now() - _start_time).total_seconds()),
     }
@@ -276,7 +277,7 @@ async def full_scan():
         "firewall": check_firewall(),
         "failed_logins": scan_failed_logins(),
         "updates": check_package_updates(),
-        "docker": check_docker_health(),
+        "services": check_systemd_services(),
         "disk_space": check_disk_space(),
         "recommendations": generate_recommendations(),
     }
@@ -302,9 +303,9 @@ async def get_updates():
     return check_package_updates()
 
 
-@app.get("/api/docker")
-async def get_docker():
-    return {"containers": check_docker_health()}
+@app.get("/api/services")
+async def get_services():
+    return {"services": check_systemd_services()}
 
 
 @app.get("/api/disk")
@@ -320,5 +321,5 @@ async def get_recommendations():
 if __name__ == "__main__":
     import uvicorn
 
-    logger.info("Stella Security Guardian starting on port 8601")
+    logger.info("Stella 🐕 Operations Companion starting on port 8601")
     uvicorn.run(app, host="0.0.0.0", port=8601, log_level="info")

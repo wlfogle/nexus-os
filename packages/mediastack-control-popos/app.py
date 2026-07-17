@@ -17,7 +17,7 @@ DEFAULT_URL = "http://127.0.0.1:9900"
 class MediaControlDesktopApp:
     def __init__(self, root: tk.Tk):
         self.root = root
-        self.root.title("MediaStack Control (Pop!_OS)")
+        self.root.title("NexusOS MediaStack Control")
         self.root.geometry("1280x760")
         self.root.minsize(980, 620)
 

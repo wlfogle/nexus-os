@@ -1,8 +1,8 @@
-# 🌟 Hyperion - Linux Power Utilities
+# 🌟 Hyperion — NexusOS Power Utilities
 
-**Version 0.1.0** | **Illuminate Your Linux Desktop**
+**Version 0.1.0** | **Illuminate Your NexusOS Desktop**
 
-Hyperion is a comprehensive collection of **power utilities** for Linux users, designed to enhance productivity and streamline desktop workflows with native Linux integration.
+Hyperion is a comprehensive collection of **power utilities** for NexusOS, designed to enhance productivity and streamline desktop workflows with native NexusOS integration.
 
 ![Hyperion](docs/hyperion-logo.png)
 
@@ -74,9 +74,8 @@ PowerToys Linux follows a **modular architecture** where each utility is:
 ### **System Requirements**
 
 **Required:**
-- **Linux Distribution**: Any modern distribution
-- **Desktop Environment**: GNOME, KDE, XFCE, or others
-- **Display Server**: X11 or Wayland support
+- **NexusOS** (or any modern Linux host for development)
+- **NexusDE** (or X11/Wayland for development builds)
 - **Node.js** >= 18.0.0 (for development)
 - **Rust** >= 1.70.0 (for building utilities)
 

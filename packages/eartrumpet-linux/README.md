@@ -24,7 +24,7 @@ A cross‑desktop, tray‑centric mixer for PipeWire with per‑application volu
 4. Persist per‑app rules (preferred device/volume)
 
 ## Build
-On Arch/Garuda, install GTK4 dev files, then:
+On NexusOS (or any system with GTK4 dev packages), then:
 
 - Ensure Rust toolchain installed
 - From this directory:

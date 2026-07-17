@@ -1,23 +1,22 @@
-# PortProton Enhanced
+# PortProton Enhanced — NexusOS Gaming Launcher
 
-**A Native Ubuntu Build with Custom Game Launcher Autoinstallers**
+**NexusOS Native Gaming with Proton/Wine**
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Ubuntu](https://img.shields.io/badge/Ubuntu-25.10-orange.svg)](https://ubuntu.com)
-[![KDE Plasma](https://img.shields.io/badge/KDE-Plasma-blue.svg)](https://kde.org/plasma-desktop/)
+[![NexusOS](https://img.shields.io/badge/NexusOS-native-purple.svg)](https://github.com/wlfogle/nexus-os)
 [![RTX 4080](https://img.shields.io/badge/RTX-4080-green.svg)](https://www.nvidia.com)
 
 ## 🎯 Overview
 
-**PortProton Enhanced** is a custom-built native Ubuntu version of PortProton, specifically optimized for:
-- **Ubuntu 25.10** with **KDE Plasma** desktop environment
-- **NVIDIA RTX 4080** hybrid graphics systems  
+**PortProton Enhanced** is the NexusOS native gaming launcher with Proton/Wine, specifically optimized for:
+- **NexusOS** with **NexusDE** desktop environment
+- **NVIDIA RTX 4080** hybrid graphics systems
 - **Gaming optimization** with GameMode + MangoHUD
 - **25+ custom game launcher autoinstallers**
 - **Steam library integration**
 - **Direct game launchers** for installed Windows games
 
-This project extends the original [PortProton](https://github.com/Castro-Fidel/PortWINE) with enhanced autoinstall capabilities and system-specific optimizations.
+This project extends the original [PortProton](https://github.com/Castro-Fidel/PortWINE) with enhanced autoinstall capabilities and NexusOS-specific optimizations.
 
 ## ✨ Enhanced Features
 
@@ -65,9 +64,9 @@ Pre-configured launchers for your installed games:
 ## 🛠️ Installation
 
 ### Prerequisites
-- Ubuntu 25.10 (other versions may work but are untested)
-- NVIDIA drivers installed (tested with 580.82.07)
-- KDE Plasma desktop environment
+- NexusOS (or Pop!_OS 22.04 as host during development)
+- NVIDIA drivers installed (580.173+)
+- NexusDE or compatible desktop
 - At least 4GB free space
 
 ### Quick Install

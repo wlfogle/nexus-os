@@ -8,7 +8,7 @@ This optimization suite is designed for systems with:
 - **CPU**: Intel i9-13900HX (24 cores, 48 threads)
 - **RAM**: 64GB DDR5 (optimized for 32GB+ systems)
 - **Storage**: NVMe SSDs
-- **OS**: Arch Linux / Garuda Linux (adaptable to other distributions)
+- **OS**: NexusOS (native) — scripts also work on any systemd-based Linux host
 
 ## 📋 What's Included
 
@@ -34,8 +34,8 @@ System-level optimizations for running large language models:
 
 ### Prerequisites
 ```bash
-# Ensure you have required packages (Arch/Garuda Linux)
-sudo pacman -S base-devel git curl
+# Ensure you have required packages (NexusOS / nala on host)
+sudo nala install build-essential git curl
 ```
 
 ### 1. Custom Kernel Compilation

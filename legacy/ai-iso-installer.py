@@ -69,50 +69,16 @@ class OSDatabase:
                 },
                 "keywords": ["windows", "microsoft", "gaming", "office", "business"]
             },
-            "garuda-dragonized": {
-                "name": "Garuda Linux Dr460nized",
+            "pop-os": {
+                "name": "Pop!_OS",
                 "versions": {
-                    "latest": "https://iso.garudalinux.org/iso/latest/garuda/dr460nized/"
+                    "22.04": "https://pop-iso.sfo2.cdn.digitaloceanspaces.com/22.04/amd64/nvidia/38/pop-os_22.04_amd64_nvidia_38.iso",
+                    "latest": "https://pop.system76.com/latest/pop-os_22.04_amd64_nvidia.iso"
                 },
-                "keywords": ["garuda", "garuda linux", "dr460nized", "gaming linux", "arch based", "beautiful linux", "customized linux", "kde plasma", "dragonized"]
-            },
-            "garuda-gaming": {
-                "name": "Garuda Linux Gaming Edition",
-                "versions": {
-                    "latest": "https://iso.garudalinux.org/iso/latest/garuda/gaming/"
-                },
-                "keywords": ["garuda gaming", "gaming edition", "garuda linux gaming", "gaming linux", "performance gaming", "linux gaming", "gaming optimization"]
-            },
-            "garuda-gnome": {
-                "name": "Garuda Linux GNOME",
-                "versions": {
-                    "latest": "https://iso.garudalinux.org/iso/latest/garuda/gnome/"
-                },
-                "keywords": ["garuda gnome", "gnome desktop", "garuda linux gnome", "clean desktop", "modern linux"]
-            },
-            "garuda-xfce": {
-                "name": "Garuda Linux Xfce",
-                "versions": {
-                    "latest": "https://iso.garudalinux.org/iso/latest/garuda/xfce/"
-                },
-                "keywords": ["garuda xfce", "lightweight garuda", "xfce desktop", "efficient linux", "low resource"]
-            },
-            "garuda-cinnamon": {
-                "name": "Garuda Linux Cinnamon",
-                "versions": {
-                    "latest": "https://iso.garudalinux.org/iso/latest/garuda/cinnamon/"
-                },
-                "keywords": ["garuda cinnamon", "cinnamon desktop", "familiar interface", "traditional desktop"]
-            },
-            "garuda-sway": {
-                "name": "Garuda Linux Sway",
-                "versions": {
-                    "latest": "https://iso.garudalinux.org/iso/latest/garuda/sway/"
-                },
-                "keywords": ["garuda sway", "wayland compositor", "tiling window manager", "minimal desktop", "keyboard driven"]
+                "keywords": ["pop os", "system76", "pop!_os", "gaming linux", "nvidia linux", "developer laptop", "i9 13900hx", "rtx 4080"]
             },
             "ai-powerhouse": {
-                "name": "AI Powerhouse Garuda",
+                "name": "NexusOS / AI Powerhouse",
                 "versions": {
                     "latest": "https://github.com/wlfogle/ai-powerhouse-setup"
                 },
@@ -138,25 +104,21 @@ class OSDatabase:
                     score += 5
             
             # Check use case matches
-            # Gaming prioritization - Garuda Gaming gets highest score
+            # Gaming prioritization — Pop!_OS and NexusOS first
             if any(word in query for word in ["gaming", "game", "games"]):
-                if "garuda-gaming" in os_id:
-                    score += 15  # Highest priority for Garuda Gaming
-                elif "garuda" in os_id:
-                    score += 12  # High priority for other Garuda editions
+                if "pop-os" in os_id:
+                    score += 15  # Pop!_OS: native gaming with NVIDIA RTX support
                 elif "windows" in os_id:
                     score += 3   # Lower priority for Windows
             
             # Linux desktop prioritization
             if any(word in query for word in ["linux", "arch", "rolling"]):
-                if "garuda" in os_id:
-                    score += 10
-                elif "arch" in os_id:
+                if "arch" in os_id:
                     score += 8
             
             # Desktop environment specific
-            if any(word in query for word in ["kde", "plasma", "dr460nized", "dragonized"]):
-                if "garuda-dragonized" in os_id or "garuda-gaming" in os_id:
+            if any(word in query for word in ["kde", "plasma", "nvidia", "rtx"]):
+                if "pop-os" in os_id:
                     score += 12
             
             # Other use cases
@@ -304,9 +266,9 @@ class AIPowerhouseInstaller:
         """Get path to built AI Powerhouse ISO"""
         # Common locations where the ISO might be built
         possible_paths = [
-            Path.home() / "Downloads" / "ai-powerhouse-setup" / "build" / "ai-powerhouse-garuda.iso",
-            Path("/tmp") / "ai-powerhouse-garuda.iso",
-            Path("./build") / "ai-powerhouse-garuda.iso"
+            Path.home() / "Downloads" / "ai-powerhouse-setup" / "build" / "nexusos-ai-powerhouse.iso",
+            Path("/tmp") / "nexusos-ai-powerhouse.iso",
+            Path("./build") / "nexusos-ai-powerhouse.iso"
         ]
         
         for path in possible_paths:
@@ -389,7 +351,7 @@ class AIISOInstaller:
         
         # Example queries
         examples = ttk.Label(search_frame, 
-                           text="Examples: 'Ubuntu for beginners', 'Garuda gaming', 'Kali for pentesting', 'AI Powerhouse development'",
+                           text="Examples: 'Ubuntu for beginners', 'Pop!_OS gaming', 'Kali for pentesting', 'AI Powerhouse development'",
                            font=("Arial", 9), foreground="gray")
         examples.grid(row=1, column=0, columnspan=2, sticky=tk.W, pady=(5, 0))
         
@@ -714,7 +676,7 @@ class AIISOInstaller:
             download_url = os_data['versions'][latest_version]
             
             # Special handling for AI Powerhouse Setup
-            if os_name == "AI Powerhouse Garuda":
+            if os_name == "NexusOS / AI Powerhouse":
                 self.status_var.set("Setting up AI Powerhouse Build Environment...")
                 self.progress_var.set(10)
                 
