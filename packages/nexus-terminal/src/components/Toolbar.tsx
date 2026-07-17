@@ -133,7 +133,7 @@ const Toolbar: React.FC = () => {
 
         {/* System Info */}
         <div className="flex items-center space-x-2 text-xs text-gray-500">
-          <span>🐧 Garuda Linux</span>
+          <span>🚀 NexusOS</span>
           <span>•</span>
           <span>🦀 Rust+Tauri</span>
           <span>•</span>

@@ -77,7 +77,7 @@ class OllamaCodeCheckerGUI:
         target_frame.grid(row=3, column=1, columnspan=2, sticky=(tk.W, tk.E), pady=5, padx=(10, 0))
         target_frame.columnconfigure(0, weight=1)
         
-        self.target_var = tk.StringVar(value="/home/garuda/nexus-terminal")
+        self.target_var = tk.StringVar(value="/home/nexusos/nexus-terminal")
         self.target_entry = ttk.Entry(target_frame, textvariable=self.target_var, font=('Arial', 9))
         self.target_entry.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, 10))
         

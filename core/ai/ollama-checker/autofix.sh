@@ -5,7 +5,7 @@
 
 set -e
 
-MODELS_PATH="/run/media/garuda/73cf9511-0af0-4ac4-9d83-ee21eb17ff5d/models"
+MODELS_PATH="${OLLAMA_MODELS:-/media/loufogle/73cf9511-0af0-4ac4-9d83-ee21eb17ff5d/models}"
 
 # Colors
 RED='\033[0;31m'
