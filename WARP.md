@@ -1,4 +1,19 @@
-# WARP.md
+# WARP.md — nexus-os
+
+**Read this file at the start of every session. Read `docs/NEXUS-OS-SOURCE-OF-TRUTH.md` first — it wins over all other docs.**
+
+## Infrastructure Quick Reference (2026-07-21)
+
+- **ISP:** Spectrum gigabit `74.134.128.100`. Archer AX55 Pro Router mode `192.168.12.254`.
+- **Tiamat** `192.168.12.242` — Proxmox VE host. All VMs/CTs live here.
+- **CT-300** `192.168.12.30` — all media services. Gateway `192.168.12.254`. wg0 split-tunnel (aria2 only).
+- **Bahamut** `192.168.12.244` — AdGuard DNS, WireGuard server (10.92.29.1:51820), Vaultwarden, Caddy/DuckDNS.
+- **OpenWrt VM-100** `192.168.12.222` — VPN gateway VM (wg0 full-tunnel 10.92.29.4). Full routing migration pending.
+- **Laptop** `192.168.1.188` (wired) / `192.168.12.172` (WiFi) — admin/dev workstation.
+- SSH aliases: `ssh tiamat`, `ssh bahamut`, `ssh openwrt`, `ssh ct-300`
+- Active modules: **nexus-mediastack** (live media stack), **bulletproof-mediastack** (forerunner/reference only)
+
+---
 
 This file provides guidance to WARP (warp.dev) when working with code in
 this repository.

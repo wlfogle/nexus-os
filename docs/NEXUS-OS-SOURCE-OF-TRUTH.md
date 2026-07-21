@@ -1,7 +1,7 @@
 # NexusOS — Source of Truth
 
 > The single **current** reference for NexusOS + the media stack. If anything
-> elsewhere disagrees with this file, **this file wins**. Last updated 2026-07-12.
+> elsewhere disagrees with this file, **this file wins**. Last updated 2026-07-21.
 > Legacy/forerunner material is labeled as such so it is never mistaken for live.
 
 ## 1. Component hierarchy (what is current)
@@ -26,21 +26,15 @@
 ## 2. Hosts & network
 - **Tiamat** `192.168.12.242` — Proxmox VE host (Ryzen 5 3600, 32 GB, RX 580).
   Owns the 2 TB HDD at `/mnt/hdd/media`; the **file-share hub**.
-- **CT-300** `192.168.12.30` — consolidated media-stack LXC (Debian 12).
-- **Bahamut** `192.168.12.244` — Pi 4 (**DietPi 10**): AdGuard DNS, Caddy+DuckDNS,
-  Vaultwarden, PiVPN. Edge node (RAM-tight — keep it light).
-- **Laptop** `192.168.12.204` (wired) / `.172` (WiFi) — Pop!_OS, RTX 4080,
-  **control center** (Cockpit, Ollama).
-- **Gateway:** Spectrum SAX1V1K `192.168.1.1` — WAN `74.134.128.100` (real public IP,
-  gigabit; migrated 2026-07-11 from T-Mobile KVD21 CGNAT). 923 Mbps down/916 up.
-- **Archer AX55 Pro "Stella"** `192.168.12.254` — **Router mode** (LAN IP moved from
-  `.1` → `.254` on 2026-07-12). DHCP `192.168.12.100–200`, Primary DNS push
-  `192.168.12.244` (AdGuard — all LAN devices now filtered), Secondary DNS `1.1.1.1`,
-  port-forward WireGuard UDP 51820 → Bahamut. NAT Boost ON.
-  Admin: `http://192.168.12.254` | Password: see Vaultwarden.
+- **CT-300** `192.168.12.30` — consolidated media-stack LXC (Debian 12). Gateway `192.168.12.254`. wg0 split-tunnel (10.92.29.5, VPN subnet only; aria2 inbound).
+- **Bahamut** `192.168.12.244` — Pi 4 (DietPi): AdGuard DNS, Caddy+DuckDNS,
+  Vaultwarden, **PiVPN+WireGuard server** (`10.92.29.1`, subnet `10.92.29.0/24`, port 51820). MTU 1420 + TCPMSS clamp (2026-07-21). Edge node — keep light.
+- **OpenWrt VM-100** `192.168.12.222` (WAN/eth0) / `10.10.0.1` (LAN/br-lan) — VPN gateway VM on Tiamat. wg0 full-tunnel through Bahamut (`10.92.29.4`). UE300+vmbr2 operational. **Full routing migration pending** — Archer still primary DHCP/gateway.
+- **Laptop** `192.168.1.188` (wired, Spectrum direct) / `192.168.12.172` (WiFi, Archer) — Pop!_OS, i9-13900HX, RTX 4080, **control center**.
+- **ISP:** Spectrum gigabit `74.134.128.100`. Archer AX55 Pro "Stella" **Router mode** `192.168.12.254` (WAN: `192.168.1.61` via Spectrum SAX1V1K at `192.168.1.1`).
+- **WireGuard clients:** laptop `10.92.29.2`, Tiamat `10.92.29.3`, OpenWrt `10.92.29.4`, CT-300 `10.92.29.5`. All full-tunnel except CT-300 (split-tunnel).
 - **Tailscale** tailnet `tail9d8b73.ts.net`; CT-300 node `100.115.82.71`.
-- Full device inventory (Fire TVs, phones, Echos, tablet, printer, HDHomeRun):
-  `bulletproof-mediastack/docs/NETWORKING.md` → "Device Inventory".
+- Full device inventory: `bulletproof-mediastack/docs/NETWORKING.md` → "Device Inventory".
 
 ## 3. Media stack (CT-300, consolidated)
 All services on `192.168.12.30`: Riven frontend `:3000`, Riven backend `:8080`
