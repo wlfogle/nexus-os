@@ -135,7 +135,49 @@ describe('isShellCommand — edge cases', () => {
   it('single "?" → AI', () => expect(isShellCommand('?')).toBe(false));
 });
 
-// ── CommandRoutingService.isShellCommand (instance method) ───────────────────
+// ── Warp-aligned shell vs agent routing cases ─────────────────────────────
+// These mirror the routing decisions in Warp's HeuristicClassifier.
+
+describe('isShellCommand — Warp-aligned shell commands', () => {
+  // Core unix commands
+  it('cargo build → shell', () => expect(isShellCommand('cargo build')).toBe(true));
+  it('cargo test → shell', () => expect(isShellCommand('cargo test')).toBe(true));
+  it('cargo run → shell', () => expect(isShellCommand('cargo run')).toBe(true));
+  it('make install → shell', () => expect(isShellCommand('make install')).toBe(true));
+  it('vim src/main.rs → shell', () => expect(isShellCommand('vim src/main.rs')).toBe(true));
+  it('ssh user@host → shell', () => expect(isShellCommand('ssh user@host')).toBe(true));
+  it('curl https://example.com → shell', () => expect(isShellCommand('curl https://example.com')).toBe(true));
+  it('kill -9 1234 → shell', () => expect(isShellCommand('kill -9 1234')).toBe(true));
+  it('find . -name "*.rs" → shell', () => expect(isShellCommand('find . -name "*.rs"')).toBe(true));
+  it('tar -czf archive.tar.gz src/ → shell', () => expect(isShellCommand('tar -czf archive.tar.gz src/')).toBe(true));
+});
+
+describe('isShellCommand — Warp-aligned natural language → agent', () => {
+  // Natural language instructions that should go to AI, not shell
+  it('write a function to sort an array → AI', () => {
+    expect(isShellCommand('write a function to sort an array')).toBe(false);
+  });
+  it('what does cargo build do → AI', () => {
+    expect(isShellCommand('what does cargo build do')).toBe(false);
+  });
+  it('how do I use git rebase → AI', () => {
+    expect(isShellCommand('how do I use git rebase')).toBe(false);
+  });
+  it('generate a dockerfile for node → AI', () => {
+    expect(isShellCommand('generate a dockerfile for node')).toBe(false);
+  });
+  it('review my last commit → AI', () => {
+    expect(isShellCommand('review my last commit')).toBe(false);
+  });
+  it('tell me about rust ownership → AI', () => {
+    expect(isShellCommand('tell me about rust ownership')).toBe(false);
+  });
+  it('show me how to write a makefile → AI', () => {
+    expect(isShellCommand('show me how to write a makefile')).toBe(false);
+  });
+});
+
+// ── CommandRoutingService.isShellCommand (instance method) ──────────────────
 
 describe('CommandRoutingService.isShellCommand (instance)', () => {
   const svc = new CommandRoutingService();
