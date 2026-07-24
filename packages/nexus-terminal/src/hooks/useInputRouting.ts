@@ -77,9 +77,9 @@ export const useInputRouting = () => {
         if (terminalId) {
           try {
             routingLogger.info(`Executing shell command`, 'shell_execute', { command: trimmed, terminalId });
-            await invoke('write_to_terminal', { 
-              terminal_id: terminalId, 
-              data: `${trimmed}\r` 
+            await invoke('write_to_terminal', {
+              terminalId,
+              data: `${trimmed}\r`
             });
 
             routingLogger.shellExecution(trimmed, true);
@@ -100,7 +100,7 @@ export const useInputRouting = () => {
               if (recreatedTerminalId) {
                 try {
                   await invoke('write_to_terminal', {
-                    terminal_id: recreatedTerminalId,
+                    terminalId: recreatedTerminalId,
                     data: `${trimmed}\r`
                   });
                   routingLogger.shellExecution(trimmed, true);
@@ -237,9 +237,9 @@ export const useInputRouting = () => {
         if (terminalId) {
           try {
             routingLogger.info('Executing fallback shell command', 'fallback_shell', { command: trimmed });
-            await invoke('write_to_terminal', { 
-              terminal_id: terminalId, 
-              data: `${trimmed}\r` 
+            await invoke('write_to_terminal', {
+              terminalId,
+              data: `${trimmed}\r`
             });
           } catch (error) {
             routingLogger.error('Fallback shell execution failed', error as Error, 'fallback_failed', { command: trimmed });

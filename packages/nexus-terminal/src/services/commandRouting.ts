@@ -219,8 +219,16 @@ export class CommandRoutingService {
         reason: result.reason,
         suggestedAction: isShell ? 'execute_shell' : 'send_to_ai',
       };
-    } catch {
-      // Tauri not available — fall through to regex fallback
+    } catch (classifyError) {
+      // Backend unavailable (e.g. running in browser / test env) — log and fall
+      // through to local regex heuristics. Do NOT catch ordinary classification
+      // results here; a successful invoke() returns a result, not an exception.
+      routingLogger.warn(
+        'classify_input backend unavailable, using local regex fallback',
+        undefined,
+        'classify_unavailable',
+        { error: classifyError instanceof Error ? classifyError.message : String(classifyError) }
+      );
     }
 
     // ── Fallback: structural regex heuristics ────────────────────────────────
