@@ -1,3 +1,7 @@
+// agent.rs — NexusTerminal autonomous agent (Oz-compatible)
+// Derived from warpdotdev/warp (AGPL-3.0) — agent loop, tool schema, permissioning, streaming.
+// See https://github.com/warpdotdev/warp for the original source.
+
 /// NexusTerminal Agent — autonomous AI with native Ollama function-calling.
 /// Uses Ollama's OpenAI-compatible tool_calls API — no text parsing, no infinite loops.
 use anyhow::Result;
@@ -10,6 +14,118 @@ use tauri::Emitter;
 use tracing::{debug, info, warn};
 
 use crate::model_router::{select_model, TaskKind};
+
+// ── Ollama endpoint resolution ──────────────────────────────────────────────────────────
+
+/// Default Ollama endpoint — laptop running Ollama v0.18.0.
+pub const DEFAULT_OLLAMA_URL: &str = "http://127.0.0.1:11434";
+
+/// Resolve Ollama base URL from OLLAMA_HOST env var, falling back to DEFAULT_OLLAMA_URL.
+/// OLLAMA_HOST may be a full URL (http://host:port), host:port, or bare host.
+fn get_ollama_url() -> String {
+    crate::ai::resolve_ollama_url()
+}
+
+// ── Permissioning ───────────────────────────────────────────────────────────────────
+
+/// Agent permission category — mirrors Oz’s tool-safety model.
+/// Each tool is mapped to one category; the agent checks before executing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Permission {
+    /// Read any file, run read-only commands (grep, list, git status/diff/log).
+    Read,
+    /// Write or edit files, create directories.
+    Write,
+    /// Execute arbitrary shell commands via run_cmd.
+    Shell,
+    /// Make outbound network calls (http_get, http_post, web_search, mcp_call).
+    Network,
+    /// Commit to git repositories.
+    Git,
+    /// Run system/service management operations.
+    System,
+}
+
+/// Set of permissions granted for a session.
+/// Defaults to all permissions allowed, matching the Warp “auto-approve” mode.
+#[derive(Debug, Clone)]
+pub struct PermissionSet {
+    pub read: bool,
+    pub write: bool,
+    pub shell: bool,
+    pub network: bool,
+    pub git: bool,
+    pub system: bool,
+}
+
+impl PermissionSet {
+    /// All permissions granted — default for autonomous agent sessions.
+    pub fn all() -> Self {
+        Self { read: true, write: true, shell: true, network: true, git: true, system: true }
+    }
+
+    /// Read-only mode — agent can inspect but not change anything.
+    pub fn read_only() -> Self {
+        Self { read: true, write: false, shell: false, network: false, git: false, system: false }
+    }
+
+    pub fn allows(&self, p: Permission) -> bool {
+        match p {
+            Permission::Read    => self.read,
+            Permission::Write   => self.write,
+            Permission::Shell   => self.shell,
+            Permission::Network => self.network,
+            Permission::Git     => self.git,
+            Permission::System  => self.system,
+        }
+    }
+}
+
+/// Map a tool name to its required permission category.
+fn tool_permission(name: &str) -> Permission {
+    match name {
+        // Read-only
+        "read_file" | "read_files" | "list_dir" | "file_tree" | "grep" | "glob"
+        | "git_status" | "git_diff" | "git_log"
+        | "search_codebase" | "hardware_info" | "process_list"
+        | "read_todos" | "read_plan" | "screenshot"
+        => Permission::Read,
+        // Write
+        "write_file" | "edit_file" | "create_dir"
+        | "add_todo" | "complete_todo" | "create_plan"
+        => Permission::Write,
+        // Shell
+        "run_cmd" | "analyze_code" | "autofix_code"
+        => Permission::Shell,
+        // Network
+        "http_get" | "http_post" | "web_search" | "mcp_call"
+        => Permission::Network,
+        // Git
+        "git_commit" => Permission::Git,
+        // System (everything else)
+        _ => Permission::System,
+    }
+}
+
+// ── Session-scoped TODO / Plan storage ───────────────────────────────────────────────
+
+/// Per-session todo lists: session_id → ["item", ...]
+static SESSION_TODOS: std::sync::OnceLock<
+    std::sync::Mutex<HashMap<String, Vec<String>>>
+> = std::sync::OnceLock::new();
+
+fn session_todos() -> &'static std::sync::Mutex<HashMap<String, Vec<String>>> {
+    SESSION_TODOS.get_or_init(|| std::sync::Mutex::new(HashMap::new()))
+}
+
+/// Per-session plan text: session_id → plan markdown
+static SESSION_PLANS: std::sync::OnceLock<
+    std::sync::Mutex<HashMap<String, String>>
+> = std::sync::OnceLock::new();
+
+fn session_plans() -> &'static std::sync::Mutex<HashMap<String, String>> {
+    SESSION_PLANS.get_or_init(|| std::sync::Mutex::new(HashMap::new()))
+}
 
 // ── ask_user: global map of pending question answers ─────────────────────────────
 // When the agent calls ask_user, it stores a oneshot sender here keyed by
@@ -39,61 +155,51 @@ pub fn deliver_answer(session_id: &str, answer: String) -> bool {
 
 const MAX_STEPS: usize = 50;  // More steps = more thorough fixes
 
-const SYSTEM_PROMPT: &str = r#"You are NexusAI — the autonomous agent of NexusOS. You act immediately. No preamble, no explanations, no instructions to the user. Just run tools and fix things.
+const SYSTEM_PROMPT: &str = r#"You are Oz — the autonomous agent embedded in NexusTerminal.
 
-## CRITICAL: Act, don't explain
-- WRONG: "Here's how you could fix this: 1. Run grep..."
-- RIGHT: [call grep tool immediately]
-- NEVER write steps for the user to follow. YOU execute the steps.
+Act immediately. Use tools. Never describe what you will do — just do it.
+No preamble. No bullet-point plans written out as text. Call the tools.
+
+## Core rules
+- Each turn: call a tool OR give a final answer. Never plain text while actions remain.
 - After every tool result: ask yourself "Is the task 100% done?" If no, call another tool.
-- NEVER produce a text response while there are still actions to take.
-- When the user says 'scan for errors' (without 'fix'): scan, then call ask_user with the findings
-  and options ['Fix all errors', 'Report only']. Wait for the user's choice before proceeding.
-- When the user says 'fix errors' or 'scan and fix': scan then fix directly without asking.
-- Only call ask_user when you need a decision; never ask for trivial or read-only operations.
+- On complex multi-step tasks: call add_todo first to track steps; call complete_todo as you finish each.
+- Never call the same tool twice with identical arguments.
+- When user says 'scan' (without 'fix'): scan, then call ask_user(['Fix all', 'Report only']). Wait.
+- When user says 'fix' or 'scan and fix': scan and fix directly without asking.
+- ask_user only for real decisions — never for info you can get from a tool.
+- At the end of any task that modifies files: git_commit with a descriptive message.
 
-## Tool selection — MOST IMPORTANT RULE
-Choose the correct tool based on what the user is asking about:
+## Tool selection
+- Read code/files         → read_file, read_files, grep, glob, file_tree, list_dir
+- Write/edit files        → write_file (new files only), edit_file (existing, exact-match replace)
+- Run shell commands      → run_cmd (use bash -c for complex cmds; 30s default timeout)
+- Compile/type-check      → run_cmd with 'cargo check 2>&1' or 'npx tsc --noEmit 2>&1'
+- Find files by pattern   → glob (e.g. pattern='**/*.rs', dir='/path/to/project')
+- Git operations          → git_status, git_diff, git_log, git_commit
+- Task tracking           → add_todo, read_todos, complete_todo
+- Planning                → create_plan, read_plan
+- User decisions          → ask_user(question, [options])
+- System diagnostics      → hardware_info, process_list, list_services
+- Network/HTTP            → http_get, http_post, web_search
+- AI code review          → analyze_code(path, type): errors|style|security|performance|cleanup|all
+- AI autofix              → autofix_code(path, dry_run=true) preview first, then dry_run=false
+- Screen capture          → screenshot(prompt)
+- MCP services            → mcp_call(server, tool, args)
 
-### Code / file tasks (scan a directory, fix errors, check a project)
-Use: run_cmd, read_file, edit_file, grep, file_tree, list_dir
-- "scan /path for errors" → detect project type in that path, run the right checker:
-  - Cargo.toml present → `cargo check --message-format=short 2>&1`
-  - package.json present → `npx tsc --noEmit 2>&1`
-  - Generic → `grep -r 'error\|ERROR\|FIXME\|TODO' /path --include='*.rs' --include='*.ts' -l`
-- NEVER call hardware_info for code/file questions.
+## Code scanning workflow
+1. list_dir or file_tree to understand the project layout
+2. Detect project type: Cargo.toml → Rust, package.json → Node/TS
+3. run_cmd 'cargo check --message-format=short 2>&1' or 'npx tsc --noEmit 2>&1'
+4. For each error: read_file the failing file → edit_file with minimal targeted fix
+5. run_cmd again to verify fix; iterate until all pass
+6. git_commit with all changes
 
-### System hardware / OS diagnostics (CPU, RAM, disk, services, processes)
-Use: hardware_info, process_list, list_services, systemctl_cmd
-- "scan system" / "system status" / "optimize memory" / "check performance" → hardware_info
-- NEVER call hardware_info for code scanning tasks.
-
-## Code fix workflow
-1. list_dir or file_tree the target path to understand the project
-2. Detect project type (Cargo.toml → Rust, package.json → Node/TS)
-3. run_cmd: `cargo check 2>&1` or `npx tsc --noEmit 2>&1` to get compiler errors
-4. For each error: read_file the failing file, edit_file minimal fix
-5. run_cmd to verify fix. Iterate until all pass, then git_commit
-6. For deep AI code review: analyze_code(path, type) — types: errors|style|security|performance|cleanup|all
-7. For AI-powered autofix: autofix_code(path, dry_run=true) first to preview, then dry_run=false to apply
-8. Report: 1 paragraph, what was broken, what you changed
-
-## Rules
-- Always use the injected "Current working directory" for paths
-- Never use /home/user or guessed paths
-- edit_file for existing files, write_file for new files only
-- Never call the same tool twice with identical arguments
-- No stubs. No TODOs. Complete working code only.
-
-## Tools
-read_file, read_files, write_file, edit_file, run_cmd, list_dir, file_tree,
-grep, create_dir, search_codebase, git_status, git_diff, git_log, git_commit,
-http_get, http_post, ssh_exec, systemctl_cmd, process_list, docker_cmd,
-list_services, hardware_info, proxmox_list,
-analyze_code(path, analysis_type) — AI code review: errors|style|security|performance|cleanup|all,
-autofix_code(path, dry_run) — AI rewrites file with fixes; always dry_run=true first,
-ask_user(question, options) — show clickable buttons to the user and WAIT for their answer,
-screenshot — capture the screen and see it with llama3.2-vision:11b"#;
+## Absolute rules
+- Use the injected "Current working directory" for all paths
+- Never guess paths or use /home/user or any other hardcoded path
+- edit_file for existing files; write_file for new files only
+- No stubs. No TODOs in code. No placeholder implementations. Complete working code only."#;
 
 // ── Ollama native function-calling types ──────────────────────────────────────
 
@@ -672,6 +778,98 @@ Always call this BEFORE making destructive changes or when the user said 'scan' 
                     },
                     "required": ["prompt"]
                 }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "glob",
+                description: "Find files matching a shell glob pattern (e.g. '**/*.rs', 'src/**/*.ts', '*.toml'). \
+                    Returns matching paths relative to dir. Use this instead of 'find' for pattern-based file discovery.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "pattern": {
+                            "type": "string",
+                            "description": "Glob pattern (e.g. '**/*.rs', 'src/**/*.ts', 'Cargo.toml')"
+                        },
+                        "dir": {
+                            "type": "string",
+                            "description": "Root directory to search (default: current working directory)"
+                        }
+                    },
+                    "required": ["pattern"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "add_todo",
+                description: "Add one or more items to the session todo list. Use at the START of complex multi-step tasks \
+                    to break work into trackable steps. Call complete_todo when each step finishes.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "items": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Todo items to add (each a short action description)"
+                        }
+                    },
+                    "required": ["items"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "read_todos",
+                description: "Read the current session todo list. Use to check what remains before giving a final answer.",
+                parameters: serde_json::json!({"type": "object", "properties": {}, "required": []}),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "complete_todo",
+                description: "Mark a todo item as done by its 1-based index. Call after finishing each step.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "index": {
+                            "type": "integer",
+                            "description": "1-based index of the todo item to mark complete"
+                        }
+                    },
+                    "required": ["index"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "create_plan",
+                description: "Write a plan for the current task and store it for the session. \
+                    Use for complex tasks to record approach before executing.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "content": {
+                            "type": "string",
+                            "description": "The plan content (markdown supported)"
+                        }
+                    },
+                    "required": ["content"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "read_plan",
+                description: "Read the current session plan.",
+                parameters: serde_json::json!({"type": "object", "properties": {}, "required": []}),
             },
         },
     ]
@@ -1575,9 +1773,7 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
                             let app2 = app.clone();
                             let sid = session_id.to_string();
                             let sp = path.to_string();
-                            let ollama_host = std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
-                            let ollama_port = std::env::var("OLLAMA_PORT").unwrap_or_else(|_| "11434".to_string());
-                            let ollama_url = format!("http://{}:{}", ollama_host, ollama_port);
+                            let ollama_url = get_ollama_url();
                             tokio::spawn(async move {
                                 crate::fix_engine::scan_and_fix(app2, sid, sp, ollama_url).await;
                             });
@@ -1623,9 +1819,7 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
             };
             let prompt = format!("{base_prefix}{task_suffix}");
 
-            let ollama_host = std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
-            let ollama_port = std::env::var("OLLAMA_PORT").unwrap_or_else(|_| "11434".to_string());
-            let ollama_base = format!("http://{}:{}", ollama_host, ollama_port);
+            let ollama_base = get_ollama_url();
             // Code analysis: use deepseek-coder / granite-code priority chain
             let model = select_model(TaskKind::CodeAnalysis, &ollama_base).await;
             let url = format!("{}/api/generate", ollama_base);
@@ -1695,9 +1889,7 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
             let dry_run = args["dry_run"].as_bool().unwrap_or(false);
             if path.is_empty() { return "ERROR: path is required".to_string(); }
 
-            let ollama_host = std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
-            let ollama_port = std::env::var("OLLAMA_PORT").unwrap_or_else(|_| "11434".to_string());
-            let ollama_base = format!("http://{}:{}", ollama_host, ollama_port);
+            let ollama_base = get_ollama_url();
             // Code fix: use codestral / deepseek-coder-v2 priority chain
             let model = select_model(TaskKind::CodeFix, &ollama_base).await;
             let url = format!("{}/api/generate", ollama_base);
@@ -1873,6 +2065,115 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
                 Ok(_) => format!("OK: fixed {path} ({} lines → {} lines). Backup: {backup}",
                     content.lines().count(), fixed.lines().count()),
                 Err(e) => format!("ERROR writing {path}: {} (backup at {backup})", e),
+            }
+        }
+
+        "glob" => {
+            let pattern = args["pattern"].as_str().unwrap_or("");
+            let dir = args["dir"].as_str().unwrap_or(default_cwd);
+            if pattern.is_empty() {
+                return "ERROR: pattern is required".to_string();
+            }
+            // Use `find` for reliable glob matching regardless of the user's shell
+            // (fish does not support globstar; bash is spawned directly here).
+            // Convert glob ** to a find-compatible wildcard.
+            let find_pat = pattern.replace("**/", "");
+            // Build a find command that handles both recursive and simple patterns.
+            let cmd = if pattern.contains("**/") || pattern.contains('/') {
+                // Recursive: use bash -O globstar for full glob support
+                format!("bash -O globstar -O nullglob -c 'cd {:?} && ls -1pd {:?} 2>/dev/null | head -200'",
+                    dir, pattern)
+            } else {
+                // Simple name pattern: use find -name
+                format!("find {:?} -name {:?} -not -path '*/target/*' -not -path '*/.git/*' \
+                         -not -path '*/node_modules/*' 2>/dev/null | sort | head -200",
+                    dir, find_pat)
+            };
+            match tokio::time::timeout(
+                Duration::from_secs(10),
+                tokio::process::Command::new("sh").arg("-c").arg(&cmd).output(),
+            ).await {
+                Ok(Ok(out)) => {
+                    let result = String::from_utf8_lossy(&out.stdout).to_string();
+                    let result = if result.len() > 8_000 {
+                        format!("{}\n[... truncated ...]", &result[..8_000])
+                    } else { result };
+                    if result.trim().is_empty() { "no matches".to_string() } else { result }
+                }
+                Ok(Err(e)) => format!("ERROR: {}", e),
+                Err(_) => "ERROR: glob timed out after 10s".to_string(),
+            }
+        }
+
+        "add_todo" => {
+            let items: Vec<String> = args["items"]
+                .as_array()
+                .map(|a| a.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+                .unwrap_or_default();
+            if items.is_empty() {
+                return "ERROR: items array is required and must be non-empty".to_string();
+            }
+            let mut todos = session_todos().lock().unwrap_or_else(|e| e.into_inner());
+            let list = todos.entry(session_id.to_string()).or_default();
+            let start_idx = list.len() + 1;
+            list.extend(items.iter().map(|i| format!("[ ] {}", i)));
+            let added: Vec<String> = items.iter().enumerate()
+                .map(|(i, item)| format!("{}: {}", start_idx + i, item))
+                .collect();
+            format!("Added {} todo item(s):\n{}", added.len(), added.join("\n"))
+        }
+
+        "read_todos" => {
+            let todos = session_todos().lock().unwrap_or_else(|e| e.into_inner());
+            let empty_msg = "No todo items for this session.".to_string();
+            match todos.get(session_id) {
+                None => empty_msg,
+                Some(list) if list.is_empty() => empty_msg,
+                Some(list) => list.iter().enumerate()
+                    .map(|(i, item)| format!("{}: {}", i + 1, item))
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+            }
+        }
+
+        "complete_todo" => {
+            let idx = args["index"].as_u64().unwrap_or(0) as usize;
+            if idx == 0 {
+                return "ERROR: index must be a 1-based integer".to_string();
+            }
+            let mut todos = session_todos().lock().unwrap_or_else(|e| e.into_inner());
+            let list = todos.entry(session_id.to_string()).or_default();
+            if idx > list.len() {
+                return format!("ERROR: index {} out of range (have {} items)", idx, list.len());
+            }
+            let item_text = list[idx - 1]
+                .trim_start_matches("[ ] ")
+                .trim_start_matches("[x] ")
+                .to_string();
+            list[idx - 1] = format!("[x] {}", item_text);
+            format!("Marked item {} done: {}", idx, item_text)
+        }
+
+        "create_plan" => {
+            let content = args["content"].as_str().unwrap_or("").to_string();
+            if content.is_empty() {
+                return "ERROR: content is required".to_string();
+            }
+            let mut plans = session_plans().lock().unwrap_or_else(|e| e.into_inner());
+            plans.insert(session_id.to_string(), content.clone());
+            let preview = if content.len() > 200 {
+                format!("{}\u{2026}", &content[..200])
+            } else {
+                content.clone()
+            };
+            format!("Plan saved ({} chars):\n{}", content.len(), preview)
+        }
+
+        "read_plan" => {
+            let plans = session_plans().lock().unwrap_or_else(|e| e.into_inner());
+            match plans.get(session_id) {
+                None => "No plan created for this session yet. Use create_plan to write one.".to_string(),
+                Some(p) => p.clone(),
             }
         }
 

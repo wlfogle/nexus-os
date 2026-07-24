@@ -1,3 +1,7 @@
+// model_router.rs — NexusTerminal dynamic model router
+// Derived from warpdotdev/warp (AGPL-3.0) — model role selection pattern.
+// See https://github.com/warpdotdev/warp for the original source.
+
 /// NexusTerminal Model Router
 /// Selects the best available local Ollama model for each task type.
 /// Priority lists are tuned for the RTX 4080 + 41-model library on this machine.
@@ -216,6 +220,79 @@ pub async fn select_model(kind: TaskKind, ollama_url: &str) -> String {
     let last_resort = names.first().cloned().unwrap_or_else(|| "llama3.1:8b".to_string());
     warn!("model_router: {:?} falling back to {}", kind, last_resort);
     last_resort
+}
+
+// ── Startup health check ─────────────────────────────────────────────────────
+
+/// Check Ollama reachability and model availability at startup.
+///
+/// Returns:
+///   Ok(Vec<String>)  — list of available model names (non-empty).
+///   Err(String)      — human-readable error with actionable advice.
+///
+/// Uses a 5-second timeout so it never hangs silently.
+pub async fn startup_health_check(ollama_url: &str) -> Result<Vec<String>, String> {
+    #[derive(Deserialize)]
+    struct TagList {
+        models: Vec<ModelEntry>,
+    }
+    #[derive(Deserialize)]
+    struct ModelEntry {
+        name: String,
+    }
+
+    let url = format!("{}/api/tags", ollama_url);
+    let result = tokio::time::timeout(
+        Duration::from_secs(5),
+        reqwest::Client::new().get(&url).send(),
+    )
+    .await;
+
+    match result {
+        Err(_) => Err(format!(
+            "Ollama health check timed out after 5s at {}\n\
+             → Is Ollama running?  Run: ollama serve\n\
+             → Or set OLLAMA_HOST env var to the correct host:port",
+            url
+        )),
+        Ok(Err(e)) => Err(format!(
+            "Ollama not reachable at {}\n\
+             → Error: {}\n\
+             → Is Ollama running?  Run: ollama serve",
+            url, e
+        )),
+        Ok(Ok(resp)) if !resp.status().is_success() => Err(format!(
+            "Ollama returned HTTP {} at {}\n\
+             → Unexpected response — check Ollama logs",
+            resp.status(),
+            url
+        )),
+        Ok(Ok(resp)) => match resp.json::<TagList>().await {
+            Err(e) => Err(format!(
+                "Ollama responded but response could not be parsed: {}\n\
+                 → Check Ollama version (v0.18.0+ required)",
+                e
+            )),
+            Ok(list) => {
+                let names: Vec<String> = list.models.into_iter().map(|m| m.name).collect();
+                if names.is_empty() {
+                    Err(format!(
+                        "Ollama is running at {} but NO models are installed.\n\
+                         → Pull a model:  ollama pull llama3.1\n\
+                         → Or check OLLAMA_MODELS env var if your models drive is unmounted",
+                        ollama_url
+                    ))
+                } else {
+                    // Populate the cache immediately so model selection works right away
+                    let mut g = cache().write().await;
+                    g.names = names.clone();
+                    g.refreshed_at = Instant::now();
+                    info!("startup_health_check: {} models found at {}", names.len(), ollama_url);
+                    Ok(names)
+                }
+            }
+        },
+    }
 }
 
 // ── Tauri-command helper ──────────────────────────────────────────────────────
