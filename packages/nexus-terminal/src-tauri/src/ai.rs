@@ -1,3 +1,7 @@
+// ai.rs — NexusTerminal AI service layer
+// Derived from warpdotdev/warp (AGPL-3.0) — Ollama health-check and model-selection patterns.
+// See https://github.com/warpdotdev/warp for the original source.
+
 use anyhow::{Context, Result};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -7,6 +11,32 @@ use std::sync::Arc;
 
 use crate::ai_optimized::{OptimizedAIService, AIRequest, RequestPriority};
 use crate::local_recall::LocalRecallClient;
+
+/// Default Ollama endpoint.
+/// Override with OLLAMA_HOST env var (full URL: http://host:port  or  host:port).
+pub const DEFAULT_OLLAMA_URL: &str = "http://127.0.0.1:11434";
+
+/// Resolve the Ollama base URL from the environment, falling back to DEFAULT_OLLAMA_URL.
+/// OLLAMA_HOST may be:
+///   - a full URL:  "http://192.168.1.10:11434"
+///   - host:port:   "192.168.1.10:11434"  (http:// is prepended)
+///   - bare host:   "192.168.1.10"        (http:// + :11434 is appended)
+pub fn resolve_ollama_url() -> String {
+    match std::env::var("OLLAMA_HOST") {
+        Ok(v) if !v.is_empty() => {
+            if v.starts_with("http://") || v.starts_with("https://") {
+                v
+            } else if v.contains(':') {
+                // host:port
+                format!("http://{}", v)
+            } else {
+                // bare host
+                format!("http://{}:11434", v)
+            }
+        }
+        _ => DEFAULT_OLLAMA_URL.to_string(),
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AIConfig {
@@ -142,19 +172,53 @@ impl AIService {
 
     async fn test_connection(&self) -> Result<()> {
         let url = format!("{}/api/tags", self.config.ollama_url);
-        let response = self.client.get(&url).send().await
-            .context("Failed to connect to Ollama")?;
+        // Hard 5-second timeout — never hang silently.
+        let result = tokio::time::timeout(
+            Duration::from_secs(5),
+            reqwest::Client::builder()
+                .timeout(Duration::from_secs(5))
+                .build()
+                .unwrap_or_else(|_| reqwest::Client::new())
+                .get(&url)
+                .send(),
+        )
+        .await;
 
-        if response.status().is_success() {
-            info!("Successfully connected to Ollama at {}", self.config.ollama_url);
-            Ok(())
-        } else {
-            error!("Failed to connect to Ollama: {}", response.status());
-            Err(anyhow::anyhow!("Ollama connection failed: {}", response.status()))
+        match result {
+            Err(_) => {
+                error!("Ollama health check timed out (5s) at {}", url);
+                Err(anyhow::anyhow!(
+                    "Ollama not responding at {} (5s timeout) -- \
+                     Is Ollama running?  Run: ollama serve  \
+                     OR set OLLAMA_HOST env var to the correct endpoint",
+                    url
+                ))
+            }
+            Ok(Err(e)) => {
+                error!("Cannot reach Ollama at {}: {}", url, e);
+                Err(anyhow::anyhow!(
+                    "Cannot reach Ollama at {} -- {}",
+                    url, e
+                ))
+            }
+            Ok(Ok(resp)) if !resp.status().is_success() => {
+                error!("Ollama returned HTTP {} at {}", resp.status(), url);
+                Err(anyhow::anyhow!(
+                    "Ollama returned HTTP {} at {} -- check Ollama logs",
+                    resp.status(), url
+                ))
+            }
+            Ok(Ok(_)) => {
+                info!("Ollama health check passed at {}", self.config.ollama_url);
+                Ok(())
+            }
         }
     }
 
-    async fn generate(&self, prompt: &str, model: Option<&str>) -> Result<String> {
+    /// Generate a completion directly via Ollama /api/generate.
+    /// pub(crate) so ai_optimized.rs can call it without going through
+    /// chat() and creating an infinite async recursion.
+    pub(crate) async fn generate(&self, prompt: &str, model: Option<&str>) -> Result<String> {
         let model = model.unwrap_or(&self.config.default_model);
         let url = format!("{}/api/generate", self.config.ollama_url);
         
@@ -624,273 +688,37 @@ impl AIService {
         Ok(())
     }
 
-    /// Check Ollama is reachable. That's it. Never kill, never reinstall.
+    /// Verify Ollama is reachable and has at least one model.
+    /// Never tries to install or restart Ollama — that is the operator's job.
     async fn ensure_ollama_running(&self) -> Result<()> {
-        info!("Initializing Ollama AI service...");
-        self.test_connection().await
-            .map_err(|_| anyhow::anyhow!(
-                "Cannot reach Ollama at {}. Is it running? Start it with: ollama serve",
-                self.config.ollama_url
-            ))?;
-        self.ensure_default_model_available().await?;
-        info!("Ollama AI service fully initialized and ready");
+        info!("Checking Ollama connectivity at {}", self.config.ollama_url);
+        self.test_connection().await?;
+        self.ensure_models_exist().await?;
+        info!("Ollama ready: {} models available", self.config.ollama_url);
         Ok(())
     }
 
-    /// Kill any existing Ollama processes
-    async fn kill_existing_ollama(&self) -> Result<()> {
-        use tokio::process::Command;
-        
-        info!("Cleaning up any existing Ollama processes...");
-        
-        let kill_commands = [
-            ("pkill", vec!["-f", "ollama"]),
-            ("killall", vec!["ollama"]),
-            ("sudo", vec!["pkill", "-f", "ollama"]),
-            ("sudo", vec!["killall", "ollama"]),
-        ];
-        
-        for (cmd, args) in &kill_commands {
-            let _ = Command::new(cmd)
-                .args(args)
-                .output()
-                .await;
-        }
-        
-        // Wait a moment for processes to terminate
-        tokio::time::sleep(Duration::from_millis(500)).await;
-        Ok(())
-    }
-    
-    /// Ensure Ollama is installed
-    async fn ensure_ollama_installed(&self) -> Result<()> {
-        use tokio::process::Command;
-        use std::path::Path;
-        
-        info!("Checking Ollama installation...");
-        
-        let ollama_paths = [
-            "/usr/local/bin/ollama",
-            "/usr/bin/ollama",
-            "/opt/ollama/bin/ollama",
-            "./bin/ollama",
-            "../bin/ollama",
-        ];
-        
-        // Check if Ollama is already installed
-        for path in &ollama_paths {
-            if Path::new(path).exists() {
-                info!("Found Ollama at: {}", path);
-                return Ok(());
+    /// Verify at least one model is installed.  Does NOT pull models.
+    async fn ensure_models_exist(&self) -> Result<()> {
+        match self.get_available_models().await {
+            Ok(models) if models.is_empty() => {
+                Err(anyhow::anyhow!(
+                    "Ollama is running at {} but has NO models installed. \
+                     Pull a model: ollama pull llama3.1 \
+                     Or check OLLAMA_MODELS env var if your models drive is unmounted",
+                    self.config.ollama_url
+                ))
             }
-        }
-        
-        // Try to install Ollama if not found
-        info!("Ollama not found, attempting to install...");
-        
-        let install_commands = [
-            // Standard installation
-            ("curl", vec!["-fsSL", "https://ollama.ai/install.sh", "|", "sh"]),
-            // Alternative installation methods
-            ("sudo", vec!["pacman", "-S", "--noconfirm", "ollama"]),
-            ("yay", vec!["-S", "--noconfirm", "ollama"]),
-            ("sudo", vec!["apt", "install", "-y", "ollama"]),
-            ("sudo", vec!["dnf", "install", "-y", "ollama"]),
-        ];
-        
-        for (cmd, args) in &install_commands {
-            info!("Trying to install Ollama with: {} {}", cmd, args.join(" "));
-            
-            let mut command = Command::new(cmd);
-            command.args(args);
-            
-            match command.output().await {
-                Ok(output) if output.status.success() => {
-                    info!("Successfully installed Ollama");
-                    // Verify installation
-                    for path in &ollama_paths {
-                        if Path::new(path).exists() {
-                            return Ok(());
-                        }
-                    }
-                }
-                Ok(output) => {
-                    let error = String::from_utf8_lossy(&output.stderr);
-                    debug!("Installation attempt failed: {}", error);
-                }
-                Err(e) => {
-                    debug!("Failed to execute install command: {}", e);
-                }
-            }
-        }
-        
-        Err(anyhow::anyhow!("Could not install Ollama. Please install it manually."))
-    }
-    
-    /// Start Ollama service using system commands
-    async fn start_ollama_service(&self) -> Result<()> {
-        use tokio::process::Command;
-        use std::path::Path;
-        
-        info!("Starting Ollama service...");
-        
-        // Use configurable models directory with fallback
-        let models_dir = std::env::var("OLLAMA_MODELS")
-            .or_else(|_| std::env::var("OLLAMA_MODELS_PATH"))
-            .unwrap_or_else(|_| {
-                let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
-                format!("{}/.ollama/models", home)
-            });
-        
-        if !Path::new(&models_dir).exists() {
-            return Err(anyhow::anyhow!("Models directory {} does not exist! Set OLLAMA_MODELS environment variable.", models_dir));
-        }
-        
-        info!("Using models directory: {}", models_dir);
-        
-        let ollama_paths = [
-            "/usr/local/bin/ollama",
-            "/usr/bin/ollama",
-            "/opt/ollama/bin/ollama",
-            "ollama",
-        ];
-        
-        let mut ollama_cmd = None;
-        for path in &ollama_paths {
-            if Path::new(path).exists() || *path == "ollama" {
-                ollama_cmd = Some(*path);
-                break;
-            }
-        }
-        
-        let ollama_binary = ollama_cmd.ok_or_else(|| anyhow::anyhow!("Ollama binary not found"))?;
-        
-        info!("Starting Ollama with binary: {}", ollama_binary);
-        
-        // Start Ollama server in background
-        let mut command = Command::new(ollama_binary);
-        command.arg("serve");
-        command.env("OLLAMA_HOST", "0.0.0.0");
-        command.env("OLLAMA_PORT", "11434");
-        command.env("OLLAMA_MODELS", models_dir);
-        command.env("OLLAMA_KEEP_ALIVE", "24h");
-        command.env("OLLAMA_MAX_LOADED_MODELS", "1");
-        
-        // Redirect output to log files
-        let log_file = std::fs::File::create("/tmp/ollama.log")
-            .map_err(|e| anyhow::anyhow!("Failed to create log file: {}", e))?;
-        let log_file_stderr = log_file.try_clone()
-            .map_err(|e| anyhow::anyhow!("Failed to clone log file handle: {}", e))?;
-        command.stdout(log_file_stderr);
-        command.stderr(log_file);
-        
-        match command.spawn() {
-            Ok(mut child) => {
-                // Don't wait for the serve command, let it run in background
-                tokio::spawn(async move {
-                    let _ = child.wait().await;
-                });
-                info!("Ollama service started successfully");
+            Ok(models) => {
+                info!("Ollama has {} models available", models.len());
                 Ok(())
             }
             Err(e) => {
-                error!("Failed to start Ollama service: {}", e);
-                Err(anyhow::anyhow!("Could not start Ollama: {}", e))
+                warn!("Could not enumerate Ollama models: {}", e);
+                // Non-fatal — model list unavailable but connection succeeded
+                Ok(())
             }
         }
-    }
-
-    /// Ensure the default model is available
-    async fn ensure_default_model_available(&self) -> Result<()> {
-        info!("Ensuring default model '{}' is available...", self.config.default_model);
-        
-        // Check what models are already available
-        if let Ok(available_models) = self.get_available_models().await {
-            info!("Available models: {:?}", available_models);
-            
-            // Check if our default model is already available
-            if available_models.iter().any(|m| m.contains(self.config.default_model.split(':').next().unwrap_or(&self.config.default_model))) {
-                info!("Default model '{}' is already available", self.config.default_model);
-                return Ok(());
-            }
-        }
-        
-        // First, try to pull the model
-        if let Err(e) = self.pull_default_model().await {
-            info!("Could not pull model '{}': {}. Model might already be available locally.", self.config.default_model, e);
-            
-            // Try alternative lightweight models
-            let alternative_models = [
-                "llama3.2:1b",
-                "phi3:mini", 
-                "tinyllama:1.1b",
-                "qwen2.5:0.5b",
-                "gemma2:2b",
-            ];
-            
-            for alt_model in &alternative_models {
-                info!("Trying alternative model: {}", alt_model);
-                if self.pull_model(alt_model).await.is_ok() {
-                    info!("Successfully pulled alternative model: {}", alt_model);
-                    // Update config to use this model
-                    return Ok(());
-                }
-            }
-            
-            return Err(anyhow::anyhow!("Could not pull any suitable AI model. Please check your internet connection."));
-        }
-        
-        info!("Default model '{}' is ready", self.config.default_model);
-        Ok(())
-    }
-
-    /// Pull the default model if not available
-    async fn pull_default_model(&self) -> Result<()> {
-        self.pull_model(&self.config.default_model).await
-    }
-    
-    /// Pull a specific model
-    async fn pull_model(&self, model: &str) -> Result<()> {
-        use tokio::process::Command;
-        use std::path::Path;
-        
-        info!("Attempting to pull model: {}", model);
-        
-        let ollama_paths = [
-            "/usr/local/bin/ollama",
-            "/usr/bin/ollama",
-            "ollama",
-        ];
-        
-        for ollama_cmd in &ollama_paths {
-            if Path::new(ollama_cmd).exists() || *ollama_cmd == "ollama" {
-                info!("Pulling model '{}' with: {}", model, ollama_cmd);
-                
-                let mut command = Command::new(ollama_cmd);
-                command.args(["pull", model]);
-                command.env("OLLAMA_HOST", "127.0.0.1:11434");
-                
-                match tokio::time::timeout(Duration::from_secs(300), command.output()).await {
-                    Ok(Ok(output)) => {
-                        if output.status.success() {
-                            info!("Successfully pulled model '{}'", model);
-                            return Ok(());
-                        } else {
-                            let error = String::from_utf8_lossy(&output.stderr);
-                            info!("Model pull failed for '{}': {}", model, error);
-                        }
-                    }
-                    Ok(Err(e)) => {
-                        info!("Command execution failed for '{}': {}", model, e);
-                    }
-                    Err(_) => {
-                        info!("Model pull timed out for '{}'", model);
-                    }
-                }
-            }
-        }
-        
-        Err(anyhow::anyhow!("Could not pull model '{}'", model))
     }
 
     /// Submit a high-priority request through the optimized service

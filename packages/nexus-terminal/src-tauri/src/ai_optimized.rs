@@ -1,3 +1,7 @@
+// ai_optimized.rs — NexusTerminal priority-queue AI service
+// Derived from warpdotdev/warp (AGPL-3.0) — request prioritization and connection-pool patterns.
+// See https://github.com/warpdotdev/warp for the original source.
+
 use anyhow::{Context, Result};
 use reqwest::Client;
 use serde::Serialize;
@@ -291,19 +295,35 @@ impl OptimizedAIService {
         Ok(rx)
     }
 
-    /// Quick API for chat functionality
+    /// Quick API for chat functionality.
+    /// Calls the base service directly with a 60-second timeout.
+    /// The priority-queue path is bypassed here because the queue's response-sender
+    /// plumbing is not yet connected — routing through the base service is reliable.
     pub async fn chat_async(&self, message: &str, context: Option<&str>) -> Result<AIResponse> {
-        let request = AIRequest::simple(message.to_string())
-            .with_priority(RequestPriority::High)
-            .with_context(context.unwrap_or_default().to_string());
-
-        let mut rx = self.submit_request_async(request).await?;
-        
-        // Wait for response with timeout
-        match timeout(Duration::from_secs(30), rx.recv()).await {
-            Ok(Some(response)) => Ok(response),
-            Ok(None) => Err(anyhow::anyhow!("Request channel closed")),
-            Err(_) => Err(anyhow::anyhow!("Request timeout")),
+        let start = Instant::now();
+        let prompt = if let Some(ctx) = context {
+            format!("Context: {}\n\nQuestion: {}", ctx, message)
+        } else {
+            message.to_string()
+        };
+        match timeout(
+            Duration::from_secs(60),
+            // Use generate() (pub(crate)) rather than chat() to avoid the
+            // chat() -> chat_async() -> chat() infinite async recursion.
+            self.base_service.generate(&prompt, None),
+        ).await {
+            Ok(Ok(content)) => Ok(AIResponse {
+                id: Uuid::new_v4().to_string(),
+                request_id: Uuid::new_v4().to_string(),
+                content,
+                model_used: self.base_service.config.default_model.clone(),
+                processing_time: start.elapsed(),
+                tokens_used: None,
+                success: true,
+                error: None,
+            }),
+            Ok(Err(e)) => Err(anyhow::anyhow!("AI service error: {}", e)),
+            Err(_) => Err(anyhow::anyhow!("AI chat timed out after 60s")),
         }
     }
 
