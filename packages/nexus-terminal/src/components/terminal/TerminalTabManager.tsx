@@ -378,7 +378,6 @@ export const TerminalTabManager: React.FC = () => {
       {/* New Tab Modal */}
       {isCreatingTab && (
         <NewTabModal
-          {/* isOpen removed — not part of NewTabModal interface */}
           onClose={handleCloseCreatingTab}
           onCreateTab={(config) => dispatch(createTab(config))}
         />
