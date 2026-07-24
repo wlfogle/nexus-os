@@ -1,4 +1,6 @@
+// Ported from warpdotdev/warp (AGPL-3.0) — live-block state tracks the block:start/output/end event contract.
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { LiveBlock } from '../../types/terminal';
 
 interface TerminalSession {
   id: string;
@@ -93,6 +95,8 @@ interface TerminalState {
     bufferSizes: Record<string, number>;
     lastCleanup: number;
   };
+  /** Live block state built from block:start / block:output / block:end Tauri events. */
+  liveBlocks: Record<string, LiveBlock>;
 }
 
 // Memory management constants
@@ -113,6 +117,7 @@ const initialState: TerminalState = {
     bufferSizes: {},
     lastCleanup: Date.now(),
   },
+  liveBlocks: {},
 };
 
 const terminalSlice = createSlice({
@@ -269,6 +274,77 @@ const terminalSlice = createSlice({
       }
     },
     
+    // ─── Block-events reducers ─────────────────────────────────────────────────
+    // These consume the exact block:start / block:output / block:end Tauri event payloads.
+
+    /** Called on "block:start" — creates a new LiveBlock entry. */
+    blockStarted: (state, action: PayloadAction<{
+      blockId: string;
+      terminalId: string;
+      command: string;
+      cwd: string;
+      startedAt: number;
+    }>) => {
+      const { blockId, terminalId, command, cwd, startedAt } = action.payload;
+      state.liveBlocks[blockId] = {
+        blockId,
+        terminalId,
+        command,
+        cwd,
+        startedAt,
+        chunks: [],
+        exitCode: null,
+        endedAt: null,
+        durationMs: null,
+        status: 'running',
+      };
+    },
+
+    /** Called on "block:output" — appends a chunk to the matching block. */
+    blockOutput: (state, action: PayloadAction<{
+      blockId: string;
+      chunk: string;
+      stream: 'stdout' | 'stderr';
+    }>) => {
+      const { blockId, chunk, stream } = action.payload;
+      const block = state.liveBlocks[blockId];
+      if (block) {
+        block.chunks.push({ text: chunk, stream });
+      }
+    },
+
+    /** Called on "block:end" — marks the block done with exit code and timing. */
+    blockEnded: (state, action: PayloadAction<{
+      blockId: string;
+      exitCode: number | null;
+      endedAt: number;
+      durationMs: number;
+    }>) => {
+      const { blockId, exitCode, endedAt, durationMs } = action.payload;
+      const block = state.liveBlocks[blockId];
+      if (block) {
+        block.exitCode = exitCode;
+        block.endedAt = endedAt;
+        block.durationMs = durationMs;
+        block.status = 'done';
+      }
+    },
+
+    /** Clear all live blocks (e.g. on tab close or terminal clear). */
+    clearLiveBlocks: (state, action: PayloadAction<string | undefined>) => {
+      if (action.payload) {
+        // Clear only blocks for a specific terminalId
+        const termId = action.payload;
+        for (const key of Object.keys(state.liveBlocks)) {
+          if (state.liveBlocks[key].terminalId === termId) {
+            delete state.liveBlocks[key];
+          }
+        }
+      } else {
+        state.liveBlocks = {};
+      }
+    },
+
     // New actions for memory management
     forceMemoryCleanup: (state) => {
       // Clean up all terminal buffers to free memory
@@ -308,7 +384,11 @@ export const {
   setConnectionStatus,
   setError,
   clearOutput,
-  forceMemoryCleanup
+  forceMemoryCleanup,
+  blockStarted,
+  blockOutput,
+  blockEnded,
+  clearLiveBlocks,
 } = terminalSlice.actions;
 
 // Selectors
@@ -341,5 +421,12 @@ export const selectMemoryStats = (state: { terminal: TerminalState }) => {
 export const selectAllTerminals = (state: { terminal: TerminalState }) => {
   return Object.values(state.terminal.terminals);
 };
+
+/** Select live blocks for a specific terminal, sorted by startedAt. */
+export const selectLiveBlocksForTerminal = (terminalId: string) =>
+  (state: { terminal: TerminalState }): LiveBlock[] =>
+    Object.values(state.terminal.liveBlocks)
+      .filter(b => b.terminalId === terminalId)
+      .sort((a, b) => a.startedAt - b.startedAt);
 
 export default terminalSlice.reducer;

@@ -155,6 +155,54 @@ export enum ShellFeature {
   SCRIPTING = 'scripting'
 }
 
+// ─── Block-events contract ─────────────────────────────────────────────────────
+// Ported from warpdotdev/warp (AGPL-3.0).
+// These EXACTLY match the Tauri event payloads emitted by the terminal backend.
+// Do NOT change field names or types — the backend is the fixed source of truth.
+
+/** Payload for the "block:start" Tauri event. */
+export interface BlockStartPayload {
+  blockId: string;
+  terminalId: string;
+  command: string;
+  cwd: string;
+  startedAt: number; // epoch ms
+}
+
+/** Payload for the "block:output" Tauri event. */
+export interface BlockOutputPayload {
+  blockId: string;
+  terminalId: string;
+  chunk: string;
+  stream: 'stdout' | 'stderr';
+}
+
+/** Payload for the "block:end" Tauri event. */
+export interface BlockEndPayload {
+  blockId: string;
+  terminalId: string;
+  exitCode: number | null;
+  endedAt: number; // epoch ms
+  durationMs: number;
+}
+
+/**
+ * In-memory block state built progressively from block:start / block:output / block:end events.
+ * Used by the BlockList component and stored in the terminal Redux slice.
+ */
+export interface LiveBlock {
+  blockId: string;
+  terminalId: string;
+  command: string;
+  cwd: string;
+  startedAt: number;
+  chunks: Array<{ text: string; stream: 'stdout' | 'stderr' }>;
+  exitCode: number | null;
+  endedAt: number | null;
+  durationMs: number | null;
+  status: 'running' | 'done';
+}
+
 // Built-in shell configurations
 export const SHELL_CONFIGS: Record<ShellType, ShellConfig> = {
   [ShellType.BASH]: {

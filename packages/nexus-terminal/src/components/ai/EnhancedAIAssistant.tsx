@@ -238,11 +238,9 @@ const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ className }) 
     };
     
     // Start screen monitoring for proactive assistance.
-    // Return a cleanup that stops it when capabilities changes or component unmounts.
-    visionService.startScreenMonitoring(handleScreenChange, 10000);
-    return () => {
-      try { visionService.stopScreenMonitoring?.(); } catch { /* non-fatal */ }
-    };
+    // startScreenMonitoring returns Promise<void> — there is no explicit stop method.
+    visionService.startScreenMonitoring(handleScreenChange, 10000)
+      .catch(() => { /* non-fatal — monitoring is optional */ });
   }, [capabilities]);
 
   const handleProactiveSuggestion = async (suggestion: string, context: any) => {
