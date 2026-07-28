@@ -1,7 +1,7 @@
 # NexusOS — Source of Truth
 
 > The single **current** reference for NexusOS + the media stack. If anything
-> elsewhere disagrees with this file, **this file wins**. Last updated 2026-07-21.
+> elsewhere disagrees with this file, **this file wins**. Last updated 2026-07-28.
 > Legacy/forerunner material is labeled as such so it is never mistaken for live.
 
 ## 1. Component hierarchy (what is current)
@@ -25,14 +25,16 @@
 
 ## 2. Hosts & network
 - **Tiamat** `192.168.12.242` — Proxmox VE host (Ryzen 5 3600, 32 GB, RX 580).
-  Owns the 2 TB HDD at `/mnt/hdd/media`; the **file-share hub**.
-- **CT-300** `192.168.12.30` — consolidated media-stack LXC (Debian 12). Gateway `192.168.12.254`. wg0 split-tunnel (10.92.29.5, VPN subnet only; aria2 inbound).
+  Owns the 2 TB HDD at `/mnt/hdd/media`; the **file-share hub**. Gateway: `192.168.12.222` (OpenWrt).
+- **CT-300** `192.168.12.30` — consolidated media-stack LXC (Debian 12). Gateway `192.168.12.222` (OpenWrt). wg0 split-tunnel (10.92.29.5, VPN subnet only; aria2 inbound).
 - **Bahamut** `192.168.12.244` — Pi 4 (DietPi): AdGuard DNS, Caddy+DuckDNS,
-  Vaultwarden, **PiVPN+WireGuard server** (`10.92.29.1`, subnet `10.92.29.0/24`, port 51820). MTU 1420 + TCPMSS clamp (2026-07-21). Edge node — keep light.
-- **OpenWrt VM-100** `192.168.12.222` (WAN/eth0) / `10.10.0.1` (LAN/br-lan) — VPN gateway VM on Tiamat. wg0 full-tunnel through Bahamut (`10.92.29.4`). UE300+vmbr2 operational. **Full routing migration pending** — Archer still primary DHCP/gateway.
+  Vaultwarden. Gateway `192.168.12.222` (OpenWrt). **PiVPN kept as client-config management tool only** (no longer runs WireGuard server). Edge node — keep light.
+- **OpenWrt VM-100** `192.168.12.222` — **Primary router/gateway for all homelab hosts** (router-on-a-stick on 192.168.12.0/24 via vmbr0). **WireGuard SERVER** `10.92.29.1`, port 51820, uses Bahamut's former server keys (clients unchanged). eth2/vmbr2 (UE300) removed from br-lan. LuCI packages: ttyd, watchcat, pbr, statistics, nlbwmon, filemanager, vnstat2, crowdsec-firewall-bouncer. DNS upstream: Bahamut AdGuard + 8.8.8.8 fallback. **Full routing migration COMPLETE** (2026-07-28).
+- **Archer AX55 Pro** `192.168.12.254` — upstream NAT/WiFi. **DMZ → 192.168.12.222** (all inbound to OpenWrt). Built-in WireGuard VPN Server must remain **disabled** (conflicts with OpenWrt on port 51820). Still primary DHCP server for 192.168.12.0/24.
 - **Laptop** `192.168.1.188` (wired, Spectrum direct) / `192.168.12.172` (WiFi, Archer) — Pop!_OS, i9-13900HX, RTX 4080, **control center**.
 - **ISP:** Spectrum gigabit `74.134.128.100`. Archer AX55 Pro "Stella" **Router mode** `192.168.12.254` (WAN: `192.168.1.61` via Spectrum SAX1V1K at `192.168.1.1`).
-- **WireGuard clients:** laptop `10.92.29.2`, Tiamat `10.92.29.3`, OpenWrt `10.92.29.4`, CT-300 `10.92.29.5`. All full-tunnel except CT-300 (split-tunnel).
+- **WireGuard server:** OpenWrt `10.92.29.1`. **Clients:** laptop `10.92.29.2`, Tiamat `10.92.29.3`, CT-300 `10.92.29.5`. All full-tunnel except CT-300 (split-tunnel). All LAN clients endpoint: `192.168.12.222:51820`. External clients: `74.134.128.100:51820` → DMZ → OpenWrt.
+- **Cockpit** (laptop localhost:9090): remote hosts configured — Tiamat `192.168.12.242` (user: cockpit), Bahamut `192.168.12.244` (user: root), CT-300 `192.168.12.30` (user: root).
 - **Tailscale** tailnet `tail9d8b73.ts.net`; CT-300 node `100.115.82.71`.
 - Full device inventory: `bulletproof-mediastack/docs/NETWORKING.md` → "Device Inventory".
 
