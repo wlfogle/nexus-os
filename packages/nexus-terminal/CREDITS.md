@@ -207,3 +207,28 @@ Your work doesn't just inspire us; it makes the impossible possible. You've crea
 *"If I have seen further it is by standing on the shoulders of Giants."* - Isaac Newton
 
 *WarpAI Terminal is our contribution to the giant pile of shoulders for the next generation of developers.* 🙏
+
+
+---
+
+## Warp Terminal (warpdotdev/warp) — AGPL-3.0
+
+Portions of this project incorporate logic derived from
+[Warp](https://github.com/warpdotdev/warp) by Warp Technology Inc.,
+licensed under the [GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.html).
+
+| File | Warp reference |
+|------|----------------|
+| src-tauri/src/input_classifier.rs | crates/input_classifier/ — HeuristicClassifier, SentenceParser, thresholds |
+| src-tauri/src/terminal.rs | app/src/terminal/ — OSC 133 block lifecycle |
+| src-tauri/src/blocks.rs | app/src/terminal/ — block:start / block:output / block:end events |
+| src-tauri/src/agent.rs | app/src/ai/ — Oz-style agent loop, tool schema, permissioning |
+| src-tauri/src/ai.rs | app/src/ai/ — Ollama client, health check, model resolution |
+| src-tauri/src/model_router.rs | app/src/ai/ — startup health check, model selection |
+| src/services/commandRouting.ts | app/src/ai/blocklist/input_model.rs — shell-vs-AI routing wiring |
+| src/components/terminal/WarpStyleTerminal.tsx | app/src/terminal/ — Warp screen layout |
+| src/components/blocks/BlockList.tsx | app/src/terminal/ — block list rendering |
+| src/components/panels/AgentPanel.tsx | app/src/ai/ — agent/conversation panel |
+
+As required by AGPL-3.0, this combined work is licensed under AGPL-3.0.
+See LICENSE for the full text.

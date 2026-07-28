@@ -8,10 +8,7 @@
 // (and change this declaration to `use crate::blocks;`) once all four parallel
 // branches are merged.
 
-// Declare blocks.rs as a pub sub-module so the file is compiled even before
-// main.rs grows its own `mod blocks;` declaration.
-#[path = "blocks.rs"]
-pub mod blocks;
+use crate::blocks;
 
 use anyhow::{Context, Result};
 use portable_pty::{Child, CommandBuilder, MasterPty, PtySize, PtySystem};

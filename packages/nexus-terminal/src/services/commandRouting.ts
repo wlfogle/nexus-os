@@ -283,22 +283,6 @@ export class CommandRoutingService {
   }
 
   /**
-   * Check if a command is an executable file
-   */
-  private async checkIfExecutable(command: string): Promise<boolean> {
-    try {
-      // Use the which command to check if executable exists
-      const result = await invoke('execute_safe_system_command', { 
-        command: `which ${command} 2>/dev/null || command -v ${command} 2>/dev/null` 
-      }) as string;
-      
-      return result.trim().length > 0;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
    * Synchronous fast-path — mirrors the tier logic of routeCommand without
    * async PATH lookup (Tier 2 is skipped here).
    */

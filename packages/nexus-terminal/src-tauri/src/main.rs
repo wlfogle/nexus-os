@@ -37,6 +37,7 @@ mod cloud_integration;
 mod ecosystem_awareness;
 mod local_recall;
 mod ollama_config;
+mod blocks;
 
 use ai::AIService;
 use ai_optimized::RequestPriority;
@@ -2470,6 +2471,21 @@ async fn ollama_ensure_configured() -> Result<(), String> {
 
 
 
+// ── Autosuggest commands (from prediction module) ────────────────────────────
+#[tauri::command]
+async fn autosuggest_command(
+    partial: String,
+    history: Vec<String>,
+    limit: Option<usize>,
+) -> Vec<String> {
+    prediction::autosuggest(&partial, &history, limit.unwrap_or(10))
+}
+
+#[tauri::command]
+async fn get_path_completions(partial: String) -> Vec<String> {
+    prediction::get_path_completions(&partial)
+}
+
 // ── Agent chat (blocking) ──────────────────────────────────────────────────────
 #[tauri::command]
 async fn agent_chat(
@@ -3794,6 +3810,9 @@ async fn main() {
             classify_input,
             run_cmd_capture,
             predict_command,
+            // Autosuggest (from prediction module)
+            autosuggest_command,
+            get_path_completions,
             // Agent
             agent_chat,
             agent_chat_stream,
