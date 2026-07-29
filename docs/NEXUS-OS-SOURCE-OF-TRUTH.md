@@ -1,7 +1,7 @@
 # NexusOS — Source of Truth
 
 > The single **current** reference for NexusOS + the media stack. If anything
-> elsewhere disagrees with this file, **this file wins**. Last updated 2026-07-28.
+> elsewhere disagrees with this file, **this file wins**. Last updated 2026-07-29.
 > Legacy/forerunner material is labeled as such so it is never mistaken for live.
 
 ## 1. Component hierarchy (what is current)
@@ -33,7 +33,7 @@
 - **Archer AX55 Pro** `192.168.12.254` — upstream NAT/WiFi. **DMZ → 192.168.12.222** (all inbound to OpenWrt). Built-in WireGuard VPN Server must remain **disabled** (conflicts with OpenWrt on port 51820). Still primary DHCP server for 192.168.12.0/24.
 - **Laptop** `192.168.1.188` (wired, Spectrum direct) / `192.168.12.172` (WiFi, Archer) — Pop!_OS, i9-13900HX, RTX 4080, **control center**.
 - **ISP:** Spectrum gigabit `74.134.128.100`. Archer AX55 Pro "Stella" **Router mode** `192.168.12.254` (WAN: `192.168.1.61` via Spectrum SAX1V1K at `192.168.1.1`).
-- **WireGuard server:** OpenWrt `10.92.29.1`. **Clients:** laptop `10.92.29.2`, Tiamat `10.92.29.3`, CT-300 `10.92.29.5`. All full-tunnel except CT-300 (split-tunnel). All LAN clients endpoint: `192.168.12.222:51820`. External clients: `74.134.128.100:51820` → DMZ → OpenWrt.
+- **WireGuard server:** OpenWrt `10.92.29.1`. **Clients:** laptop `10.92.29.2`, Tiamat `10.92.29.3`, CT-300 `10.92.29.5`. **ALL clients split-tunnel** (`AllowedIPs = 10.92.29.0/24` only, no DNS override — full-tunnel was killing internet/apt). All LAN clients endpoint: `192.168.12.222:51820`. External clients: `74.134.128.100:51820` → DMZ → OpenWrt.
 - **Cockpit** (laptop localhost:9090): remote hosts configured — Tiamat `192.168.12.242` (user: cockpit), Bahamut `192.168.12.244` (user: root), CT-300 `192.168.12.30` (user: root).
 - **Tailscale** tailnet `tail9d8b73.ts.net`; CT-300 node `100.115.82.71`.
 - Full device inventory: `bulletproof-mediastack/docs/NETWORKING.md` → "Device Inventory".
