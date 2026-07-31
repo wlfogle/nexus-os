@@ -192,13 +192,14 @@ export class CommandRoutingService {
   ];
 
   /**
-   * Route input to shell or AI.
+   * Route input to shell or AI using a strict priority-ordered algorithm.
+   * Ported from Warp's HeuristicClassifier (AGPL-3.0).
    *
-   * Primary path: Rust-backed Warp-derived classifier (invoke classify_input).
-   * This uses the same English word dict + shell syntax detection + PATH lookup
-   * as Warp's HeuristicClassifier (ported from AGPL-3.0 source).
-   *
-   * Fallback: local regex heuristics if Tauri is unavailable.
+   * TIER 1 — Definite shell: command dictionary → regex patterns → structural signals
+   * TIER 2 — Async PATH lookup for unknown first words
+   * TIER 3 — Definite NL: question marks, question words, conversational phrases
+   * TIER 4 — Structural NL heuristics: articles/prepositions, word count
+   * TIER 5 — Default → AI (safer than accidental shell execution)
    */
   public async routeCommand(input: string): Promise<CommandRoutingResult> {
     const trimmed = input.trim();
@@ -206,48 +207,103 @@ export class CommandRoutingService {
       return { isShellCommand: false, confidence: 0, reason: 'Empty input', suggestedAction: 'ask_user' };
     }
 
-    // ── Primary: Rust Warp-derived classifier ─────────────────────────────────
-    try {
-      const result = await invoke<{ input_type: string; confidence: number; reason: string }>(
-        'classify_input',
-        { input: trimmed }
-      );
-      const isShell = result.input_type === 'shell';
-      return {
-        isShellCommand: isShell,
-        confidence: result.confidence,
-        reason: result.reason,
-        suggestedAction: isShell ? 'execute_shell' : 'send_to_ai',
-      };
-    } catch {
-      // Tauri not available — fall through to regex fallback
-    }
-
-    // ── Fallback: structural regex heuristics ────────────────────────────────
     const words = trimmed.split(/\s+/);
     const first = words[0].toLowerCase();
 
-    if (this.findShellCommand(first)) {
-      return { isShellCommand: true, confidence: 0.85, reason: `Known shell command: ${first}`, suggestedAction: 'execute_shell' };
+    // ── TIER 1a: known command dictionary (always wins) ───────────────────────
+    const shellCommandInfo = this.findShellCommand(first);
+    if (shellCommandInfo) {
+      return {
+        isShellCommand: true,
+        confidence: 0.80 + (shellCommandInfo.priority / 100),
+        reason: `Known shell command (${shellCommandInfo.category}): ${first}`,
+        suggestedAction: 'execute_shell',
+      };
     }
-    // Same trailing-punctuation strip as isShellCommand — mirrors Warp tokenizer.
-    const forPatternsAsync = trimmed.replace(/[?!.,]+$/, '').trim();
-    if (!forPatternsAsync) return { isShellCommand: false, confidence: 1, reason: 'Punctuation-only input', suggestedAction: 'send_to_ai' };
 
+    // ── TIER 1b: high-priority regex shell patterns ───────────────────────────
     for (const sp of this.highPriorityShellPatterns) {
-      const matched = Array.isArray(sp.pattern) ? sp.pattern.includes(first) : (sp.pattern as RegExp).test(forPatternsAsync);
-      if (matched) return { isShellCommand: true, confidence: 0.9, reason: sp.description, suggestedAction: 'execute_shell' };
+      const matched = Array.isArray(sp.pattern)
+        ? sp.pattern.includes(first)
+        : (sp.pattern as RegExp).test(trimmed);
+      if (matched) {
+        return {
+          isShellCommand: true,
+          confidence: 0.90 + (sp.priority / 100),
+          reason: `High-priority shell pattern: ${sp.description}`,
+          suggestedAction: 'execute_shell',
+        };
+      }
     }
+
+    // ── TIER 1c: structural shell patterns (pipes, paths, redirects …) ────────
     for (const pattern of this.shellPatterns) {
-      if (pattern.test(forPatternsAsync)) return { isShellCommand: true, confidence: 0.85, reason: 'shell pattern', suggestedAction: 'execute_shell' };
+      if (pattern.test(trimmed)) {
+        return {
+          isShellCommand: true,
+          confidence: 0.85,
+          reason: `Shell structural pattern`,
+          suggestedAction: 'execute_shell',
+        };
+      }
     }
-    if (trimmed.includes('?') || /^(what|how|why|when|where|who|can you|please|help me)\b/i.test(trimmed)) {
-      return { isShellCommand: false, confidence: 0.95, reason: 'Natural language signal', suggestedAction: 'send_to_ai' };
+
+    // ── TIER 2: async PATH lookup for unknown first words ────────────────────
+    try {
+      if (await this.checkIfExecutable(first)) {
+        return {
+          isShellCommand: true,
+          confidence: 0.85,
+          reason: `Executable found in PATH: ${first}`,
+          suggestedAction: 'execute_shell',
+        };
+      }
+    } catch { /* continue */ }
+
+    // ── TIER 3: definite natural language ─────────────────────────────────────
+    if (trimmed.includes('?')) {
+      return { isShellCommand: false, confidence: 0.98, reason: 'Contains question mark', suggestedAction: 'send_to_ai' };
+    }
+    if (/^(what|how|why|when|where|who)\b/i.test(trimmed)) {
+      return { isShellCommand: false, confidence: 0.97, reason: 'Starts with question word', suggestedAction: 'send_to_ai' };
+    }
+    if (/^(can you|could you|would you|please help|i want to|i need to|i would like|help me\b)/i.test(trimmed)) {
+      return { isShellCommand: false, confidence: 0.97, reason: 'Conversational opener', suggestedAction: 'send_to_ai' };
+    }
+    if (/\b(help me|show me how|tell me how|explain to me|how do i|what is|what are|how to)\b/i.test(trimmed)) {
+      return { isShellCommand: false, confidence: 0.95, reason: 'Embedded natural-language phrase', suggestedAction: 'send_to_ai' };
+    }
+    if (
+      /^(generate|create|write|suggest|recommend|analyze|analyse|review|check|debug|fix|optimize|optimise|improve|explain|describe)\s+/i.test(trimmed) &&
+      hasNaturalLanguageStructure(words)
+    ) {
+      return { isShellCommand: false, confidence: 0.90, reason: 'AI verb with natural-language object', suggestedAction: 'send_to_ai' };
+    }
+
+    // ── TIER 4: structural NL heuristics ─────────────────────────────────────
+    if (hasNaturalLanguageStructure(words)) {
+      return { isShellCommand: false, confidence: 0.82, reason: 'Natural-language structure (articles/prepositions)', suggestedAction: 'send_to_ai' };
     }
     if (words.length >= 4) {
-      return { isShellCommand: false, confidence: 0.8, reason: 'Long input without command prefix', suggestedAction: 'send_to_ai' };
+      return { isShellCommand: false, confidence: 0.80, reason: 'Long multi-word input without command prefix', suggestedAction: 'send_to_ai' };
     }
-    return { isShellCommand: true, confidence: 0.6, reason: 'Fallback: treated as shell', suggestedAction: 'execute_shell' };
+    if (words.length <= 3 && trimmed.length < 60 && /^[a-z][a-z0-9_-]*$/.test(first)) {
+      const hasFlag = words.slice(1).some(w => w.startsWith('-') || w.startsWith('/') || w.startsWith('~') || w.includes('.'));
+      if (hasFlag) {
+        return { isShellCommand: true, confidence: 0.72, reason: 'Command-like invocation with flags or paths', suggestedAction: 'execute_shell' };
+      }
+      if (words.length === 1 && first.length < 25) {
+        return { isShellCommand: true, confidence: 0.60, reason: 'Single unrecognised word — treating as potential command', suggestedAction: 'execute_shell' };
+      }
+    }
+
+    // ── TIER 5: default → AI ─────────────────────────────────────────────────
+    return {
+      isShellCommand: false,
+      confidence: 0.75,
+      reason: 'Unclassified input — defaulting to AI (safer)',
+      suggestedAction: 'send_to_ai',
+    };
   }
 
   /**
