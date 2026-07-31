@@ -31,8 +31,6 @@
   Vaultwarden. Gateway `192.168.12.222` (OpenWrt). **PiVPN kept as client-config management tool only** (no longer runs WireGuard server). Edge node — keep light.
 - **OpenWrt VM-100** `192.168.12.222` — **Primary router/gateway for all homelab hosts** (router-on-a-stick on 192.168.12.0/24 via vmbr0). **WireGuard SERVER** `10.92.29.1`, port 51820, uses Bahamut's former server keys (clients unchanged). LuCI packages: ttyd, watchcat, pbr, statistics, nlbwmon, filemanager, vnstat2, crowdsec-firewall-bouncer. DNS upstream: Bahamut AdGuard + 8.8.8.8 fallback. **Full routing migration COMPLETE** (2026-07-28).
 - **VM-990** `192.168.12.123` — Home Assistant OS. HA web UI `:8123` → `ha.tiamat.local`. Credentials: `haos/haos`. **Critical — stop only when reducing I/O pressure.**
-- **CT-501** `192.168.12.251` — HABridge (Alexa/Hue emulation). Web UI `:80` → `habridge.tiamat.local`. Maps Alexa voice commands to HA actions and media controls. **Critical — main Alexa integration.**
-- **CT-200** `192.168.12.201` — alexa-media-bridge LXC. Cloud Commander web file manager `:8000` (`cloudcmd/cloudcmd`).
 - **Archer AX55 Pro** `192.168.12.254` — upstream NAT/WiFi. **DMZ → 192.168.12.222** (all inbound to OpenWrt). Built-in WireGuard VPN Server must remain **disabled** (conflicts with OpenWrt on port 51820). Still primary DHCP server for 192.168.12.0/24.
 - **Laptop** `192.168.1.188` (wired, Spectrum direct) / `192.168.12.172` (WiFi, Archer) — Pop!_OS, i9-13900HX, RTX 4080, **control center**.
 - **ISP:** Spectrum gigabit `74.134.128.100`. Archer AX55 Pro "Stella" **Router mode** `192.168.12.254` (WAN: `192.168.1.61` via Spectrum SAX1V1K at `192.168.1.1`).
