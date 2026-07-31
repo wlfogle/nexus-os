@@ -198,6 +198,19 @@ impl TerminalManager {
         // Start reading output in a separate thread
         self.start_output_reader(&terminal_id).await?;
 
+        // Inject OSC 133 (FTCS) bootstrap — gives Warp-style command block boundaries.
+        // stty -echo inside the bootstrap hides the injection from the visible output.
+        let bootstrap = osc133_bootstrap(&shell_cmd);
+        if !bootstrap.is_empty() {
+            // Brief pause so the shell finishes its own init before we inject.
+            tokio::time::sleep(Duration::from_millis(150)).await;
+            if let Err(e) = self.write_to_terminal(&terminal_id, &bootstrap).await {
+                error!("Failed to inject OSC 133 bootstrap for terminal {}: {}", terminal_id, e);
+            } else {
+                info!("OSC 133 bootstrap injected for terminal {} ({})", terminal_id, shell_cmd);
+            }
+        }
+
         info!("Created terminal {} shell={} cwd={}", terminal_id, shell_cmd, working_dir);
         Ok(terminal_id)
     }
