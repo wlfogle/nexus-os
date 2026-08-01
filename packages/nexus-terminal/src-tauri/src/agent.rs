@@ -74,6 +74,14 @@ Use: analyze_image(path, prompt)
 - NEVER call read_file, read_files, analyze_code, or autofix_code on an image path — they only
   read UTF-8 text and will fail on binary image data.
 - To see the LIVE screen right now (not a saved file) use the screenshot tool instead.
+- analyze_image returns TWO sections: OCR extracted text (exact ground truth) and an AI visual
+  description (context only).
+- Your final answer about the image MUST open by quoting the literal OCR extracted text
+  verbatim, then diagnose based on THAT text. The AI visual description section frequently
+  hallucinates unrelated generic content (e.g. inventing a totally different app) — IGNORE it
+  for anything factual/textual; only use it for rough layout/color context if truly needed.
+- If OCR extracted text says "no text detected" or is missing, say so explicitly instead of
+  inventing generic troubleshooting advice not grounded in the image.
 
 ## Code fix workflow
 1. list_dir or file_tree the target path to understand the project
@@ -686,7 +694,7 @@ Always call this BEFORE making destructive changes or when the user said 'scan' 
             kind: "function",
             function: ToolFunction {
                 name: "analyze_image",
-                description: "Analyze an EXISTING image file (screenshot, photo, diagram) already saved on disk, using llama3.2-vision:11b. ALWAYS use this for paths ending in .png/.jpg/.jpeg/.gif/.webp/.bmp/.tiff/.ico — NEVER use read_file, read_files, analyze_code, or autofix_code on image files; those only handle UTF-8 text and will fail.",
+                description: "Analyze an EXISTING image file (screenshot, photo, diagram) already saved on disk. Combines llama3.2-vision:11b (layout/context) with real Tesseract OCR (exact ground-truth text) since the vision model alone can misread or hallucinate on-screen text. ALWAYS use this for paths ending in .png/.jpg/.jpeg/.gif/.webp/.bmp/.tiff/.ico — NEVER use read_file, read_files, analyze_code, or autofix_code on image files; those only handle UTF-8 text and will fail.",
                 parameters: serde_json::json!({
                     "type": "object",
                     "properties": {
@@ -1459,12 +1467,22 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
             };
             let b64 = match crate::vision_commands::resize_for_vision(&data) {
                 Ok(b) => b,
-                Err(e) => return format!("ERROR: failed to decode image {} ({}): {}", path, 
+                Err(e) => return format!("ERROR: failed to decode image {} ({}): {}", path,
                     std::path::Path::new(path).extension().and_then(|e| e.to_str()).unwrap_or("unknown"), e),
             };
-            match crate::vision_commands::query_vision_ai(prompt.to_string(), b64, None, None, None).await {
+            let vision_result = match crate::vision_commands::query_vision_ai(prompt.to_string(), b64, None, None, None).await {
                 Ok(description) => description,
                 Err(e) => format!("ERROR: image analysis failed: {}", e),
+            };
+            // llama3.2-vision:11b frequently hallucinates or misreads exact on-screen
+            // text in dense UI screenshots. Cross-check with real Tesseract OCR, which
+            // gives exact ground-truth wording when it succeeds.
+            match crate::vision_commands::ocr_extract_text(path).await {
+                Ok(text) => format!(
+                    "=== OCR extracted text (EXACT ground truth — trust this for precise error messages/wording) ===\n{}\n\n=== AI visual description (layout/context only — may misread exact text, do not trust literal quotes from this section) ===\n{}",
+                    text, vision_result
+                ),
+                Err(_) => vision_result,
             }
         }
 

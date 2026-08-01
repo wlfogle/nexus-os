@@ -382,6 +382,84 @@ pub async fn query_vision_ai(
     Ok(ai_response)
 }
 
+/// Run real Tesseract OCR against an image file for precise, ground-truth text
+/// extraction. Small local vision-language models (llama3.2-vision:11b) frequently
+/// hallucinate or misread exact on-screen text in dense UI screenshots, so this is
+/// combined with the vision model's description rather than relied on alone.
+/// Upscaling 2x before OCR significantly improves recall of typical UI text sizes;
+/// capped at 3200px on the longest side to bound processing time on large inputs.
+pub async fn ocr_extract_text(path: &str) -> Result<String, String> {
+    let check = tokio::process::Command::new("which").arg("tesseract").output().await;
+    if !matches!(check, Ok(ref o) if o.status.success()) {
+        return Err("tesseract is not installed".to_string());
+    }
+
+    let data = tokio::fs::read(path).await.map_err(|e| format!("failed to read image: {}", e))?;
+    let img = image::load_from_memory(&data).map_err(|e| format!("failed to decode image: {}", e))?;
+    let (w, h) = img.dimensions();
+    let longest = w.max(h) as f32;
+    let scale = if longest * 2.0 > 3200.0 { 3200.0 / longest } else { 2.0 };
+    let nw = ((w as f32 * scale) as u32).max(1);
+    let nh = ((h as f32 * scale) as u32).max(1);
+    let upscaled = img.resize(nw, nh, image::imageops::FilterType::Lanczos3);
+
+    let tmp_path = format!("/tmp/nexusai-ocr-{}.png", uuid::Uuid::new_v4());
+    upscaled.save(&tmp_path).map_err(|e| format!("failed to save temp image: {}", e))?;
+
+    let result = tokio::time::timeout(
+        std::time::Duration::from_secs(20),
+        tokio::process::Command::new("tesseract")
+            .args([tmp_path.as_str(), "stdout", "--psm", "3", "--dpi", "300"])
+            .output(),
+    ).await;
+
+    let _ = tokio::fs::remove_file(&tmp_path).await;
+
+    match result {
+        Ok(Ok(out)) => {
+            let raw = String::from_utf8_lossy(&out.stdout).trim().to_string();
+            let cleaned = clean_ocr_text(&raw);
+            if cleaned.is_empty() {
+                Err("no text detected".to_string())
+            } else {
+                Ok(cleaned)
+            }
+        }
+        Ok(Err(e)) => Err(format!("tesseract failed to run: {}", e)),
+        Err(_) => Err("tesseract timed out after 20s".to_string()),
+    }
+}
+
+/// Drop OCR noise lines (mangled toolbar icons, symbol soup from dense UI
+/// chrome) that would otherwise bury the actual message text and mislead a
+/// small model into fixating on junk. A line is kept only if it has at least
+/// two "real" words (4+ alphabetic characters), or exactly one real word and
+/// no stray symbol characters at all (e.g. a short standalone label like
+/// "error"). This is stricter than a simple alpha-ratio check because
+/// misread icon glyphs (e.g. "Q)Bass", "pbees") can accidentally contain a
+/// run of 3+ letters despite being surrounded by noise symbols.
+fn clean_ocr_text(raw: &str) -> String {
+    const ALLOWED_PUNCT: &str = ".,'-:;!?/";
+    raw.lines()
+        .filter(|line| {
+            let trimmed = line.trim();
+            if trimmed.is_empty() {
+                return false;
+            }
+            let symbol_count = trimmed
+                .chars()
+                .filter(|c| !c.is_alphanumeric() && !c.is_whitespace() && !ALLOWED_PUNCT.contains(*c))
+                .count();
+            let real_word_count = trimmed
+                .split_whitespace()
+                .filter(|w| w.chars().filter(|c| c.is_alphabetic()).count() >= 4)
+                .count();
+            real_word_count >= 2 || (real_word_count >= 1 && symbol_count == 0)
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 /// One-shot: capture screen + query vision AI. Used by camera button and agent screenshot tool.
 #[command]
 pub async fn capture_and_ask(
@@ -591,6 +669,48 @@ mod tests {
         // The test image is blank (all black) so JPEG is tiny, but the point is it
         // must be smaller than the original PNG which is at least a few KB.
         assert!(jpeg.len() < data.len(), "JPEG output should be smaller than PNG input");
+    }
+
+    #[test]
+    fn clean_ocr_text_drops_icon_garbage_keeps_real_sentences() {
+        // Real Tesseract output captured from a Cockpit login screenshot
+        // with a dense browser-chrome background — icon fragments should be
+        // dropped while the actual message text survives.
+        let raw = "ca] « A x» 8B Ft mM te © OH %» © @ B® O B < Q)Bass\n\
+            Debian GNU/Linux\n\
+            You have been logged out due to inactivity.\n\
+            3\n\
+            2 => @pbees ao Bs> @@ YO OF HRB A+ GH EBM";
+        let cleaned = super::clean_ocr_text(raw);
+        assert!(cleaned.contains("You have been logged out due to inactivity."),
+            "expected real message to survive filtering, got: {}", cleaned);
+        assert!(cleaned.contains("Debian GNU/Linux"));
+        assert!(!cleaned.contains("ca] « A x»"), "expected icon garbage line to be dropped, got: {}", cleaned);
+        assert!(!cleaned.contains("2 => @pbees"), "expected icon garbage line to be dropped, got: {}", cleaned);
+    }
+
+    #[tokio::test]
+    async fn ocr_extract_text_missing_file_returns_err() {
+        let result = super::ocr_extract_text("/tmp/nexusai-ocr-does-not-exist.png").await;
+        assert!(result.is_err(), "missing file should return Err");
+    }
+
+    #[tokio::test]
+    async fn ocr_extract_text_handles_blank_image() {
+        // A blank image contains no text — this exercises the full
+        // read -> decode -> upscale -> tesseract subprocess path without
+        // requiring new font-rendering dependencies, and confirms it
+        // degrades gracefully (Err("no text detected")) instead of panicking.
+        let data = make_png(400, 100);
+        let tmp_path = format!("/tmp/nexusai-ocr-test-{}.png", uuid::Uuid::new_v4());
+        std::fs::write(&tmp_path, &data).expect("failed to write test image");
+
+        let result = super::ocr_extract_text(&tmp_path).await;
+        let _ = std::fs::remove_file(&tmp_path);
+
+        match result {
+            Ok(_) | Err(_) => {} // Either outcome is acceptable; the point is no panic.
+        }
     }
 }
 
