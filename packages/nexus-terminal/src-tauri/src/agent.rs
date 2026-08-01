@@ -2200,6 +2200,42 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
     }
 }
 
+/// True if the model's text is narrating a future action ("I will now ssh into...") instead
+/// of either calling a tool or delivering a genuinely completed answer. A model that announces
+/// intent and stops is functionally identical to one that gives generic advice — neither one
+/// actually did anything — so this is treated the same as "no tool calls" for self-correction.
+fn describes_future_action(text: &str) -> bool {
+    let lower = text.to_lowercase();
+    const FUTURE_ACTION_PHRASES: &[&str] = &[
+        "i will now", "i'll now", "i will execute", "i will investigate", "i will check",
+        "i will restart", "i will update you", "i will proceed", "let me now",
+        "i'm going to", "i am going to", "i will use", "i will run", "i will call",
+        "i will ssh", "next, i will", "i will log into", "i will look into",
+        "stand by", "give me a moment", "one moment", "shortly", "will now",
+    ];
+    FUTURE_ACTION_PHRASES.iter().any(|p| lower.contains(p))
+}
+
+#[cfg(test)]
+mod future_action_tests {
+    use super::describes_future_action;
+
+    #[test]
+    fn detects_intent_without_action() {
+        let text = "I will now use the ssh_exec tool to log into one of the management hosts \
+            and check the status of the Home Assistant container. I will update you with the \
+            results of my investigation shortly.";
+        assert!(describes_future_action(text), "expected future-action phrasing to be detected");
+    }
+
+    #[test]
+    fn allows_genuine_completed_answers() {
+        let text = "The host is reachable and Home Assistant responded with HTTP 200. \
+            No further action is needed.";
+        assert!(!describes_future_action(text), "a completed, grounded answer should not be flagged");
+    }
+}
+
 /// Extract a fenced code block from model output.
 /// Tries language-specific fence first, then plain ```, then returns empty.
 fn extract_code_block(text: &str, lang: &str) -> String {
@@ -2585,9 +2621,10 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
         };
         messages.push(assistant_msg);
 
-        // Self-correction: if the model gave text but no tool calls on the first step,
-        // it's describing instead of doing. Inject a correction to force tool execution.
-        // This is what makes Oz (using frontier models) reliable — the model always follows up.
+        // Self-correction: if the model gave text but no tool calls, and that text is
+        // describing/promising an action rather than delivering a completed answer, inject a
+        // correction to force tool execution. This is what makes Oz (using frontier models)
+        // reliable — the model always follows up.
         //
         // BUG (fixed): this branch pushed the correction message into `messages` but never
         // `continue`d the loop, so execution fell straight through to the "no tool calls →
@@ -2596,7 +2633,17 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
         // but never actually sent. This is the root cause of the agent "just giving you things
         // to do" instead of executing them: the self-correction that was supposed to prevent
         // exactly that never ran.
-        if collected_tool_calls.is_empty() && step == 0 && !full_content.trim().is_empty() {
+        //
+        // BUG #2 (fixed): the check was `step == 0` only, so it caught the very first response
+        // but nothing after — e.g. step 0 calls analyze_image, step 1 comes back with "I will
+        // now use ssh_exec to check this…" and NO tool call, which fell straight through as an
+        // accepted final answer because step == 1. Real Oz doesn't narrate a future step and
+        // then stop; it just calls the next tool. Detect that pattern at ANY step via
+        // future-tense/intent phrasing, not just on the first response.
+        let describes_future_action = describes_future_action(&full_content);
+        if collected_tool_calls.is_empty() && !full_content.trim().is_empty()
+            && (step == 0 || describes_future_action)
+        {
             let correction = format!(
                 "You described what to do but didn't do it. Execute the task now. Call the appropriate tools immediately. Do not explain further.\n\nYour previous response was: {}",
                 if full_content.len() > 500 { &full_content[..500] } else { &full_content }
@@ -2607,7 +2654,7 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
                 tool_calls: None,
                 tool_call_id: None,
             });
-            warn!("Step 0 had text but no tool calls — injecting self-correction and retrying");
+            warn!("Step {} had text but no tool calls (describes_future_action={}) — injecting self-correction and retrying", step, describes_future_action);
             continue;
         }
 
