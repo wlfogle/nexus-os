@@ -2263,6 +2263,66 @@ fn contains_illustrative_command_block(text: &str) -> bool {
     false
 }
 
+/// True if the model wrote a JSON-shaped tool-call description as plain answer text instead of
+/// using Ollama's native function-calling (which arrives separately as a real `tool_calls`
+/// array — never as `content`). E.g. `{"function": "analyze_image", "arguments": {…}}`. This is
+/// the same underlying failure as the other two checks — nothing was actually executed — just a
+/// different shape (the model imitating a function-call format it has seen in training data
+/// instead of emitting a real one), so it needs its own structural detector rather than another
+/// phrase to chase.
+fn looks_like_fake_tool_call(text: &str) -> bool {
+    let lower = text.to_lowercase();
+    let has_name_marker = lower.contains("\"function\"") || lower.contains("\"tool_call\"")
+        || lower.contains("\"tool_name\"") || lower.contains("\"name\":");
+    let has_args_marker = lower.contains("\"arguments\"") || lower.contains("\"parameters\"");
+    has_name_marker && has_args_marker
+}
+
+/// Try to extract a tool name + arguments object from a fake JSON tool-call written as plain
+/// text (see `looks_like_fake_tool_call`). Accepts the handful of key names models commonly
+/// imitate ("function"/"tool"/"tool_name"/"name" for the call name, "arguments"/"parameters"
+/// for the args) since the model invented this shape itself rather than following our schema.
+/// Returns None if no JSON object can be found/parsed — the caller falls back to a plain
+/// self-correction retry in that case.
+fn parse_fake_tool_call(text: &str) -> Option<(String, serde_json::Value)> {
+    let start = text.find('{')?;
+    let end = text.rfind('}')?;
+    if end <= start {
+        return None;
+    }
+    let value: serde_json::Value = serde_json::from_str(&text[start..=end]).ok()?;
+    let obj = value.as_object()?;
+    let name = obj.get("function").and_then(|v| v.as_str())
+        .or_else(|| obj.get("tool").and_then(|v| v.as_str()))
+        .or_else(|| obj.get("tool_name").and_then(|v| v.as_str()))
+        .or_else(|| obj.get("name").and_then(|v| v.as_str()))?;
+    let args = obj.get("arguments").or_else(|| obj.get("parameters")).cloned()
+        .unwrap_or_else(|| serde_json::json!({}));
+    Some((name.to_string(), args))
+}
+
+#[cfg(test)]
+mod fake_tool_call_tests {
+    use super::{looks_like_fake_tool_call, parse_fake_tool_call};
+
+    #[test]
+    fn detects_and_parses_the_exact_reported_case() {
+        let text = "{\n  \"function\": \"analyze_image\",\n  \"arguments\": {\n    \"path\": \"/home/loufogle/Pictures/2026-07-31_19-54.png\",\n    \"prompt\": \"What is the Home Assistant error message?\"\n  }\n}";
+        assert!(looks_like_fake_tool_call(text), "expected fake tool-call JSON to be detected");
+        let (name, args) = parse_fake_tool_call(text).expect("should parse the fake call");
+        assert_eq!(name, "analyze_image");
+        assert_eq!(args["path"], "/home/loufogle/Pictures/2026-07-31_19-54.png");
+        assert_eq!(args["prompt"], "What is the Home Assistant error message?");
+    }
+
+    #[test]
+    fn allows_genuine_prose_answers() {
+        let text = "The host is reachable and Home Assistant responded with HTTP 200.";
+        assert!(!looks_like_fake_tool_call(text));
+        assert!(parse_fake_tool_call(text).is_none());
+    }
+}
+
 #[cfg(test)]
 mod future_action_tests {
     use super::describes_future_action;
@@ -2723,16 +2783,52 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
         // accepted final answer because step == 1. Real Oz doesn't narrate a future step and
         // then stop; it just calls the next tool. Detect that pattern at ANY step via
         // future-tense/intent phrasing, not just on the first response.
+        // BUG #3 (fixed): the model sometimes writes a JSON-shaped tool-call description as
+        // plain text instead of using Ollama's native function-calling, e.g.
+        // `{"function": "analyze_image", "arguments": {"path": "..."}}`. Its intent is
+        // completely unambiguous here, so rather than just asking it to retry (which may
+        // produce the same malformed shape again), parse the JSON ourselves and execute the
+        // call directly — salvaging what the model clearly meant instead of gambling on a retry.
+        if collected_tool_calls.is_empty() && !full_content.trim().is_empty() {
+            if let Some((fake_name, fake_args)) = parse_fake_tool_call(&full_content) {
+                let probe_result = exec_tool(&fake_name, &fake_args, cwd, session_id).await;
+                if !probe_result.starts_with("ERROR: unknown tool") {
+                    warn!("Step {} wrote a fake JSON tool-call for '{}' instead of using native function-calling — executing it directly", step, fake_name);
+                    let key = format!("{}:{}", fake_name, serde_json::to_string(&fake_args).unwrap_or_default());
+                    seen_calls.insert(key);
+                    let _ = app.emit("agent-tool-call", AgentToolEvent {
+                        session_id: session_id.to_string(),
+                        tool: fake_name.clone(),
+                        args: serde_json::to_string(&fake_args).unwrap_or_default(),
+                    });
+                    let _ = app.emit("agent-tool-result", AgentToolResultEvent {
+                        session_id: session_id.to_string(),
+                        tool: fake_name.clone(),
+                        result: probe_result.clone(),
+                    });
+                    messages.push(ChatMessage {
+                        role: "tool".to_string(),
+                        content: probe_result,
+                        tool_calls: None,
+                        tool_call_id: None,
+                    });
+                    continue;
+                }
+            }
+        }
+
         let describes_future_action = describes_future_action(&full_content);
         let has_illustrative_command = contains_illustrative_command_block(&full_content);
+        let is_fake_tool_call_text = looks_like_fake_tool_call(&full_content);
         if collected_tool_calls.is_empty() && !full_content.trim().is_empty()
-            && (step == 0 || describes_future_action || has_illustrative_command)
+            && (step == 0 || describes_future_action || has_illustrative_command || is_fake_tool_call_text)
         {
             let correction = format!(
-                "You described what to do but didn't do it — you wrote out commands instead of \
-                calling the actual tools. Execute the task now using real tool calls (run_cmd, \
-                ping_host, ssh_exec, etc.) Do not put commands in a code block and describe what \
-                they would do — call the tool.\n\nYour previous response was: {}",
+                "You described what to do but didn't do it — you wrote out commands (or a fake \
+                JSON tool-call) as text instead of calling the actual tools. Execute the task now \
+                using real tool calls (run_cmd, ping_host, ssh_exec, etc.) Do not put commands or \
+                JSON describing a tool call in your answer text — call the tool.\n\nYour previous \
+                response was: {}",
                 if full_content.len() > 500 { &full_content[..500] } else { &full_content }
             );
             messages.push(crate::agent::ChatMessage {
@@ -2741,7 +2837,7 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
                 tool_calls: None,
                 tool_call_id: None,
             });
-            warn!("Step {} had text but no tool calls (describes_future_action={}, has_illustrative_command={}) — injecting self-correction and retrying", step, describes_future_action, has_illustrative_command);
+            warn!("Step {} had text but no tool calls (describes_future_action={}, has_illustrative_command={}, is_fake_tool_call_text={}) — injecting self-correction and retrying", step, describes_future_action, has_illustrative_command, is_fake_tool_call_text);
             continue;
         }
 
