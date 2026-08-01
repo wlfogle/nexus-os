@@ -68,6 +68,13 @@ Use: hardware_info, process_list, list_services, systemctl_cmd
 - "scan system" / "system status" / "optimize memory" / "check performance" → hardware_info
 - NEVER call hardware_info for code scanning tasks.
 
+### Image files (screenshots, photos, diagrams already saved on disk)
+Use: analyze_image(path, prompt)
+- If a referenced file path ends in .png/.jpg/.jpeg/.gif/.webp/.bmp/.tiff/.ico → call analyze_image.
+- NEVER call read_file, read_files, analyze_code, or autofix_code on an image path — they only
+  read UTF-8 text and will fail on binary image data.
+- To see the LIVE screen right now (not a saved file) use the screenshot tool instead.
+
 ## Code fix workflow
 1. list_dir or file_tree the target path to understand the project
 2. Detect project type (Cargo.toml → Rust, package.json → Node/TS)
@@ -93,7 +100,8 @@ list_services, hardware_info, proxmox_list,
 analyze_code(path, analysis_type) — AI code review: errors|style|security|performance|cleanup|all,
 autofix_code(path, dry_run) — AI rewrites file with fixes; always dry_run=true first,
 ask_user(question, options) — show clickable buttons to the user and WAIT for their answer,
-screenshot — capture the screen and see it with llama3.2-vision:11b"#;
+screenshot — capture the LIVE screen and see it with llama3.2-vision:11b,
+analyze_image(path, prompt) — analyze an EXISTING image file on disk with llama3.2-vision:11b"#;
 
 // ── Ollama native function-calling types ──────────────────────────────────────
 
@@ -664,13 +672,28 @@ Always call this BEFORE making destructive changes or when the user said 'scan' 
             kind: "function",
             function: ToolFunction {
                 name: "screenshot",
-                description: "Capture the screen and analyze it with llama3.2-vision:11b. Use this to see what is on the screen, diagnose visual errors, or understand the current UI state.",
+                description: "Capture the LIVE screen right now and analyze it with llama3.2-vision:11b. Use this to see what is currently on the screen. For an already-saved image file on disk, use analyze_image instead.",
                 parameters: serde_json::json!({
                     "type": "object",
                     "properties": {
                         "prompt": {"type": "string", "description": "What to look for or ask about the screen (e.g. 'What errors are visible?', 'Describe the current terminal output')"}
                     },
                     "required": ["prompt"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
+                name: "analyze_image",
+                description: "Analyze an EXISTING image file (screenshot, photo, diagram) already saved on disk, using llama3.2-vision:11b. ALWAYS use this for paths ending in .png/.jpg/.jpeg/.gif/.webp/.bmp/.tiff/.ico — NEVER use read_file, read_files, analyze_code, or autofix_code on image files; those only handle UTF-8 text and will fail.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "path": {"type": "string", "description": "Absolute path to the image file to analyze"},
+                        "prompt": {"type": "string", "description": "What to look for or ask about the image (e.g. 'What error is shown?', 'Describe this UI')"}
+                    },
+                    "required": ["path"]
                 }),
             },
         },
@@ -692,10 +715,30 @@ fn normalize_args(args: &serde_json::Value) -> serde_json::Value {
 
 // ── Tool execution ───────────────────────────────────────────────────────────
 
+/// Detect binary image files by extension so text-reading tools can redirect
+/// the model to `analyze_image` instead of failing with a raw UTF-8 decode error.
+fn is_image_path(path: &str) -> bool {
+    let ext = std::path::Path::new(path)
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|e| e.to_lowercase())
+        .unwrap_or_default();
+    matches!(
+        ext.as_str(),
+        "png" | "jpg" | "jpeg" | "gif" | "webp" | "bmp" | "tiff" | "tif" | "ico"
+    )
+}
+
 async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, session_id: &str) -> String {
     match name {
         "read_file" => {
             let path = args["path"].as_str().unwrap_or("");
+            if is_image_path(path) {
+                return format!(
+                    "ERROR: '{}' is an image file, not text. Call the analyze_image tool with this path instead of read_file.",
+                    path
+                );
+            }
             match tokio::fs::read_to_string(path).await {
                 Ok(content) => {
                     if content.len() > 32_000 {
@@ -716,6 +759,10 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
             let mut result = String::new();
             for p in paths {
                 result.push_str(&format!("=== {} ===\n", p));
+                if is_image_path(p) {
+                    result.push_str("ERROR: this is an image file, not text. Call the analyze_image tool with this path instead.\n");
+                    continue;
+                }
                 match tokio::fs::read_to_string(p).await {
                     Ok(content) => {
                         if content.len() > 32_000 {
@@ -1401,10 +1448,36 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
             }
         }
 
+        "analyze_image" => {
+            let path = args["path"].as_str().unwrap_or("");
+            let prompt = args["prompt"].as_str()
+                .unwrap_or("Describe this image in detail, including any visible text, errors, or UI elements.");
+            if path.is_empty() { return "ERROR: path is required".to_string(); }
+            let data = match tokio::fs::read(path).await {
+                Ok(d) => d,
+                Err(e) => return format!("ERROR: failed to read image {}: {}", path, e),
+            };
+            let b64 = match crate::vision_commands::resize_for_vision(&data) {
+                Ok(b) => b,
+                Err(e) => return format!("ERROR: failed to decode image {} ({}): {}", path, 
+                    std::path::Path::new(path).extension().and_then(|e| e.to_str()).unwrap_or("unknown"), e),
+            };
+            match crate::vision_commands::query_vision_ai(prompt.to_string(), b64, None, None, None).await {
+                Ok(description) => description,
+                Err(e) => format!("ERROR: image analysis failed: {}", e),
+            }
+        }
+
         "analyze_code" => {
             let path = args["path"].as_str().unwrap_or("");
             let analysis_type = args["analysis_type"].as_str().unwrap_or("errors");
             if path.is_empty() { return "ERROR: path is required".to_string(); }
+            if is_image_path(path) {
+                return format!(
+                    "ERROR: '{}' is an image file, not source code. Call the analyze_image tool with this path instead of analyze_code.",
+                    path
+                );
+            }
 
             // If path is a DIRECTORY: find all project roots and run real compiler checks.
             // Handles both single projects (has Cargo.toml/package.json at root) and
@@ -1694,6 +1767,12 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
             let path = args["path"].as_str().unwrap_or("");
             let dry_run = args["dry_run"].as_bool().unwrap_or(false);
             if path.is_empty() { return "ERROR: path is required".to_string(); }
+            if is_image_path(path) {
+                return format!(
+                    "ERROR: '{}' is an image file, not source code. Call the analyze_image tool with this path instead of autofix_code.",
+                    path
+                );
+            }
 
             let ollama_host = std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
             let ollama_port = std::env::var("OLLAMA_PORT").unwrap_or_else(|_| "11434".to_string());
