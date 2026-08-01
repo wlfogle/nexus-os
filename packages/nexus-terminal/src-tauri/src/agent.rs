@@ -779,6 +779,21 @@ fn is_image_path(path: &str) -> bool {
     )
 }
 
+/// List Host aliases configured in ~/.ssh/config (excluding wildcard patterns), so tools that
+/// need a concrete SSH target can ground the model in real host names instead of leaving it to
+/// guess or retry blind. Shared by diagnose_connection_error and ssh_exec's error path.
+async fn list_ssh_management_hosts() -> Vec<String> {
+    let cmd = "grep -i '^Host ' ~/.ssh/config 2>/dev/null | grep -v '[*?]' | awk '{print $2}'";
+    match tokio::time::timeout(
+        Duration::from_secs(5),
+        tokio::process::Command::new("sh").arg("-c").arg(cmd).output(),
+    ).await {
+        Ok(Ok(out)) => String::from_utf8_lossy(&out.stdout)
+            .lines().map(|l| l.trim().to_string()).filter(|l| !l.is_empty()).collect(),
+        _ => vec![],
+    }
+}
+
 /// If OCR text indicates a connection/network/service failure (e.g. a browser's
 /// "can't connect" page), mechanically diagnose the target host:port with ping/curl
 /// and list configured SSH management hosts — deterministically, in Rust, without
@@ -845,15 +860,7 @@ async fn diagnose_connection_error(ocr_text: &str) -> Option<String> {
 
     // List configured SSH management hosts so the model has concrete candidates
     // in front of it immediately, instead of needing a separate tool call to find them.
-    let ssh_hosts_cmd = "grep -i '^Host ' ~/.ssh/config 2>/dev/null | grep -v '[*?]' | awk '{print $2}'";
-    let ssh_hosts: Vec<String> = match tokio::time::timeout(
-        Duration::from_secs(5),
-        tokio::process::Command::new("sh").arg("-c").arg(ssh_hosts_cmd).output(),
-    ).await {
-        Ok(Ok(out)) => String::from_utf8_lossy(&out.stdout)
-            .lines().map(|l| l.trim().to_string()).filter(|l| !l.is_empty()).collect(),
-        _ => vec![],
-    };
+    let ssh_hosts = list_ssh_management_hosts().await;
 
     report.push_str(&format!(
         "\n--- SSH management hosts available (from ~/.ssh/config) ---\n{}\n",
@@ -910,6 +917,21 @@ mod connection_diagnosis_tests {
         let args = serde_json::json!({});
         let result = super::exec_tool("ping_host", &args, "/tmp", "").await;
         assert!(result.contains("ERROR"), "expected an error when host is missing: {}", result);
+    }
+
+    #[tokio::test]
+    async fn ssh_exec_missing_args_gives_actionable_hint_not_bare_error() {
+        // Reported failure: the model called ssh_exec 3 times in a row with empty host/cmd
+        // because the bare "ERROR: host and cmd are required" gave it nothing to correct
+        // itself with. The error must now either list real ~/.ssh/config hosts or explicitly
+        // say none are configured — either way, more than the bare original message.
+        let args = serde_json::json!({});
+        let result = super::exec_tool("ssh_exec", &args, "/tmp", "").await;
+        assert!(result.contains("host and cmd are required"));
+        assert!(
+            result.contains("Available SSH hosts") || result.contains("No SSH hosts are configured"),
+            "expected an actionable hint beyond the bare error: {}", result
+        );
     }
 }
 
@@ -1412,7 +1434,16 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
             let host = args["host"].as_str().unwrap_or("");
             let cmd = args["cmd"].as_str().unwrap_or("");
             if host.is_empty() || cmd.is_empty() {
-                return "ERROR: host and cmd are required".to_string();
+                // A bare "host and cmd are required" gives the model nothing new to correct
+                // itself with, so it tends to just retry blind with empty args again. Ground
+                // it with real candidate hosts so the retry can actually succeed.
+                let hosts = list_ssh_management_hosts().await;
+                let hint = if hosts.is_empty() {
+                    "No SSH hosts are configured in ~/.ssh/config — ask the user which host manages this service.".to_string()
+                } else {
+                    format!("Available SSH hosts: {}. Call ssh_exec again with one of these EXACT names as 'host' and a real command (e.g. 'qm list', 'systemctl status homeassistant') as 'cmd'.", hosts.join(", "))
+                };
+                return format!("ERROR: host and cmd are required. {}", hint);
             }
             let full_cmd = format!("ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 {} '{}'", host, cmd.replace('\'', "'\"'\"'"));
             match tokio::time::timeout(
@@ -2217,7 +2248,7 @@ fn describes_future_action(text: &str) -> bool {
     const FUTURE_ACTION_PHRASES: &[&str] = &[
         // First-person: announces intent but doesn't act
         "i will now", "i'll now", "i will execute", "i will investigate", "i will check",
-        "i will restart", "i will update you", "i will proceed", "let me now",
+        "i will restart", "i will update you", "i will proceed", "let me now", "let me try",
         "i'm going to", "i am going to", "i will use", "i will run", "i will call",
         "i will ssh", "next, i will", "i will log into", "i will look into",
         "i will first", "i will then", "i will attempt", "the next step is",
@@ -2789,12 +2820,30 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
         // completely unambiguous here, so rather than just asking it to retry (which may
         // produce the same malformed shape again), parse the JSON ourselves and execute the
         // call directly — salvaging what the model clearly meant instead of gambling on a retry.
+        //
+        // BUG #4 (fixed): this salvage path inserted into `seen_calls` but never CHECKED it
+        // first, unlike the native tool_calls path below. A model that keeps regenerating the
+        // exact same fake JSON (observed live: identical "1255 chars" content for 20+ steps in
+        // a row, all salvaged as ping_host) re-executed the same call every single step with no
+        // duplicate rejection, running all the way to MAX_STEPS (~50 steps, ~4+ minutes) instead
+        // of being caught after the first repeat — this is the "stuck in a ping loop" the user
+        // hit. Must check-then-insert exactly like the real tool_calls duplicate detection.
         if collected_tool_calls.is_empty() && !full_content.trim().is_empty() {
             if let Some((fake_name, fake_args)) = parse_fake_tool_call(&full_content) {
+                let key = format!("{}:{}", fake_name, serde_json::to_string(&fake_args).unwrap_or_default());
+                if seen_calls.contains(&key) {
+                    warn!("Step {} repeated the same fake JSON tool-call for '{}' — rejecting as duplicate instead of re-executing", step, fake_name);
+                    messages.push(ChatMessage {
+                        role: "user".to_string(),
+                        content: "You already ran this exact call. Stop repeating it and give your final answer now based on what you already found.".to_string(),
+                        tool_calls: None,
+                        tool_call_id: None,
+                    });
+                    continue;
+                }
                 let probe_result = exec_tool(&fake_name, &fake_args, cwd, session_id).await;
                 if !probe_result.starts_with("ERROR: unknown tool") {
                     warn!("Step {} wrote a fake JSON tool-call for '{}' instead of using native function-calling — executing it directly", step, fake_name);
-                    let key = format!("{}:{}", fake_name, serde_json::to_string(&fake_args).unwrap_or_default());
                     seen_calls.insert(key);
                     let _ = app.emit("agent-tool-call", AgentToolEvent {
                         session_id: session_id.to_string(),
