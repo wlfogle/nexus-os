@@ -2253,6 +2253,8 @@ fn describes_future_action(text: &str) -> bool {
         "i will ssh", "next, i will", "i will log into", "i will look into",
         "i will first", "i will then", "i will attempt", "the next step is",
         "stand by", "give me a moment", "one moment", "shortly", "will now",
+        "let's try", "let's now", "let's log", "let's check", "let's see if",
+        "next, let's", "logging into",
         // Second-person: tells the user what THEY should do, instead of doing it
         "you should use", "you should now", "you should try", "you should check",
         "you should run", "you should log", "you can use the", "you can try",
@@ -2384,6 +2386,14 @@ mod future_action_tests {
             command (qm start <id>, systemctl restart <name>, docker start <name>) to start it \
             again.";
         assert!(describes_future_action(text), "expected second-person advice-giving to be detected");
+    }
+
+    #[test]
+    fn detects_next_step_contraction_phrasing() {
+        // The exact reported failure: after real ping_host/ssh_exec calls succeeded, the model
+        // ended with this and no further tool call — identical failure mode, new wording.
+        let text = "Next, let's try logging into bahamut:";
+        assert!(describes_future_action(text), "expected 'let's try'/'logging into' phrasing to be detected");
     }
 
     #[test]
