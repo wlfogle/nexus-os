@@ -2205,6 +2205,13 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
 /// instead of either calling a tool or delivering a genuinely completed answer. Both patterns
 /// are functionally identical to giving generic advice — neither one actually did anything —
 /// so both are treated the same as "no tool calls" for self-correction.
+///
+/// Phrase matching alone is a losing game — a weak model has effectively unlimited ways to
+/// rephrase "here's what you could do" ("I will first attempt to...", "The next step is to...",
+/// "Please let me know if..."). `contains_illustrative_command_block` below catches the same
+/// failure structurally instead: regardless of phrasing, a model that is actually DOING
+/// something calls a real tool: it never needs to put an example shell command in a markdown
+/// code fence in its own answer text. Both checks are combined by the caller.
 fn describes_future_action(text: &str) -> bool {
     let lower = text.to_lowercase();
     const FUTURE_ACTION_PHRASES: &[&str] = &[
@@ -2213,6 +2220,7 @@ fn describes_future_action(text: &str) -> bool {
         "i will restart", "i will update you", "i will proceed", "let me now",
         "i'm going to", "i am going to", "i will use", "i will run", "i will call",
         "i will ssh", "next, i will", "i will log into", "i will look into",
+        "i will first", "i will then", "i will attempt", "the next step is",
         "stand by", "give me a moment", "one moment", "shortly", "will now",
         // Second-person: tells the user what THEY should do, instead of doing it
         "you should use", "you should now", "you should try", "you should check",
@@ -2221,8 +2229,38 @@ fn describes_future_action(text: &str) -> bool {
         "you need to", "you would need to", "if you find", "if you have",
         "try using", "consider using", "here's how you can", "here is how you can",
         "to resolve this issue, you", "to resolve this, you", "make sure to", "please ensure",
+        // Closing filler that signals "I'm done talking, over to you" without having acted
+        "please let me know", "let me know if", "feel free to",
     ];
     FUTURE_ACTION_PHRASES.iter().any(|p| lower.contains(p))
+}
+
+/// True if the model's answer contains a markdown code fence whose content looks like an
+/// illustrative shell command (starts with `ping`, `curl`, `ssh`, `qm`, `pct`, `systemctl`,
+/// `docker`, etc.) rather than a real tool result. Real tool output arrives as a `tool` role
+/// message injected by our own code, never as something the model writes into its own answer
+/// — so a command-shaped code fence in assistant text is always a sign the model is showing an
+/// example instead of actually running it. This structural check catches every rephrasing of
+/// "here's the command you'd run" without needing to enumerate the phrasing itself.
+fn contains_illustrative_command_block(text: &str) -> bool {
+    const COMMAND_PREFIXES: &[&str] = &[
+        "ping ", "curl ", "ssh ", "qm ", "pct ", "systemctl ", "docker ", "wget ", "nc ",
+    ];
+    let mut in_block = false;
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("```") {
+            in_block = !in_block;
+            continue;
+        }
+        if in_block {
+            let lower = trimmed.to_lowercase();
+            if COMMAND_PREFIXES.iter().any(|p| lower.starts_with(p)) {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 #[cfg(test)]
@@ -2255,6 +2293,29 @@ mod future_action_tests {
             command (qm start <id>, systemctl restart <name>, docker start <name>) to start it \
             again.";
         assert!(describes_future_action(text), "expected second-person advice-giving to be detected");
+    }
+
+    #[test]
+    fn detects_illustrative_ping_and_curl_blocks() {
+        // The exact reported failure: model shows example commands in code fences and
+        // narrates around them ("I will first attempt…", "The next step is…") instead of
+        // ever calling a real tool. No single phrase list will ever fully cover this kind of
+        // rephrasing, so the structural code-fence check must catch it independently.
+        let text = "To diagnose this, I will first attempt to ping the host:\n\n\
+            ```\nping -c 2 homeassistant.local\n```\n\n\
+            If that fails, I will then try:\n\n\
+            ```\ncurl -v http://homeassistant.local:8123/\n```\n\n\
+            The next step is to check the Home Assistant service. Please let me know if you \
+            need further assistance.";
+        assert!(super::contains_illustrative_command_block(text), "expected fenced ping/curl commands to be detected");
+    }
+
+    #[test]
+    fn allows_code_blocks_that_are_not_commands() {
+        // Quoting OCR text (as instructed elsewhere in SYSTEM_PROMPT) in a fenced block must
+        // NOT be mistaken for an illustrative command.
+        let text = "```\nServer Not Found\nFirefox can't connect to the server.\n```\n\nThe host is down.";
+        assert!(!super::contains_illustrative_command_block(text), "quoted non-command text should not be flagged");
     }
 }
 
@@ -2663,11 +2724,15 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
         // then stop; it just calls the next tool. Detect that pattern at ANY step via
         // future-tense/intent phrasing, not just on the first response.
         let describes_future_action = describes_future_action(&full_content);
+        let has_illustrative_command = contains_illustrative_command_block(&full_content);
         if collected_tool_calls.is_empty() && !full_content.trim().is_empty()
-            && (step == 0 || describes_future_action)
+            && (step == 0 || describes_future_action || has_illustrative_command)
         {
             let correction = format!(
-                "You described what to do but didn't do it. Execute the task now. Call the appropriate tools immediately. Do not explain further.\n\nYour previous response was: {}",
+                "You described what to do but didn't do it — you wrote out commands instead of \
+                calling the actual tools. Execute the task now using real tool calls (run_cmd, \
+                ping_host, ssh_exec, etc.) Do not put commands in a code block and describe what \
+                they would do — call the tool.\n\nYour previous response was: {}",
                 if full_content.len() > 500 { &full_content[..500] } else { &full_content }
             );
             messages.push(crate::agent::ChatMessage {
@@ -2676,7 +2741,7 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
                 tool_calls: None,
                 tool_call_id: None,
             });
-            warn!("Step {} had text but no tool calls (describes_future_action={}) — injecting self-correction and retrying", step, describes_future_action);
+            warn!("Step {} had text but no tool calls (describes_future_action={}, has_illustrative_command={}) — injecting self-correction and retrying", step, describes_future_action, has_illustrative_command);
             continue;
         }
 
