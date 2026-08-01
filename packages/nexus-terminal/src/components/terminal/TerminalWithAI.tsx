@@ -6,11 +6,12 @@ import { WebLinksAddon } from '@xterm/addon-web-links';
 import { SearchAddon } from '@xterm/addon-search';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { TerminalTab } from '../../types/terminal';
+import { TerminalTab, TerminalBlock } from '../../types/terminal';
 import { addError, addTerminalBlock, updateTabWorkingDirectory } from '../../store/slices/terminalTabSlice';
 import { useInputRouting } from '../../hooks/useInputRouting';
 import { routeCommand } from '../../services/commandRouting';
 import { terminalLogger } from '../../utils/logger';
+import { BlockList } from './BlockList';
 import '@xterm/xterm/css/xterm.css';
 interface TerminalWithAIProps {
   tab: TerminalTab;
@@ -23,6 +24,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
   const terminal = useRef<Terminal | null>(null);
   const fitAddon = useRef<FitAddon | null>(null);
   const [aiPanelOpen, setAIPanelOpen] = useState(true); // Start in AI mode by default
+  const [blockListOpen, setBlockListOpen] = useState(false); // Warp-style block timeline overlay
   const [isTerminalReady, setIsTerminalReady] = useState(false);
   const [agentModel, setAgentModel] = useState('…');
 
@@ -607,7 +609,94 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     }).catch(() => { setIsHealing(false); });
   };
 
-  // ── Session memory — persist AI blocks to localStorage ───────────────────
+  // ── Block actions (Warp-style block list: re-run / ask AI about a block) ───
+  const handleRerunBlock = async (cmd: string) => {
+    if (!tab.terminalId) return;
+    setBlockListOpen(false);
+    recordShellCommand(cmd);
+    setErrorState(null);
+    scheduleErrorCheck(cmd);
+    try {
+      // Warp uses bracketed paste for fish to prevent per-keystroke interpretation.
+      const isFish = tab.shell === 'fish';
+      const payload = isFish
+        ? `\x1b[200~${cmd}\x1b[201~\r`
+        : `${cmd}\r`;
+      await invoke('write_to_terminal', { terminalId: tab.terminalId, data: payload });
+    } catch (e) {
+      terminalLogger.error('Re-run block failed', e as Error, 'rerun_block_failed', { terminalId: tab.terminalId });
+    }
+  };
+
+  const handleAskAIAboutBlock = async (block: TerminalBlock) => {
+    setBlockListOpen(false);
+    const prompt = [
+      `Explain this terminal command and its result:`,
+      ``,
+      `$ ${block.command}`,
+      '```',
+      block.output.slice(0, 3000) || '(no output)',
+      '```',
+      `Exit code: ${block.exitCode}`,
+      block.exitCode !== 0 ? `\nThis command failed — diagnose why and propose a fix.` : '',
+    ].filter(Boolean).join('\n');
+
+    const sessionId = `block_ask_${Date.now()}`;
+    const streamId = `block_ask_stream_${Date.now()}`;
+    let streamBuffer = '';
+    const localTools: Array<{ tool: string; args: string; result?: string }> = [];
+    setAiBlocks(prev => [...prev, { id: `block_ask_user_${Date.now()}`, role: 'user', content: `Ask AI about: ${block.command}` }]);
+    setAiBlocks(prev => [...prev, { id: streamId, role: 'assistant', content: '', streaming: '' }]);
+    setIsAILoading(true);
+
+    const u1 = await listen<any>('agent-token', ({ payload }) => {
+      if (payload.session_id !== sessionId) return;
+      streamBuffer += payload.token;
+      setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, streaming: streamBuffer + '█' } : b));
+    });
+    const u2 = await listen<any>('agent-tool-call', ({ payload }) => {
+      if (payload.session_id !== sessionId) return;
+      localTools.push({ tool: payload.tool, args: payload.args });
+      setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, tools: [...localTools] } : b));
+    });
+    const u3 = await listen<any>('agent-tool-result', ({ payload }) => {
+      if (payload.session_id !== sessionId) return;
+      const idx = localTools.map(t => t.tool).lastIndexOf(payload.tool);
+      if (idx >= 0) localTools[idx].result = payload.result.slice(0, 500);
+      setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, tools: [...localTools] } : b));
+    });
+    const u4 = await listen<any>('agent-done', ({ payload }) => {
+      if (payload.session_id !== sessionId) return;
+      const toolSec = localTools.length > 0
+        ? localTools.map(t => `🔧 ${t.tool}\n\`\`\`\n${(t.result ?? '').slice(0, 600)}\n\`\`\``).join('\n\n')
+        : '';
+      const final = toolSec && payload.answer.trim()
+        ? `${toolSec}\n\n${payload.answer.trim()}`
+        : toolSec || payload.answer.trim() || '✓ Done';
+      setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, content: final, streaming: undefined, tools: undefined } : b));
+      setIsAILoading(false);
+      u1(); u2(); u3(); u4(); u5();
+    });
+    const u5 = await listen<any>('agent-error', ({ payload }) => {
+      if (payload.session_id !== sessionId) return;
+      setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, content: `❌ ${payload.error}`, streaming: undefined } : b));
+      setIsAILoading(false);
+      u1(); u2(); u3(); u4(); u5();
+    });
+
+    await invoke('agent_chat_stream', {
+      message: prompt,
+      sessionId,
+      history: [],
+      cwd: (!tab.workingDirectory || tab.workingDirectory === '~') ? null : tab.workingDirectory,
+      context: `Shell: ${tab.shell}\nDirectory: ${block.cwd || tab.workingDirectory}`,
+    }).catch(() => {
+      setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, content: '❌ Failed to reach agent', streaming: undefined } : b));
+      setIsAILoading(false);
+    });
+  };
+
+  // ── Session memory — persist AI blocks to localStorage ────────────────────────
   const SESSION_KEY = `nexusai_session_${tab.id}`;
 
   // Restore session on mount
@@ -887,6 +976,16 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
           </div>
         )}
 
+        {/* Warp-style block timeline: completed commands as discrete cards */}
+        {blockListOpen && (
+          <BlockList
+            blocks={tab.recentBlocks}
+            onRerun={handleRerunBlock}
+            onAskAI={handleAskAIAboutBlock}
+            onClose={() => setBlockListOpen(false)}
+          />
+        )}
+
         {/* AI blocks float as an overlay panel at the bottom of the terminal */}
         {aiBlocks.length > 0 && (
           <div style={{
@@ -1058,6 +1157,19 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
                   {mode === 'shell' ? 'Terminal' : mode === 'ai' ? 'Agent' : 'Auto'}
                 </button>
               ))}
+              {/* Blocks toggle — Warp-style block timeline */}
+              <button
+                onClick={() => setBlockListOpen(o => !o)}
+                title="Show completed commands as blocks"
+                style={{
+                  fontSize: 10, padding: '1px 8px', borderRadius: 4, border: 'none', cursor: 'pointer',
+                  background: blockListOpen ? '#374151' : 'transparent',
+                  color: blockListOpen ? '#fff' : '#6b7280',
+                  fontWeight: blockListOpen ? 600 : 400,
+                }}
+              >
+                📋 Blocks{tab.recentBlocks.length > 0 ? ` (${tab.recentBlocks.length})` : ''}
+              </button>
             </div>
             <span style={{ fontSize: 10, color: '#4b5563', fontFamily: 'monospace' }}>{agentModel}</span>
           </div>
