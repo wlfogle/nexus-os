@@ -15,7 +15,6 @@ mod agent;
 mod ai;
 mod model_router;
 mod fix_engine;
-mod input_classifier;
 mod prediction;
 mod git;
 mod git_advanced;
@@ -3100,14 +3099,6 @@ async fn predict_command(
     Ok(prediction::predict_command(&partial_input, &history, &cwd, &ollama_url).await)
 }
 
-// ── Input classifier (Warp-derived) ─────────────────────────────────────────
-/// Classify terminal input as shell command or natural language.
-/// Same algorithm as Warp's HeuristicClassifier (ported from AGPL-3.0 source).
-#[tauri::command]
-async fn classify_input(input: String) -> Result<input_classifier::ClassifyResult, String> {
-    Ok(input_classifier::classify(&input).await)
-}
-
 // ── Alias persistence ────────────────────────────────────────────────────────
 #[tauri::command]
 async fn load_aliases(state: State<'_, AppState>) -> Result<Vec<serde_json::Value>, String> {
@@ -3790,8 +3781,6 @@ async fn main() {
             ollama_get_available_models,
             ollama_initialize_config,
             ollama_ensure_configured,
-// Input classifier (Warp-derived NL vs shell detection)
-            classify_input,
             run_cmd_capture,
             predict_command,
             // Agent

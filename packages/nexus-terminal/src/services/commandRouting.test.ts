@@ -152,3 +152,17 @@ describe('CommandRoutingService.isShellCommand (instance)', () => {
     expect(svc.isShellCommand('what services are running?')).toBe(false);
   });
 });
+
+// ── Regression: known-command dictionary must win regardless of trailing words ────
+// The (now-removed) Rust classifier had an NL_VERB_PREFIXES stage that force-classified
+// any input starting with a common English verb ("find", "make", ...) as AI unless a
+// later token had a dash/slash/dot. This TS classifier's Tier 1 known-command dictionary
+// must always win instead, regardless of the rest of the input.
+describe('isShellCommand — known-command dictionary wins over generic-looking arguments', () => {
+  it('"find largefile" → shell (find is Tier 1, no dot/dash/slash in the arg)', () => {
+    expect(isShellCommand('find largefile')).toBe(true);
+  });
+  it('"make build" → shell (make is Tier 1, no dot/dash/slash in the arg)', () => {
+    expect(isShellCommand('make build')).toBe(true);
+  });
+});

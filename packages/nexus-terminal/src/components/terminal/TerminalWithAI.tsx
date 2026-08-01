@@ -9,6 +9,7 @@ import { listen } from '@tauri-apps/api/event';
 import { TerminalTab } from '../../types/terminal';
 import { addError, addTerminalBlock, updateTabWorkingDirectory } from '../../store/slices/terminalTabSlice';
 import { useInputRouting } from '../../hooks/useInputRouting';
+import { routeCommand } from '../../services/commandRouting';
 import { terminalLogger } from '../../utils/logger';
 import '@xterm/xterm/css/xterm.css';
 interface TerminalWithAIProps {
@@ -683,12 +684,23 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     if (value.startsWith('*')) { setInputMode('ai'); return; }
     if (!value.trim()) { setInputMode('detecting'); return; }
 
-    // Debounced Warp classifier
+    // Debounced classifier.
+    // NOTE: this used to call the Rust `classify_input` Tauri command instead of
+    // commandRoutingService.routeCommand(). That Rust classifier (src-tauri/src/input_classifier.rs,
+    // now removed) had an over-aggressive NL_VERB_PREFIXES stage: any input whose first word was a
+    // common English verb ("find", "make", "list", "check", ...) was force-classified as AI unless a
+    // later token had a dash/slash/dot — e.g. "find largefile" or "make build" were misrouted to AI
+    // even though "find"/"make" are real Tier-1 known-command matches in this TS classifier. The
+    // TS classifier's Tier 1 (known-command dictionary) always wins regardless of the rest of the
+    // input, so it doesn't have this failure mode. (Genuinely ambiguous single-word-verb inputs
+    // like "run tests"/"start server", where the first word isn't a real standalone command, still
+    // default to AI in both classifiers — that's Warp's intentional "safer than accidental shell
+    // execution" default, not a bug.)
     if (classifyDebounce.current) clearTimeout(classifyDebounce.current);
     classifyDebounce.current = setTimeout(async () => {
       try {
-        const result = await invoke<{ input_type: string }>('classify_input', { input: value });
-        setInputMode(result.input_type === 'shell' ? 'shell' : 'ai');
+        const result = await routeCommand(value);
+        setInputMode(result.isShellCommand ? 'shell' : 'ai');
       } catch {
         setInputMode(isShellCommand(value) ? 'shell' : 'ai');
       }
