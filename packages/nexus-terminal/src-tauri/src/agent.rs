@@ -2200,18 +2200,27 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
     }
 }
 
-/// True if the model's text is narrating a future action ("I will now ssh into...") instead
-/// of either calling a tool or delivering a genuinely completed answer. A model that announces
-/// intent and stops is functionally identical to one that gives generic advice — neither one
-/// actually did anything — so this is treated the same as "no tool calls" for self-correction.
+/// True if the model's text is narrating a future action ("I will now ssh into...") OR telling
+/// the USER what to do ("you should use ssh_exec...", "if you find a matching service, run...")
+/// instead of either calling a tool or delivering a genuinely completed answer. Both patterns
+/// are functionally identical to giving generic advice — neither one actually did anything —
+/// so both are treated the same as "no tool calls" for self-correction.
 fn describes_future_action(text: &str) -> bool {
     let lower = text.to_lowercase();
     const FUTURE_ACTION_PHRASES: &[&str] = &[
+        // First-person: announces intent but doesn't act
         "i will now", "i'll now", "i will execute", "i will investigate", "i will check",
         "i will restart", "i will update you", "i will proceed", "let me now",
         "i'm going to", "i am going to", "i will use", "i will run", "i will call",
         "i will ssh", "next, i will", "i will log into", "i will look into",
         "stand by", "give me a moment", "one moment", "shortly", "will now",
+        // Second-person: tells the user what THEY should do, instead of doing it
+        "you should use", "you should now", "you should try", "you should check",
+        "you should run", "you should log", "you can use the", "you can try",
+        "you could use", "you could try", "you may need to", "you may want to",
+        "you need to", "you would need to", "if you find", "if you have",
+        "try using", "consider using", "here's how you can", "here is how you can",
+        "to resolve this issue, you", "to resolve this, you", "make sure to", "please ensure",
     ];
     FUTURE_ACTION_PHRASES.iter().any(|p| lower.contains(p))
 }
@@ -2233,6 +2242,19 @@ mod future_action_tests {
         let text = "The host is reachable and Home Assistant responded with HTTP 200. \
             No further action is needed.";
         assert!(!describes_future_action(text), "a completed, grounded answer should not be flagged");
+    }
+
+    #[test]
+    fn detects_second_person_advice_giving() {
+        // The exact reported failure: model tells the USER what to do instead of doing it.
+        let text = "Based on the mechanical connectivity diagnosis, it appears that the server \
+            at homeassistant.local:8123 is currently unreachable. To resolve this issue, you \
+            should use the ssh_exec tool to log into one of the management hosts (tiamat, \
+            bahamut, archer, etc.) and check whether a VM/container/service matching this \
+            hostname is stopped or crashed. If you find a matching service, use the appropriate \
+            command (qm start <id>, systemctl restart <name>, docker start <name>) to start it \
+            again.";
+        assert!(describes_future_action(text), "expected second-person advice-giving to be detected");
     }
 }
 
