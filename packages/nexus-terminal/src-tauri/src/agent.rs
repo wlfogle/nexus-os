@@ -247,6 +247,16 @@ pub struct AgentErrorEvent {
     pub error: String,
 }
 
+/// Emitted right before the agent discards a failed attempt and retries (self-correction,
+/// duplicate-call rejection, etc.). The frontend must clear its live streaming buffer for this
+/// session on receipt — otherwise every discarded attempt's text keeps getting appended to what
+/// the user sees, producing a huge wall of near-duplicate "scratch work" text even though only
+/// the final successful attempt actually matters.
+#[derive(Debug, Clone, Serialize)]
+pub struct AgentRetryEvent {
+    pub session_id: String,
+}
+
 /// Emitted when the agent calls ask_user — frontend renders clickable buttons.
 /// `data` carries extra context for the frontend (e.g. scan_path for fix_engine).
 #[derive(Debug, Clone, Serialize)]
@@ -2843,6 +2853,7 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
                 let key = format!("{}:{}", fake_name, serde_json::to_string(&fake_args).unwrap_or_default());
                 if seen_calls.contains(&key) {
                     warn!("Step {} repeated the same fake JSON tool-call for '{}' — rejecting as duplicate instead of re-executing", step, fake_name);
+                    let _ = app.emit("agent-retry", AgentRetryEvent { session_id: session_id.to_string() });
                     messages.push(ChatMessage {
                         role: "user".to_string(),
                         content: "You already ran this exact call. Stop repeating it and give your final answer now based on what you already found.".to_string(),
@@ -2890,6 +2901,7 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
                 response was: {}",
                 if full_content.len() > 500 { &full_content[..500] } else { &full_content }
             );
+            let _ = app.emit("agent-retry", AgentRetryEvent { session_id: session_id.to_string() });
             messages.push(crate::agent::ChatMessage {
                 role: "user".to_string(),
                 content: correction,
@@ -2918,6 +2930,7 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
 
             if has_duplicate {
                 warn!("Duplicate tool call detected at streaming step {}", step);
+                let _ = app.emit("agent-retry", AgentRetryEvent { session_id: session_id.to_string() });
                 messages.push(ChatMessage {
                     role: "user".to_string(),
                     content: "You already ran this. Give your final answer now.".to_string(),

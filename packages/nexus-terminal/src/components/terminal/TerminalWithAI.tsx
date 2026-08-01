@@ -591,13 +591,21 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
         : toolSec || payload.answer.trim() || '✓ Done';
       setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, content: final, streaming: undefined, tools: undefined } : b));
       setIsHealing(false);
-      u1(); u2(); u3(); u4(); u5();
+      u1(); u2(); u3(); u4(); u5(); u6();
     });
     const u5 = await listen<any>('agent-error', ({ payload }) => {
       if (payload.session_id !== sessionId) return;
       setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, content: `❌ ${payload.error}`, streaming: undefined } : b));
       setIsHealing(false);
-      u1(); u2(); u3(); u4(); u5();
+      u1(); u2(); u3(); u4(); u5(); u6();
+    });
+    // Discard the visible text from a failed attempt (self-correction/duplicate-call
+    // rejection) instead of letting it keep accumulating in streamBuffer — otherwise every
+    // discarded retry's narration piles up into one huge wall of near-duplicate text.
+    const u6 = await listen<{ session_id: string }>('agent-retry', ({ payload }) => {
+      if (payload.session_id !== sessionId) return;
+      streamBuffer = '';
+      setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, streaming: '↻ retrying…' } : b));
     });
 
     await invoke('agent_chat_stream', {
@@ -675,13 +683,19 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
         : toolSec || payload.answer.trim() || '✓ Done';
       setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, content: final, streaming: undefined, tools: undefined } : b));
       setIsAILoading(false);
-      u1(); u2(); u3(); u4(); u5();
+      u1(); u2(); u3(); u4(); u5(); u6();
     });
     const u5 = await listen<any>('agent-error', ({ payload }) => {
       if (payload.session_id !== sessionId) return;
       setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, content: `❌ ${payload.error}`, streaming: undefined } : b));
       setIsAILoading(false);
-      u1(); u2(); u3(); u4(); u5();
+      u1(); u2(); u3(); u4(); u5(); u6();
+    });
+    // Discard failed-attempt text instead of accumulating it (see handleHeal for full rationale).
+    const u6 = await listen<{ session_id: string }>('agent-retry', ({ payload }) => {
+      if (payload.session_id !== sessionId) return;
+      streamBuffer = '';
+      setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, streaming: '↻ retrying…' } : b));
     });
 
     await invoke('agent_chat_stream', {
@@ -917,13 +931,21 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
           : toolSection || payload.answer.trim() || '✓ Done';
         setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, content: final, streaming: undefined, tools: undefined } : b));
         setIsAILoading(false);
-        u1(); u2(); u3(); u4(); u5();
+        u1(); u2(); u3(); u4(); u5(); u6();
       });
       const u5 = await listen<{ session_id: string; error: string }>('agent-error', ({ payload }) => {
         if (payload.session_id !== sessionId) return;
         setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, content: `❌ ${payload.error}`, streaming: undefined } : b));
         setIsAILoading(false);
-        u1(); u2(); u3(); u4(); u5();
+        u1(); u2(); u3(); u4(); u5(); u6();
+      });
+      // Discard failed-attempt text (self-correction/duplicate-call rejection) instead of
+      // letting it keep accumulating in streamBuffer — otherwise every discarded retry's
+      // narration piles up into one huge wall of near-duplicate text visible to the user.
+      const u6 = await listen<{ session_id: string }>('agent-retry', ({ payload }) => {
+        if (payload.session_id !== sessionId) return;
+        streamBuffer = '';
+        setAiBlocks(prev => prev.map(b => b.id === streamId ? { ...b, streaming: '↻ retrying…' } : b));
       });
 
       // Build block context from recent terminal blocks
