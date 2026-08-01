@@ -2268,6 +2268,14 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
         // Self-correction: if the model gave text but no tool calls on the first step,
         // it's describing instead of doing. Inject a correction to force tool execution.
         // This is what makes Oz (using frontier models) reliable — the model always follows up.
+        //
+        // BUG (fixed): this branch pushed the correction message into `messages` but never
+        // `continue`d the loop, so execution fell straight through to the "no tool calls →
+        // final answer" branch below and immediately returned the model's *original*
+        // describing text as the accepted final answer — the correction was built and queued
+        // but never actually sent. This is the root cause of the agent "just giving you things
+        // to do" instead of executing them: the self-correction that was supposed to prevent
+        // exactly that never ran.
         if collected_tool_calls.is_empty() && step == 0 && !full_content.trim().is_empty() {
             let correction = format!(
                 "You described what to do but didn't do it. Execute the task now. Call the appropriate tools immediately. Do not explain further.\n\nYour previous response was: {}",
@@ -2279,8 +2287,8 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
                 tool_calls: None,
                 tool_call_id: None,
             });
-            // Don't emit agent-done yet — continue the loop to force tool execution
-            warn!("Step 0 had text but no tool calls — injecting self-correction");
+            warn!("Step 0 had text but no tool calls — injecting self-correction and retrying");
+            continue;
         }
 
         if !collected_tool_calls.is_empty() {

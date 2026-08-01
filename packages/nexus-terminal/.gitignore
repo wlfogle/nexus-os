@@ -41,9 +41,14 @@ config/
 tmp/
 temp/
 
-# AI models and data
+# AI models and data (runtime caches/downloads elsewhere in the app)
 models/
 data/
+# Exception: src-tauri/models/ holds the committed bert_tiny ONNX classifier model +
+# tokenizer (fetched from warpdotdev/warp), a required build-time source asset
+# (embedded via include_bytes!), not a runtime cache — must be tracked.
+!/src-tauri/models/
+!/src-tauri/models/**
 
 # System files
 *.pid

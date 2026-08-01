@@ -44,6 +44,17 @@ const NL_TO_SHELL: Array<{ patterns: RegExp; command: string }> = [
   { patterns: /^(show|command).*(history)/i, command: 'history | tail -20' },
 ];
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`Timed out after ${ms}ms`)), ms);
+
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (error) => { clearTimeout(timer); reject(error); },
+    );
+  });
+}
+
 /**
  * Attempts to translate a natural-language phrase directly to a shell command.
  * Returns the shell command string if matched, null otherwise.
@@ -288,16 +299,44 @@ export class CommandRoutingService {
       return { isShellCommand: false, confidence: 0.80, reason: 'Long multi-word input without command prefix', suggestedAction: 'send_to_ai' };
     }
     if (words.length <= 3 && trimmed.length < 60 && /^[a-z][a-z0-9_-]*$/.test(first)) {
-      const hasFlag = words.slice(1).some(w => w.startsWith('-') || w.startsWith('/') || w.startsWith('~') || w.includes('.'));
+      // NOTE: only an actual CLI flag ("-x", "--foo") or "~" (home-dir shorthand, which
+      // essentially never appears in natural language) counts as strong shell evidence here.
+      // A bare "/" path or a dot in the second word used to count too, but that's far too
+      // weak a signal: "read /path/to/file.md", "explain HARDWARE.md", and similar
+      // natural-language file references match it just as well as real shell invocations
+      // do, and would incorrectly short-circuit before ever reaching the PATH lookup / ONNX
+      // fallback tiers below.
+      const hasFlag = words.slice(1).some(w => w.startsWith('-') || w.startsWith('~'));
       if (hasFlag) {
-        return { isShellCommand: true, confidence: 0.72, reason: 'Command-like invocation with flags or paths', suggestedAction: 'execute_shell' };
+        return { isShellCommand: true, confidence: 0.72, reason: 'Command-like invocation with a CLI flag', suggestedAction: 'execute_shell' };
       }
       if (words.length === 1 && first.length < 25) {
         return { isShellCommand: true, confidence: 0.60, reason: 'Single unrecognised word — treating as potential command', suggestedAction: 'execute_shell' };
       }
     }
 
-    // ── TIER 5: default → AI ─────────────────────────────────────────────────
+    // ── TIER 5: ML fallback ───────────────────────────────────────────────
+    // Heuristic tiers are genuinely inconclusive. Mirrors Warp's real two-stage design:
+    // defer to the ONNX model (bert_tiny) instead of blindly defaulting. Bounded by a short
+    // timeout — bert_tiny is a tiny CPU model (millisecond-scale), not a reasoning LLM, so a
+    // generous timeout isn't needed here.
+    try {
+      const mlResult = await withTimeout(
+        invoke<{ p_shell: number; p_ai: number }>('classify_input_onnx', { input: trimmed }),
+        800,
+      );
+
+      return {
+        isShellCommand: mlResult.p_shell > mlResult.p_ai,
+        confidence: Math.max(mlResult.p_shell, mlResult.p_ai),
+        reason: `ONNX classifier (p_shell=${mlResult.p_shell.toFixed(3)}, p_ai=${mlResult.p_ai.toFixed(3)})`,
+        suggestedAction: mlResult.p_shell > mlResult.p_ai ? 'execute_shell' : 'send_to_ai',
+      };
+    } catch (error) {
+      routingLogger.warn('ONNX classifier fallback failed or timed out, defaulting to AI', error as Error, 'onnx_fallback_failed', { input: trimmed });
+    }
+
+    // ── TIER 6: default → AI (ONNX fallback unavailable) ───────────────────────
     return {
       isShellCommand: false,
       confidence: 0.75,
@@ -399,9 +438,11 @@ export class CommandRoutingService {
     if (hasNaturalLanguageStructure(words)) return false;
     if (words.length >= 4) return false;
 
-    // Short command-like input
+    // Short command-like input. See the matching comment in routeCommand() above: only an
+    // actual CLI flag or "~" counts as strong shell evidence — a bare path/dot in the second
+    // word is too weak a signal and misfires on natural-language file references.
     if (words.length <= 3 && trimmed.length < 60 && /^[a-z][a-z0-9_-]*$/.test(first)) {
-      const hasFlag = words.slice(1).some(w => w.startsWith('-') || w.startsWith('/') || w.startsWith('~') || w.includes('.'));
+      const hasFlag = words.slice(1).some(w => w.startsWith('-') || w.startsWith('~'));
       if (hasFlag) return true;
       if (words.length === 1) return true;
     }

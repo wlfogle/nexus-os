@@ -6,7 +6,7 @@
  * mocked so these tests run in a plain Node environment via vitest.
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ── Mocks (must be declared before any import that triggers them) ──────────────
 
@@ -22,7 +22,8 @@ vi.mock('../utils/logger', () => ({
 
 // ── Imports (after mocks) ─────────────────────────────────────────────────────
 
-import { translateNLToShell, isShellCommand, CommandRoutingService } from './commandRouting';
+import { translateNLToShell, isShellCommand, routeCommand, CommandRoutingService } from './commandRouting';
+import { invoke } from '@tauri-apps/api/core';
 
 // ── translateNLToShell ────────────────────────────────────────────────────────
 
@@ -164,5 +165,67 @@ describe('isShellCommand — known-command dictionary wins over generic-looking 
   });
   it('"make build" → shell (make is Tier 1, no dot/dash/slash in the arg)', () => {
     expect(isShellCommand('make build')).toBe(true);
+  });
+});
+
+// ── Regression: a bare path/dot in a short input is NOT strong shell evidence ────────
+// Live bug report: "read /home/loufogle/bulletproof-mediastack/docs/HARDWARE.md" was
+// misclassified as shell. "read" is not a Tier 1 known command; the second word merely
+// looking like an absolute path with a dot used to be treated as strong shell evidence,
+// which fires just as easily on natural-language file references.
+describe('isShellCommand — bare path/dot in a short input is not strong shell evidence', () => {
+  it('"read /path/to/file.md" → AI ("read" is not a known shell command)', () => {
+    expect(isShellCommand('read /home/loufogle/bulletproof-mediastack/docs/HARDWARE.md')).toBe(false);
+  });
+  it('"read file.md" → AI', () => {
+    expect(isShellCommand('read file.md')).toBe(false);
+  });
+  it('"explain HARDWARE.md" → AI (embedded natural-language phrase still applies)', () => {
+    expect(isShellCommand('explain HARDWARE.md')).toBe(false);
+  });
+});
+
+// ── routeCommand — ONNX fallback (Tier 5) ───────────────────────────────
+describe('routeCommand — ONNX fallback for genuinely ambiguous input', () => {
+  beforeEach(() => {
+    vi.mocked(invoke).mockReset();
+  });
+
+  const mockInvoke = (onnxResult: { p_shell: number; p_ai: number } | Error) => {
+    vi.mocked(invoke).mockImplementation(async (cmd: unknown) => {
+      if (cmd === 'execute_safe_system_command') return ''; // not an installed executable
+      if (cmd === 'classify_input_onnx') {
+        if (onnxResult instanceof Error) throw onnxResult;
+        return onnxResult;
+      }
+      throw new Error(`unexpected invoke call: ${String(cmd)}`);
+    });
+  };
+
+  it('uses the ONNX classifier result for genuinely ambiguous input (shell verdict)', async () => {
+    mockInvoke({ p_shell: 0.9, p_ai: 0.1 });
+
+    const result = await routeCommand('quux glorbex');
+
+    expect(result.isShellCommand).toBe(true);
+    expect(result.reason).toContain('ONNX classifier');
+  });
+
+  it('uses the ONNX classifier result for genuinely ambiguous input (AI verdict)', async () => {
+    mockInvoke({ p_shell: 0.2, p_ai: 0.8 });
+
+    const result = await routeCommand('quux glorbex');
+
+    expect(result.isShellCommand).toBe(false);
+    expect(result.reason).toContain('ONNX classifier');
+  });
+
+  it('falls back to the safe AI default when the ONNX call fails', async () => {
+    mockInvoke(new Error('backend unavailable'));
+
+    const result = await routeCommand('quux glorbex');
+
+    expect(result.isShellCommand).toBe(false);
+    expect(result.reason).toContain('defaulting to AI');
   });
 });

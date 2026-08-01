@@ -15,6 +15,7 @@ mod agent;
 mod ai;
 mod model_router;
 mod fix_engine;
+mod onnx_classifier;
 mod prediction;
 mod git;
 mod git_advanced;
@@ -3099,7 +3100,16 @@ async fn predict_command(
     Ok(prediction::predict_command(&partial_input, &history, &cwd, &ollama_url).await)
 }
 
-// ── Alias persistence ────────────────────────────────────────────────────────
+// ── ML input classifier fallback (Warp's bert_tiny ONNX model, AGPL-3.0) ────────────
+/// Classify ambiguous terminal input as shell command vs AI query using the same bert_tiny
+/// ONNX model Warp's own OSS build ships. Only called by the frontend when the fast heuristic
+/// tiers in commandRouting.ts are inconclusive (Tier 5) — never on every keystroke.
+#[tauri::command]
+async fn classify_input_onnx(input: String) -> Result<onnx_classifier::ClassificationResult, String> {
+    onnx_classifier::classify(&input).await
+}
+
+// ── Alias persistence ────────────────────────────────────────
 #[tauri::command]
 async fn load_aliases(state: State<'_, AppState>) -> Result<Vec<serde_json::Value>, String> {
     let config = state.config.read().await;
@@ -3781,6 +3791,7 @@ async fn main() {
             ollama_get_available_models,
             ollama_initialize_config,
             ollama_ensure_configured,
+            classify_input_onnx,
             run_cmd_capture,
             predict_command,
             // Agent
