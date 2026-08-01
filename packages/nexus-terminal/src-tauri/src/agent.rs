@@ -758,6 +758,123 @@ fn is_image_path(path: &str) -> bool {
     )
 }
 
+/// If OCR text indicates a connection/network/service failure (e.g. a browser's
+/// "can't connect" page), mechanically diagnose the target host:port with ping/curl
+/// and list configured SSH management hosts — deterministically, in Rust, without
+/// relying on the model to remember to call further tools. Small local models
+/// frequently stop after one tool result and just summarize/explain instead of
+/// continuing to act, so the diagnosis itself must not depend on model cooperation
+/// (same reasoning as the analyze_code scan_and_fix bypass below).
+async fn diagnose_connection_error(ocr_text: &str) -> Option<String> {
+    let lower = ocr_text.to_lowercase();
+    let signals = [
+        "can't connect", "cant connect", "server not found", "connection refused",
+        "econnrefused", "timed out", "unreachable", "service unavailable",
+        "no route to host", "dns_probe", "err_connection", " 502", " 503", " 504",
+    ];
+    if !signals.iter().any(|s| lower.contains(s)) {
+        return None;
+    }
+
+    // Extract a host[:port] — e.g. "homeassistant.local:8123" or "192.168.1.5:8080".
+    let re = regex::Regex::new(
+        r"([a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,}|(?:\d{1,3}\.){3}\d{1,3})(?::(\d{1,5}))?"
+    ).ok()?;
+    let caps = re.captures(ocr_text)?;
+    let host = caps.get(1)?.as_str().to_string();
+    let port = caps.get(2).map(|m| m.as_str().to_string());
+    let target = match &port {
+        Some(p) => format!("{}:{}", host, p),
+        None => host.clone(),
+    };
+
+    let mut report = format!(
+        "\n\n=== Mechanical connectivity diagnosis (auto-run, not model-generated) ===\nDetected target: {}\n",
+        target
+    );
+
+    // Ping the host directly — always runs, regardless of what the model does next.
+    let ping_cmd = format!("ping -c 2 -W 2 {} 2>&1", host);
+    match tokio::time::timeout(
+        Duration::from_secs(8),
+        tokio::process::Command::new("sh").arg("-c").arg(&ping_cmd).output(),
+    ).await {
+        Ok(Ok(out)) => {
+            let text = String::from_utf8_lossy(&out.stdout).trim().to_string();
+            report.push_str(&format!("\n--- ping -c 2 {} ---\n{}\n", host, if text.is_empty() { "(no output)".to_string() } else { text }));
+        }
+        Ok(Err(e)) => report.push_str(&format!("\n--- ping failed to run: {} ---\n", e)),
+        Err(_) => report.push_str("\n--- ping timed out after 8s ---\n"),
+    }
+
+    // Curl the target with verbose connection diagnostics.
+    let curl_cmd = format!("curl -sv --max-time 5 'http://{}/' 2>&1", target);
+    match tokio::time::timeout(
+        Duration::from_secs(10),
+        tokio::process::Command::new("sh").arg("-c").arg(&curl_cmd).output(),
+    ).await {
+        Ok(Ok(out)) => {
+            let text = String::from_utf8_lossy(&out.stdout).trim().to_string();
+            let text = if text.len() > 1500 { format!("{}\n[truncated]", &text[..1500]) } else { text };
+            report.push_str(&format!("\n--- curl -v http://{}/ ---\n{}\n", target, if text.is_empty() { "(no output)".to_string() } else { text }));
+        }
+        Ok(Err(e)) => report.push_str(&format!("\n--- curl failed to run: {} ---\n", e)),
+        Err(_) => report.push_str("\n--- curl timed out after 10s ---\n"),
+    }
+
+    // List configured SSH management hosts so the model has concrete candidates
+    // in front of it immediately, instead of needing a separate tool call to find them.
+    let ssh_hosts_cmd = "grep -i '^Host ' ~/.ssh/config 2>/dev/null | grep -v '[*?]' | awk '{print $2}'";
+    let ssh_hosts: Vec<String> = match tokio::time::timeout(
+        Duration::from_secs(5),
+        tokio::process::Command::new("sh").arg("-c").arg(ssh_hosts_cmd).output(),
+    ).await {
+        Ok(Ok(out)) => String::from_utf8_lossy(&out.stdout)
+            .lines().map(|l| l.trim().to_string()).filter(|l| !l.is_empty()).collect(),
+        _ => vec![],
+    };
+
+    report.push_str(&format!(
+        "\n--- SSH management hosts available (from ~/.ssh/config) ---\n{}\n",
+        if ssh_hosts.is_empty() { "(none configured)".to_string() } else { ssh_hosts.join(", ") }
+    ));
+
+    report.push_str(&format!(
+        "\n⚠️ NEXT STEP REQUIRED: {} appears unreachable. You MUST now call ssh_exec on the \
+        most likely management host above to check whether a VM/container/service matching \
+        this hostname is stopped or crashed (`qm list`, `pct list`, `systemctl status`, \
+        `docker ps`), and fix it directly (`qm start <id>`, `systemctl restart <name>`, \
+        `docker start <name>`) if you find one. Do NOT write a final answer telling the user \
+        what to check themselves — you have the tools to check and fix it yourself.\n",
+        target
+    ));
+
+    Some(report)
+}
+
+#[cfg(test)]
+mod connection_diagnosis_tests {
+    use super::diagnose_connection_error;
+
+    #[tokio::test]
+    async fn ignores_text_without_error_signals() {
+        let result = diagnose_connection_error("Everything is working fine, no issues here.").await;
+        assert!(result.is_none(), "plain text with no error signal should not trigger diagnosis");
+    }
+
+    #[tokio::test]
+    async fn detects_host_and_runs_diagnosis() {
+        let ocr = "Problem loading page\nFirefox can't connect to the server at homeassistant.local:8123.";
+        let result = diagnose_connection_error(ocr).await;
+        assert!(result.is_some(), "expected a diagnosis block for a connection error with a host");
+        let report = result.unwrap();
+        assert!(report.contains("homeassistant.local:8123"), "expected target host:port in report: {}", report);
+        assert!(report.contains("ping -c 2"), "expected ping section: {}", report);
+        assert!(report.contains("curl -v"), "expected curl section: {}", report);
+        assert!(report.contains("NEXT STEP REQUIRED"), "expected forcing directive: {}", report);
+    }
+}
+
 async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, session_id: &str) -> String {
     match name {
         "read_file" => {
@@ -1499,10 +1616,16 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
             // text in dense UI screenshots. Cross-check with real Tesseract OCR, which
             // gives exact ground-truth wording when it succeeds.
             match crate::vision_commands::ocr_extract_text(path).await {
-                Ok(text) => format!(
-                    "=== OCR extracted text (EXACT ground truth — trust this for precise error messages/wording) ===\n{}\n\n=== AI visual description (layout/context only — may misread exact text, do not trust literal quotes from this section) ===\n{}",
-                    text, vision_result
-                ),
+                Ok(text) => {
+                    // Mechanically diagnose connection/network errors right now, in Rust,
+                    // rather than trusting a small local model to remember to call
+                    // run_cmd/ssh_exec itself afterward.
+                    let diagnosis = diagnose_connection_error(&text).await.unwrap_or_default();
+                    format!(
+                        "=== OCR extracted text (EXACT ground truth — trust this for precise error messages/wording) ===\n{}\n\n=== AI visual description (layout/context only — may misread exact text, do not trust literal quotes from this section) ===\n{}{}",
+                        text, vision_result, diagnosis
+                    )
+                }
                 Err(_) => vision_result,
             }
         }
