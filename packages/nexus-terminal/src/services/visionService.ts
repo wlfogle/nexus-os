@@ -71,6 +71,7 @@ class VisionService {
   private isInitialized = false;
   private ocrEngine: 'tesseract' | 'paddleocr' | 'easyocr' = 'tesseract';
   private captures: Map<string, ScreenCapture> = new Map();
+  private monitoringIntervalId: ReturnType<typeof setInterval> | null = null;
 
   /**
    * Initialize computer vision service
@@ -380,9 +381,13 @@ class VisionService {
   }
 
   /**
-   * Monitor screen for changes and provide proactive assistance
+   * Monitor screen for changes and provide proactive assistance.
+   * Only one monitoring loop can be active at a time; calling this again replaces
+   * (stops) any previously running loop rather than leaking an additional interval.
    */
   async startScreenMonitoring(callback: (analysis: ScreenAnalysis) => void, intervalMs: number = 5000): Promise<void> {
+    this.stopScreenMonitoring();
+
     const monitor = async () => {
       try {
         const capture = await this.captureScreen();
@@ -397,9 +402,18 @@ class VisionService {
       }
     };
 
-    // Start monitoring
-    setInterval(monitor, intervalMs);
-    // Screen monitoring started
+    this.monitoringIntervalId = setInterval(monitor, intervalMs);
+  }
+
+  /**
+   * Stop any active screen monitoring loop started by `startScreenMonitoring`.
+   * Safe to call even if monitoring was never started (no-op).
+   */
+  stopScreenMonitoring(): void {
+    if (this.monitoringIntervalId !== null) {
+      clearInterval(this.monitoringIntervalId);
+      this.monitoringIntervalId = null;
+    }
   }
 
   /**

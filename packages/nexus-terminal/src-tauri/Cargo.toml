@@ -3,7 +3,7 @@ name = "nexus-terminal"
 version = "1.0.0-beta.1"
 description = "NexusTerminal - Where AI meets the command line. The intelligent terminal experience."
 authors = ["wlfogle"]
-license = "MIT"
+license = "AGPL-3.0-only"
 repository = "https://github.com/wlfogle/nexus-terminal"
 edition = "2021"
 

@@ -6,7 +6,7 @@
  * mocked so these tests run in a plain Node environment via vitest.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 // ── Mocks (must be declared before any import that triggers them) ──────────────
 

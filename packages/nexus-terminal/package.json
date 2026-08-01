@@ -3,7 +3,7 @@
   "version": "1.0.0-beta.1",
   "description": "NexusTerminal - Where AI meets the command line. The intelligent terminal experience.",
   "author": "wlfogle",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "main": "src/main.tsx",
   "type": "module",
   "keywords": [

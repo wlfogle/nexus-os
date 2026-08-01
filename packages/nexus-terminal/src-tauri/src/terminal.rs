@@ -259,6 +259,23 @@ impl TerminalManager {
                 }
             };
 
+            // Best-effort: fetch the child's exit code (if it has already exited and hasn't
+            // been reaped yet) and emit `terminal-exit` so the frontend knows this terminal's
+            // process is gone. Shared by both the EOF and read-error paths below.
+            let emit_exit_event = |exit_code: Option<i32>| {
+                if let Some(app_handle) = APP_HANDLE.get() {
+                    let _ = app_handle.emit("terminal-exit", TerminalExitEvent {
+                        terminal_id: terminal_id.clone(),
+                        exit_code,
+                    });
+                }
+            };
+            let fetch_exit_code = || -> Option<i32> {
+                let mut guard = terminals.lock().ok()?;
+                let terminal = guard.get_mut(&terminal_id)?;
+                terminal._child.try_wait().ok()?.map(|status| status.exit_code() as i32)
+            };
+
             let mut buffer = [0u8; 8192];
             loop {
                 match reader.read(&mut buffer) {
@@ -269,6 +286,7 @@ impl TerminalManager {
                         // looped again forever, leaking this thread indefinitely for every
                         // terminal that was ever closed.
                         info!("Terminal {} closed (EOF), stopping output reader", terminal_id);
+                        emit_exit_event(fetch_exit_code());
                         break;
                     }
                     Ok(n) => {
@@ -298,6 +316,7 @@ impl TerminalManager {
                     }
                     Err(e) => {
                         error!("Error reading from terminal {}: {}", terminal_id, e);
+                        emit_exit_event(fetch_exit_code());
                         break;
                     }
                 }

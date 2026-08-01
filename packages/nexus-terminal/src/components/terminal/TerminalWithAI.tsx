@@ -8,7 +8,6 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { TerminalTab } from '../../types/terminal';
 import { addError, addTerminalBlock, updateTabWorkingDirectory } from '../../store/slices/terminalTabSlice';
-import EnhancedAIAssistant from '../ai/EnhancedAIAssistant';
 import { useInputRouting } from '../../hooks/useInputRouting';
 import { terminalLogger } from '../../utils/logger';
 import '@xterm/xterm/css/xterm.css';
@@ -24,7 +23,6 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
   const fitAddon = useRef<FitAddon | null>(null);
   const [aiPanelOpen, setAIPanelOpen] = useState(true); // Start in AI mode by default
   const [isTerminalReady, setIsTerminalReady] = useState(false);
-  const [inputBuffer, setInputBuffer] = useState('');
   const [agentModel, setAgentModel] = useState('…');
 
   // Fetch the actual agent model name from backend on mount
@@ -33,7 +31,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
   }, []);
 
   // Centralized routing: differentiates shell commands from natural language
-  const { handleInput, isShellCommand } = useInputRouting();
+  const { isShellCommand } = useInputRouting();
 
   // Memoize terminal theme based on shell type
   const terminalTheme = useMemo(() => {
@@ -146,6 +144,7 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     //   \x1b]133;D;N\x07 = command end, N = exit code
     let unlistenTerminalOutput: (() => void) | null = null;
     let unlistenTerminalCwd: (() => void) | null = null;
+    let unlistenTerminalExit: (() => void) | null = null;
     const capturedTerminalId = tab.terminalId;
     const capturedTabId = tab.id;
     // cwdRef tracks the live shell cwd — updated by OSC 7 events
@@ -273,10 +272,25 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
       .then((unlisten) => { unlistenTerminalCwd = unlisten; })
       .catch(() => { /* non-fatal */ });
 
+    // Listen for the shell process exiting (backend detects this via PTY EOF/read-error
+    // in terminal.rs's output reader). Surface it directly in the terminal, matching how
+    // other terminal emulators report process termination.
+    listen<{ terminal_id: string; exit_code: number | null }>('terminal-exit', (event) => {
+      const { terminal_id, exit_code } = event.payload;
+      if (terminal_id !== capturedTerminalId) return;
+      if (!terminal.current) return;
+      const codeText = exit_code === null || exit_code === undefined ? 'unknown' : String(exit_code);
+      terminal.current.write(`\r\n\x1b[90m[Process exited with code ${codeText}]\x1b[0m\r\n`);
+      terminalLogger.info('Terminal process exited', 'terminal_exit', { terminalId: terminal_id, exitCode: exit_code });
+    })
+      .then((unlisten) => { unlistenTerminalExit = unlisten; })
+      .catch(() => { /* non-fatal */ });
+
     return () => {
       resizeObserver?.disconnect();
       if (unlistenTerminalOutput) unlistenTerminalOutput();
       if (unlistenTerminalCwd) unlistenTerminalCwd();
+      if (unlistenTerminalExit) unlistenTerminalExit();
       if (terminal.current) {
         terminal.current.dispose();
         terminal.current = null;
@@ -367,57 +381,6 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-
-  const getShellWelcomeMessage = (shell: string): string => {
-    switch (shell) {
-      case 'fish':
-        return '🐟 Welcome to Fish Shell - The friendly interactive shell';
-      case 'zsh':
-        return '⚡ Welcome to Zsh - The powerful Z shell';
-      case 'powershell':
-        return '💙 Welcome to PowerShell - Object-based shell';
-      case 'bash':
-      default:
-        return '🐚 Welcome to Bash - The Bourne Again Shell';
-    }
-  };
-
-  const getQuickActions = () => {
-    const actions = [
-      {
-        icon: '🤖',
-        label: 'Ask AI',
-        shortcut: 'Ctrl+Shift+A',
-        onClick: () => setAIPanelOpen(true),
-        highlight: tab.aiContext.errors.length > 0 || tab.aiContext.suggestions.length > 0
-      }
-    ];
-
-    if (tab.aiContext.errors.length > 0) {
-      actions.push({
-        icon: '🚨',
-        label: `Fix ${tab.aiContext.errors.length} Error${tab.aiContext.errors.length > 1 ? 's' : ''}`,
-        shortcut: '',
-        onClick: () => {
-          // Just open the AI panel - the enhanced assistant will handle error context
-          setAIPanelOpen(true);
-        },
-        highlight: true
-      });
-    }
-
-    if (tab.aiContext.suggestions.length > 0) {
-      actions.push({
-        icon: '💡',
-        label: `${tab.aiContext.suggestions.length} Suggestion${tab.aiContext.suggestions.length > 1 ? 's' : ''}`,
-        shortcut: '',
-        onClick: () => setAIPanelOpen(true),
-        highlight: true
-      });
-    }
-
-    return actions;
-  };
 
   // ── Agent question prompt (ask_user tool) ───────────────────────────────
   const [agentQuestion, setAgentQuestion] = useState<{
@@ -524,7 +487,6 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
   const classifyDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Error detection + self-healing ───────────────────────────────
-  const [lastShellCmd, setLastShellCmd] = useState<string>('');
   const [errorState, setErrorState] = useState<{ cmd: string; output: string } | null>(null);
   const [isHealing, setIsHealing] = useState(false);
   const termOutputBuffer = useRef<string>(''); // accumulates raw terminal output
@@ -793,7 +755,6 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
     if (isShell) {
       recordShellCommand(text);
       setPrediction('');
-      setLastShellCmd(text);
       setErrorState(null); // clear previous error
       scheduleErrorCheck(text); // start watching for errors
       // Execute in PTY
@@ -893,12 +854,6 @@ export const TerminalWithAI: React.FC<TerminalWithAIProps> = ({ tab }) => {
       });
     }
   };
-
-  const modeColor = inputMode === 'shell' ? 'text-green-400 border-green-500/40' :
-                    inputMode === 'ai'    ? 'text-purple-400 border-purple-500/40' :
-                                           'text-gray-400 border-gray-600';
-  const modeLabel = inputMode === 'shell' ? '🖵  SHELL' :
-                    inputMode === 'ai'    ? '🤖 NEXUSAI' : '···';
 
   // Warp UDI border color — blue for shell, magenta for AI, dim for detecting
   const udiBorderColor =

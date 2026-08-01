@@ -1,8 +1,22 @@
 # 🙏 Credits & Acknowledgments
 
-**WarpAI Terminal** stands on the shoulders of giants. This project is deeply inspired by and builds upon the incredible work of the open source community. We want to give proper credit to all the amazing projects and developers who made this possible.
+**NexusTerminal** stands on the shoulders of giants. This project is deeply inspired by and builds upon the incredible work of the open source community. We want to give proper credit to all the amazing projects and developers who made this possible.
 
-## 🌟 **Primary Inspirations** (From Your Starred Repositories)
+## 🪡 **Warp** — primary design & license basis
+
+**[warpdotdev/warp](https://github.com/warpdotdev/warp)** — *Warp, an agentic development environment born out of the terminal.* Licensed AGPL-3.0 (with the `warpui`/`warpui_core` UI-framework crates under MIT).
+
+NexusTerminal's input-classification design (shell-vs-AI auto-detection heuristics),
+block-based command tracking concept (via OSC 133 shell integration), and unified
+terminal/agent input UX are inspired by, and in the case of the classifier tiers
+in `src/services/commandRouting.ts`, ported from the *algorithm and design* of
+Warp's `crates/input_classifier`. No Warp code, trained models, or other binary
+assets are copied verbatim — NexusTerminal's implementation is independent. This
+is the reason NexusTerminal is licensed under AGPL-3.0 (see `LICENSE`): it
+acknowledges this lineage and keeps NexusTerminal's own source available on the
+same copyleft terms as its primary reference.
+
+## 🌟 **Other Inspirations** (From Starred Repositories)
 
 ### 🎭 **Glamorous AI Experience**
 **[charmbracelet/crush](https://github.com/charmbracelet/crush)** - *The glamourous AI coding agent for your favourite terminal 💘*
