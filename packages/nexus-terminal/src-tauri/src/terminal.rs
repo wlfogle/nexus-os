@@ -29,6 +29,12 @@ pub struct TerminalInfo {
 struct Terminal {
     _child: Box<dyn Child + Send + Sync>,
     master: Box<dyn MasterPty + Send>,
+    // `MasterPty::take_writer()` can only be called ONCE per PTY master (portable-pty tracks a
+    // `took_writer` flag internally and errors with "cannot take writer more than once" on any
+    // subsequent call). Take it a single time at terminal-creation and reuse it for every write,
+    // instead of re-acquiring it per write (which previously surfaced as "Failed to get terminal
+    // writer" on the second and all later writes to a given terminal).
+    writer: Mutex<Box<dyn Write + Send>>,
     info: TerminalInfo,
 }
 
@@ -170,6 +176,11 @@ impl TerminalManager {
             .spawn_command(cmd)
             .context("Failed to spawn shell process")?;
 
+        // Take the PTY writer exactly once, here, and cache it for the lifetime of the
+        // terminal (see the `writer` field doc comment on `Terminal`).
+        let writer = pty_pair.master.take_writer()
+            .context("Failed to get terminal writer")?;
+
         let terminal_info = TerminalInfo {
             id: terminal_id.clone(),
             shell: shell_cmd.clone(),
@@ -180,6 +191,7 @@ impl TerminalManager {
         let terminal = Terminal {
             _child: child,
             master: pty_pair.master,
+            writer: Mutex::new(writer),
             info: terminal_info,
         };
 
@@ -292,9 +304,9 @@ impl TerminalManager {
             .map_err(|_| anyhow::anyhow!("Terminal lock poisoned"))?;
         
         if let Some(terminal) = terminals.get(terminal_id) {
-            let mut writer = terminal.master.take_writer()
-                .context("Failed to get terminal writer")?;
-            
+            let mut writer = terminal.writer.lock()
+                .map_err(|_| anyhow::anyhow!("Terminal writer lock poisoned"))?;
+
             writer.write_all(data.as_bytes())
                 .context("Failed to write to terminal")?;
             

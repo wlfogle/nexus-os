@@ -1,7 +1,8 @@
 # Nexus Terminal → Exact Warp Clone — Progress & Handoff
 
-**Status:** Plan APPROVED ("go"). Orchestration config = local. Not yet launched.
-**Plan ID:** `4797e695-63d6-4fa2-a102-c61e50c424b5`
+**Status:** The `oz/nexus-warp-clone` branch/orchestration below was never merged and is now stale/superseded — the classifier fix landed directly on `main` instead (commit `6aa2db71`, porting the correct 5-tier algorithm from standalone `nexus-terminal` commit `11a4457`), and OSC 133 shell integration also landed on `main` (commit `2051c72c`). On 2026-08-01, found and fixed a separate, unrelated live bug: `write_to_terminal` called `MasterPty::take_writer()` on every write, but `portable-pty` only allows this once per PTY master (subsequent calls fail with "cannot take writer more than once", surfaced to users as "Shell error: Failed to get terminal writer" after the very first write/OSC-133-bootstrap injection). Fixed by taking the writer once at terminal creation and caching it in the `Terminal` struct behind a `Mutex`; `cargo check` passes. The `oz/nexus-warp-clone` remote branch can likely be deleted.
+**Plan ID:** `4797e695-63d6-4fa2-a102-c61e50c424b5` (superseded — see Status above)
+**Prior integration commit (unmerged, stale):** `c4d2cd2b` on `oz/nexus-warp-clone`
 
 ## Goal
 Turn `nexus-os/packages/nexus-terminal` into an exact clone of Warp — behavior (command-vs-AI input auto-detection, Oz-style agent, blocks) AND screen layout — using Warp's open-source client (`github.com/warpdotdev/warp`, AGPL-3.0) as reference. Credit Warp; relicense to AGPL-3.0.
