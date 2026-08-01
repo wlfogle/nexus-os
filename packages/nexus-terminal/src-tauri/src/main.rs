@@ -3823,32 +3823,14 @@ async fn main() {
 
 #[cfg(test)]
 mod tests {
-    use super::{is_scan_fix_request, is_system_optimize_request};
+    use super::is_system_optimize_request;
 
-    // ── is_scan_fix_request ───────────────────────────────────────────────────
-    // Must trigger the pre-flight cargo check / npm build path.
-
-    #[test]
-    fn scan_fix_matches_fix_errors() {
-        assert!(is_scan_fix_request("fix all errors"));
-        assert!(is_scan_fix_request("scan and fix all errors"));
-        assert!(is_scan_fix_request("fix the bugs in the code"));
-        assert!(is_scan_fix_request("check the project for errors"));
-        assert!(is_scan_fix_request("audit all files"));
-        assert!(is_scan_fix_request("repair the code"));
-    }
-
-    #[test]
-    fn scan_fix_does_not_match_system_optimize() {
-        // "scan system and optimize" must NOT trigger the code pre-flight —
-        // that was the original CTD: cargo check running inside the running app.
-        assert!(!is_scan_fix_request("scan system and optimize"));
-        assert!(!is_scan_fix_request("optimize memory usage"));
-        assert!(!is_scan_fix_request("scan system"));
-        assert!(!is_scan_fix_request("list files"));
-        assert!(!is_scan_fix_request("help me"));
-        assert!(!is_scan_fix_request("scan"));
-    }
+    // NOTE: `is_scan_fix_request` (and its "pre-flight cargo check / npm build" path) was
+    // deliberately removed — see the comment above `agent_chat_stream`'s `is_sys_optimize`
+    // check: running builds before the LLM starts caused a 26s stall and a PTY race
+    // condition. Its tests (scan_fix_matches_fix_errors, scan_fix_does_not_match_system_optimize,
+    // no_double_trigger_on_hardware_info_optimize) were removed along with it since they
+    // referenced a function that no longer exists.
 
     // ── is_system_optimize_request ───────────────────────────────────────────
     // Must trigger the Rust-executed system optimization path.
@@ -3874,12 +3856,4 @@ mod tests {
         assert!(!is_system_optimize_request("explain rust"));
     }
 
-    #[test]
-    fn no_double_trigger_on_hardware_info_optimize() {
-        // The phrase must be classified as SYSTEM_OPTIMIZE only, not SCAN_FIX.
-        // Double-triggering would run cargo check AND system ops — catastrophic.
-        let msg = "scan system and optimize";
-        assert!(!is_scan_fix_request(msg),  "must NOT trigger code scan");
-        assert!( is_system_optimize_request(msg), "must trigger system optimize");
-    }
 }

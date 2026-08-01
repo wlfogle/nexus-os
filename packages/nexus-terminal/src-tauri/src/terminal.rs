@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::sync::{Arc, Mutex, OnceLock};
-use std::thread;
 use std::time::Duration;
 use tracing::{debug, error, info};
 use uuid::Uuid;
@@ -231,7 +230,13 @@ impl TerminalManager {
         let terminals = Arc::clone(&self.terminals);
         let terminal_id = terminal_id.to_string();
 
-        tokio::spawn(async move {
+        // This loop body is fully synchronous (blocking `Read::read` + `thread::sleep`, no
+        // `.await` points at all), so it belongs on Tokio's dedicated blocking thread pool via
+        // `spawn_blocking`, not on an async worker thread via `tokio::spawn`. The previous
+        // `tokio::spawn` here monopolized a full async worker thread per open terminal for as
+        // long as the terminal lived, and (worse, under a current-thread/limited-worker
+        // runtime) could starve other tasks since this closure never yields cooperatively.
+        tokio::task::spawn_blocking(move || {
             let mut reader = {
                 let terminals_guard = match terminals.lock() {
                     Ok(guard) => guard,
@@ -257,7 +262,16 @@ impl TerminalManager {
             let mut buffer = [0u8; 8192];
             loop {
                 match reader.read(&mut buffer) {
-                    Ok(n) if n > 0 => {
+                    Ok(0) => {
+                        // For a BLOCKING read on a PTY master, Ok(0) unambiguously means EOF:
+                        // every slave-side fd has been closed (the child process exited/was
+                        // killed). This used to fall into a catch-all arm that just slept and
+                        // looped again forever, leaking this thread indefinitely for every
+                        // terminal that was ever closed.
+                        info!("Terminal {} closed (EOF), stopping output reader", terminal_id);
+                        break;
+                    }
+                    Ok(n) => {
                         let output = String::from_utf8_lossy(&buffer[..n]);
                         debug!("Terminal {} output: {}", terminal_id, output);
 
@@ -281,10 +295,6 @@ impl TerminalManager {
                                 }));
                             }
                         }
-                    }
-                    Ok(_) => {
-                        debug!("No data read from terminal {}", terminal_id);
-                        thread::sleep(Duration::from_millis(10));
                     }
                     Err(e) => {
                         error!("Error reading from terminal {}: {}", terminal_id, e);
@@ -346,8 +356,16 @@ impl TerminalManager {
         let mut terminals = self.terminals.lock()
             .map_err(|_| anyhow::anyhow!("Terminal lock poisoned"))?;
         
-        if let Some(_terminal) = terminals.remove(terminal_id) {
-            // Terminal will be dropped and cleaned up automatically
+        if let Some(mut terminal) = terminals.remove(terminal_id) {
+            // Explicitly kill the child process. Just dropping `Terminal` (and its boxed
+            // `Child`) does NOT terminate the underlying process (portable-pty's Child impls
+            // don't kill-on-drop, matching std::process::Child's documented behavior). Without
+            // this, the shell became an orphan that kept the PTY slave side open, so the
+            // background output-reader task's blocking read() in `start_output_reader` never
+            // saw EOF and leaked forever (one stuck OS thread per closed terminal tab).
+            if let Err(e) = terminal._child.kill() {
+                error!("Failed to kill child process for terminal {}: {}", terminal_id, e);
+            }
             info!("Killed terminal {}", terminal_id);
             Ok(())
         } else {
@@ -480,7 +498,42 @@ impl Default for TerminalManager {
 
 #[cfg(test)]
 mod tests {
-    use super::extract_osc7_cwd;
+    use super::{extract_osc7_cwd, TerminalManager};
+
+    /// Regression test for the writer-exhaustion bug: `write_to_terminal` used to call
+    /// `MasterPty::take_writer()` fresh on every write, but portable-pty only allows this
+    /// once per PTY master (subsequent calls fail with "cannot take writer more than once").
+    /// `create_terminal_with_config` already performs one internal write (the OSC 133
+    /// bootstrap injection), so under the old buggy code even the FIRST write issued here
+    /// would already be the second `take_writer()` call overall and would fail with
+    /// "Failed to get terminal writer".
+    // NOTE: multi_thread is required here (not the default current_thread flavor) because
+    // `start_output_reader`'s spawned task performs fully blocking I/O (`reader.read()` +
+    // `thread::sleep`) instead of yielding, which would otherwise monopolize a single-threaded
+    // runtime's only worker thread and starve this test task indefinitely.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn write_to_terminal_can_be_called_multiple_times() {
+        let mut manager = TerminalManager::new();
+        let terminal_id = manager
+            .create_terminal_with_config(Some("/bin/sh".to_string()), Some(vec![]), None, None)
+            .await
+            .expect("failed to create terminal");
+
+        manager
+            .write_to_terminal(&terminal_id, "echo one\n")
+            .await
+            .expect("first write_to_terminal call after terminal creation should succeed");
+
+        manager
+            .write_to_terminal(&terminal_id, "echo two\n")
+            .await
+            .expect("second write_to_terminal call should also succeed (writer must be reusable, not just tolerant of one extra call)");
+
+        manager
+            .kill_terminal(&terminal_id)
+            .await
+            .expect("failed to kill terminal");
+    }
 
     #[test]
     fn osc7_fish_standard_format() {
