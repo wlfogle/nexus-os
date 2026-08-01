@@ -48,6 +48,10 @@ const SYSTEM_PROMPT: &str = r#"You are NexusAI — the autonomous agent of Nexus
 - This applies to EVERYTHING, not just code: a browser "can't connect" screenshot, a crashed
   service, a stopped VM — diagnose and fix it yourself with your tools. Telling the user what
   THEY could check in their own browser/terminal is explaining, not fixing.
+- NEVER fabricate a tool result. If you run_cmd/ssh_exec an echo/printf that only prints what a
+  successful check WOULD look like instead of running the real command, that is lying, not
+  fixing — you will be caught immediately because fabricated output looks inconsistent (e.g.
+  Windows-style ping text from a Linux host). Only report what a tool actually returned.
 - After every tool result: ask yourself "Is the task 100% done?" If no, call another tool.
 - NEVER produce a text response while there are still actions to take.
 - When the user says 'scan for errors' (without 'fix'): scan, then call ask_user with the findings
@@ -91,15 +95,16 @@ Signals: "can't connect", "Server Not Found", "connection refused", "ECONNREFUSE
 "502/503/504", "service unavailable", a bare hostname:port that won't load.
 - Do NOT list troubleshooting steps for the user to try in their own browser/terminal — that is
   explaining, not fixing. YOU diagnose and fix it, the same as a code bug.
-- Diagnose the target host:port yourself: run_cmd `ping -c 3 <host>` and
-  `curl -sv --max-time 8 http://<host>:<port>/`.
+- To check if a host/server is reachable: ALWAYS call ping_host(host, port) — NEVER use run_cmd
+  or ssh_exec to run ping/curl yourself for this. ping_host runs a real check that cannot be
+  faked; a hand-written ping/curl command CAN be (and has been) faked by echoing fake success
+  text instead of actually running it.
 - If unreachable and you don't already know which machine hosts it: run_cmd `cat ~/.ssh/config`
   to find management/SSH hosts, then ssh_exec into likely candidates to check the underlying
   service/VM/container (`systemctl status <name>`, `qm list`, `pct list`, `docker ps`).
 - If you find the service/VM/container stopped or crashed, fix it directly — `systemctl restart
   <name>`, `qm start <vmid>`, `docker start <name>` via ssh_exec — don't just report that it's down.
-- Re-run the original ping/curl check afterward to confirm the fix actually worked before
-  reporting success.
+- Re-run ping_host afterward to confirm the fix actually worked before reporting success.
 - Only use ask_user if the fix is destructive/ambiguous (e.g. multiple plausible causes, a
   disruptive restart) or you've genuinely exhausted every diagnostic tool without finding the
   cause — not as a substitute for trying.
@@ -130,7 +135,8 @@ analyze_code(path, analysis_type) — AI code review: errors|style|security|perf
 autofix_code(path, dry_run) — AI rewrites file with fixes; always dry_run=true first,
 ask_user(question, options) — show clickable buttons to the user and WAIT for their answer,
 screenshot — capture the LIVE screen and see it with llama3.2-vision:11b,
-analyze_image(path, prompt) — analyze an EXISTING image file on disk with llama3.2-vision:11b"#;
+analyze_image(path, prompt) — analyze an EXISTING image file on disk with llama3.2-vision:11b,
+ping_host(host, port) — REAL, unfakeable network reachability check; use for ANY "is X up/reachable" question"#;
 
 // ── Ollama native function-calling types ──────────────────────────────────────
 
@@ -714,6 +720,21 @@ Always call this BEFORE making destructive changes or when the user said 'scan' 
         Tool {
             kind: "function",
             function: ToolFunction {
+                name: "ping_host",
+                description: "Actually test network reachability of a host with a REAL ping (ICMP) and optional TCP port check. This is the ONLY correct way to check if a server/host is up — it directly executes ping/curl with fixed logic, so its result cannot be scripted or faked. NEVER use run_cmd or ssh_exec to run your own ping/curl for a reachability check, and NEVER write echo/printf commands that only print what a successful check would look like — that fabricates the result. Always call this tool instead.",
+                parameters: serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "host": {"type": "string", "description": "Hostname or IP address to ping (e.g. 'homeassistant.local', '192.168.1.5')"},
+                        "port": {"type": "integer", "description": "Optional TCP port to also test with a real HTTP connection attempt (e.g. 8123)"}
+                    },
+                    "required": ["host"]
+                }),
+            },
+        },
+        Tool {
+            kind: "function",
+            function: ToolFunction {
                 name: "analyze_image",
                 description: "Analyze an EXISTING image file (screenshot, photo, diagram) already saved on disk. Combines llama3.2-vision:11b (layout/context) with real Tesseract OCR (exact ground-truth text) since the vision model alone can misread or hallucinate on-screen text. ALWAYS use this for paths ending in .png/.jpg/.jpeg/.gif/.webp/.bmp/.tiff/.ico — NEVER use read_file, read_files, analyze_code, or autofix_code on image files; those only handle UTF-8 text and will fail.",
                 parameters: serde_json::json!({
@@ -872,6 +893,23 @@ mod connection_diagnosis_tests {
         assert!(report.contains("ping -c 2"), "expected ping section: {}", report);
         assert!(report.contains("curl -v"), "expected curl section: {}", report);
         assert!(report.contains("NEXT STEP REQUIRED"), "expected forcing directive: {}", report);
+    }
+
+    #[tokio::test]
+    async fn ping_host_tool_runs_real_ping_not_fabricated_text() {
+        let args = serde_json::json!({ "host": "127.0.0.1" });
+        let result = super::exec_tool("ping_host", &args, "/tmp", "").await;
+        // A real Linux ping to loopback must succeed and use Linux ping's own wording,
+        // never a model-fabricated Windows-style "Reply from ... TTL=64" response.
+        assert!(result.contains("REACHABLE"), "expected loopback ping to succeed: {}", result);
+        assert!(!result.contains("Approximate round trip times"), "output must be real ping, not fabricated Windows-style text: {}", result);
+    }
+
+    #[tokio::test]
+    async fn ping_host_requires_host_argument() {
+        let args = serde_json::json!({});
+        let result = super::exec_tool("ping_host", &args, "/tmp", "").await;
+        assert!(result.contains("ERROR"), "expected an error when host is missing: {}", result);
     }
 }
 
@@ -1592,6 +1630,47 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
                 Ok(description) => description,
                 Err(e) => format!("ERROR: screenshot failed: {}", e),
             }
+        }
+
+        "ping_host" => {
+            // Executed directly (not via `sh -c`) so the host argument can never be used
+            // to inject a fabricated command — this always runs a REAL ping, no exceptions.
+            let host = args["host"].as_str().unwrap_or("").trim().to_string();
+            if host.is_empty() { return "ERROR: host is required".to_string(); }
+            let port = args["port"].as_u64();
+
+            let mut report = String::new();
+            match tokio::time::timeout(
+                Duration::from_secs(8),
+                tokio::process::Command::new("ping").args(["-c", "3", "-W", "2", &host]).output(),
+            ).await {
+                Ok(Ok(out)) => {
+                    let stdout = String::from_utf8_lossy(&out.stdout).trim().to_string();
+                    let status = if out.status.success() { "REACHABLE" } else { "UNREACHABLE" };
+                    let text = if stdout.is_empty() { String::from_utf8_lossy(&out.stderr).trim().to_string() } else { stdout };
+                    report.push_str(&format!("ping {} — {}:\n{}\n", host, status, if text.is_empty() { "(no output)".to_string() } else { text }));
+                }
+                Ok(Err(e)) => report.push_str(&format!("ping failed to run: {}\n", e)),
+                Err(_) => report.push_str(&format!("ping {} timed out after 8s (host is likely unreachable)\n", host)),
+            }
+
+            if let Some(p) = port {
+                let curl_cmd = format!("curl -sv --max-time 5 'http://{}:{}/' 2>&1", host, p);
+                match tokio::time::timeout(
+                    Duration::from_secs(10),
+                    tokio::process::Command::new("sh").arg("-c").arg(&curl_cmd).output(),
+                ).await {
+                    Ok(Ok(out)) => {
+                        let text = String::from_utf8_lossy(&out.stdout).trim().to_string();
+                        let text = if text.len() > 1500 { format!("{}\n[truncated]", &text[..1500]) } else { text };
+                        report.push_str(&format!("\ncurl -v http://{}:{}/ :\n{}\n", host, p, if text.is_empty() { "(no output)".to_string() } else { text }));
+                    }
+                    Ok(Err(e)) => report.push_str(&format!("\ncurl failed to run: {}\n", e)),
+                    Err(_) => report.push_str("\ncurl timed out after 10s\n"),
+                }
+            }
+
+            report
         }
 
         "analyze_image" => {
