@@ -136,6 +136,25 @@ See [PHASE5_ARCHITECTURE.md](PHASE5_ARCHITECTURE.md) for full spec and implement
 Pop!_OS 22.04 on Intel i9-13900HX + RTX 4080 + 64 GB DDR5.
 Preferred package manager: `nala` (not raw `apt`).
 
+### Laptop host policy (2026-08-03)
+
+- **NO Docker.** All Docker/containerd packages are purged from the laptop and
+  must not be reintroduced. Container workloads belong on **CT-300**
+  (`192.168.12.30`). Use libvirt/QEMU locally instead.
+- **NVIDIA:** `nvidia-driver-610-open` (610.43.02) is the only driver; DKMS
+  builds `nvidia/610.43.02`. The stale `nvidia-dkms-580` package was removed.
+- **Intentionally masked units:** `pop-upgrade.service`, `acpid.service`,
+  `nvidia-powerd.service`, plus user-level `pop-upgrade-notify.{timer,service}`.
+  Do not unmask these — release upgrades are managed manually.
+- **Ubuntu Pro:** attached with `esm-infra` + `esm-apps` enabled. **Kernel
+  Livepatch must stay off** — Canonical only livepatches its own signed
+  kernels, and Pop kernels are built by `jenkins@warp.pop-os.org`. Enabling it
+  crash-loops the snap and leaves systemd `degraded`.
+  Upstream report: pop-os/pop#4062.
+- `fluidsynth` is masked for the **gdm** user only (`/var/lib/gdm3/.config/`),
+  which fixes a shutdown timeout on `user@111.service`. It stays enabled for
+  the `loufogle` session.
+
 ## Code Quality Standards
 
 Every function must be complete and working.  No stubs, no TODOs, no zombie code.
