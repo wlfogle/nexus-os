@@ -10,6 +10,10 @@
   --green: #6fcf97;
   --red: #e07a7a;
   --mono: ui-monospace, "JetBrains Mono", "Fira Code", Menlo, monospace;
+
+  /* Tells the engine to use dark variants for anything it draws itself
+     (scrollbars, dropdown popups, focus rings). */
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -123,17 +127,68 @@ button.btn.danger { color: var(--red); }
 button.btn:disabled { opacity: 0.45; cursor: default; }
 button.btn.tiny { padding: 3px 9px; font-size: 12px; }
 
-input.text, select.text {
+/* WebKitGTK renders native form controls with the *platform* light theme,
+   which washes the text out on a dark background. Opt out of the native
+   appearance entirely and paint them ourselves. */
+input.text, select.text, textarea.text {
+  -webkit-appearance: none;
+  appearance: none;
   background: var(--panel-2);
   border: 1px solid var(--line);
   color: var(--text);
   border-radius: 7px;
   padding: 6px 10px;
   font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+}
+
+/* Draw our own dropdown arrow, since appearance:none removes it. */
+select.text {
+  padding-right: 30px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--dim) 50%),
+                    linear-gradient(135deg, var(--dim) 50%, transparent 50%);
+  background-position: calc(100% - 17px) 52%, calc(100% - 12px) 52%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+/* The popup list is drawn by the platform, so set both colours explicitly
+   or the options render as light-on-light. */
+select.text option {
+  background: #1c222d;
+  color: #dde3ec;
+}
+
+input.text:focus, select.text:focus, textarea.text:focus {
+  border-color: var(--accent);
+}
+input.text::placeholder { color: var(--dim); opacity: 1; }
+input.grow { flex: 1; width: auto; }
+
+/* Range sliders get the same treatment. */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--line);
   outline: none;
 }
-input.text:focus { border-color: var(--accent); }
-input.grow { flex: 1; }
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: none;
+}
+
+input[type="checkbox"] { accent-color: var(--accent); }
 
 .content { flex: 1; overflow: auto; padding: 18px; }
 
