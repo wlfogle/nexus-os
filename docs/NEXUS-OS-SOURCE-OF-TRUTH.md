@@ -1,8 +1,22 @@
 # NexusOS — Source of Truth
 
 > The single **current** reference for NexusOS + the media stack. If anything
-> elsewhere disagrees with this file, **this file wins**. Last updated 2026-07-29.
+> elsewhere disagrees with this file, **this file wins**. Last updated 2026-08-07.
 > Legacy/forerunner material is labeled as such so it is never mistaken for live.
+
+## 0. Where the code lives (changed 2026-08-07)
+**All repos now live in `/media/loufogle/Data/Repos/<name>`.** Home contains no
+repositories. Clone new work into the vault, never into `~`.
+- Reclaimed 37 GB from `/` (was 96% full, now 92%) by deleting every repo whose
+  content was verifiably recoverable from its remote, then re-cloning `nexus-os`
+  into the vault.
+- Local-only state that could not be pushed (stashes, uncommitted work, repos
+  with no remote) is preserved as git bundles and patches in
+  `Repos/_bundles/<repo>/`, each with a `MANIFEST.txt` restore recipe.
+- Deleted outright as re-clonable or unwanted: the third-party clones listed in
+  §1, plus `w3se`, `quickshare`, `rootAVD`, `docling-ui`, and the superseded
+  standalone `nexus-terminal` (canonical copy is `packages/nexus-terminal`).
+- All 10 `nexus-os` worktrees were removed; their branches survive in the repo.
 
 ## 1. Component hierarchy (what is current)
 - **nexus-os** — umbrella monorepo (THIS repo): AI-native Rust microkernel +
@@ -89,8 +103,20 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
   dedupes against this repo, recoverably trashes obsolete. Run dry-run, then
   `--apply`. On 2026-06-27 it staged 175 scattered files into `nexus-os/_consolidate/`
   and trashed 462 dups (recoverable in `~/.nexus-consolidate-trash/`).
-- **New (parked):** `nexus-os/packages/nexus-brain/` — self-contained idea
-  capture/search service (Phase 1). See its README.
+- **`nexus-os/packages/nexus-brain/`** — the second brain, now two halves:
+  - **Phase 1** (`nexus-brain.py`) — capture + FTS search for *new* thoughts.
+    Pure stdlib, no pip deps.
+  - **Phase 2** (`desktop/`) — **Librarian**, implemented 2026-08-07. Tauri 2
+    desktop app that crawls the ecosystem, **interprets every file with a local
+    Ollama model**, scores it against the repo set, labels current vs stale, and
+    files it (auto above 0.85 confidence, otherwise queued for review). Never
+    deletes: "remove" means move to `Quarantine/`; every move is journalled and
+    reversible; repo-owned files are never touched. 50 unit tests.
+    Routes across the 42 local models by content class with confidence-based
+    escalation, draining the queue one model at a time to avoid VRAM thrashing.
+  - **Phase 3** (open) — promote an idea into an n8n workflow.
+  - Built because Phase 1 was designed, parked, forgotten, and then re-invented
+    from scratch. **Check `packages/` before proposing anything new.**
 
 ## 7. Maintenance
 - Re-run consolidation any time: `python3 nexus-os/scripts/nexus-consolidate.py`

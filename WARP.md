@@ -12,6 +12,9 @@
 - **Laptop** `192.168.1.188` (wired) / `192.168.12.172` (WiFi) — admin/dev workstation.
 - SSH aliases: `ssh tiamat`, `ssh bahamut`, `ssh openwrt`, `ssh mediastack`
 - Active modules: **nexus-mediastack** (live media stack), **bulletproof-mediastack** (forerunner/reference only)
+- **ALL repos live in `/media/loufogle/Data/Repos/<name>`** (2026-08-07). Home holds no
+  repos. Clone new work there; do not clone into `~`. Git bundles preserving
+  local-only state that could not be pushed are in `Repos/_bundles/<repo>/`.
 - **JDownloader2**: runs on Tiamat at `/root/JDownloader2/`, systemd service `jdownloader2.service`, requires `default-jre-headless` (OpenJDK 21). Connected via MyJDownloader as `mediastack-jd2`.
 
 ---
@@ -193,9 +196,17 @@ Every function must be complete and working.  No stubs, no TODOs, no zombie code
 ## Session Continuity
 
 **IMPORTANT: At the start of EVERY conversation, before doing anything else:**
-1. Read `/home/loufogle/nexus-os/packages/nexus-terminal/PROGRESS.md` to get current state
-2. Check `git --no-pager log --oneline -5` in `/home/loufogle/nexus-os` to see recent commits
-3. You are already caught up. Do not ask the user to explain what we were doing.
+1. Read `docs/NEXUS-OS-SOURCE-OF-TRUTH.md` — it wins over every other doc.
+2. Read `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/PROGRESS.md`
+   to get current state.
+3. Check `git --no-pager log --oneline -5` in `/media/loufogle/Data/Repos/nexus-os`
+   to see recent commits.
+4. You are already caught up. Do not ask the user to explain what we were doing.
+
+Before proposing a new package or tool, **check `packages/` first**. Ideas here
+get designed, parked, forgotten and then re-invented — that is the specific
+failure `packages/nexus-brain` exists to stop. Search the catalog rather than
+trusting recall of a name.
 
 This eliminates the need to re-explain context every session.
 
