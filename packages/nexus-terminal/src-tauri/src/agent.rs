@@ -2344,9 +2344,28 @@ fn parse_fake_tool_call(text: &str) -> Option<(String, serde_json::Value)> {
     Some((name.to_string(), args))
 }
 
+/// True if the text mentions one of our real tool names immediately followed by an opening
+/// brace (e.g. `ssh_exec { host: "tiamat", cmd: "..." }`) — a JS-object-like pseudo-call that
+/// is NOT valid JSON (so parse_fake_tool_call can't extract/salvage it, since its keys are
+/// unquoted) but is unambiguously the model describing a tool invocation instead of making a
+/// real one. Our tool names are distinctive enough that this pattern essentially never occurs
+/// in a legitimate final answer.
+fn mentions_tool_call_syntax(text: &str) -> bool {
+    const TOOL_NAMES: &[&str] = &[
+        "ssh_exec", "ping_host", "run_cmd", "systemctl_cmd", "docker_cmd", "proxmox_list",
+        "analyze_image", "analyze_code", "autofix_code", "write_file", "edit_file", "read_file",
+        "list_dir", "file_tree", "git_commit", "ask_user", "http_get", "http_post",
+    ];
+    TOOL_NAMES.iter().any(|name| {
+        text.find(name)
+            .map(|pos| text[pos + name.len()..].trim_start().starts_with('{'))
+            .unwrap_or(false)
+    })
+}
+
 #[cfg(test)]
 mod fake_tool_call_tests {
-    use super::{looks_like_fake_tool_call, parse_fake_tool_call};
+    use super::{looks_like_fake_tool_call, parse_fake_tool_call, mentions_tool_call_syntax};
 
     #[test]
     fn detects_and_parses_the_exact_reported_case() {
@@ -2363,6 +2382,24 @@ mod fake_tool_call_tests {
         let text = "The host is reachable and Home Assistant responded with HTTP 200.";
         assert!(!looks_like_fake_tool_call(text));
         assert!(parse_fake_tool_call(text).is_none());
+    }
+
+    #[test]
+    fn detects_js_object_style_pseudo_call() {
+        // The exact reported failure: unquoted-key pseudo-JSON that parse_fake_tool_call
+        // (real JSON only) can't salvage, and looks_like_fake_tool_call (quoted keys only)
+        // doesn't flag either.
+        let text = "To get the ID of the Home Assistant VM, we can use the following command \
+            on tiamat:\n\nssh_exec {\n host: \"tiamat\",\n cmd: \"qm list | grep haos\"\n}";
+        assert!(mentions_tool_call_syntax(text), "expected 'ssh_exec {{' pseudo-call syntax to be detected");
+        assert!(!looks_like_fake_tool_call(text), "sanity check: unquoted keys should NOT match the quoted-JSON detector");
+        assert!(parse_fake_tool_call(text).is_none(), "sanity check: unquoted keys are not valid JSON and must not parse");
+    }
+
+    #[test]
+    fn allows_genuine_answers_that_dont_mention_tool_syntax() {
+        let text = "The Home Assistant VM (haos, VMID 990) is running on tiamat.";
+        assert!(!mentions_tool_call_syntax(text));
     }
 }
 
@@ -2890,15 +2927,19 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
         let describes_future_action = describes_future_action(&full_content);
         let has_illustrative_command = contains_illustrative_command_block(&full_content);
         let is_fake_tool_call_text = looks_like_fake_tool_call(&full_content);
+        let has_pseudo_call_syntax = mentions_tool_call_syntax(&full_content);
         if collected_tool_calls.is_empty() && !full_content.trim().is_empty()
-            && (step == 0 || describes_future_action || has_illustrative_command || is_fake_tool_call_text)
+            && (step == 0 || describes_future_action || has_illustrative_command
+                || is_fake_tool_call_text || has_pseudo_call_syntax)
         {
             let correction = format!(
-                "You described what to do but didn't do it — you wrote out commands (or a fake \
-                JSON tool-call) as text instead of calling the actual tools. Execute the task now \
-                using real tool calls (run_cmd, ping_host, ssh_exec, etc.) Do not put commands or \
-                JSON describing a tool call in your answer text — call the tool.\n\nYour previous \
-                response was: {}",
+                "You described what to do but didn't do it — you wrote out commands, JSON, or \
+                pseudo-code like `toolname {{ ... }}` as text instead of calling the actual \
+                tools. Execute the task now using real tool calls (run_cmd, ping_host, ssh_exec, \
+                etc.) Do not put commands, JSON, or pseudo-code describing a tool call in your \
+                answer text — call the tool. If you already found a working host/value earlier in \
+                this conversation, reuse it — do not ask the user for information you already \
+                have.\n\nYour previous response was: {}",
                 if full_content.len() > 500 { &full_content[..500] } else { &full_content }
             );
             let _ = app.emit("agent-retry", AgentRetryEvent { session_id: session_id.to_string() });
@@ -2908,7 +2949,7 @@ async fn run_agent_streaming_inner<R: tauri::Runtime>(
                 tool_calls: None,
                 tool_call_id: None,
             });
-            warn!("Step {} had text but no tool calls (describes_future_action={}, has_illustrative_command={}, is_fake_tool_call_text={}) — injecting self-correction and retrying", step, describes_future_action, has_illustrative_command, is_fake_tool_call_text);
+            warn!("Step {} had text but no tool calls (describes_future_action={}, has_illustrative_command={}, is_fake_tool_call_text={}, has_pseudo_call_syntax={}) — injecting self-correction and retrying", step, describes_future_action, has_illustrative_command, is_fake_tool_call_text, has_pseudo_call_syntax);
             continue;
         }
 

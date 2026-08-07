@@ -44,7 +44,13 @@ All services on `192.168.12.30`: Riven frontend `:3000`, Riven backend `:8080`
 (+ RivenVFS FUSE at `/mount`), Jellyfin `:8096`, Caddy `:80/443`, PostgreSQL
 `:5432`, Redis `:6379`, n8n `:5678`, Threadfin `:34400`, Homarr `:7575`,
 Uptime Kuma `:3001`, Cockpit `:9090`, CrowdSec, JDownloader2 (headless Xvfb),
-aria2, MetaTube `:32217`, unified-guide `:7700`.
+aria2, MetaTube `:32217`, unified-guide `:7700`, Immich `:2283`
+(native build — server/web via Node+pnpm, machine-learning via Python venv,
+core plugin via extism-js built from source since Debian 12's glibc predates
+the upstream prebuilt binary; own Postgres DB with VectorChord+pgvector,
+Redis DB index 1), flexget `:5050` (pipx venv), autobrr `:7474` (Go binary).
+Immich/flexget/autobrr were migrated 2026-08-02 from Docker containers on the
+laptop's HomeDock stack to native CT-300 services.
 
 **Pipeline:** request in Riven → scrape Torrentio → add to Real-Debrid →
 RivenVFS mounts the RD library at `/mount` → Jellyfin plays (seconds, zero local

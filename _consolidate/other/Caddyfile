@@ -1,0 +1,115 @@
+root@mediastack ~ [7]# cat /etc/caddy/Caddyfile
+{
+    auto_https disable_redirects
+    local_certs
+    default_bind 192.168.12.30
+}
+
+(headers) {
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer-when-downgrade"
+        -Server
+    }
+}
+
+riven.mediastack.lan, riven.local {
+    tls internal
+    import headers
+    reverse_proxy 127.0.0.1:3000
+}
+
+jellyfin.mediastack.lan, jellyfin.local {
+    tls internal
+    import headers
+    reverse_proxy 127.0.0.1:8096
+}
+
+cockpit.mediastack.lan {
+    tls internal
+    import headers
+    reverse_proxy 127.0.0.1:9090
+}
+
+guide.mediastack.lan, guide.local {
+    tls internal
+    import headers
+    reverse_proxy 127.0.0.1:7700
+}
+
+homarr.mediastack.lan, homarr.local {
+    tls internal
+    import headers
+    reverse_proxy 127.0.0.1:7575
+}
+
+vault.tiamat.local, vaultwarden.tiamat.local {
+    tls internal
+    import headers
+    reverse_proxy https://192.168.12.104 {
+        transport http {
+            tls_insecure_skip_verify
+        }
+    }
+}
+
+auth.tiamat.local {
+    tls internal
+    import headers
+    reverse_proxy http://192.168.12.107:9000
+}
+
+n8n.tiamat.local {
+    tls internal
+    import headers
+    reverse_proxy http://127.0.0.1:5678
+}
+
+uptime.tiamat.local, uptimekuma.tiamat.local {
+    tls internal
+    import headers
+    reverse_proxy http://127.0.0.1:3001
+}
+
+threadfin.tiamat.local {
+    tls internal
+    import headers
+    reverse_proxy http://192.168.12.30:34400
+}
+
+ha.tiamat.local, homeassistant.tiamat.local {
+    tls internal
+    import headers
+    reverse_proxy http://192.168.12.250:8123
+}
+
+sonarr.tiamat.local {
+    tls internal
+    import headers
+    reverse_proxy http://192.168.12.214:8989
+}
+
+radarr.tiamat.local {
+    tls internal
+    import headers
+    reverse_proxy http://192.168.12.225:7878
+}
+
+prowlarr.tiamat.local {
+    tls internal
+    import headers
+    reverse_proxy http://192.168.12.210:9696
+}
+
+aria2.tiamat.local {
+    tls internal
+    import headers
+
+    handle /jsonrpc* {
+        reverse_proxy http://127.0.0.1:6800
+    }
+
+    handle {
+        root * /opt/ariang
+        file_server

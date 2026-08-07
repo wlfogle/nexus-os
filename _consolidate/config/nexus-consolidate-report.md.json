@@ -1,0 +1,232 @@
+[
+  {
+    "path": "/home/loufogle/Abyss Rampage \u2013 Warlock Leveling Build for Diablo 4 (Season 14).md",
+    "action": "REVIEW",
+    "cls": "REVIEW",
+    "reason": "unique; relevance unclear (kept)",
+    "dest": "docs",
+    "hash": "d71472cc1a30459135f7730e5dd22a3f3f2539e1dd25859f59499259b433c6ca",
+    "size": 3814,
+    "mtime": 1782956244.7022793
+  },
+  {
+    "path": "/home/loufogle/Caddyfile",
+    "action": "MOVE",
+    "cls": "RELEVANT_MISSING",
+    "reason": "nexus-related and not yet in the repo",
+    "dest": "other",
+    "hash": "b334a871574895ed9bc7a81660da34fec57c5ebebd143ee88a5ce7cf8b4544c7",
+    "size": 2153,
+    "mtime": 1782360365.0521343
+  },
+  {
+    "path": "/home/loufogle/Elvis Movies.md",
+    "action": "REVIEW",
+    "cls": "REVIEW",
+    "reason": "unique; relevance unclear (kept)",
+    "dest": "docs",
+    "hash": "293357e047b874e677d50bf4ec32fd7198318c38d18941d527b21e77c39c2b71",
+    "size": 24137,
+    "mtime": 1784144758.209433
+  },
+  {
+    "path": "/home/loufogle/I installed httpsgithub.comcoder.md",
+    "action": "MOVE",
+    "cls": "RELEVANT_MISSING",
+    "reason": "nexus-related and not yet in the repo",
+    "dest": "docs",
+    "hash": "d03c346c3ae771231bf299873191e96aade8b955d63a12727139da1f810580af",
+    "size": 96,
+    "mtime": 1783031545.0421767
+  },
+  {
+    "path": "/home/loufogle/Pixel Tablet.txt",
+    "action": "REVIEW",
+    "cls": "REVIEW",
+    "reason": "unique; relevance unclear (kept)",
+    "dest": "docs",
+    "hash": "e6cc8d93acd0d44ed7d7650bd3e5704c4c7218d96da88b7853a8959197c74131",
+    "size": 2113,
+    "mtime": 1778790897.324248
+  },
+  {
+    "path": "/home/loufogle/WARP.md",
+    "action": "TRASH",
+    "cls": "STALE_OLDER",
+    "reason": "older variant of a file already in nexus-os",
+    "dest": "",
+    "hash": "4a3dc743eaa6dc0d44d60f246f63b138dd0cbb2a32247e80980feee7015a164f",
+    "size": 9289,
+    "mtime": 1784255559.5050774
+  },
+  {
+    "path": "/home/loufogle/WinVM Error.md",
+    "action": "MOVE",
+    "cls": "RELEVANT_MISSING",
+    "reason": "nexus-related and not yet in the repo",
+    "dest": "docs",
+    "hash": "b691d3b02408272338e8c06d950753c04a001d028f96aa13afa87c8eb86830bf",
+    "size": 4964,
+    "mtime": 1785445934.793124
+  },
+  {
+    "path": "/home/loufogle/bitwarden_export_20250804125949.json",
+    "action": "SECURE",
+    "cls": "SECURE",
+    "reason": "secret-looking; handle manually",
+    "dest": "",
+    "hash": "",
+    "size": 1256025,
+    "mtime": 1754326789.8915863
+  },
+  {
+    "path": "/home/loufogle/diablo4_launch.sh",
+    "action": "REVIEW",
+    "cls": "REVIEW",
+    "reason": "unique; relevance unclear (kept)",
+    "dest": "scripts",
+    "hash": "49da2c72a1c01e333af6948d0a6d94bb8101130ac5cbb5e39775f5de6c664736",
+    "size": 663,
+    "mtime": 1762633682.8253994
+  },
+  {
+    "path": "/home/loufogle/glxinfo.txt",
+    "action": "REVIEW",
+    "cls": "REVIEW",
+    "reason": "unique; relevance unclear (kept)",
+    "dest": "docs",
+    "hash": "4795645c006cf8865a71406f443a88eb4141e459e98b1a023391c2628c8558d7",
+    "size": 106800,
+    "mtime": 1783108383.248895
+  },
+  {
+    "path": "/home/loufogle/install-reclaimerr-native.sh",
+    "action": "MOVE",
+    "cls": "RELEVANT_MISSING",
+    "reason": "nexus-related and not yet in the repo",
+    "dest": "scripts",
+    "hash": "20fe4c9e22457d9134836390be4f0f0ab2d0e5706ef8e0dff2682c2279a518a7",
+    "size": 8765,
+    "mtime": 1784857472.8217905
+  },
+  {
+    "path": "/home/loufogle/launch_game.sh",
+    "action": "REVIEW",
+    "cls": "REVIEW",
+    "reason": "unique; relevance unclear (kept)",
+    "dest": "scripts",
+    "hash": "e53b7644eca9fe0dc37cbbf3c61085a6ff36d4b58e1bdbc3ffa85bd388d4305e",
+    "size": 217,
+    "mtime": 1765497855.3249724
+  },
+  {
+    "path": "/home/loufogle/libvirt.md",
+    "action": "MOVE",
+    "cls": "RELEVANT_MISSING",
+    "reason": "nexus-related and not yet in the repo",
+    "dest": "docs",
+    "hash": "c2eac3b0d7863356e72addf12235d708fad5f26922336336fa91229441c876eb",
+    "size": 63801,
+    "mtime": 1782678679.8655884
+  },
+  {
+    "path": "/home/loufogle/next.md",
+    "action": "REVIEW",
+    "cls": "NEWER_THAN_REPO",
+    "reason": "same name in nexus-os but THIS copy is newer; verify before replacing",
+    "dest": "docs",
+    "hash": "1e59a931cfd6bcdf6d0369eaf7adc17cbece2f4e9e64b4db18242bf7740ebb27",
+    "size": 564,
+    "mtime": 1785542058.07149
+  },
+  {
+    "path": "/home/loufogle/nexus-consolidate-report.md",
+    "action": "MOVE",
+    "cls": "RELEVANT_MISSING",
+    "reason": "nexus-related and not yet in the repo",
+    "dest": "docs",
+    "hash": "a48e96ae46d59d9b6c1533496e93d7e015c240f97d899879b987fdcd3a5bdef7",
+    "size": 2993,
+    "mtime": 1785547740.506894
+  },
+  {
+    "path": "/home/loufogle/nexus-consolidate-report.md.json",
+    "action": "MOVE",
+    "cls": "RELEVANT_MISSING",
+    "reason": "nexus-related and not yet in the repo",
+    "dest": "config",
+    "hash": "9273545a12a0462f1e40f6540f1fe6dcb5a452358c241d3b4255a3b39cda871a",
+    "size": 6491,
+    "mtime": 1785547740.5070584
+  },
+  {
+    "path": "/home/loufogle/optimize_note9.sh",
+    "action": "REVIEW",
+    "cls": "REVIEW",
+    "reason": "unique; relevance unclear (kept)",
+    "dest": "scripts",
+    "hash": "f5fcfc731931b144c89da5a5d15e3212e44778435e145ca7dfd9659383eb553f",
+    "size": 3186,
+    "mtime": 1762200035.0331664
+  },
+  {
+    "path": "/home/loufogle/platform_details.txt",
+    "action": "REVIEW",
+    "cls": "REVIEW",
+    "reason": "unique; relevance unclear (kept)",
+    "dest": "docs",
+    "hash": "522636114a2aaf781fb66e1e29a073b40bd25c5dc13f9acbf9849bd4d343dc19",
+    "size": 2290,
+    "mtime": 1783108206.9672318
+  },
+  {
+    "path": "/home/loufogle/proxmox error.md",
+    "action": "MOVE",
+    "cls": "RELEVANT_MISSING",
+    "reason": "nexus-related and not yet in the repo",
+    "dest": "docs",
+    "hash": "9dda0f11a38521ac52a3911e5cf5144936676182a2c4bfd02aac9694e8e44d4c",
+    "size": 81295,
+    "mtime": 1784747062.7218552
+  },
+  {
+    "path": "/home/loufogle/stop-subtitle.sh",
+    "action": "REVIEW",
+    "cls": "REVIEW",
+    "reason": "unique; relevance unclear (kept)",
+    "dest": "scripts",
+    "hash": "5dd223e3a8d7807d0eb406126cf66c46043b91163b285fb0b2d95daf4cda92f9",
+    "size": 1830,
+    "mtime": 1782456875.8144069
+  },
+  {
+    "path": "/home/loufogle/sync_all.sh",
+    "action": "MOVE",
+    "cls": "RELEVANT_MISSING",
+    "reason": "nexus-related and not yet in the repo",
+    "dest": "scripts",
+    "hash": "f8bc8ee180512b14b961ace3ca2ddcb6e74b5799b902998dead8ad592f88c925",
+    "size": 545,
+    "mtime": 1782883231.7567232
+  },
+  {
+    "path": "/home/loufogle/vulkan_video_info.txt",
+    "action": "REVIEW",
+    "cls": "REVIEW",
+    "reason": "unique; relevance unclear (kept)",
+    "dest": "docs",
+    "hash": "006e0a103077b4487f81be68ada02038916e631a6498d92b83226e77a647c5b1",
+    "size": 1981522,
+    "mtime": 1783108435.5326118
+  },
+  {
+    "path": "/home/loufogle/vulkaninfo.txt",
+    "action": "REVIEW",
+    "cls": "REVIEW",
+    "reason": "unique; relevance unclear (kept)",
+    "dest": "docs",
+    "hash": "31b05da3ee90317d1ad975011d587fa0ed4de41578fd4eea2aad99124ec3fea9",
+    "size": 793456,
+    "mtime": 1783108418.6962297
+  }
+]
