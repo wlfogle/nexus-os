@@ -35,6 +35,14 @@ chrono = "0.4"
 num_cpus = "1"
 base64 = "0.22"
 
+[features]
+# Serves the frontend from the embedded bundle instead of the Vite dev server.
+# Without it the binary tries to reach devUrl (localhost:5173) and fails with
+# "connection refused" unless `npm run dev` happens to be running.
+# `cargo tauri build` enables this automatically; a plain `cargo build` does not.
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
 [profile.release]
 opt-level = 3
 lto = true
