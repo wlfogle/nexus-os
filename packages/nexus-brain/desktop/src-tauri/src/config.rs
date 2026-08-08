@@ -68,8 +68,15 @@ impl Default for ModelRouting {
     }
 }
 
+/// Bump when the built-in prune lists change, so an existing `config.json`
+/// picks up the new entries instead of silently pinning the old ones.
+pub const CONFIG_VERSION: u32 = 2;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
+    /// Schema version of the persisted file. Absent in v1 files, hence `default`.
+    #[serde(default)]
+    pub version: u32,
     /// Directories crawled for content.
     pub roots: Vec<PathBuf>,
     /// Directory *names* pruned anywhere in the tree.
@@ -99,6 +106,7 @@ impl Default for Config {
     fn default() -> Self {
         let h = home();
         Self {
+            version: CONFIG_VERSION,
             roots: vec![h.clone()],
             prune_names: [
                 // dependency and tool caches
@@ -117,6 +125,15 @@ impl Default for Config {
                 // browser and editor profiles
                 ".mozilla", ".waterfox", ".thunderbird", ".tor-browser",
                 ".vscode", ".vscode-shared", ".vscode-react-native",
+                // Per-user application state. `.local/share` alone contributes
+                // six figures of icon themes, shell completions, flatpak
+                // appstream data and shader caches -- none of it authored by
+                // the user, all of it noise in a catalogue of ideas.
+                ".local", ".config", ".icons", ".themes", ".fonts",
+                ".thumbnails", ".pulse", ".dbus", ".gvfs", ".java",
+                // Credentials. Never walked, never read, never sent anywhere.
+                ".ssh", ".gnupg", ".pki", ".aws", ".kube", ".docker",
+                ".password-store", ".secrets", ".netrc",
                 // our own state, and git internals
                 ".warp", ".xmltv", ".git",
             ]
@@ -154,7 +171,40 @@ impl Config {
         }
         let raw = std::fs::read_to_string(&p)
             .with_context(|| format!("reading {}", p.display()))?;
-        Ok(serde_json::from_str(&raw).unwrap_or_default())
+        let mut cfg: Self = serde_json::from_str(&raw).unwrap_or_default();
+        if cfg.migrate() {
+            cfg.save()?;
+        }
+        Ok(cfg)
+    }
+
+    /// Fold newly shipped defaults into an older config file.
+    ///
+    /// Prune lists are additive: entries the user added are kept, and entries
+    /// added to the built-in defaults since the file was written are merged in.
+    /// Without this, changing a default has no effect on any machine that has
+    /// already run the app once -- which is exactly how `.local` and `.config`
+    /// kept getting walked after being added to the deny list.
+    ///
+    /// Returns true when something changed and the file should be rewritten.
+    fn migrate(&mut self) -> bool {
+        if self.version >= CONFIG_VERSION {
+            return false;
+        }
+        let defaults = Self::default();
+
+        let merge = |current: &mut Vec<String>, incoming: &[String]| {
+            for item in incoming {
+                if !current.iter().any(|c| c == item) {
+                    current.push(item.clone());
+                }
+            }
+        };
+        merge(&mut self.prune_names, &defaults.prune_names);
+        merge(&mut self.prune_fragments, &defaults.prune_fragments);
+
+        self.version = CONFIG_VERSION;
+        true
     }
 
     pub fn save(&self) -> Result<()> {
@@ -195,5 +245,74 @@ impl Config {
             std::fs::create_dir_all(&p)?;
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Config, CONFIG_VERSION};
+    use std::path::PathBuf;
+
+    #[test]
+    fn migration_adds_new_defaults_and_keeps_user_entries() {
+        // A v1 file: no version field, short prune list, one custom entry.
+        let mut old = Config {
+            version: 0,
+            prune_names: vec!["node_modules".into(), "my-own-junk-dir".into()],
+            prune_fragments: vec!["/custom/fragment/".into()],
+            ..Config::default()
+        };
+
+        assert!(old.migrate(), "a v1 config must report that it changed");
+        assert_eq!(old.version, CONFIG_VERSION);
+
+        // The entries that were silently missing before are now present.
+        for expected in [".local", ".config", ".ssh", ".icons"] {
+            assert!(
+                old.prune_names.iter().any(|p| p == expected),
+                "{expected} should have been merged in"
+            );
+        }
+        // The user's own additions survive.
+        assert!(old.prune_names.iter().any(|p| p == "my-own-junk-dir"));
+        assert!(old.prune_fragments.iter().any(|p| p == "/custom/fragment/"));
+    }
+
+    #[test]
+    fn migration_is_idempotent_and_does_not_duplicate() {
+        let mut c = Config::default();
+        assert!(!c.migrate(), "a current config needs no migration");
+        let before = c.prune_names.len();
+        c.version = 0;
+        c.migrate();
+        assert_eq!(
+            c.prune_names.len(),
+            before,
+            "re-migrating must not duplicate entries"
+        );
+    }
+
+    #[test]
+    fn credential_and_state_dirs_are_pruned() {
+        let c = Config::default();
+        for dir in [".ssh", ".gnupg", ".aws", ".local", ".config"] {
+            let p = super::home().join(dir);
+            assert!(c.is_pruned(&p), "{dir} must be pruned");
+        }
+    }
+
+    #[test]
+    fn ordinary_project_dirs_are_not_pruned() {
+        let c = Config::default();
+        for dir in ["nexus-os", "Documents", "scripts"] {
+            let p = super::home().join(dir);
+            assert!(!c.is_pruned(&p), "{dir} must not be pruned");
+        }
+    }
+
+    #[test]
+    fn path_fragments_are_pruned_anywhere() {
+        let c = Config::default();
+        assert!(c.is_pruned(&PathBuf::from("/home/x/go/pkg/mod/foo")));
     }
 }

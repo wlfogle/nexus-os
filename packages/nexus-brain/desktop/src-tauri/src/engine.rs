@@ -68,23 +68,44 @@ pub struct Progress {
     pub running: bool,
 }
 
-fn emit(app: &AppHandle, state: &AppState, phase: &str, detail: String) {
+/// Anything that can receive progress updates.
+///
+/// The window implementation emits a Tauri event; the headless implementation
+/// prints a line. Keeping this generic is what makes the pipeline runnable --
+/// and therefore testable -- without a GUI attached.
+pub trait ProgressSink: Send + Sync + 'static {
+    fn report(&self, progress: Progress);
+}
+
+/// Reports into the app window.
+pub struct WindowSink(pub AppHandle);
+
+impl ProgressSink for WindowSink {
+    fn report(&self, progress: Progress) {
+        let _ = self.0.emit("librarian://progress", progress);
+    }
+}
+
+/// Reports to stdout, one line per phase.
+pub struct StdoutSink;
+
+impl ProgressSink for StdoutSink {
+    fn report(&self, p: Progress) {
+        let s = &p.stats;
+        println!(
+            "[{:<10}] {:<58} scanned {:>6} extracted {:>6} embedded {:>6} interpreted {:>6}",
+            p.phase, p.detail, s.scanned, s.extracted, s.embedded, s.interpreted
+        );
+    }
+}
+
+fn emit(sink: &dyn ProgressSink, state: &AppState, phase: &str, detail: String) {
+    // Scoped so the guard is released before `sink.report` below: `emit` is
+    // called from phases that may already be holding this lock, and
+    // std::sync::Mutex is not reentrant.
     let stats = {
         let conn = state.db.lock().unwrap();
-        db::stats(&conn).unwrap_or(db::Stats {
-            files_total: 0,
-            files_present: 0,
-            scanned: 0,
-            extracted: 0,
-            embedded: 0,
-            interpreted: 0,
-            repos: 0,
-            notes: 0,
-            pending_actions: 0,
-            duplicate_groups: 0,
-            loose_files: 0,
-            bytes_loose: 0,
-        })
+        db::stats(&conn).unwrap_or_default()
     };
     let payload = Progress {
         phase: phase.to_string(),
@@ -92,11 +113,11 @@ fn emit(app: &AppHandle, state: &AppState, phase: &str, detail: String) {
         stats,
         running: state.running.load(Ordering::Relaxed),
     };
-    let _ = app.emit("librarian://progress", payload);
+    sink.report(payload);
 }
 
 /// Run the whole pipeline until every file reaches stage 3.
-pub async fn run_pipeline(app: AppHandle, state: Arc<AppState>) -> Result<()> {
+pub async fn run_pipeline(sink: Arc<dyn ProgressSink>, state: Arc<AppState>) -> Result<()> {
     if state.running.swap(true, Ordering::SeqCst) {
         return Ok(()); // already running
     }
@@ -104,28 +125,53 @@ pub async fn run_pipeline(app: AppHandle, state: Arc<AppState>) -> Result<()> {
     let cfg = state.config();
     let client = state.client();
 
-    let finish = |app: &AppHandle, state: &AppState, msg: String| {
+    let finish = |sink: &dyn ProgressSink, state: &AppState, msg: String| {
         state.running.store(false, Ordering::SeqCst);
-        emit(app, state, "idle", msg);
+        emit(sink, state, "idle", msg);
     };
 
+    // Every phase below follows the same two rules, and breaking either one
+    // deadlocks the whole app:
+    //
+    //   1. The database guard is released *before* `emit`, because `emit`
+    //      locks the same non-reentrant std::sync::Mutex to read stats.
+    //   2. Blocking work (filesystem walks, git subprocesses, SQLite) runs
+    //      inside `spawn_blocking`, so the async runtime stays free to serve
+    //      commands from the window while a long pass is in flight.
+
     // --- repos first: file ownership feeds every later decision -------------
-    emit(&app, &state, "repos", "discovering git repositories".into());
+    emit(&*sink, &state, "repos", "discovering git repositories".into());
     {
-        let mut conn = state.db.lock().unwrap();
-        match repos::refresh(&mut conn, &cfg) {
-            Ok(n) => emit(&app, &state, "repos", format!("{n} repositories")),
-            Err(e) => emit(&app, &state, "repos", format!("repo scan failed: {e}")),
+        let dbh = state.db.clone();
+        let c = cfg.clone();
+        let res = tokio::task::spawn_blocking(move || {
+            let mut conn = dbh.lock().unwrap();
+            repos::refresh(&mut conn, &c)
+        })
+        .await?;
+        match res {
+            Ok(n) => emit(&*sink, &state, "repos", format!("{n} repositories")),
+            Err(e) => emit(&*sink, &state, "repos", format!("repo scan failed: {e}")),
         }
     }
 
     // --- tier 0 -------------------------------------------------------------
-    emit(&app, &state, "scan", "walking the filesystem".into());
+    emit(&*sink, &state, "scan", "walking the filesystem".into());
     {
-        let mut conn = state.db.lock().unwrap();
-        match scan::run(&mut conn, &cfg) {
+        let dbh = state.db.clone();
+        let c = cfg.clone();
+        let res = tokio::task::spawn_blocking(move || -> Result<scan::ScanReport> {
+            let mut conn = dbh.lock().unwrap();
+            let report = scan::run(&mut conn, &c)?;
+            repos::assign_files(&mut conn)?;
+            extract::skip_unreadable(&conn, c.max_read_bytes as i64)?;
+            extract::reattach_moved(&conn)?;
+            Ok(report)
+        })
+        .await?;
+        match res {
             Ok(r) => emit(
-                &app,
+                &*sink,
                 &state,
                 "scan",
                 format!(
@@ -134,18 +180,15 @@ pub async fn run_pipeline(app: AppHandle, state: Arc<AppState>) -> Result<()> {
                 ),
             ),
             Err(e) => {
-                finish(&app, &state, format!("scan failed: {e}"));
+                finish(&*sink, &state, format!("scan failed: {e}"));
                 return Err(e);
             }
         }
-        repos::assign_files(&mut conn)?;
-        extract::skip_unreadable(&conn, cfg.max_read_bytes as i64)?;
-        extract::reattach_moved(&conn)?;
     }
 
     if !client.reachable().await {
         finish(
-            &app,
+            &*sink,
             &state,
             "Ollama is not reachable - inventory is complete but nothing can be \
              interpreted until it is running."
@@ -157,7 +200,7 @@ pub async fn run_pipeline(app: AppHandle, state: Arc<AppState>) -> Result<()> {
     // --- tiers 1..3 ---------------------------------------------------------
     loop {
         if state.cancel.load(Ordering::Relaxed) {
-            finish(&app, &state, "paused".into());
+            finish(&*sink, &state, "paused".into());
             return Ok(());
         }
         state.pass.fetch_add(1, Ordering::Relaxed);
@@ -168,11 +211,14 @@ pub async fn run_pipeline(app: AppHandle, state: Arc<AppState>) -> Result<()> {
             scan::pending_extract(&conn, &cfg, EXTRACT_BATCH)?
         };
         if !batch.is_empty() {
-            let mut conn = state.db.lock().unwrap();
-            let r = extract::run(&mut conn, &batch)?;
-            drop(conn);
+            let dbh = state.db.clone();
+            let r = tokio::task::spawn_blocking(move || {
+                let mut conn = dbh.lock().unwrap();
+                extract::run(&mut conn, &batch)
+            })
+            .await??;
             emit(
-                &app,
+                &*sink,
                 &state,
                 "extract",
                 format!("read {} files ({} with text)", r.processed, r.with_text),
@@ -184,7 +230,7 @@ pub async fn run_pipeline(app: AppHandle, state: Arc<AppState>) -> Result<()> {
         let r = embed::run(&state.db, &cfg, &client, EMBED_BATCH).await?;
         if r.files > 0 {
             emit(
-                &app,
+                &*sink,
                 &state,
                 "embed",
                 format!("embedded {} files / {} chunks", r.files, r.chunks),
@@ -201,7 +247,7 @@ pub async fn run_pipeline(app: AppHandle, state: Arc<AppState>) -> Result<()> {
                 .map(|(m, n)| format!("{m} x{n}"))
                 .collect();
             emit(
-                &app,
+                &*sink,
                 &state,
                 "interpret",
                 format!(
@@ -219,17 +265,24 @@ pub async fn run_pipeline(app: AppHandle, state: Arc<AppState>) -> Result<()> {
 
     // --- derived artefacts --------------------------------------------------
     {
-        let mut conn = state.db.lock().unwrap();
-        let n = embed::rebuild_centroids(&mut conn)?;
-        drop(conn);
-        emit(&app, &state, "centroids", format!("{n} repo centroids"));
+        let dbh = state.db.clone();
+        let n = tokio::task::spawn_blocking(move || {
+            let mut conn = dbh.lock().unwrap();
+            embed::rebuild_centroids(&mut conn)
+        })
+        .await??;
+        emit(&*sink, &state, "centroids", format!("{n} repo centroids"));
     }
     {
-        let mut conn = state.db.lock().unwrap();
-        let p = actions::plan(&mut conn, &cfg)?;
-        drop(conn);
+        let dbh = state.db.clone();
+        let c = cfg.clone();
+        let p = tokio::task::spawn_blocking(move || {
+            let mut conn = dbh.lock().unwrap();
+            actions::plan(&mut conn, &c)
+        })
+        .await??;
         emit(
-            &app,
+            &*sink,
             &state,
             "plan",
             format!(
@@ -239,11 +292,15 @@ pub async fn run_pipeline(app: AppHandle, state: Arc<AppState>) -> Result<()> {
         );
 
         if p.auto > 0 {
-            let mut conn = state.db.lock().unwrap();
-            let a = actions::apply(&mut conn, p.plan_id)?;
-            drop(conn);
+            let dbh = state.db.clone();
+            let plan_id = p.plan_id;
+            let a = tokio::task::spawn_blocking(move || {
+                let mut conn = dbh.lock().unwrap();
+                actions::apply(&mut conn, plan_id)
+            })
+            .await??;
             emit(
-                &app,
+                &*sink,
                 &state,
                 "apply",
                 format!("{} applied, {} failed", a.applied, a.failed),
@@ -251,7 +308,7 @@ pub async fn run_pipeline(app: AppHandle, state: Arc<AppState>) -> Result<()> {
         }
     }
 
-    finish(&app, &state, "complete".into());
+    finish(&*sink, &state, "complete".into());
     Ok(())
 }
 

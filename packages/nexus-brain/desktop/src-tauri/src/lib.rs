@@ -24,6 +24,39 @@ pub mod search;
 
 use std::sync::Arc;
 
+/// Run the pipeline to completion with no window, printing progress.
+///
+/// This is the same `run_pipeline` the window drives, differing only in the
+/// progress sink. Having it means the pipeline can be exercised end to end
+/// without a display -- useful for cron, and the only honest way to verify the
+/// engine does not deadlock.
+pub fn run_headless() -> i32 {
+    let state = match engine::AppState::new() {
+        Ok(s) => Arc::new(s),
+        Err(e) => {
+            eprintln!("librarian: failed to initialise: {e}");
+            return 1;
+        }
+    };
+
+    let runtime = match tokio::runtime::Runtime::new() {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("librarian: cannot start runtime: {e}");
+            return 1;
+        }
+    };
+
+    let sink: Arc<dyn engine::ProgressSink> = Arc::new(engine::StdoutSink);
+    match runtime.block_on(engine::run_pipeline(sink, state)) {
+        Ok(()) => 0,
+        Err(e) => {
+            eprintln!("librarian: pipeline failed: {e}");
+            1
+        }
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let state = match engine::AppState::new() {

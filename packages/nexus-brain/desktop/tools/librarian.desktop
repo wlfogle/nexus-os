@@ -1,0 +1,19 @@
+[Desktop Entry]
+Type=Application
+Version=1.4
+Name=Librarian
+GenericName=Ecosystem Librarian
+Comment=Reads and interprets every file you own, then files it where it belongs
+Exec=/media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/src-tauri/target/release/librarian
+Path=/media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/src-tauri
+Icon=librarian
+Terminal=false
+Categories=Utility;
+Keywords=librarian;organise;organize;index;search;notes;ideas;nexus;brain;
+StartupNotify=true
+StartupWMClass=Librarian
+Actions=Headless;
+
+[Desktop Action Headless]
+Name=Run pipeline in terminal (no window)
+Exec=konsole --hold -e /media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/src-tauri/target/release/librarian --headless

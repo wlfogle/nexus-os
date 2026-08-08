@@ -170,20 +170,27 @@ export default function App() {
 function Dashboard({ stats, health }: { stats: Stats | null; health: Health | null }) {
   if (!stats) return <div className="empty">Loading…</div>;
 
-  const total = Math.max(stats.files_present, 1);
-  const pct = (n: number) => `${(n / total) * 100}%`;
-  const onlyScanned = stats.scanned - stats.extracted;
-  const onlyExtracted = stats.extracted - stats.embedded;
-  const onlyEmbedded = stats.embedded - stats.interpreted;
+  // Progress is measured against files that are actually candidates for
+  // interpretation. Counting skipped binaries in the denominator made the bar
+  // look almost complete before a single file had been read.
+  const eligible = Math.max(stats.files_present - stats.skipped, 1);
+  const pct = (n: number) => `${Math.min((n / eligible) * 100, 100)}%`;
+  const onlyText = Math.max(stats.with_text - stats.embedded, 0);
+  const onlyEmbedded = Math.max(stats.embedded - stats.interpreted, 0);
+  const notYetRead = Math.max(eligible - stats.with_text, 0);
 
   return (
     <>
       <div className="cards">
-        <Card k="Files catalogued" v={stats.files_present.toLocaleString()} />
+        <Card
+          k="Files catalogued"
+          v={stats.files_present.toLocaleString()}
+          sub={`${stats.skipped.toLocaleString()} skipped as binary or oversized`}
+        />
         <Card
           k="Interpreted"
           v={stats.interpreted.toLocaleString()}
-          sub={`${Math.round((stats.interpreted / total) * 100)}% of corpus`}
+          sub={`${Math.round((stats.interpreted / eligible) * 100)}% of ${eligible.toLocaleString()} eligible`}
         />
         <Card k="Git repos" v={stats.repos.toLocaleString()} />
         <Card
@@ -200,8 +207,8 @@ function Dashboard({ stats, health }: { stats: Stats | null; health: Health | nu
         <div className="bar">
           <span className="s3" style={{ width: pct(stats.interpreted) }} />
           <span className="s2" style={{ width: pct(onlyEmbedded) }} />
-          <span className="s1" style={{ width: pct(onlyExtracted) }} />
-          <span className="s0" style={{ width: pct(onlyScanned) }} />
+          <span className="s1" style={{ width: pct(onlyText) }} />
+          <span className="s0" style={{ width: pct(notYetRead) }} />
         </div>
         <div className="legend">
           <span>
@@ -214,11 +221,14 @@ function Dashboard({ stats, health }: { stats: Stats | null; health: Health | nu
           </span>
           <span>
             <i style={{ background: "#47739b" }} />
-            extracted {onlyExtracted.toLocaleString()}
+            has text {onlyText.toLocaleString()}
           </span>
           <span>
             <i style={{ background: "#33415a" }} />
-            scanned {onlyScanned.toLocaleString()}
+            not read yet {notYetRead.toLocaleString()}
+          </span>
+          <span className="muted">
+            ({stats.skipped.toLocaleString()} skipped, excluded)
           </span>
         </div>
       </div>

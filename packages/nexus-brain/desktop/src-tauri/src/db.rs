@@ -294,20 +294,41 @@ pub fn meta_set(conn: &Connection, key: &str, value: &str) -> Result<()> {
 
 // -------------------------------------------------------------- stats ------
 
-#[derive(Debug, Clone, serde::Serialize)]
+/// Pipeline counters.
+///
+/// Each field counts what its name says. In particular `interpreted` is the
+/// number of rows a model actually produced, not the number of files that
+/// reached stage 3 -- `skip_unreadable` promotes binaries and oversized files
+/// straight to stage 3 without reading them, and counting those as interpreted
+/// overstated progress by six figures.
+#[derive(Debug, Clone, Default, serde::Serialize)]
 pub struct Stats {
     pub files_total: i64,
     pub files_present: i64,
     pub scanned: i64,
+    /// Files whose bytes were actually read and hashed.
     pub extracted: i64,
+    /// Files that yielded usable text.
+    pub with_text: i64,
+    /// Files that have at least one embedded chunk.
     pub embedded: i64,
+    /// Files a model has read and judged.
     pub interpreted: i64,
+    /// Files deliberately not read (binary, media, oversized).
+    pub skipped: i64,
     pub repos: i64,
     pub notes: i64,
     pub pending_actions: i64,
     pub duplicate_groups: i64,
     pub loose_files: i64,
     pub bytes_loose: i64,
+}
+
+impl Stats {
+    /// Files that are candidates for interpretation at all.
+    pub fn eligible(&self) -> i64 {
+        (self.files_present - self.skipped).max(0)
+    }
 }
 
 pub fn stats(conn: &Connection) -> Result<Stats> {
@@ -317,10 +338,27 @@ pub fn stats(conn: &Connection) -> Result<Stats> {
     Ok(Stats {
         files_total: one("SELECT COUNT(*) FROM files")?,
         files_present: one("SELECT COUNT(*) FROM files WHERE present = 1")?,
-        scanned: one("SELECT COUNT(*) FROM files WHERE present = 1 AND stage >= 0")?,
-        extracted: one("SELECT COUNT(*) FROM files WHERE present = 1 AND stage >= 1")?,
-        embedded: one("SELECT COUNT(*) FROM files WHERE present = 1 AND stage >= 2")?,
-        interpreted: one("SELECT COUNT(*) FROM files WHERE present = 1 AND stage >= 3")?,
+        scanned: one("SELECT COUNT(*) FROM files WHERE present = 1")?,
+        extracted: one(
+            "SELECT COUNT(*) FROM files
+              WHERE present = 1 AND sha256 IS NOT NULL",
+        )?,
+        with_text: one(
+            "SELECT COUNT(*) FROM files f JOIN file_text t ON t.file_id = f.id
+              WHERE f.present = 1",
+        )?,
+        embedded: one(
+            "SELECT COUNT(DISTINCT c.file_id) FROM chunks c JOIN files f ON f.id = c.file_id
+              WHERE f.present = 1 AND c.embedding IS NOT NULL",
+        )?,
+        interpreted: one(
+            "SELECT COUNT(*) FROM interpretations i JOIN files f ON f.id = i.file_id
+              WHERE f.present = 1",
+        )?,
+        skipped: one(
+            "SELECT COUNT(*) FROM files
+              WHERE present = 1 AND extract_err LIKE 'skipped%'",
+        )?,
         repos: one("SELECT COUNT(*) FROM repos")?,
         notes: one("SELECT COUNT(*) FROM notes")?,
         pending_actions: one("SELECT COUNT(*) FROM actions WHERE state = 'pending'")?,

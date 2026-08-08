@@ -8,8 +8,11 @@ export interface Stats {
   files_present: number;
   scanned: number;
   extracted: number;
+  with_text: number;
   embedded: number;
   interpreted: number;
+  /** Deliberately not read: binary, media, oversized. */
+  skipped: number;
   repos: number;
   notes: number;
   pending_actions: number;

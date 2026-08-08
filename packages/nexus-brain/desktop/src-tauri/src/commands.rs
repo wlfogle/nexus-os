@@ -110,8 +110,9 @@ pub async fn list_models(state: State<'_, Arc<AppState>>) -> R<Vec<TagModel>> {
 #[tauri::command]
 pub fn start_pipeline(app: AppHandle, state: State<'_, Arc<AppState>>) -> R<()> {
     let st = state.inner().clone();
+    let sink: Arc<dyn engine::ProgressSink> = Arc::new(engine::WindowSink(app));
     tauri::async_runtime::spawn(async move {
-        if let Err(e) = engine::run_pipeline(app, st).await {
+        if let Err(e) = engine::run_pipeline(sink, st).await {
             eprintln!("librarian: pipeline error: {e}");
         }
     });

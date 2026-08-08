@@ -1,0 +1,25 @@
+[Desktop Entry]
+Type=Application
+Version=1.4
+Name=Librarian (Debug)
+GenericName=Ecosystem Librarian - debug build
+Comment=Debug build: runs in a terminal with backtraces and the webview inspector enabled
+# Runs in konsole with --hold so the window stays open after a crash and the
+# panic backtrace remains readable.
+Exec=konsole --hold -e /media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/tools/run-debug.sh
+Path=/media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/src-tauri
+Icon=librarian
+Terminal=false
+Categories=Development;
+Keywords=librarian;debug;nexus;brain;
+StartupNotify=true
+StartupWMClass=Librarian
+Actions=Headless;Tail;
+
+[Desktop Action Headless]
+Name=Run pipeline headless (verbose)
+Exec=konsole --hold -e /media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/tools/run-debug.sh --headless
+
+[Desktop Action Tail]
+Name=Tail the last run log
+Exec=konsole --hold -e tail -n 200 -f /home/loufogle/.local/state/librarian/run.log
