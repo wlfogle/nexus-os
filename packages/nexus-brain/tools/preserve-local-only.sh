@@ -142,11 +142,27 @@ do_archive() {
         fi
 
         # 4. untracked, non-ignored files
+        #
+        # `-C` must precede `-T` so it applies while the file list is read. With
+        # it placed afterwards tar prints "has no effect" and writes an EMPTY
+        # archive -- which is precisely how popos-setup's only file was lost on
+        # 2026-08-07. The warning was in the log and went unnoticed, so the
+        # archive is now verified to hold entries before it is trusted, and the
+        # empty file is deleted rather than left looking like a valid backup.
         n="$(git -C "$repo" ls-files --others --exclude-standard 2>/dev/null | wc -l || true)"
         if (( n > 0 )); then
             if git -C "$repo" ls-files --others --exclude-standard -z 2>/dev/null |
-               tar --null -T - -czf "$out/untracked.tar.gz" -C "$repo" 2>>"$LOG"; then
-                made+=("untracked.tar.gz ($n file(s))")
+               tar -czf "$out/untracked.tar.gz" -C "$repo" --null -T - 2>>"$LOG"; then
+                local got
+                got="$(tar tzf "$out/untracked.tar.gz" 2>/dev/null | grep -c . || true)"
+                if (( got > 0 )); then
+                    made+=("untracked.tar.gz ($got of $n file(s))")
+                    (( got < n )) &&
+                        log "     WARNING $slug: archived $got of $n untracked files"
+                else
+                    log "     ERROR $slug: untracked archive is EMPTY ($n expected) -- NOT safe to delete this repo"
+                    rm -f "$out/untracked.tar.gz"
+                fi
             fi
         fi
 
