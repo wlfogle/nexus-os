@@ -24,6 +24,8 @@ use tauri::{Emitter, Manager};
 mod effects;
 mod fan;
 
+mod hotkey_osd;
+
 /// Shared application state, held once and handed to every command via
 /// Tauri's managed-state mechanism.
 pub struct AppState {
@@ -301,6 +303,19 @@ pub fn run() {
                     }
                 }
             });
+
+            // osd-lidmonitor-agent: background evdev listener that pops up
+            // the `osd` window on Fn-hotkey presses. See hotkey_osd.rs and
+            // CONTRACT.md's "osd-lidmonitor-agent" section.
+            //
+            // NOTE: this and the system-stats loop above must stay inside
+            // this single `.setup()` closure - Tauri's Builder::setup only
+            // keeps the last-registered closure, it does not chain them.
+            // A prior auto-merge of two independent agent branches each
+            // calling `.setup()` separately silently dropped one of the two
+            // background tasks; caught and fixed during integration.
+            hotkey_osd::spawn(app.handle().clone());
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
