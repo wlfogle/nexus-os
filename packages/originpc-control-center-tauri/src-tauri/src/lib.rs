@@ -16,6 +16,8 @@ use std::sync::Arc;
 use clevo_hw::{Color, PowerReader, RgbController, SensorReader};
 use serde::Serialize;
 
+mod hotkey_osd;
+
 /// Shared application state, held once and handed to every command via
 /// Tauri's managed-state mechanism.
 pub struct AppState {
@@ -123,6 +125,13 @@ pub fn run() {
             get_sensor_snapshot,
             get_power_info,
         ])
+        .setup(|app| {
+            // osd-lidmonitor-agent: background evdev listener that pops up
+            // the `osd` window on Fn-hotkey presses. See hotkey_osd.rs and
+            // CONTRACT.md's "osd-lidmonitor-agent" section.
+            hotkey_osd::spawn(app.handle().clone());
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running the OriginPC Control Center application");
 }

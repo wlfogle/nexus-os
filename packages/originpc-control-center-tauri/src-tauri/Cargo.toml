@@ -21,6 +21,10 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
 anyhow = "1"
+# Hotkey OSD background task (osd-lidmonitor-agent): reads the
+# clevo-hotkeys kernel module's evdev device. The "tokio" feature gives an
+# epoll-backed async event stream instead of a blocking read loop.
+evdev = { version = "0.13", features = ["tokio"] }
 
 [features]
 default = ["custom-protocol"]
