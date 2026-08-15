@@ -33,3 +33,24 @@ export interface HotkeyEventPayload {
   label: string;
   icon: string;
 }
+
+// Mirrors `../../hw/src/flexikey.rs`'s `ProfilesIndex`/`Profile`/`Action`
+// (owned by flexikey-agent). Key names throughout (map keys, `target`,
+// `keys`) are raw evdev key names such as "KEY_F13", exactly what
+// `capture_next_key` returns.
+export interface ProfilesIndex {
+  active_profile: string | null;
+  profiles: string[];
+}
+
+export type Action =
+  | { type: "remap"; target: string }
+  | { type: "combo"; keys: string[] }
+  | { type: "text"; text: string }
+  | { type: "launch"; command: string }
+  | { type: "disabled" };
+
+export interface Profile {
+  name: string;
+  mappings: Record<string, Action>;
+}
