@@ -33,3 +33,17 @@ export interface HotkeyEventPayload {
   label: string;
   icon: string;
 }
+
+// --- backend-agent's additions (CONTRACT.md "commands to add") ---
+
+export type EffectName = "wave" | "breathing" | "rainbow";
+
+export type PowerProfileName = "performance" | "balanced" | "power_save";
+
+export type FanModeName = "auto" | "silent";
+
+// Payload of the periodic "system-stats" push event.
+export interface SystemStatsEvent {
+  sensors: SensorSnapshot;
+  power: PowerInfo;
+}

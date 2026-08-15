@@ -1,103 +1,59 @@
-import { useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import type { ConnectionStatus, PowerInfo, SensorSnapshot } from "./types";
+import { useState } from "react";
+import "./App.css";
+import { Sidebar } from "./components/Sidebar";
+import { RgbControlTab } from "./components/tabs/RgbControlTab";
+import { SystemTab } from "./components/tabs/SystemTab";
+import { EffectsTab } from "./components/tabs/EffectsTab";
+import { KeyBindingsTab } from "./components/tabs/KeyBindingsTab";
+import { useConnectionStatus } from "./hooks/useConnectionStatus";
+import { useSystemStats } from "./hooks/useSystemStats";
 
-// Minimal, genuinely working shell: connection status + a few group-color
-// buttons + a periodic stats poll. frontend-agent expands this into the
-// full 4-tab layout (RGB Control, System, Effects, Key Bindings) plus the
-// monitoring sidebar per CONTRACT.md - this file establishes the pattern
-// (typed `invoke` calls, polling cadence) rather than being the final UI.
+// Full 4-tab layout (RGB Control, System, Effects, Key Bindings) plus the
+// monitoring sidebar, per CONTRACT.md's "frontend-agent: UI to add" section.
+// The typed `invoke` pattern established by the original minimal shell now
+// lives in `lib/api.ts`; every command call in the tabs below goes through
+// that layer instead of calling `invoke` directly.
 
-const PRESET_COLORS: Array<{ name: string; r: number; g: number; b: number }> = [
-  { name: "Red", r: 255, g: 0, b: 0 },
-  { name: "Green", r: 0, g: 255, b: 0 },
-  { name: "Blue", r: 0, g: 0, b: 255 },
-  { name: "Orange", r: 255, g: 102, b: 0 },
+type TabId = "rgb" | "system" | "effects" | "bindings";
+
+const TABS: Array<{ id: TabId; label: string }> = [
+  { id: "rgb", label: "RGB Control" },
+  { id: "system", label: "System" },
+  { id: "effects", label: "Effects" },
+  { id: "bindings", label: "Key Bindings" },
 ];
 
 function App() {
-  const [connection, setConnection] = useState<ConnectionStatus | null>(null);
-  const [sensors, setSensors] = useState<SensorSnapshot | null>(null);
-  const [power, setPower] = useState<PowerInfo | null>(null);
-  const [status, setStatus] = useState<string>("");
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function poll() {
-      try {
-        const [conn, sensorData, powerData] = await Promise.all([
-          invoke<ConnectionStatus>("get_connection_status"),
-          invoke<SensorSnapshot>("get_sensor_snapshot"),
-          invoke<PowerInfo>("get_power_info"),
-        ]);
-        if (!cancelled) {
-          setConnection(conn);
-          setSensors(sensorData);
-          setPower(powerData);
-        }
-      } catch (err) {
-        if (!cancelled) setStatus(`Error polling backend: ${String(err)}`);
-      }
-    }
-
-    poll();
-    const interval = setInterval(poll, 2000);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, []);
-
-  async function applyGroupColor(group: string, r: number, g: number, b: number) {
-    try {
-      await invoke("set_group_color", { group, r, g, b });
-      setStatus(`Applied color to ${group}`);
-    } catch (err) {
-      setStatus(`Failed to apply color: ${String(err)}`);
-    }
-  }
-
-  async function clearAll() {
-    try {
-      await invoke("clear_all_keys");
-      setStatus("All keys cleared");
-    } catch (err) {
-      setStatus(`Failed to clear keys: ${String(err)}`);
-    }
-  }
+  const [activeTab, setActiveTab] = useState<TabId>("rgb");
+  const connection = useConnectionStatus();
+  const { sensors, power, live } = useSystemStats();
 
   return (
-    <main style={{ fontFamily: "sans-serif", padding: "1.5rem", color: "#eee", background: "#1e1e1e", minHeight: "100vh" }}>
-      <h1>OriginPC Control Center</h1>
-      <p>
-        RGB device:{" "}
-        {connection === null
-          ? "checking..."
-          : connection.connected
-            ? `connected (${connection.device_path ?? "unknown path"})`
-            : "not connected"}
-      </p>
-
-      <section>
-        <h2>Quick Colors (all keys)</h2>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          {PRESET_COLORS.map((c) => (
-            <button key={c.name} onClick={() => applyGroupColor("all_keys", c.r, c.g, c.b)}>
-              {c.name}
+    <div className="app-shell">
+      <Sidebar connection={connection} sensors={sensors} power={power} live={live} />
+      <main className="main-area">
+        <header className="app-header">
+          <h1>OriginPC Control Center</h1>
+        </header>
+        <nav className="tab-nav">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              className={`tab-button ${activeTab === tab.id ? "tab-button-active" : ""}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
             </button>
           ))}
-          <button onClick={clearAll}>Clear All</button>
+        </nav>
+        <div className="tab-content">
+          {activeTab === "rgb" && <RgbControlTab />}
+          {activeTab === "system" && <SystemTab sensors={sensors} power={power} live={live} />}
+          {activeTab === "effects" && <EffectsTab />}
+          {activeTab === "bindings" && <KeyBindingsTab />}
         </div>
-      </section>
-
-      <section>
-        <h2>System</h2>
-        <pre>{JSON.stringify({ sensors, power }, null, 2)}</pre>
-      </section>
-
-      {status && <p style={{ color: "#4CAF50" }}>{status}</p>}
-    </main>
+      </main>
+    </div>
   );
 }
 
