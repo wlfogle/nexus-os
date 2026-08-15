@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=OriginPC Control Center
+Comment=RGB keyboard, fan, power and hotkey control for OriginPC/Clevo laptops
+Exec=originpc-control-center
+Icon=preferences-desktop-peripherals
+Terminal=false
+Type=Application
+Categories=Settings;HardwareSettings;
+Keywords=rgb;lighting;keyboard;laptop;originpc;clevo;flexikey;
+StartupNotify=true

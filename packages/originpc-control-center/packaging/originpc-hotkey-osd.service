@@ -1,0 +1,13 @@
+[Unit]
+Description=OriginPC Fn-Hotkey On-Screen Display
+After=graphical-session.target
+
+[Service]
+Type=simple
+Environment=DISPLAY=:0
+ExecStart=/usr/bin/python3 %h/.local/share/originpc-control-center/hotkey_osd.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
