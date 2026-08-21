@@ -1,6 +1,6 @@
 import { GaugeRing } from "./GaugeRing";
 import { tempColor } from "../lib/tempColor";
-import { formatUptime } from "../lib/format";
+import { formatTemp, formatUptime } from "../lib/format";
 import type {
   ConnectionStatus,
   PowerInfo,
@@ -54,13 +54,13 @@ export function Sidebar({ connection, sensors, power, usage, live }: SidebarProp
           <div className="stat-row">
             <dt>CPU</dt>
             <dd style={{ color: tempColor(cpuTemp) }}>
-              {cpuTemp !== undefined ? `${cpuTemp.toFixed(1)}°C` : "--"}
+              {cpuTemp !== undefined ? formatTemp(cpuTemp) : "--"}
             </dd>
           </div>
           <div className="stat-row">
             <dt>GPU</dt>
             <dd style={{ color: tempColor(gpuTemp) }}>
-              {gpuTemp !== undefined ? `${gpuTemp.toFixed(1)}°C` : "--"}
+              {gpuTemp !== undefined ? formatTemp(gpuTemp) : "--"}
             </dd>
           </div>
         </dl>

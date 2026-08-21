@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { getTlpStats, setFanMode, setPowerProfile } from "../../lib/api";
 import { Modal } from "../Modal";
-import { formatUptime } from "../../lib/format";
+import { celsiusToFahrenheit, formatUptime } from "../../lib/format";
 import type {
   FanModeName,
   PowerInfo,
@@ -32,11 +32,13 @@ const FAN_MODES: Array<{ id: FanModeName; label: string }> = [
 function TempTable({
   title,
   readings,
-  unit = "°C",
+  unit = "\u00b0F",
+  toFahrenheit = true,
 }: {
   title: string;
   readings: TemperatureReading[] | undefined;
   unit?: string;
+  toFahrenheit?: boolean;
 }) {
   return (
     <div className="temp-table">
@@ -49,7 +51,7 @@ function TempTable({
             <li key={reading.label}>
               <span>{reading.label}</span>
               <span>
-                {reading.celsius.toFixed(1)}
+                {(toFahrenheit ? celsiusToFahrenheit(reading.celsius) : reading.celsius).toFixed(1)}
                 {unit}
               </span>
             </li>
@@ -111,7 +113,12 @@ export function SystemTab({ sensors, power, usage, live }: SystemTabProps) {
           <TempTable title="CPU" readings={sensors?.cpu} />
           <TempTable title="GPU" readings={sensors?.gpu} />
           <TempTable title="NVMe" readings={sensors?.nvme} />
-          <TempTable title="Fans" readings={sensors?.fans_rpm} unit=" RPM" />
+          <TempTable
+            title="Fans"
+            readings={sensors?.fans_rpm}
+            unit=" RPM"
+            toFahrenheit={false}
+          />
         </div>
         {usage && (
           <p className="panel-hint">

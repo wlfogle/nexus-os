@@ -407,6 +407,25 @@ pub fn run() {
             start_flexikey_engine,
             stop_flexikey_engine,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running the OriginPC Control Center application");
+        .build(tauri::generate_context!())
+        .expect("error while building the OriginPC Control Center application")
+        .run(|app_handle, event| {
+            // Clear the keyboard on every exit path (tray "Exit", window
+            // manager quit, session logout/SIGTERM that tauri translates
+            // to a runtime exit) - not just one button. Matches the old
+            // Python app's `quit_application`, which cleared RGB before
+            // terminating so the keyboard never gets left lit after the
+            // app closes.
+            //
+            // `clear_all_keys` is a plain blocking call (real hidraw
+            // writes, no async involved at the `RgbController` level) -
+            // called directly and synchronously here rather than via
+            // `spawn_blocking`, since `RunEvent::Exit` fires once, right
+            // before the process actually terminates, and we need the
+            // write to complete before that happens rather than racing it.
+            if let tauri::RunEvent::Exit = event {
+                let rgb = app_handle.state::<AppState>().rgb.clone();
+                let _ = rgb.clear_all_keys();
+            }
+        });
 }
