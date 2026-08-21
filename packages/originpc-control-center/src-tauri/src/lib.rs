@@ -29,6 +29,7 @@ mod effects;
 mod fan;
 
 mod hotkey_osd;
+mod tray;
 
 /// A running lighting-effect task plus its cooperative cancellation flag.
 ///
@@ -369,13 +370,18 @@ pub fn run() {
             // the `osd` window on Fn-hotkey presses. See hotkey_osd.rs and
             // CONTRACT.md's "osd-lidmonitor-agent" section.
             //
-            // NOTE: this and the system-stats loop above must stay inside
-            // this single `.setup()` closure - Tauri's Builder::setup only
-            // keeps the last-registered closure, it does not chain them.
-            // A prior auto-merge of two independent agent branches each
-            // calling `.setup()` separately silently dropped one of the two
-            // background tasks; caught and fixed during integration.
+            // System tray icon (Show Control Center / Quick Clear / Exit)
+            // plus hide-to-tray on window close - see tray.rs.
+            //
+            // NOTE: this, the tray setup, and the system-stats loop above
+            // must stay inside this single `.setup()` closure - Tauri's
+            // Builder::setup only keeps the last-registered closure, it
+            // does not chain them. A prior auto-merge of two independent
+            // agent branches each calling `.setup()` separately silently
+            // dropped one of the two background tasks; caught and fixed
+            // during integration.
             hotkey_osd::spawn(app.handle().clone());
+            tray::setup(app)?;
 
             Ok(())
         })
