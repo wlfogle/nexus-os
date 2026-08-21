@@ -13,6 +13,7 @@
 //! backend-agent; the Flexikey key-bindings commands are a separate
 //! module owned by flexikey-agent per the migration plan.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -26,16 +27,30 @@ mod fan;
 
 mod hotkey_osd;
 
+/// A running lighting-effect task plus its cooperative cancellation flag.
+///
+/// We deliberately don't rely on `JoinHandle::abort()` alone to stop the
+/// task: aborting only takes effect at an `.await` point, so it can't
+/// interrupt a frame write already in flight inside `spawn_blocking` on a
+/// separate OS thread. `stop_running_effect` sets `cancel` and then awaits
+/// `join`, guaranteeing the effect loop has fully stopped (including any
+/// in-flight write) before a subsequent `clear_all_keys()` can run - see
+/// `effects::run`'s doc comment for the full race this avoids.
+struct RunningEffect {
+    cancel: Arc<AtomicBool>,
+    join: tokio::task::JoinHandle<()>,
+}
+
 /// Shared application state, held once and handed to every command via
 /// Tauri's managed-state mechanism.
 pub struct AppState {
     pub rgb: Arc<RgbController>,
     pub sensors: Arc<SensorReader>,
     pub power: Arc<PowerReader>,
-    /// Cancellation handle for the currently running lighting effect task
-    /// (if any), so `start_effect`/`stop_effect` can replace or stop it
-    /// without leaking the previous animation loop.
-    effect_handle: Mutex<Option<tokio::task::AbortHandle>>,
+    /// The currently running lighting effect task (if any), so
+    /// `start_effect`/`stop_effect` can replace or stop it without leaking
+    /// the previous animation loop.
+    effect_handle: Mutex<Option<RunningEffect>>,
     pub flexikey: Arc<FlexikeyEngine>,
 }
 
@@ -140,8 +155,9 @@ async fn start_effect(
     stop_running_effect(&state).await?;
 
     let rgb = state.rgb.clone();
-    let task = tokio::spawn(effects::run(rgb, kind, speed));
-    *state.effect_handle.lock().unwrap() = Some(task.abort_handle());
+    let cancel = Arc::new(AtomicBool::new(false));
+    let join = tokio::spawn(effects::run(rgb, kind, speed, cancel.clone()));
+    *state.effect_handle.lock().unwrap() = Some(RunningEffect { cancel, join });
     Ok(())
 }
 
@@ -150,13 +166,30 @@ async fn stop_effect(state: tauri::State<'_, AppState>) -> Result<(), String> {
     stop_running_effect(&state).await
 }
 
-/// Cancels the running effect task (if any) and clears the keyboard, so
+/// How long to wait for a running effect to observe cancellation and exit
+/// cleanly before falling back to a hard abort. Generous relative to the
+/// ~33ms frame period - only matters if a hidraw write is genuinely wedged
+/// (e.g. device stuck mid-transfer), in which case we still proceed with
+/// the clear rather than hang the `stop_effect` command forever.
+const EFFECT_STOP_GRACE_PERIOD: Duration = Duration::from_secs(2);
+
+/// Stops the running effect task (if any) and clears the keyboard, so
 /// stopping an effect never leaves stray colors lit - mirrors the Python
-/// app's `stop_current_effect`.
+/// app's `stop_current_effect`. Waits for the task to actually finish
+/// (not just signals it to) before clearing, so the clear can never race
+/// a still-in-flight frame write and get silently overwritten by it.
 async fn stop_running_effect(state: &tauri::State<'_, AppState>) -> Result<(), String> {
-    let handle = state.effect_handle.lock().unwrap().take();
-    if let Some(handle) = handle {
-        handle.abort();
+    let running = state.effect_handle.lock().unwrap().take();
+    if let Some(RunningEffect { cancel, mut join }) = running {
+        cancel.store(true, Ordering::SeqCst);
+        if tokio::time::timeout(EFFECT_STOP_GRACE_PERIOD, &mut join)
+            .await
+            .is_err()
+        {
+            // The loop didn't exit in time (wedged write) - force it and
+            // proceed with the clear anyway rather than hang this command.
+            join.abort();
+        }
     }
     let rgb = state.rgb.clone();
     tokio::task::spawn_blocking(move || rgb.clear_all_keys())

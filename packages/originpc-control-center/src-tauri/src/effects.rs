@@ -16,6 +16,7 @@
 //! table.
 
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, OnceLock};
 use std::time::{Duration, Instant};
 
@@ -43,9 +44,20 @@ impl Effect {
     }
 }
 
-/// Runs `effect` at ~30 FPS until the surrounding Tokio task is aborted
-/// (from `stop_effect`, or a fresh `start_effect` call replacing it).
-pub async fn run(rgb: Arc<RgbController>, effect: Effect, speed: f64) {
+/// Runs `effect` at ~30 FPS until `cancel` is set.
+///
+/// Cancellation is cooperative (checked at loop boundaries) rather than a
+/// raw `AbortHandle::abort()`, because aborting a task can only interrupt
+/// it at an `.await` point - it cannot reach into an in-flight
+/// `spawn_blocking` hidraw write already running on a separate OS thread.
+/// A caller that aborts and then immediately clears the keyboard can
+/// therefore race that still-in-flight write, which can re-light a key
+/// just after "stop" was issued. Checking `cancel` right after each frame
+/// write (in addition to before the next tick) guarantees that once the
+/// caller observes this task has finished (by awaiting its `JoinHandle`),
+/// no further effect writes are possible - so a clear issued afterward
+/// cannot be raced. See `stop_running_effect` in `lib.rs`.
+pub async fn run(rgb: Arc<RgbController>, effect: Effect, speed: f64, cancel: Arc<AtomicBool>) {
     // Guard against zero/negative/NaN speed values from the frontend
     // instead of trusting them, since they'd otherwise freeze or spin the
     // animation.
@@ -54,8 +66,11 @@ pub async fn run(rgb: Arc<RgbController>, effect: Effect, speed: f64) {
     let mut ticker = tokio::time::interval(Duration::from_millis(33));
     ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
 
-    loop {
+    while !cancel.load(Ordering::SeqCst) {
         ticker.tick().await;
+        if cancel.load(Ordering::SeqCst) {
+            break;
+        }
         let elapsed = start.elapsed().as_secs_f64();
         let frame = frame_for(effect, elapsed, speed);
         let rgb = rgb.clone();
@@ -207,5 +222,18 @@ mod tests {
         let frame = breathing_frame(0.0, 1.0);
         assert_eq!(frame.len(), KEYBOARD_MAP.len());
         assert_eq!(frame["esc"], Color::OFF);
+    }
+
+    #[tokio::test]
+    async fn run_exits_promptly_once_cancel_is_set_before_it_starts() {
+        // Regression test for the stop/clear race: if `cancel` is already
+        // true, `run` must return without ever attempting a device write
+        // (there is no real RGB device in the test environment, so any
+        // write attempt would hang or error retrying discovery).
+        let rgb = Arc::new(RgbController::new());
+        let cancel = Arc::new(AtomicBool::new(true));
+        tokio::time::timeout(Duration::from_millis(500), run(rgb, Effect::Wave, 1.0, cancel))
+            .await
+            .expect("run() did not exit promptly when cancelled before starting");
     }
 }
