@@ -1,16 +1,20 @@
 import { useState } from "react";
-import { setFanMode, setPowerProfile } from "../../lib/api";
+import { getTlpStats, setFanMode, setPowerProfile } from "../../lib/api";
+import { Modal } from "../Modal";
+import { formatUptime } from "../../lib/format";
 import type {
   FanModeName,
   PowerInfo,
   PowerProfileName,
   SensorSnapshot,
+  SystemUsage,
   TemperatureReading,
 } from "../../types";
 
 interface SystemTabProps {
   sensors: SensorSnapshot | null;
   power: PowerInfo | null;
+  usage: SystemUsage | null;
   live: boolean;
 }
 
@@ -56,10 +60,25 @@ function TempTable({
   );
 }
 
-export function SystemTab({ sensors, power, live }: SystemTabProps) {
+export function SystemTab({ sensors, power, usage, live }: SystemTabProps) {
   const [profile, setProfile] = useState<PowerProfileName>("balanced");
   const [fanMode, setFanModeState] = useState<FanModeName>("auto");
   const [status, setStatus] = useState("");
+  const [showFanDetails, setShowFanDetails] = useState(false);
+  const [showTlpStats, setShowTlpStats] = useState(false);
+  const [tlpStatsText, setTlpStatsText] = useState<string | null>(null);
+  const [tlpStatsError, setTlpStatsError] = useState<string | null>(null);
+
+  async function openTlpStats() {
+    setShowTlpStats(true);
+    setTlpStatsText(null);
+    setTlpStatsError(null);
+    try {
+      setTlpStatsText(await getTlpStats());
+    } catch (err) {
+      setTlpStatsError(String(err));
+    }
+  }
 
   async function applyProfile(next: PowerProfileName) {
     setProfile(next);
@@ -94,6 +113,12 @@ export function SystemTab({ sensors, power, live }: SystemTabProps) {
           <TempTable title="NVMe" readings={sensors?.nvme} />
           <TempTable title="Fans" readings={sensors?.fans_rpm} unit=" RPM" />
         </div>
+        {usage && (
+          <p className="panel-hint">
+            Load average: {usage.load_avg.map((v) => v.toFixed(2)).join(", ")} · Uptime:{" "}
+            {formatUptime(usage.uptime_secs)}
+          </p>
+        )}
       </section>
 
       <section className="panel-card">
@@ -131,11 +156,18 @@ export function SystemTab({ sensors, power, live }: SystemTabProps) {
               {p.label}
             </button>
           ))}
+          <button className="accent-button" onClick={openTlpStats}>
+            TLP Stats
+          </button>
         </div>
       </section>
 
       <section className="panel-card">
         <h3>Fan Mode</h3>
+        <p className="panel-hint">
+          Applied via NBFC, matching the original app's fan-control mechanism
+          (no raw EC/PWM protocol for this laptop was ever reverse-engineered).
+        </p>
         <div className="button-row">
           {FAN_MODES.map((m) => (
             <button
@@ -146,10 +178,45 @@ export function SystemTab({ sensors, power, live }: SystemTabProps) {
               {m.label}
             </button>
           ))}
+          <button className="accent-button" onClick={() => setShowFanDetails(true)}>
+            Fan Details
+          </button>
         </div>
       </section>
 
       {status && <p className="status-line">{status}</p>}
+
+      {showFanDetails && (
+        <Modal title="Fan Details" onClose={() => setShowFanDetails(false)}>
+          {sensors?.fans_rpm && sensors.fans_rpm.length > 0 ? (
+            <ul className="modal-list">
+              {sensors.fans_rpm.map((fan) => (
+                <li key={fan.label}>
+                  <span>{fan.label}</span>
+                  <span>{fan.celsius.toFixed(0)} RPM</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="panel-hint">
+              No fan sensors detected. This laptop's fans may not expose hwmon/NBFC
+              telemetry - fan mode can still be set above even without a speed readout.
+            </p>
+          )}
+        </Modal>
+      )}
+
+      {showTlpStats && (
+        <Modal title="TLP Stats" onClose={() => setShowTlpStats(false)}>
+          {tlpStatsError ? (
+            <p className="panel-hint">Failed to read TLP stats: {tlpStatsError}</p>
+          ) : tlpStatsText ? (
+            <pre className="modal-pre">{tlpStatsText}</pre>
+          ) : (
+            <p className="panel-hint">Loading…</p>
+          )}
+        </Modal>
+      )}
     </div>
   );
 }

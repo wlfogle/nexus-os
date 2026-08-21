@@ -11,7 +11,9 @@ pub mod keymap;
 pub mod power;
 pub mod rgb;
 pub mod sensors;
+pub mod usage;
 
 pub use power::{PowerInfo, PowerProfile, PowerReader};
 pub use rgb::{Color, RgbController, RgbError};
 pub use sensors::{SensorReader, SensorSnapshot, TemperatureReading};
+pub use usage::{SystemUsage, UsageReader};

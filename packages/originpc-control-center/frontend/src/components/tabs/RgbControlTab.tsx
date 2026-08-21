@@ -21,6 +21,15 @@ function hexToRgb(hex: string): [number, number, number] {
   ];
 }
 
+// Matches the old app's preset-button styling exactly: full-color fill,
+// black text on light colors and white text on dark ones
+// (`'black' if sum(color) > 400 else 'white'` in enhanced-professional-
+// control-center.py's `create_control_panel_content`).
+function contrastingTextColor(hex: string): string {
+  const [r, g, b] = hexToRgb(hex);
+  return r + g + b > 400 ? "#000" : "#fff";
+}
+
 export function RgbControlTab() {
   const [color, setColor] = useState("#00c8ff");
   const [selectedKey, setSelectedKey] = useState(KEY_NAMES[0]);
@@ -76,13 +85,14 @@ export function RgbControlTab() {
             <button
               key={p.name}
               className="preset-swatch"
-              style={{ backgroundColor: p.hex }}
-              title={p.name}
+              style={{ backgroundColor: p.hex, color: contrastingTextColor(p.hex) }}
               onClick={() => {
                 setColor(p.hex);
                 void applyToGroup("all_keys", p.hex);
               }}
-            />
+            >
+              {p.name}
+            </button>
           ))}
         </div>
       </section>

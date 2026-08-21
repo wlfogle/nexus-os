@@ -26,6 +26,21 @@ export interface PowerInfo {
   tlp_active: boolean;
 }
 
+// Mirrors `../../hw/src/usage.rs`'s `SystemUsage` - CPU/memory/disk/load
+// average/uptime, matching the original app's circular CPU/Memory gauges
+// and "System Information" text block.
+export interface SystemUsage {
+  cpu_percent: number;
+  memory_percent: number;
+  memory_used_gb: number;
+  memory_total_gb: number;
+  disk_percent: number;
+  disk_used_gb: number;
+  disk_total_gb: number;
+  load_avg: [number, number, number];
+  uptime_secs: number;
+}
+
 // Emitted by the backend's evdev hotkey reader (owned by
 // osd-lidmonitor-agent) on the "hotkey-event" Tauri event.
 export interface HotkeyEventPayload {
@@ -67,4 +82,5 @@ export type FanModeName = "auto" | "silent";
 export interface SystemStatsEvent {
   sensors: SensorSnapshot;
   power: PowerInfo;
+  usage: SystemUsage;
 }

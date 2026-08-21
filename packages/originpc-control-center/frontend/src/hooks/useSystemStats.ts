@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { getPowerInfo, getSensorSnapshot, listenSystemStats } from "../lib/api";
-import type { PowerInfo, SensorSnapshot } from "../types";
+import { getPowerInfo, getSensorSnapshot, getSystemUsage, listenSystemStats } from "../lib/api";
+import type { PowerInfo, SensorSnapshot, SystemUsage } from "../types";
 
 interface SystemStatsState {
   sensors: SensorSnapshot | null;
   power: PowerInfo | null;
+  usage: SystemUsage | null;
   /** True while readings are arriving via the "system-stats" push event. */
   live: boolean;
 }
@@ -24,6 +25,7 @@ const EVENT_STALE_MS = 4000;
 export function useSystemStats(): SystemStatsState {
   const [sensors, setSensors] = useState<SensorSnapshot | null>(null);
   const [power, setPower] = useState<PowerInfo | null>(null);
+  const [usage, setUsage] = useState<SystemUsage | null>(null);
   const [live, setLive] = useState(false);
   const lastEventAt = useRef(0);
 
@@ -33,10 +35,15 @@ export function useSystemStats(): SystemStatsState {
 
     async function pollOnce() {
       try {
-        const [sensorData, powerData] = await Promise.all([getSensorSnapshot(), getPowerInfo()]);
+        const [sensorData, powerData, usageData] = await Promise.all([
+          getSensorSnapshot(),
+          getPowerInfo(),
+          getSystemUsage(),
+        ]);
         if (!cancelled) {
           setSensors(sensorData);
           setPower(powerData);
+          setUsage(usageData);
         }
       } catch (err) {
         console.error("Failed to poll system stats:", err);
@@ -48,6 +55,7 @@ export function useSystemStats(): SystemStatsState {
       lastEventAt.current = Date.now();
       setSensors(payload.sensors);
       setPower(payload.power);
+      setUsage(payload.usage);
       setLive(true);
     }).then((fn) => {
       if (cancelled) {
@@ -74,5 +82,5 @@ export function useSystemStats(): SystemStatsState {
     };
   }, []);
 
-  return { sensors, power, live };
+  return { sensors, power, usage, live };
 }

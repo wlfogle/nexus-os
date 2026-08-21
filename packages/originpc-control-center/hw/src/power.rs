@@ -105,13 +105,23 @@ impl PowerReader {
     }
 
     /// Apply a named power profile via TLP, matching the Python app's
-    /// Performance/Balanced/Power Save buttons. Requires TLP to be
-    /// installed; returns an error string otherwise (surfaced to the UI,
-    /// not a panic).
+    /// Performance/Balanced/Power Save buttons.
+    ///
+    /// `tlp`'s real CLI has no "auto"/"balanced" subcommand - valid modes
+    /// are `start` (apply whichever profile matches the current power
+    /// source), `ac` (force the AC profile), and `bat` (force the battery
+    /// profile). An earlier version of this function passed `tlp auto`,
+    /// which is not a real subcommand and would have failed every time
+    /// "Balanced" was clicked - caught by checking the actual `tlp` CLI
+    /// rather than assuming a 3-way performance/balanced/powersave mapping
+    /// existed on the TLP side.
+    ///
+    /// Requires TLP to be installed; returns an error string otherwise
+    /// (surfaced to the UI, not a panic).
     pub fn set_profile(profile: PowerProfile) -> Result<(), String> {
         let mode = match profile {
             PowerProfile::Performance => "ac",
-            PowerProfile::Balanced => "auto",
+            PowerProfile::Balanced => "start",
             PowerProfile::PowerSave => "bat",
         };
         Command::new("tlp")
@@ -125,6 +135,31 @@ impl PowerReader {
                     Err(format!("tlp {mode} exited with {status}"))
                 }
             })
+    }
+
+    /// Text output of `tlp-stat -s` (status summary), for the "TLP Stats"
+    /// detail view.
+    ///
+    /// The Python app ran the full, unfiltered `sudo tlp-stat` in an
+    /// external terminal. That is deliberately not reproduced here:
+    /// shelling out to `sudo` from a GUI process blocks forever waiting on
+    /// a TTY password prompt that can never arrive (the same class of bug
+    /// already found and removed elsewhere in this app's RGB-clear path).
+    /// `-s` is the same summary view `get_power_info`'s TLP detection
+    /// already reads without root, so this stays consistent with the rest
+    /// of this module rather than needing new privileges.
+    pub fn tlp_stats() -> Result<String, String> {
+        let output = Command::new("tlp-stat")
+            .arg("-s")
+            .output()
+            .map_err(|e| format!("failed to run tlp-stat: {e}"))?;
+        let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
+        if output.status.success() && !stdout.trim().is_empty() {
+            Ok(stdout)
+        } else {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            Err(format!("tlp-stat -s produced no output: {stderr}").trim().to_string())
+        }
     }
 }
 

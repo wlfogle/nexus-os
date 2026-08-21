@@ -18,7 +18,10 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use clevo_hw::flexikey::{FlexikeyEngine, Profile, ProfilesIndex};
-use clevo_hw::{Color, PowerInfo, PowerProfile, PowerReader, RgbController, SensorReader, SensorSnapshot};
+use clevo_hw::{
+    Color, PowerInfo, PowerProfile, PowerReader, RgbController, SensorReader, SensorSnapshot,
+    SystemUsage, UsageReader,
+};
 use serde::Serialize;
 use tauri::{Emitter, Manager};
 
@@ -47,6 +50,7 @@ pub struct AppState {
     pub rgb: Arc<RgbController>,
     pub sensors: Arc<SensorReader>,
     pub power: Arc<PowerReader>,
+    pub usage: Arc<UsageReader>,
     /// The currently running lighting effect task (if any), so
     /// `start_effect`/`stop_effect` can replace or stop it without leaking
     /// the previous animation loop.
@@ -60,6 +64,7 @@ impl Default for AppState {
             rgb: Arc::new(RgbController::new()),
             sensors: Arc::new(SensorReader::new()),
             power: Arc::new(PowerReader::new()),
+            usage: Arc::new(UsageReader::new()),
             effect_handle: Mutex::new(None),
             flexikey: Arc::new(FlexikeyEngine::new()),
         }
@@ -140,6 +145,24 @@ async fn get_power_info(state: tauri::State<'_, AppState>) -> Result<PowerInfo, 
     tokio::task::spawn_blocking(move || power.snapshot())
         .await
         .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn get_system_usage(state: tauri::State<'_, AppState>) -> Result<SystemUsage, String> {
+    let usage = state.usage.clone();
+    tokio::task::spawn_blocking(move || usage.snapshot())
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// Text output for the "TLP Stats" detail view - see
+/// `PowerReader::tlp_stats`'s doc comment for why this deliberately does
+/// not reproduce the Python app's `sudo tlp-stat` behavior.
+#[tauri::command]
+async fn get_tlp_stats() -> Result<String, String> {
+    tokio::task::spawn_blocking(PowerReader::tlp_stats)
+        .await
+        .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
@@ -229,6 +252,7 @@ async fn set_fan_mode(mode: String) -> Result<(), String> {
 struct SystemStatsPayload {
     sensors: SensorSnapshot,
     power: PowerInfo,
+    usage: SystemUsage,
 }
 
 // ---------------------------------------------------------------------------
@@ -320,19 +344,23 @@ pub fn run() {
             let state = app.state::<AppState>();
             let sensors = state.sensors.clone();
             let power = state.power.clone();
+            let usage = state.usage.clone();
             tauri::async_runtime::spawn(async move {
                 let mut ticker = tokio::time::interval(Duration::from_secs(2));
                 loop {
                     ticker.tick().await;
                     let sensors = sensors.clone();
                     let power = power.clone();
+                    let usage = usage.clone();
                     let readings = tokio::task::spawn_blocking(move || {
-                        (sensors.snapshot(), power.snapshot())
+                        (sensors.snapshot(), power.snapshot(), usage.snapshot())
                     })
                     .await;
-                    if let Ok((sensors, power)) = readings {
-                        let _ = app_handle
-                            .emit("system-stats", SystemStatsPayload { sensors, power });
+                    if let Ok((sensors, power, usage)) = readings {
+                        let _ = app_handle.emit(
+                            "system-stats",
+                            SystemStatsPayload { sensors, power, usage },
+                        );
                     }
                 }
             });
@@ -358,6 +386,8 @@ pub fn run() {
             clear_all_keys,
             get_sensor_snapshot,
             get_power_info,
+            get_system_usage,
+            get_tlp_stats,
             start_effect,
             stop_effect,
             set_power_profile,

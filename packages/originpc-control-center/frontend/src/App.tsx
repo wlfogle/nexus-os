@@ -26,11 +26,11 @@ const TABS: Array<{ id: TabId; label: string }> = [
 function App() {
   const [activeTab, setActiveTab] = useState<TabId>("rgb");
   const connection = useConnectionStatus();
-  const { sensors, power, live } = useSystemStats();
+  const { sensors, power, usage, live } = useSystemStats();
 
   return (
     <div className="app-shell">
-      <Sidebar connection={connection} sensors={sensors} power={power} live={live} />
+      <Sidebar connection={connection} sensors={sensors} power={power} usage={usage} live={live} />
       <main className="main-area">
         <header className="app-header">
           <h1>OriginPC Control Center</h1>
@@ -48,7 +48,9 @@ function App() {
         </nav>
         <div className="tab-content">
           {activeTab === "rgb" && <RgbControlTab />}
-          {activeTab === "system" && <SystemTab sensors={sensors} power={power} live={live} />}
+          {activeTab === "system" && (
+            <SystemTab sensors={sensors} power={power} usage={usage} live={live} />
+          )}
           {activeTab === "effects" && <EffectsTab />}
           {activeTab === "bindings" && <KeyBindingsTab />}
         </div>

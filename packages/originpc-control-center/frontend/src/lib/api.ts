@@ -20,8 +20,14 @@ import type {
   PowerProfileName,
   SensorSnapshot,
   SystemStatsEvent,
+  SystemUsage,
 } from "../types";
-import { MOCK_CONNECTION_STATUS, mockPowerInfo, mockSensorSnapshot } from "./mockData";
+import {
+  MOCK_CONNECTION_STATUS,
+  mockPowerInfo,
+  mockSensorSnapshot,
+  mockSystemUsage,
+} from "./mockData";
 
 // --- Already implemented (Phase 1 scaffold) ---
 
@@ -62,6 +68,19 @@ export async function getSensorSnapshot(): Promise<SensorSnapshot> {
 export async function getPowerInfo(): Promise<PowerInfo> {
   if (!isTauri()) return mockPowerInfo();
   return invoke<PowerInfo>("get_power_info");
+}
+
+export async function getSystemUsage(): Promise<SystemUsage> {
+  if (!isTauri()) return mockSystemUsage();
+  return invoke<SystemUsage>("get_system_usage");
+}
+
+/** Text output of `tlp-stat -s`, for the "TLP Stats" detail view. */
+export async function getTlpStats(): Promise<string> {
+  if (!isTauri()) {
+    return "[mock] tlp-stat -s\n\nTLP Status\n  State            = enabled\n  Last run         = 12s ago\n  Mode             = battery\n  Power source     = AC\n";
+  }
+  return invoke<string>("get_tlp_stats");
 }
 
 // --- backend-agent's additions (parallel branch; signatures frozen in
@@ -110,7 +129,7 @@ export async function listenSystemStats(
 ): Promise<UnlistenFn> {
   if (!isTauri()) {
     const interval = setInterval(() => {
-      callback({ sensors: mockSensorSnapshot(), power: mockPowerInfo() });
+      callback({ sensors: mockSensorSnapshot(), power: mockPowerInfo(), usage: mockSystemUsage() });
     }, 2000);
     return () => clearInterval(interval);
   }
