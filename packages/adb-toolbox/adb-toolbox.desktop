@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.4
+Name=ADB Toolbox
+GenericName=Android Device Management GUI
+Comment=Push/pull files, install APKs, view logcat, screenshots, and device control via ADB
+Exec=/media/loufogle/Data/Repos/nexus-os/packages/adb-toolbox/src-tauri/target/release/adb-toolbox
+Path=/media/loufogle/Data/Repos/nexus-os/packages/adb-toolbox/src-tauri
+Icon=adb-toolbox
+Terminal=false
+Categories=Utility;Development;
+Keywords=adb;android;apk;logcat;device;toolbox;nexus;
+StartupNotify=true
+StartupWMClass=adb-toolbox
