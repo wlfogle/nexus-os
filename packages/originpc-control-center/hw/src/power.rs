@@ -116,23 +116,38 @@ impl PowerReader {
     /// rather than assuming a 3-way performance/balanced/powersave mapping
     /// existed on the TLP side.
     ///
-    /// Requires TLP to be installed; returns an error string otherwise
-    /// (surfaced to the UI, not a panic).
+    /// `tlp ac|bat|start` all write sysfs power-management settings and
+    /// therefore require root - running bare `tlp <mode>` from this GUI
+    /// process (no controlling TTY) always fails with "missing root
+    /// privilege", exit status 1. We call it through `sudo -n` instead,
+    /// scoped to exactly these three invocations via a dedicated
+    /// `/etc/sudoers.d/originpc-control-center-tlp` NOPASSWD rule (see
+    /// packaging notes) - `-n` (non-interactive) makes sudo fail
+    /// immediately if that rule is ever missing rather than hang waiting
+    /// on a TTY password prompt that can never arrive, the same class of
+    /// GUI-hang bug already fixed once in this app's RGB-clear path.
+    ///
+    /// Requires TLP to be installed and the sudoers rule to be present;
+    /// returns an error string otherwise (surfaced to the UI, not a
+    /// panic).
     pub fn set_profile(profile: PowerProfile) -> Result<(), String> {
         let mode = match profile {
             PowerProfile::Performance => "ac",
             PowerProfile::Balanced => "start",
             PowerProfile::PowerSave => "bat",
         };
-        Command::new("tlp")
-            .arg(mode)
+        Command::new("sudo")
+            .args(["-n", "tlp", mode])
             .status()
-            .map_err(|e| format!("failed to run tlp: {e}"))
+            .map_err(|e| format!("failed to run sudo tlp: {e}"))
             .and_then(|status| {
                 if status.success() {
                     Ok(())
                 } else {
-                    Err(format!("tlp {mode} exited with {status}"))
+                    Err(format!(
+                        "sudo tlp {mode} exited with {status} - is the \
+                         /etc/sudoers.d/originpc-control-center-tlp NOPASSWD rule installed?"
+                    ))
                 }
             })
     }

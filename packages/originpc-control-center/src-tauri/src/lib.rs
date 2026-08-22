@@ -383,6 +383,36 @@ pub fn run() {
             hotkey_osd::spawn(app.handle().clone());
             tray::setup(app)?;
 
+            // Clear the keyboard on SIGTERM/SIGINT too (session logout,
+            // `kill`, window-manager "force quit", systemd stop) - these
+            // bypass both the tray "Exit" menu item and Tauri's window-
+            // close interception entirely, terminating the process
+            // directly via the OS's default signal disposition unless we
+            // install a handler. `tokio`'s "signal" feature (part of the
+            // "full" feature set already enabled below) makes this a
+            // plain async task, no extra crate needed. SIGKILL (`kill
+            // -9`) can never be caught by any process - that limitation
+            // is unavoidable and not specific to this app.
+            {
+                let app_handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    use tokio::signal::unix::{signal, SignalKind};
+                    let Ok(mut sigterm) = signal(SignalKind::terminate()) else {
+                        return;
+                    };
+                    let Ok(mut sigint) = signal(SignalKind::interrupt()) else {
+                        return;
+                    };
+                    tokio::select! {
+                        _ = sigterm.recv() => {}
+                        _ = sigint.recv() => {}
+                    }
+                    let rgb = app_handle.state::<AppState>().rgb.clone();
+                    let _ = tokio::task::spawn_blocking(move || rgb.clear_all_keys()).await;
+                    app_handle.exit(0);
+                });
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

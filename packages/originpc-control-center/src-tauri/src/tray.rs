@@ -59,7 +59,17 @@ pub fn setup<R: Runtime>(app: &App<R>) -> tauri::Result<()> {
                 let _ = tokio::task::spawn_blocking(move || rgb.clear_all_keys()).await;
             });
         }
-        ids::EXIT => app_handle.exit(0),
+        ids::EXIT => {
+            // Clear the keyboard directly here, synchronously, rather
+            // than relying solely on `lib.rs`'s `RunEvent::Exit` handler
+            // to fire - on Linux/GTK, `app_handle.exit()` can tear the
+            // process down before that callback is guaranteed to run.
+            // `clear_all_keys` is a plain blocking call (a few ms of real
+            // hidraw writes), so blocking this menu-event thread briefly
+            // to guarantee it completes before exit proceeds is correct.
+            let _ = app_handle.state::<AppState>().rgb.clear_all_keys();
+            app_handle.exit(0);
+        }
         _ => {}
     })
     .build(app)?;
