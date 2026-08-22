@@ -183,6 +183,37 @@ export interface NoteDetail {
   backlinks: [number, string][];
 }
 
+export interface DocSyncCandidate {
+  repoPath: string;
+  repoName: string;
+  docFiles: string[];
+  reason: string;
+}
+
+export interface DocSyncResult {
+  repoPath: string;
+  updatedFiles: string[];
+  diffSummary: string;
+}
+
+export type CodeFindingKind =
+  | "environment_drift"
+  | "unreferenced"
+  | "contradicts_docs";
+
+export interface CodeFinding {
+  filePath: string;
+  kind: CodeFindingKind;
+  description: string;
+  suggestedRelocation?: string | null;
+}
+
+export interface CodeSweepCandidate {
+  repoPath: string;
+  repoName: string;
+  findings: CodeFinding[];
+}
+
 /* --------------------------------------------------------------- commands */
 
 export const getStats = () => invoke<Stats>("get_stats");
@@ -242,6 +273,19 @@ export const getNote = (id: number) => invoke<NoteDetail>("get_note", { id });
 export const saveNote = (title: string, body: string) =>
   invoke<number>("save_note", { title, body });
 export const deleteNote = (id: number) => invoke<void>("delete_note", { id });
+
+export const listDocsyncCandidates = () =>
+  invoke<DocSyncCandidate[]>("list_docsync_candidates");
+export const runDocsync = (repoPath: string) =>
+  invoke<DocSyncResult>("run_docsync", { repoPath });
+
+export const listCodeSweepCandidates = () =>
+  invoke<CodeSweepCandidate[]>("list_code_sweep_candidates");
+export const runCodeRelocation = (
+  repoPath: string,
+  filePath: string,
+  destination: string
+) => invoke<string>("run_code_relocation", { repoPath, filePath, destination });
 
 export const onProgress = (cb: (p: Progress) => void) =>
   listen<Progress>("librarian://progress", (e) => cb(e.payload));
