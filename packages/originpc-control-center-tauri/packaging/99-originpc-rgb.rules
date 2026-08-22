@@ -1,8 +1,0 @@
-# OriginPC EON17-X (Clevo-based) ITE 8910 RGB keyboard controller.
-#
-# The archived originpc-enhanced-control-5.1.0 package shipped a udev rule
-# for idVendor 1b1c/0c45 (unrelated vendors) instead of the actual device,
-# so RGB device permissions were never fixed by installing it. Confirmed via
-# `lsusb`: "Bus 001 Device 006: ID 048d:8910 Integrated Technology Express,
-# Inc. ITE Device(829x)".
-SUBSYSTEM=="hidraw", ATTRS{idVendor}=="048d", ATTRS{idProduct}=="8910", MODE="0666"

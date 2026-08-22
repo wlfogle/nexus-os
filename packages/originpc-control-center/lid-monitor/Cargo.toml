@@ -1,0 +1,13 @@
+[package]
+name = "occ-lid-monitor"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Standalone daemon that clears the OriginPC EON17-X RGB keyboard on lid close. Runs as a systemd --user service; no GUI dependency."
+
+[dependencies]
+clevo-hw = { path = "../hw" }
+# Graceful SIGTERM/SIGINT handling for the persistent daemon loop (systemd
+# sends SIGTERM on `systemctl --user stop`).
+signal-hook = "0.3"

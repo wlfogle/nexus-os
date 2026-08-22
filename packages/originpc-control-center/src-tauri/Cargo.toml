@@ -1,0 +1,31 @@
+[package]
+name = "originpc-control-center"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "OriginPC/Clevo EON17-X control center: RGB keyboard, fan/power/temp monitoring, effects, key bindings."
+
+[lib]
+name = "occ_lib"
+crate-type = ["lib", "cdylib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+clevo-hw = { path = "../hw" }
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+anyhow = "1"
+# Hotkey OSD background task (osd-lidmonitor-agent): reads the
+# clevo-hotkeys kernel module's evdev device. The "tokio" feature gives an
+# epoll-backed async event stream instead of a blocking read loop.
+evdev = { version = "0.13", features = ["tokio"] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
