@@ -117,6 +117,20 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
   - **Phase 3** (open) — promote an idea into an n8n workflow.
   - Built because Phase 1 was designed, parked, forgotten, and then re-invented
     from scratch. **Check `packages/` before proposing anything new.**
+- **`nexus-os/packages/originpc-control-center/`** — Rust/Tauri Linux
+  replacement for the Clevo/OriginPC Windows Control Center suite (laptop is
+  an OriginPC EON17-X, ITE 8910 keyboard, USB `048d:8910`), cut over from the
+  temporary Python/PyQt5 implementation on 2026-08-15. Tauri 2 + React/TS UI;
+  shared Rust `clevo-hw` crate for RGB protocol, keymap, sensors, power state,
+  and Flexikey; standalone Rust lid-monitor binary; **Fn hotkeys + OSD** via
+  the verified GPL `kernel/clevo-hotkeys/` DKMS module bound to this
+  machine's previously-unclaimed Clevo ACPI-WMI GUID
+  (`ABBC0F6B-8EA1-11D1-...`). The archived Python implementation is preserved
+  on `archive/legacy` and recoverable with
+  `git checkout archive/legacy -- packages/originpc-control-center`. GPU/CPU
+  overclocking is deliberately **not** implemented — see the package README
+  for why. Supersedes `scripts/gaming/clevo-kbd-rgb` for interactive use; that
+  CLI script stays for scripting/presets since it shares the same RGB protocol.
 
 ## 7. Maintenance
 - Re-run consolidation any time: `python3 nexus-os/scripts/nexus-consolidate.py`

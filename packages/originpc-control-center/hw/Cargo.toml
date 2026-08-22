@@ -1,0 +1,18 @@
+[package]
+name = "clevo-hw"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Shared, GUI-independent hardware layer for the OriginPC EON17-X (Clevo ITE 8910 RGB keyboard, fan/power/temp telemetry). Used by the Tauri backend, the lid-monitor binary, and the Flexikey engine."
+
+[dependencies]
+anyhow = "1"
+thiserror = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+once_cell = "1"
+evdev = "0.13"
+shlex = "1"
+
+[dev-dependencies]

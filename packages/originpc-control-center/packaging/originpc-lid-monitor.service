@@ -1,0 +1,31 @@
+[Unit]
+Description=OriginPC Lid Monitor (RGB keyboard clear on lid close)
+After=graphical-session.target
+
+[Service]
+Type=simple
+# systemd --user units already run as the invoking user, so no User=
+# directive (and no root) is needed - RGB access only requires the hidraw
+# udev permission from 99-originpc-rgb.rules.
+#
+# Needed by the daemon's "xset q" fallback lid-detection method (display
+# power state), since a --user unit doesn't automatically inherit the
+# graphical session's DISPLAY on every desktop environment.
+Environment=DISPLAY=:0
+#
+# ExecStart points at the compiled Rust lid-monitor binary (see
+# ../lid-monitor/src/main.rs), replacing the Python
+# lid-monitor-daemon.py this package's Python predecessor installed at the
+# equivalent path. Install the release binary there, e.g.:
+#   install -Dm755 target/release/occ-lid-monitor \
+#     ~/.local/share/originpc-control-center/occ-lid-monitor
+# Running with no arguments starts the persistent monitoring loop (see
+# lid-monitor/src/main.rs's module doc comment); `--clear-once` is also
+# available as a one-shot manual recovery tool but is not what this unit
+# runs.
+ExecStart=%h/.local/share/originpc-control-center/occ-lid-monitor
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

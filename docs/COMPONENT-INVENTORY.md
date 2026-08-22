@@ -31,7 +31,7 @@ NexusOS is a **from-scratch, AI-native Rust microkernel** (this repo). This file
 `nexus-terminal`, `nexus-codex`, `nexus-brain`, `kvm-manager`, `OmnioSearch`, `Hyperion`,
 `eartrumpet-linux`, `ollama-manager-gui`, `ollama-code-checker`, `PortProton-Enhanced`,
 `mobalivecd-linux`, `i9-13900hx-optimizations`, `universal-zfs-installer`,
-`firestick-mediacontrol-app`, `mediastack-control-popos`.
+`firestick-mediacontrol-app`, `mediastack-control-popos`, `originpc-control-center`.
 
 ## Current media stack (external repo)
 `nexus-mediastack` — the current media stack, all services consolidated into one LXC
