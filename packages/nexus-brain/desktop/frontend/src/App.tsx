@@ -3,7 +3,10 @@ import * as api from "./api";
 import type {
   ActionRow,
   CatalogRow,
+  CodeSweepCandidate,
   Config,
+  DocSyncCandidate,
+  DocSyncResult,
   DupGroup,
   Health,
   Hit,
@@ -24,6 +27,7 @@ type View =
   | "stale"
   | "notes"
   | "repos"
+  | "currency"
   | "dupes"
   | "history"
   | "settings";
@@ -37,6 +41,7 @@ const VIEWS: { id: View; label: string }[] = [
   { id: "notes", label: "Notes" },
   { id: "dupes", label: "Duplicates" },
   { id: "repos", label: "Repos" },
+  { id: "currency", label: "Repo Currency" },
   { id: "history", label: "History" },
   { id: "settings", label: "Settings" },
 ];
@@ -166,6 +171,7 @@ export default function App() {
           {view === "notes" && <Notes />}
           {view === "dupes" && <Duplicates />}
           {view === "repos" && <Repos />}
+          {view === "currency" && <RepoCurrency />}
           {view === "history" && <History />}
           {view === "settings" && <Settings />}
         </div>
@@ -943,6 +949,223 @@ function Repos() {
           </tbody>
         </table>
       )}
+    </>
+  );
+}
+
+/* --------------------------------------------------------------- currency */
+
+function kindLabel(kind: string): string {
+  return kind.replace(/_/g, " ");
+}
+
+function RepoCurrency() {
+  const [docCandidates, setDocCandidates] = useState<DocSyncCandidate[]>([]);
+  const [codeCandidates, setCodeCandidates] = useState<CodeSweepCandidate[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const [syncBusy, setSyncBusy] = useState<string | null>(null);
+  const [syncResults, setSyncResults] = useState<Record<string, DocSyncResult>>({});
+
+  const [relocateBusy, setRelocateBusy] = useState<string | null>(null);
+  const [relocateResults, setRelocateResults] = useState<Record<string, string>>({});
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setErr(null);
+    try {
+      const [docs, code] = await Promise.all([
+        api.listDocsyncCandidates(),
+        api.listCodeSweepCandidates(),
+      ]);
+      setDocCandidates(docs);
+      setCodeCandidates(code);
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const syncDocs = async (repoPath: string) => {
+    setSyncBusy(repoPath);
+    setErr(null);
+    try {
+      const result = await api.runDocsync(repoPath);
+      setSyncResults((r) => ({ ...r, [repoPath]: result }));
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setSyncBusy(null);
+    }
+  };
+
+  const relocate = async (repoPath: string, filePath: string, destination: string) => {
+    const key = `${repoPath}::${filePath}`;
+    setRelocateBusy(key);
+    setErr(null);
+    try {
+      const msg = await api.runCodeRelocation(repoPath, filePath, destination);
+      setRelocateResults((r) => ({ ...r, [key]: msg }));
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setRelocateBusy(null);
+    }
+  };
+
+  return (
+    <>
+      <div className="filters">
+        <span className="muted small">
+          Reads every repo against the current state of the codebase and flags
+          documentation and code that no longer match reality.
+        </span>
+        <span className="spacer" />
+        <button className="btn" onClick={load} disabled={loading}>
+          {loading ? "Refreshing…" : "Refresh"}
+        </button>
+      </div>
+      {err && <div className="err">{err}</div>}
+
+      <div className="section" style={{ marginTop: 0 }}>
+        <h2>
+          Documentation — {docCandidates.length} repo
+          {docCandidates.length === 1 ? "" : "s"} flagged
+        </h2>
+        {docCandidates.length === 0 ? (
+          <div className="empty">
+            {loading ? "Loading…" : "No documentation drift found."}
+          </div>
+        ) : (
+          docCandidates.map((c) => {
+            const result = syncResults[c.repoPath];
+            const busy = syncBusy === c.repoPath;
+            return (
+              <div key={c.repoPath} className="card" style={{ marginBottom: 10 }}>
+                <div className="row wrap">
+                  <span className="name">{c.repoName}</span>
+                  <span className="spacer" />
+                  <button
+                    className="btn tiny"
+                    onClick={() => syncDocs(c.repoPath)}
+                    disabled={busy}
+                  >
+                    {busy ? "Syncing…" : "Sync docs"}
+                  </button>
+                </div>
+                <div className="path">{c.repoPath}</div>
+                {c.reason && <div className="snippet">{c.reason}</div>}
+                {c.docFiles.length > 0 && (
+                  <div style={{ marginTop: 6 }}>
+                    {c.docFiles.map((f) => (
+                      <span key={f} className="tag">
+                        {f}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {result && (
+                  <div className="section" style={{ marginTop: 10 }}>
+                    <div className="muted small">{result.diffSummary}</div>
+                    {result.updatedFiles.length > 0 && (
+                      <div style={{ marginTop: 4 }}>
+                        {result.updatedFiles.map((f) => (
+                          <span key={f} className="tag current">
+                            {f}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <div className="section">
+        <h2>
+          Code findings — {codeCandidates.length} repo
+          {codeCandidates.length === 1 ? "" : "s"} flagged
+        </h2>
+        {codeCandidates.length === 0 ? (
+          <div className="empty">
+            {loading ? "Loading…" : "No code drift found."}
+          </div>
+        ) : (
+          codeCandidates.map((c) => (
+            <div key={c.repoPath} className="card" style={{ marginBottom: 10 }}>
+              <div className="row wrap">
+                <span className="name">{c.repoName}</span>
+              </div>
+              <div className="path">{c.repoPath}</div>
+              <table style={{ marginTop: 8 }}>
+                <thead>
+                  <tr>
+                    <th style={{ width: "28%" }}>File</th>
+                    <th style={{ width: 140 }}>Kind</th>
+                    <th>Why</th>
+                    <th style={{ width: 160 }}>Relocate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {c.findings.map((f) => {
+                    const key = `${c.repoPath}::${f.filePath}`;
+                    const msg = relocateResults[key];
+                    const busy = relocateBusy === key;
+                    return (
+                      <tr key={key}>
+                        <td className="path">{f.filePath}</td>
+                        <td>
+                          <span className="tag">{kindLabel(f.kind)}</span>
+                        </td>
+                        <td>
+                          {f.description}
+                          {msg && (
+                            <div className="muted small" style={{ marginTop: 4 }}>
+                              {msg}
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          {f.suggestedRelocation ? (
+                            <>
+                              <div className="path" style={{ marginBottom: 4 }}>
+                                → {f.suggestedRelocation}
+                              </div>
+                              <button
+                                className="btn tiny"
+                                onClick={() =>
+                                  relocate(
+                                    c.repoPath,
+                                    f.filePath,
+                                    f.suggestedRelocation!
+                                  )
+                                }
+                                disabled={busy}
+                              >
+                                {busy ? "Moving…" : "Relocate"}
+                              </button>
+                            </>
+                          ) : (
+                            <span className="muted small">report only</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ))
+        )}
+      </div>
     </>
   );
 }
