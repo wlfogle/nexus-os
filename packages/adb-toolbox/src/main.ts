@@ -4,11 +4,24 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 type LogType = "info" | "success" | "error";
 type ModalMode = "search" | "prompt" | "picker";
 
+interface DeviceInfo {
+  identifier: string;
+  state: string;
+  model: string | null;
+  transportId: number | null;
+}
+
 let cachedItems: string[] = [];
 let modalResolve: ((value: string | null) => void) | null = null;
 let currentModalMode: ModalMode = "search";
 let executionContextMode: "download" | "stream" = "download";
 let designatedTargetString: string | null = null;
+let deviceSelectEl: HTMLSelectElement | null = null;
+
+function selectedDeviceId(): string | null {
+  const value = deviceSelectEl?.value ?? "";
+  return value.length > 0 ? value : null;
+}
 
 window.addEventListener("DOMContentLoaded", () => {
   const logContent = document.getElementById("logContent")!;
@@ -21,6 +34,10 @@ window.addEventListener("DOMContentLoaded", () => {
   const modalMetaStatus = document.getElementById("modalMetaStatus")!;
   const btnCancelPicker = document.getElementById("btnCancelPicker")!;
   const btnConfirmPicker = document.getElementById("btnConfirmPicker")!;
+
+  const deviceSelect = document.getElementById("deviceSelect") as HTMLSelectElement;
+  const refreshDevicesBtn = document.getElementById("refreshDevicesBtn")!;
+  deviceSelectEl = deviceSelect;
 
   // ── Log Panel ───────────────────────────────────────────────────────────
 
@@ -36,6 +53,41 @@ window.addEventListener("DOMContentLoaded", () => {
   clearLogBtn.addEventListener("click", () => {
     logContent.innerHTML = "";
   });
+
+  // ── Device Selector ────────────────────────────────────────────────────
+
+  async function loadDevices() {
+    try {
+      const devices = await invoke<DeviceInfo[]>("list_devices");
+      deviceSelect.innerHTML = "";
+
+      if (devices.length === 0) {
+        const option = document.createElement("option");
+        option.value = "";
+        option.textContent = "No devices found";
+        deviceSelect.appendChild(option);
+        appendLog("No devices found.");
+        return;
+      }
+
+      devices.forEach((device) => {
+        const option = document.createElement("option");
+        option.value = device.identifier;
+        option.textContent = `${device.model ?? device.identifier} (${device.state}) — ${device.identifier}`;
+        deviceSelect.appendChild(option);
+      });
+
+      if (devices.length === 1) {
+        deviceSelect.value = devices[0].identifier;
+      }
+
+      appendLog(`Found ${devices.length} device(s).`);
+    } catch (err) {
+      appendLog(`Failed to list devices: ${err}`, "error");
+    }
+  }
+
+  refreshDevicesBtn.addEventListener("click", () => loadDevices());
 
   // ── Modal: Close Helper ─────────────────────────────────────────────────
 
@@ -228,6 +280,7 @@ window.addEventListener("DOMContentLoaded", () => {
       try {
         const result = await invoke<string>("execute_stream_pipeline", {
           packageId: parsedId,
+          deviceId: selectedDeviceId(),
         });
         appendLog(result, "success");
       } catch (err) {
@@ -277,6 +330,7 @@ window.addEventListener("DOMContentLoaded", () => {
         const result = await invoke<string>("push_file", {
           localPath,
           remotePath,
+          deviceId: selectedDeviceId(),
         });
         appendLog(result, "success");
       } catch (err) {
@@ -305,6 +359,7 @@ window.addEventListener("DOMContentLoaded", () => {
         const result = await invoke<string>("pull_file", {
           remotePath,
           localPath,
+          deviceId: selectedDeviceId(),
         });
         appendLog(result, "success");
       } catch (err) {
@@ -326,7 +381,10 @@ window.addEventListener("DOMContentLoaded", () => {
 
       appendLog(`Installing ${path.split("/").pop()}...`);
       try {
-        const result = await invoke<string>("install_apk", { path });
+        const result = await invoke<string>("install_apk", {
+          path,
+          deviceId: selectedDeviceId(),
+        });
         appendLog(result, "success");
       } catch (err) {
         appendLog(`Install failed: ${err}`, "error");
@@ -347,6 +405,7 @@ window.addEventListener("DOMContentLoaded", () => {
       try {
         const result = await invoke<string>("batch_install_apks", {
           folder: folder as string,
+          deviceId: selectedDeviceId(),
         });
         appendLog(result, "success");
       } catch (err) {
@@ -360,7 +419,9 @@ window.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("click", async () => {
       appendLog("Fetching installed packages...");
       try {
-        const packages = await invoke<string[]>("list_packages");
+        const packages = await invoke<string[]>("list_packages", {
+          deviceId: selectedDeviceId(),
+        });
         const selected = await showPicker(
           "Select package to clear data:",
           packages
@@ -370,6 +431,7 @@ window.addEventListener("DOMContentLoaded", () => {
         appendLog(`Clearing data for ${selected}...`);
         const result = await invoke<string>("purge_app_cache", {
           packageId: selected,
+          deviceId: selectedDeviceId(),
         });
         appendLog(result, "success");
       } catch (err) {
@@ -386,7 +448,10 @@ window.addEventListener("DOMContentLoaded", () => {
 
       appendLog(`Injecting text...`);
       try {
-        const result = await invoke<string>("inject_text", { text });
+        const result = await invoke<string>("inject_text", {
+          text,
+          deviceId: selectedDeviceId(),
+        });
         appendLog(result, "success");
       } catch (err) {
         appendLog(`Injection failed: ${err}`, "error");
@@ -399,7 +464,9 @@ window.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("click", async () => {
       appendLog("Capturing logcat...");
       try {
-        const result = await invoke<string>("capture_logcat");
+        const result = await invoke<string>("capture_logcat", {
+          deviceId: selectedDeviceId(),
+        });
         appendLog("─── Logcat ───", "info");
         result.split("\n").forEach((line) => {
           if (line.trim()) appendLog(line);
@@ -425,6 +492,7 @@ window.addEventListener("DOMContentLoaded", () => {
       try {
         const result = await invoke<string>("capture_screenshot", {
           savePath: path,
+          deviceId: selectedDeviceId(),
         });
         appendLog(result, "success");
       } catch (err) {
@@ -447,6 +515,7 @@ window.addEventListener("DOMContentLoaded", () => {
       try {
         const result = await invoke<string>("record_screen", {
           savePath: path,
+          deviceId: selectedDeviceId(),
         });
         appendLog(result, "success");
       } catch (err) {
@@ -479,7 +548,9 @@ window.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("click", async () => {
       appendLog("Restarting UI framework...");
       try {
-        const result = await invoke<string>("restart_framework");
+        const result = await invoke<string>("restart_framework", {
+          deviceId: selectedDeviceId(),
+        });
         appendLog(result, "success");
       } catch (err) {
         appendLog(`Restart failed: ${err}`, "error");
@@ -492,7 +563,9 @@ window.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("click", async () => {
       appendLog("Rebooting to bootloader...");
       try {
-        const result = await invoke<string>("reboot_bootloader");
+        const result = await invoke<string>("reboot_bootloader", {
+          deviceId: selectedDeviceId(),
+        });
         appendLog(result, "success");
       } catch (err) {
         appendLog(`Reboot failed: ${err}`, "error");
@@ -505,7 +578,9 @@ window.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener("click", async () => {
       appendLog("Rebooting to recovery...");
       try {
-        const result = await invoke<string>("reboot_recovery");
+        const result = await invoke<string>("reboot_recovery", {
+          deviceId: selectedDeviceId(),
+        });
         appendLog(result, "success");
       } catch (err) {
         appendLog(`Reboot failed: ${err}`, "error");
@@ -515,4 +590,5 @@ window.addEventListener("DOMContentLoaded", () => {
   // ── Init ────────────────────────────────────────────────────────────────
 
   appendLog("ADB Toolbox initialized.", "success");
+  loadDevices();
 });
