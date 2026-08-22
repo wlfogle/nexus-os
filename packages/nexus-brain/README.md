@@ -50,9 +50,18 @@ it — automatically when confident, asking when not.
 | 1 | `extract.rs` | SHA-256, text extraction, `pdftotext` / Tesseract OCR |
 | 2 | `embed.rs` | chunk + embed with `nomic-embed-text` (768-dim) |
 | 3 | `interpret.rs` | a local LLM reads each file and returns a judgement |
+| — | `classify.rs` | repo TF-IDF fingerprints, labels, supersession graph |
+| — | `notes.rs` | markdown notes with wikilinks and backlinks |
 
 Tier 3 returns, per file: `title`, `kind`, `purpose`, `summary`, `topics`,
 `entities`, `related_repo`, `status`, `action`, `reason`, `confidence`.
+
+`classify.rs` then combines that judgement with signals the model cannot see —
+semantic distance to each repo's centroid, commit recency, identical bytes
+already inside a repo, file age — to produce a label (`CURRENT`,
+`RELEVANT_STALE`, `DUPLICATE`, `UNRELATED`, `UNKNOWN`, `SECRET_RISK`) and the
+supersession graph: for each loose file, the newer repo-owned file that replaced
+it.
 
 ### Leveraging the local model library
 
@@ -84,8 +93,14 @@ against a 12 GB GPU. Two consequences shaped the design:
 ```bash
 cd desktop/frontend && npm install && npm run build
 cd ../src-tauri     && cargo build --release
-./target/release/librarian
+./target/release/librarian              # window
+./target/release/librarian --headless    # pipeline only, cron-able
+./target/release/librarian --classify    # re-label from existing rows, no inference
 ```
+
+`--classify` rebuilds repo fingerprints, labels, supersession edges and the
+notes index from what is already in the catalog. It finishes in seconds and
+costs nothing, which makes it the way to tune the scoring thresholds.
 
 Dev mode: `cargo tauri dev` from `desktop/src-tauri`.
 
@@ -96,12 +111,14 @@ State lives outside the repo in `~/.local/state/librarian/` (`catalog.db`,
 ### Tests
 
 ```bash
-cd desktop/src-tauri && cargo test    # 50 tests
+cd desktop/src-tauri && cargo test    # 75 tests
 ```
 
 They cover JSON recovery from imperfect model output, model routing and the
 escalation ladder, remote-URL owner parsing, chunking, vector round-trips, FTS5
-query escaping, RRF fusion, and move/undo including refusal to overwrite.
+query escaping, RRF fusion, move/undo including refusal to overwrite, config
+migration, the label decision table, supersession class compatibility, and
+wikilink/tag parsing.
 
 ## `tools/`
 

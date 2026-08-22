@@ -96,7 +96,34 @@ pub fn owner_from_remote(url: &str) -> String {
     }
 }
 
-/// Walk the configured roots and return every git working tree found.
+/// The roots actually walked for repo discovery.
+///
+/// `cfg.roots` alone is not enough: on this machine (and by convention, any
+/// machine following the same layout) real repos live under `cfg.vault` and
+/// the `cfg.monorepo` checkout, which are tracked as separate config fields
+/// from `roots` and are not guaranteed to be reachable from it (no symlink is
+/// assumed, and even if one existed the walk below refuses to follow
+/// symlinks). Without this, `roots` defaulting to just the home directory
+/// silently means zero repos are ever found. Deduplicated against `cfg.roots`
+/// so a user who already lists the vault there does not get it walked twice.
+fn effective_roots(cfg: &Config) -> Vec<PathBuf> {
+    let mut out: Vec<PathBuf> = Vec::new();
+    let mut seen: HashSet<PathBuf> = HashSet::new();
+    for root in cfg
+        .roots
+        .iter()
+        .chain(std::iter::once(&cfg.vault))
+        .chain(std::iter::once(&cfg.monorepo))
+    {
+        if seen.insert(root.clone()) {
+            out.push(root.clone());
+        }
+    }
+    out
+}
+
+/// Walk the configured roots (plus the vault and monorepo, see
+/// `effective_roots`) and return every git working tree found.
 ///
 /// Detection looks for `.git` as either a directory or a file, so worktrees and
 /// absorbed submodules are not missed. Once a repo root is found the walk still
@@ -107,7 +134,7 @@ pub fn discover(cfg: &Config) -> Vec<PathBuf> {
     let mut found: Vec<PathBuf> = Vec::new();
     let mut seen: HashSet<PathBuf> = HashSet::new();
 
-    for root in &cfg.roots {
+    for root in effective_roots(cfg) {
         let mut stack = vec![root.clone()];
         while let Some(dir) = stack.pop() {
             let entries = match std::fs::read_dir(&dir) {
@@ -344,7 +371,64 @@ pub fn list(conn: &Connection) -> Result<Vec<RepoInfo>> {
 
 #[cfg(test)]
 mod tests {
-    use super::{escape_like, owner_from_remote};
+    use super::{discover, escape_like, owner_from_remote};
+    use crate::config::Config;
+    use std::fs;
+
+    /// Creates `<tmp>/<name>` and marks it as a git working tree by creating
+    /// a `.git` directory inside it (discovery only checks for presence, not
+    /// a real repository), returning the path.
+    fn make_fake_repo(base: &std::path::Path, name: &str) -> std::path::PathBuf {
+        let repo = base.join(name);
+        fs::create_dir_all(repo.join(".git")).unwrap();
+        repo
+    }
+
+    #[test]
+    fn vault_and_monorepo_are_always_walked_even_if_not_in_roots() {
+        let base = std::env::temp_dir().join(format!(
+            "librarian-repos-test-{}-{}",
+            std::process::id(),
+            db_test_nonce()
+        ));
+        let roots_root = base.join("only_root");
+        let vault = base.join("vault");
+        let monorepo = base.join("monorepo");
+        fs::create_dir_all(&roots_root).unwrap();
+        fs::create_dir_all(&vault).unwrap();
+        fs::create_dir_all(&monorepo).unwrap();
+
+        // A repo that lives only under the vault/monorepo, never under `roots`.
+        let vault_repo = make_fake_repo(&vault, "some-project");
+        let monorepo_repo = monorepo.clone(); // the monorepo checkout is itself a repo
+        fs::create_dir_all(monorepo_repo.join(".git")).unwrap();
+
+        let cfg = Config {
+            roots: vec![roots_root],
+            vault: vault.clone(),
+            monorepo: monorepo.clone(),
+            ..Config::default()
+        };
+
+        let found = discover(&cfg);
+        assert!(
+            found.contains(&vault_repo),
+            "repo under cfg.vault must be discovered even though it is not in cfg.roots: {found:?}"
+        );
+        assert!(
+            found.contains(&monorepo_repo),
+            "cfg.monorepo itself must be discovered even though it is not in cfg.roots: {found:?}"
+        );
+
+        let _ = fs::remove_dir_all(&base);
+    }
+
+    /// A tiny counter so parallel test runs never collide on the same tmp dir.
+    fn db_test_nonce() -> u64 {
+        use std::sync::atomic::{AtomicU64, Ordering};
+        static N: AtomicU64 = AtomicU64::new(0);
+        N.fetch_add(1, Ordering::Relaxed)
+    }
 
     #[test]
     fn https_remote() {

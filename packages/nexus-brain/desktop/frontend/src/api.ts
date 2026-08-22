@@ -151,6 +151,38 @@ export interface TagModel {
   size: number;
 }
 
+export interface Supersession {
+  old_id: number;
+  old_path: string;
+  new_id: number;
+  new_path: string;
+  new_repo: string | null;
+  similarity: number;
+  reason: string;
+}
+
+export interface Note {
+  id: number;
+  path: string;
+  title: string;
+  body: string;
+  tags: string[];
+  created_at: number;
+  updated_at: number;
+}
+
+export interface NoteLink {
+  target: string;
+  dst_id: number | null;
+}
+
+export interface NoteDetail {
+  note: Note;
+  links: NoteLink[];
+  /** [id, title] of notes pointing at this one. */
+  backlinks: [number, string][];
+}
+
 /* --------------------------------------------------------------- commands */
 
 export const getStats = () => invoke<Stats>("get_stats");
@@ -199,6 +231,17 @@ export const similarFiles = (fileId: number, limit = 10) =>
   invoke<[number, string, number][]>("similar_files", { fileId, limit });
 export const readFileText = (fileId: number) =>
   invoke<string>("read_file_text", { fileId });
+
+export const listSupersessions = (limit = 200) =>
+  invoke<Supersession[]>("list_supersessions", { limit });
+export const repoTopics = (repo: string, limit = 25) =>
+  invoke<[string, number][]>("repo_topics", { repo, limit });
+
+export const listNotes = (limit = 200) => invoke<Note[]>("list_notes", { limit });
+export const getNote = (id: number) => invoke<NoteDetail>("get_note", { id });
+export const saveNote = (title: string, body: string) =>
+  invoke<number>("save_note", { title, body });
+export const deleteNote = (id: number) => invoke<void>("delete_note", { id });
 
 export const onProgress = (cb: (p: Progress) => void) =>
   listen<Progress>("librarian://progress", (e) => cb(e.payload));

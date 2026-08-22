@@ -12,6 +12,7 @@
 use anyhow::{anyhow, Result};
 use rusqlite::{params, Connection};
 use serde::Serialize;
+use std::collections::HashMap;
 use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 
@@ -47,6 +48,57 @@ pub struct ApplyReport {
     pub applied: usize,
     pub failed: usize,
     pub skipped: usize,
+}
+
+/// How much a category's own track record shifts its auto-apply threshold.
+///
+/// Capped so feedback nudges the bar rather than replacing judgement: with a
+/// base threshold of 0.85 the effective bar stays within 0.75..0.95 no matter
+/// how one-sided the history is.
+const FEEDBACK_MAX_SHIFT: f32 = 0.10;
+
+/// Minimum decisions before a category's history is trusted at all.
+const FEEDBACK_MIN_SAMPLES: i64 = 5;
+
+/// Per-category acceptance rate from recorded review decisions.
+///
+/// Returns `(approved, rejected)` counts keyed by category.
+pub fn feedback_rates(conn: &Connection) -> Result<HashMap<String, (i64, i64)>> {
+    let mut out: HashMap<String, (i64, i64)> = HashMap::new();
+    let mut q = conn.prepare(
+        "SELECT predicted,
+                SUM(CASE WHEN chosen = 'approved' THEN 1 ELSE 0 END),
+                SUM(CASE WHEN chosen = 'rejected' THEN 1 ELSE 0 END)
+           FROM feedback GROUP BY predicted",
+    )?;
+    let rows = q.query_map([], |r| {
+        Ok((
+            r.get::<_, String>(0)?,
+            r.get::<_, i64>(1)?,
+            r.get::<_, i64>(2)?,
+        ))
+    })?;
+    for row in rows {
+        let (cat, ok, no) = row?;
+        out.insert(cat, (ok, no));
+    }
+    Ok(out)
+}
+
+/// Adjust the auto-apply threshold for a category using its own history.
+///
+/// Rejecting a category's proposals raises its bar; approving them lowers it.
+/// This is the read side of the `feedback` table -- without it, every review
+/// decision was recorded and then ignored.
+pub fn effective_threshold(base: f32, approved: i64, rejected: i64) -> f32 {
+    let total = approved + rejected;
+    if total < FEEDBACK_MIN_SAMPLES {
+        return base;
+    }
+    let accept_rate = approved as f32 / total as f32;
+    // 100% accepted -> -shift (easier), 0% accepted -> +shift (harder).
+    let shift = (0.5 - accept_rate) * 2.0 * FEEDBACK_MAX_SHIFT;
+    (base + shift).clamp(0.5, 0.99)
 }
 
 /// Destination bucket for an interpretation's recommended action.
@@ -134,6 +186,9 @@ pub fn plan(conn: &mut Connection, cfg: &Config) -> Result<PlanReport> {
         return Ok(report);
     }
 
+    // Read the review history so categories you keep rejecting get a higher bar.
+    let rates = feedback_rates(conn)?;
+
     let tx = conn.transaction()?;
     tx.execute(
         "INSERT INTO plans(created_at, note, status) VALUES (?1, ?2, 'open')",
@@ -154,7 +209,9 @@ pub fn plan(conn: &mut Connection, cfg: &Config) -> Result<PlanReport> {
                 None => continue,
             };
             let dest = unique_dest(&dir, &c.name);
-            let state = if c.confidence >= cfg.auto_apply_above {
+            let (ok, no) = rates.get(&c.action).copied().unwrap_or((0, 0));
+            let threshold = effective_threshold(cfg.auto_apply_above, ok, no);
+            let state = if c.confidence >= threshold {
                 report.auto += 1;
                 "approved"
             } else {
@@ -519,5 +576,45 @@ mod tests {
         move_file(&src, &dest).unwrap();
         assert!(dest.exists());
         std::fs::remove_dir_all(&d).ok();
+    }
+
+    #[test]
+    fn feedback_is_ignored_until_there_is_enough_of_it() {
+        // Two rejections is not a pattern; the base threshold must stand.
+        assert_eq!(super::effective_threshold(0.85, 0, 2), 0.85);
+        assert_eq!(super::effective_threshold(0.85, 0, 0), 0.85);
+    }
+
+    #[test]
+    fn rejecting_a_category_raises_its_bar() {
+        // All ten proposals rejected: demand more confidence next time.
+        let t = super::effective_threshold(0.85, 0, 10);
+        assert!(t > 0.85, "expected a higher bar, got {t}");
+        assert!((t - 0.95).abs() < 1e-5);
+    }
+
+    #[test]
+    fn approving_a_category_lowers_its_bar() {
+        let t = super::effective_threshold(0.85, 10, 0);
+        assert!(t < 0.85, "expected a lower bar, got {t}");
+        assert!((t - 0.75).abs() < 1e-5);
+    }
+
+    #[test]
+    fn an_even_split_leaves_the_threshold_alone() {
+        let t = super::effective_threshold(0.85, 5, 5);
+        assert!((t - 0.85).abs() < 1e-6);
+    }
+
+    #[test]
+    fn the_shift_is_bounded_and_stays_in_range() {
+        // Even absurd histories cannot push the bar outside sane limits.
+        for (ok, no) in [(0, 100_000), (100_000, 0)] {
+            let t = super::effective_threshold(0.85, ok, no);
+            assert!((0.5..=0.99).contains(&t), "out of range: {t}");
+            assert!((t - 0.85).abs() <= super::FEEDBACK_MAX_SHIFT + 1e-6);
+        }
+        // A low base cannot be dragged below the hard floor.
+        assert!(super::effective_threshold(0.52, 0, 50) >= 0.5);
     }
 }

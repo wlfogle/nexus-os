@@ -232,10 +232,93 @@ Two traps encountered while measuring, worth avoiding next time:
 - `pkill -f librarian` matches its own command line and kills the shell running
   it. Use `pkill -x`.
 
-## Known limitation
+## 10. Five tables had schema but no code
 
-Tiers run to completion in sequence: extraction fully drains before embedding,
-which fully drains before interpretation. On a cold run the dashboard therefore
-sits at zero interpreted for several minutes while doing real work, which reads
-as broken. Interleaving the tiers so judgements appear immediately is the obvious
-next improvement.
+`classifications`, `supersedes`, `repo_topics`, `notes` and `note_links` were
+created by the schema and never written to. Worse, `classifications` was
+`LEFT JOIN`ed into the catalog and search queries, so the UI displayed a `label`
+column that was permanently null -- a promise the backend never kept. And
+`repo_centroids` was recomputed on every run and read by nothing.
+
+All are now implemented in `classify.rs` and `notes.rs` rather than deleted:
+TF-IDF repo fingerprints, labels combining the model's judgement with semantic
+and git signals, the supersession graph, and a markdown notes vault with
+wikilinks and backlinks. Centroids now feed the relevance score.
+
+## 11. Supersession matched a screenshot to an HTML file
+
+The first live run produced 100 supersession edges, one of which claimed a PNG
+screenshot had been replaced by `index.html` at cosine **1.0**. The screenshot's
+OCR had yielded 17 characters (`"FI Firnuare Setup"`) and the HTML 19
+(`"AI Coding Assistant"`). Very short strings embed to nearly the same vector
+regardless of meaning, so the similarity was real and the conclusion worthless.
+More than half of all edges sat in the weakest 0.86-0.90 band.
+
+Three guards, since a wrong "superseded by" sends you to the wrong file and is
+worse than no answer:
+
+- a file needs **200+ extracted characters** to take part at all
+- **classes must be compatible** -- prose formats interchange, code and scripts
+  interchange, an image is never a newer version of a web page
+- the threshold rose from **0.86 to 0.92**
+
+Result: 100 edges to 22, no image-sourced edges, every survivor same-class at
+0.93 or better.
+
+## 12. Repo discovery silently found zero of 46 real repos
+
+`repos::discover` only walked `cfg.roots`, which defaults to the home
+directory. The real repo vault lives on a separate path tracked as its own
+config field (`cfg.vault`), never merged into `roots`, and no symlink bridges
+the two. Interpretation itself worked end-to-end (confirmed: correct model
+routing, escalation, and stored judgements existed in the catalog) but had
+next to nothing real to read, which looked identical to "the pipeline is
+broken" from the outside.
+
+**Fix.** `repos::discover` now always walks `cfg.vault` and `cfg.monorepo` in
+addition to `cfg.roots`, deduplicated, independent of anything persisted in
+`config.json` -- so it is correct on first run with no version-bump migration
+needed. Verified with the new read-only `--list-repos` flag: **0 repositories
+found before the fix, 48 after** (46 in the vault, the monorepo checkout
+itself, and one nested submodule).
+
+## Enhancement status
+
+Against `Librarian_Enhancements.md`:
+
+**Implemented.** Two-stage ingestion (four tiers); incremental indexing with
+hash-based re-attachment of moved files; entropy/deny-list noise filtering;
+hybrid BM25 + vector retrieval; git-aware weighting; canonical source and
+supersession graph; quarantine-first lifecycle; deterministic rollback journal;
+sidecar summarisation; local dashboard; per-repo TF-IDF fingerprints; markdown
+notes with backlinks.
+
+**Still open.**
+
+- **Inotify watcher.** Re-indexing is manual or scheduled; there is no
+  filesystem watch, so a new file is not noticed until the next run.
+- **Zero-copy symlink overlay.** The enhancement list wanted a symlink view
+  before any physical move. Currently the first thing that changes on disk is a
+  real move, gated on confidence.
+- **Quarantine auto-purge.** Files land in `Quarantine/` and stay forever; the
+  30-day expiry with notification is not built.
+- **Path normalisation on move.** Moving a script does not rewrite references to
+  it in other files, so a moved script can break a caller.
+- **Human-in-the-loop learning.** Accept/reject decisions are recorded in
+  `feedback`, but nothing reads that table to adjust weights. This is the one
+  remaining case of a table written but never used, and it is deliberate:
+  guessing at a weighting scheme is worse than leaving the data for a real one.
+
+## Known limitations
+
+**Tiers run in sequence.** Extraction fully drains before embedding, which
+fully drains before interpretation. On a cold run the dashboard sits at zero
+interpreted for several minutes while doing real work, which reads as broken.
+Interleaving is the obvious next improvement. `--classify` exists partly to work
+around this: it re-derives labels, fingerprints, supersession and notes from
+existing rows in seconds, with no inference.
+
+**Classification quality is bounded by how many repos have been embedded.**
+Centroids only exist for repos whose files have reached tier 2. With two
+centroids present, every label came out `CURRENT`; the label distribution only
+becomes meaningful once the whole vault has been indexed.

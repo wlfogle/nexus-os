@@ -10,6 +10,7 @@
 //! `actions` turns judgements into reversible filesystem changes.
 
 pub mod actions;
+pub mod classify;
 pub mod commands;
 pub mod config;
 pub mod db;
@@ -17,6 +18,7 @@ pub mod embed;
 pub mod engine;
 pub mod extract;
 pub mod interpret;
+pub mod notes;
 pub mod ollama;
 pub mod repos;
 pub mod scan;
@@ -57,6 +59,78 @@ pub fn run_headless() -> i32 {
     }
 }
 
+/// Rebuild repo fingerprints, labels, supersession edges and the notes index
+/// from whatever is already in the catalog.
+///
+/// The full pipeline only reaches this stage once every file has been
+/// interpreted, which can take hours. These stages depend on nothing but
+/// existing rows, so running them alone makes the results observable
+/// immediately and lets the scoring thresholds be tuned without paying for
+/// inference again.
+pub fn run_classify() -> i32 {
+    let state = match engine::AppState::new() {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("librarian: failed to initialise: {e}");
+            return 1;
+        }
+    };
+    let cfg = state.config();
+    let mut conn = match state.db.lock() {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("librarian: database is poisoned: {e}");
+            return 1;
+        }
+    };
+
+    match embed::rebuild_centroids(&mut conn) {
+        Ok(n) => println!("centroids : {n} repo(s)"),
+        Err(e) => {
+            eprintln!("centroids failed: {e}");
+            return 1;
+        }
+    }
+    match classify::run(&mut conn, &cfg) {
+        Ok(r) => println!(
+            "classify  : {} labelled, {} repo topics, {} superseded",
+            r.classified, r.topics, r.supersedes
+        ),
+        Err(e) => {
+            eprintln!("classify failed: {e}");
+            return 1;
+        }
+    }
+    match notes::reindex(&mut conn, &cfg) {
+        Ok(n) => println!("notes     : {n} indexed"),
+        Err(e) => {
+            eprintln!("notes reindex failed: {e}");
+            return 1;
+        }
+    }
+    0
+}
+
+/// Read-only: discover every git repository under the configured roots (plus
+/// the vault and monorepo) and print them. Touches no database and reads no
+/// file content -- purely for verifying `repos::discover` in isolation.
+pub fn run_list_repos() -> i32 {
+    let cfg = match config::Config::load() {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("librarian: failed to load config: {e}");
+            return 1;
+        }
+    };
+    let found = repos::discover(&cfg);
+    for path in &found {
+        println!("{}", path.display());
+    }
+    println!("---");
+    println!("{} repositories found", found.len());
+    0
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let state = match engine::AppState::new() {
@@ -90,6 +164,12 @@ pub fn run() {
             commands::undo_plan,
             commands::similar_files,
             commands::read_file_text,
+            commands::list_supersessions,
+            commands::repo_topics,
+            commands::list_notes,
+            commands::get_note,
+            commands::save_note,
+            commands::delete_note,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Librarian");

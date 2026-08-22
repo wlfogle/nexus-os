@@ -7,9 +7,12 @@ import type {
   DupGroup,
   Health,
   Hit,
+  Note,
+  NoteDetail,
   Progress,
   RepoInfo,
   Stats,
+  Supersession,
   TagModel,
 } from "./api";
 
@@ -19,6 +22,7 @@ type View =
   | "review"
   | "search"
   | "stale"
+  | "notes"
   | "repos"
   | "dupes"
   | "history"
@@ -30,6 +34,7 @@ const VIEWS: { id: View; label: string }[] = [
   { id: "catalog", label: "Catalog" },
   { id: "review", label: "Review" },
   { id: "stale", label: "Stale" },
+  { id: "notes", label: "Notes" },
   { id: "dupes", label: "Duplicates" },
   { id: "repos", label: "Repos" },
   { id: "history", label: "History" },
@@ -110,6 +115,9 @@ export default function App() {
               {v.id === "repos" && (stats?.repos ?? 0) > 0 && (
                 <span className="count">{stats!.repos}</span>
               )}
+              {v.id === "notes" && (stats?.notes ?? 0) > 0 && (
+                <span className="count">{stats!.notes}</span>
+              )}
             </button>
           ))}
         </nav>
@@ -155,6 +163,7 @@ export default function App() {
           {view === "catalog" && <Catalog />}
           {view === "review" && <Review onChange={refreshStats} />}
           {view === "stale" && <Stale />}
+          {view === "notes" && <Notes />}
           {view === "dupes" && <Duplicates />}
           {view === "repos" && <Repos />}
           {view === "history" && <History />}
@@ -563,9 +572,11 @@ function Review({ onChange }: { onChange: () => void }) {
 
 function Stale() {
   const [rows, setRows] = useState<Hit[]>([]);
+  const [sups, setSups] = useState<Supersession[]>([]);
   const [err, setErr] = useState<string | null>(null);
   useEffect(() => {
     api.listStale(300).then(setRows).catch((e) => setErr(String(e)));
+    api.listSupersessions(300).then(setSups).catch(() => setSups([]));
   }, []);
 
   return (
@@ -577,6 +588,32 @@ function Stale() {
         </span>
       </div>
       {err && <div className="err">{err}</div>}
+
+      {sups.length > 0 && (
+        <div className="section">
+          <h2>Superseded — a newer copy exists</h2>
+          <div className="muted small" style={{ marginBottom: 10 }}>
+            {sups.length} loose file{sups.length === 1 ? "" : "s"} that a newer
+            repo-owned file has replaced. Open the replacement, not the original.
+          </div>
+          {sups.map((s) => (
+            <div key={s.old_id} className="card" style={{ marginBottom: 8 }}>
+              <div className="row wrap">
+                <span className="tag stale">stale</span>
+                <span className="path">{s.old_path}</span>
+              </div>
+              <div className="row wrap" style={{ marginTop: 4 }}>
+                <span className="tag current">replaced by</span>
+                <span className="path">{s.new_path}</span>
+                {s.new_repo && <span className="tag repo">{s.new_repo}</span>}
+                <span className="conf hi">
+                  {(s.similarity * 100).toFixed(0)}% match
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       {rows.length === 0 ? (
         <div className="empty">Nothing flagged stale.</div>
       ) : (
@@ -610,6 +647,190 @@ function Stale() {
           </tbody>
         </table>
       )}
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------ notes */
+
+function Notes() {
+  const [list, setList] = useState<Note[]>([]);
+  const [detail, setDetail] = useState<NoteDetail | null>(null);
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const reload = useCallback(() => {
+    api.listNotes(300).then(setList).catch((e) => setErr(String(e)));
+  }, []);
+  useEffect(reload, [reload]);
+
+  const open = async (id: number) => {
+    try {
+      const d = await api.getNote(id);
+      setDetail(d);
+      setTitle(d.note.title);
+      setBody(d.note.body);
+      setErr(null);
+    } catch (e) {
+      setErr(String(e));
+    }
+  };
+
+  const blank = () => {
+    setDetail(null);
+    setTitle("");
+    setBody("");
+  };
+
+  const save = async () => {
+    if (!title.trim() && !body.trim()) return;
+    setBusy(true);
+    try {
+      const id = await api.saveNote(title, body);
+      reload();
+      await open(id);
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    if (!detail) return;
+    try {
+      await api.deleteNote(detail.note.id);
+      blank();
+      reload();
+    } catch (e) {
+      setErr(String(e));
+    }
+  };
+
+  return (
+    <>
+      {err && <div className="err">{err}</div>}
+      <div className="filters">
+        <span className="muted small">
+          Plain markdown under the managed library. Link with [[Other Note]] to
+          get backlinks.
+        </span>
+        <span className="spacer" />
+        <button className="btn" onClick={blank}>
+          New note
+        </button>
+        <button className="btn primary" onClick={save} disabled={busy}>
+          {busy ? "Saving…" : "Save"}
+        </button>
+        {detail && (
+          <button className="btn danger" onClick={remove}>
+            Delete
+          </button>
+        )}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 16 }}>
+        <div>
+          <div className="section" style={{ marginTop: 0 }}>
+            <h2>{list.length} note{list.length === 1 ? "" : "s"}</h2>
+            {list.length === 0 && (
+              <div className="muted small">
+                None yet. Write one on the right and save.
+              </div>
+            )}
+            {list.map((n) => (
+              <div
+                key={n.id}
+                className="card"
+                style={{
+                  marginBottom: 6,
+                  cursor: "pointer",
+                  borderColor:
+                    detail?.note.id === n.id ? "var(--accent)" : undefined,
+                }}
+                onClick={() => open(n.id)}
+              >
+                <div className="name">{n.title}</div>
+                <div className="muted small">{api.humanDate(n.updated_at)}</div>
+                {n.tags.length > 0 && (
+                  <div style={{ marginTop: 4 }}>
+                    {n.tags.slice(0, 4).map((t) => (
+                      <span key={t} className="tag">
+                        #{t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="field">
+            <label>Title</label>
+            <input
+              className="text"
+              value={title}
+              placeholder="Title (or leave blank to take it from the first heading)"
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label>Body — markdown</label>
+            <textarea
+              className="text"
+              style={{ minHeight: 340, fontFamily: "var(--mono)", resize: "vertical" }}
+              value={body}
+              placeholder={"# Idea\n\nWhat it is, why it matters, and [[Related Note]]."}
+              onChange={(e) => setBody(e.target.value)}
+            />
+          </div>
+
+          {detail && (
+            <div className="row wrap small" style={{ gap: 16 }}>
+              <div>
+                <span className="muted">links out: </span>
+                {detail.links.length === 0 ? (
+                  <span className="muted">none</span>
+                ) : (
+                  detail.links.map((l) => (
+                    <span
+                      key={l.target}
+                      className={`tag ${l.dst_id ? "repo" : "stale"}`}
+                      title={l.dst_id ? "resolved" : "no note with this title yet"}
+                      style={{ cursor: l.dst_id ? "pointer" : "default" }}
+                      onClick={() => l.dst_id && open(l.dst_id)}
+                    >
+                      {l.target}
+                    </span>
+                  ))
+                )}
+              </div>
+              <div>
+                <span className="muted">backlinks: </span>
+                {detail.backlinks.length === 0 ? (
+                  <span className="muted">none</span>
+                ) : (
+                  detail.backlinks.map(([id, t]) => (
+                    <span
+                      key={id}
+                      className="tag repo"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => open(id)}
+                    >
+                      {t}
+                    </span>
+                  ))
+                )}
+              </div>
+              <div className="path">{detail.note.path}</div>
+            </div>
+          )}
+        </div>
+      </div>
     </>
   );
 }

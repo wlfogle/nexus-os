@@ -8,9 +8,11 @@ use std::sync::Arc;
 use tauri::{AppHandle, State};
 
 use crate::actions::{self, Action};
+use crate::classify::{self, Supersession};
 use crate::config::Config;
 use crate::db::{self, Stats};
 use crate::engine::{self, AppState};
+use crate::notes::{self, Note, NoteDetail};
 use crate::ollama::TagModel;
 use crate::repos::{self, RepoInfo};
 use crate::search::{self, Hit};
@@ -310,4 +312,54 @@ pub fn read_file_text(state: State<'_, Arc<AppState>>, file_id: i64) -> R<String
         |r| r.get::<_, String>(0),
     )
     .map_err(err)
+}
+
+/// "This old file has been replaced by that newer one."
+#[tauri::command]
+pub fn list_supersessions(
+    state: State<'_, Arc<AppState>>,
+    limit: i64,
+) -> R<Vec<Supersession>> {
+    let conn = state.db.lock().map_err(err)?;
+    classify::list_supersessions(&conn, limit).map_err(err)
+}
+
+/// The TF-IDF fingerprint that makes relevance scoring explainable.
+#[tauri::command]
+pub fn repo_topics(
+    state: State<'_, Arc<AppState>>,
+    repo: String,
+    limit: i64,
+) -> R<Vec<(String, f64)>> {
+    let conn = state.db.lock().map_err(err)?;
+    classify::repo_topics(&conn, &repo, limit).map_err(err)
+}
+
+#[tauri::command]
+pub fn list_notes(state: State<'_, Arc<AppState>>, limit: i64) -> R<Vec<Note>> {
+    let conn = state.db.lock().map_err(err)?;
+    notes::list(&conn, limit).map_err(err)
+}
+
+#[tauri::command]
+pub fn get_note(state: State<'_, Arc<AppState>>, id: i64) -> R<NoteDetail> {
+    let conn = state.db.lock().map_err(err)?;
+    notes::get(&conn, id).map_err(err)
+}
+
+#[tauri::command]
+pub fn save_note(
+    state: State<'_, Arc<AppState>>,
+    title: String,
+    body: String,
+) -> R<i64> {
+    let cfg = state.config();
+    let mut conn = state.db.lock().map_err(err)?;
+    notes::save(&mut conn, &cfg, &title, &body).map_err(err)
+}
+
+#[tauri::command]
+pub fn delete_note(state: State<'_, Arc<AppState>>, id: i64) -> R<()> {
+    let conn = state.db.lock().map_err(err)?;
+    notes::delete(&conn, id).map_err(err)
 }

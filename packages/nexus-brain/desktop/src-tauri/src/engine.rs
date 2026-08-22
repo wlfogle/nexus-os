@@ -12,11 +12,13 @@ use std::sync::Arc;
 use tauri::{AppHandle, Emitter};
 
 use crate::actions;
+use crate::classify;
 use crate::config::{self, Config};
 use crate::db::{self, Db};
 use crate::embed;
 use crate::extract;
 use crate::interpret;
+use crate::notes;
 use crate::ollama::Ollama;
 use crate::repos;
 use crate::scan;
@@ -272,6 +274,39 @@ pub async fn run_pipeline(sink: Arc<dyn ProgressSink>, state: Arc<AppState>) -> 
         })
         .await??;
         emit(&*sink, &state, "centroids", format!("{n} repo centroids"));
+    }
+
+    // Labels, repo fingerprints and the supersession graph. Runs after
+    // centroids because it consumes them.
+    {
+        let dbh = state.db.clone();
+        let c = cfg.clone();
+        let r = tokio::task::spawn_blocking(move || {
+            let mut conn = dbh.lock().unwrap();
+            classify::run(&mut conn, &c)
+        })
+        .await??;
+        emit(
+            &*sink,
+            &state,
+            "classify",
+            format!(
+                "{} labelled, {} repo topics, {} superseded",
+                r.classified, r.topics, r.supersedes
+            ),
+        );
+    }
+
+    // Index any markdown notes written since the last pass.
+    {
+        let dbh = state.db.clone();
+        let c = cfg.clone();
+        let n = tokio::task::spawn_blocking(move || {
+            let mut conn = dbh.lock().unwrap();
+            notes::reindex(&mut conn, &c)
+        })
+        .await??;
+        emit(&*sink, &state, "notes", format!("{n} note(s) indexed"));
     }
     {
         let dbh = state.db.clone();
