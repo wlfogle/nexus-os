@@ -193,14 +193,21 @@ ENVIRONMENT-DRIFT EVIDENCE (superseded tooling references found in this repo, ma
 Update this documentation file to be strictly accurate against the repo
 digest above:
 - Preserve sections that are still correct.
-- Correct stale claims, especially anything matching the environment-drift
-  evidence (e.g. install instructions for a package manager the repo no
-  longer uses).
+- Correct stale claims, but ONLY when the ENVIRONMENT-DRIFT EVIDENCE above
+  actually names that exact reference. If a command or tool is not listed as
+  drift evidence, leave it exactly as written even if a more common or more
+  generic alternative exists -- e.g. do not replace `nala` with `apt` just
+  because `apt` is more widely known; both are valid on this environment and
+  swapping a correct, intentional tool choice for a generic one is itself a
+  regression, not a fix.
 - Add brief sections for major components shown in the digest that this doc
   does not mention at all.
 - If you are not confident a claim is still true, mark it with a "⚠" note
   rather than inventing detail or silently deleting it.
 - Do not fabricate file paths, commands, or components not shown above.
+- Never claim the document "previously" said something -- you are only shown
+  its current content, not its history. Describe what you changed and why
+  using only the evidence above; do not invent a backstory for the change.
 
 Reply with a single JSON object:
 {{"changed": true|false, "updated_content": "the full updated file content, markdown, only if changed is true"}}
