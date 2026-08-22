@@ -197,9 +197,14 @@ digest above:
   actually names that exact reference. If a command or tool is not listed as
   drift evidence, leave it exactly as written even if a more common or more
   generic alternative exists -- e.g. do not replace `nala` with `apt` just
-  because `apt` is more widely known; both are valid on this environment and
-  swapping a correct, intentional tool choice for a generic one is itself a
-  regression, not a fix.
+  because `apt` is more widely known. Both are legitimate on Debian/Ubuntu
+  systems; swapping a correct, intentional tool choice for a generic one is
+  itself a regression, not a fix. This applies universally, not just to this
+  one repo or machine: never assume a single package manager exists on the
+  reader's system. If you are documenting or writing install instructions
+  and are unsure which is available, prefer a detect-then-fallback form (for
+  example `command -v nala >/dev/null 2>&1 && sudo nala install <pkg> ||
+  sudo apt install <pkg>`) over hard-coding one tool.
 - Add brief sections for major components shown in the digest that this doc
   does not mention at all.
 - If you are not confident a claim is still true, mark it with a "⚠" note
