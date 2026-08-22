@@ -103,6 +103,11 @@ desktop/src-tauri/src/
   actions.rs     planner, verified mover, journal, undo
   engine.rs      pipeline driver + ProgressSink
   commands.rs    window command surface
+  repo_digest.rs        repo currency: shared digest builder (file tree,
+                        summaries, commit log, doc files)
+  environment_drift.rs  repo currency: contextual superseded-tooling signals
+  docsync.rs            repo currency, docs tier: direct working-tree writes
+  code_sweep.rs         repo currency, code tier: report-only + relocation
 desktop/frontend/src/   React UI (9 views)
 desktop/tools/          launchers, debug wrapper, migration scripts
 ```
@@ -118,6 +123,12 @@ State lives outside the repo in `~/.local/state/librarian/` (`catalog.db`,
 
 # pipeline only, no display — cron-able, and how the engine is verified
 ./desktop/src-tauri/target/release/librarian --headless
+
+# repo currency: docs tier (direct working-tree writes) and code tier
+# (report-only; relocation only happens via the run_code_relocation command)
+./desktop/src-tauri/target/release/librarian --docsync --repo /path/to/repo
+./desktop/src-tauri/target/release/librarian --docsync --all
+./desktop/src-tauri/target/release/librarian --code-sweep --all
 
 # debug build with backtraces, inspector, and output teed to run.log
 ./desktop/tools/run-debug.sh
@@ -281,6 +292,53 @@ addition to `cfg.roots`, deduplicated, independent of anything persisted in
 needed. Verified with the new read-only `--list-repos` flag: **0 repositories
 found before the fix, 48 after** (46 in the vault, the monorepo checkout
 itself, and one nested submodule).
+
+## 13. Repo currency: docs kept honest, code flagged instead of silently rotting
+
+Interpretation and classification tell you what a file *is*, but nothing
+read a whole repo end to end and asked "is this still true?" against the
+repo's *own* real file tree and history -- so documentation from this
+machine's Garuda Linux era (pacman/paru/AUR/Calamares-era tooling and paths)
+kept describing an environment that no longer exists, and superseded code sat
+undetected because nothing cross-referenced it against what the repo
+actually imports or calls today.
+
+**Fix.** Two new tiers, both built on a shared `repo_digest.rs` (tracked file
+tree via `git ls-files`, per-file one-line summaries joined from
+`interpretations` with a zero-cost local fallback for files not yet
+interpreted, `git log --oneline -20`, and the current content of every
+README/CONTRIBUTING/CHANGELOG/ARCHITECTURE/`docs/`-or-root markdown file) and
+`environment_drift.rs` (contextual pattern matching for superseded-environment
+markers -- a bare `pacman -S` call with no `apt`/`dnf`/`nala` fallback nearby
+is evidence; the same string inside a multi-package-manager dispatch table, or
+in a repo that is itself an Arch/Garuda packaging project, is not):
+
+- **Docs tier (`docsync.rs`).** Writes corrected content straight into the
+  working-tree file -- an ordinary `git diff`-visible change, never staged,
+  committed, or pushed -- journalled under a new `doc_sync` action kind with
+  full before/after content, so it is visible in History. New doc files are
+  only proposed when the model identifies a genuinely undocumented major
+  component.
+- **Code tier (`code_sweep.rs`).** Report-only: environment-drift markers,
+  files nothing else in the repo references by name (`git grep`
+  cross-referenced against `git ls-files`), and content an LLM judges to
+  contradict the repo's own documentation (given the digest as evidence, not
+  free-floating opinion, and every reported path is checked against the real
+  tree before being trusted). The **only** write this tier can make is
+  relocation -- moving a file byte-for-byte via `git mv` into a repo-local
+  holding directory (reusing an existing `legacy/`/`archive/` convention if
+  one exists, else creating `_deprecated/`), journalled under a new
+  `code_relocate` kind using the same `{"from","to"}` payload shape the
+  existing loose-file mover uses. Nothing is ever deleted or content-edited.
+
+Four Tauri commands (`list_docsync_candidates`, `run_docsync`,
+`list_code_sweep_candidates`, `run_code_relocation`) and two headless flags
+(`--docsync [--repo <path>|--all]`, `--code-sweep [--repo <path>|--all]`,
+the latter always read-only) round out the surface. A dedicated static test
+(`repo_currency_safety_tests.rs`, kept out of the files it inspects so its own
+source cannot match the pattern it searches for) asserts no `git add`/`commit`/
+`push` call and no code-content working-tree write exists anywhere in this
+feature outside `run_code_relocation`.
 
 ## Enhancement status
 

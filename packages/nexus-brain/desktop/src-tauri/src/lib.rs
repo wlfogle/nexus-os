@@ -11,18 +11,25 @@
 
 pub mod actions;
 pub mod classify;
+pub mod code_sweep;
 pub mod commands;
 pub mod config;
 pub mod db;
+pub mod docsync;
 pub mod embed;
 pub mod engine;
+pub mod environment_drift;
 pub mod extract;
 pub mod interpret;
 pub mod notes;
 pub mod ollama;
+pub mod repo_digest;
 pub mod repos;
 pub mod scan;
 pub mod search;
+
+#[cfg(test)]
+mod repo_currency_safety_tests;
 
 use std::sync::Arc;
 
@@ -131,6 +138,118 @@ pub fn run_list_repos() -> i32 {
     0
 }
 
+/// `--docsync [--repo <path>|--all]`: run the docs tier of repo currency.
+/// `repo` of `None` means every repo Librarian already knows about.
+pub fn run_docsync_cli(repo: Option<String>) -> i32 {
+    let state = match engine::AppState::new() {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("librarian: failed to initialise: {e}");
+            return 1;
+        }
+    };
+    let runtime = match tokio::runtime::Runtime::new() {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("librarian: cannot start runtime: {e}");
+            return 1;
+        }
+    };
+    let cfg = state.config();
+    let client = state.client();
+
+    runtime.block_on(async {
+        let repos: Vec<String> = match repo {
+            Some(r) => vec![r],
+            None => {
+                let dbh = state.db.clone();
+                tokio::task::spawn_blocking(move || {
+                    let conn = dbh.lock().unwrap();
+                    repo_digest::known_repos(&conn)
+                })
+                .await
+                .ok()
+                .and_then(|r| r.ok())
+                .unwrap_or_default()
+                .into_iter()
+                .map(|(path, _name)| path)
+                .collect()
+            }
+        };
+
+        if repos.is_empty() {
+            println!("docsync: no repositories known -- run --headless first, or pass --repo <path>");
+            return 0;
+        }
+
+        let mut code = 0;
+        for r in repos {
+            match docsync::run(&state.db, &cfg, &client, &r).await {
+                Ok(res) => println!(
+                    "docsync {}: {} file(s) updated\n{}",
+                    res.repo_path,
+                    res.updated_files.len(),
+                    res.diff_summary
+                ),
+                Err(e) => {
+                    eprintln!("docsync {r} failed: {e}");
+                    code = 1;
+                }
+            }
+        }
+        code
+    })
+}
+
+/// `--code-sweep [--repo <path>|--all]`: report-only scan for the code tier
+/// of repo currency. Never calls `run_code_relocation` -- this flag only
+/// prints findings.
+pub fn run_code_sweep_cli(repo: Option<String>) -> i32 {
+    let state = match engine::AppState::new() {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("librarian: failed to initialise: {e}");
+            return 1;
+        }
+    };
+    let runtime = match tokio::runtime::Runtime::new() {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("librarian: cannot start runtime: {e}");
+            return 1;
+        }
+    };
+    let cfg = state.config();
+    let client = state.client();
+
+    runtime.block_on(async {
+        let mut candidates = match code_sweep::list_candidates(&state.db, &cfg, &client).await {
+            Ok(c) => c,
+            Err(e) => {
+                eprintln!("code-sweep failed: {e}");
+                return 1;
+            }
+        };
+        if let Some(r) = &repo {
+            candidates.retain(|c| &c.repo_path == r);
+        }
+        if candidates.is_empty() {
+            println!("code-sweep: no findings");
+            return 0;
+        }
+        for c in candidates {
+            println!("=== {} ({}) ===", c.repo_name, c.repo_path);
+            for f in c.findings {
+                println!("  [{}] {}: {}", f.kind, f.file_path, f.description);
+                if let Some(dest) = f.suggested_relocation {
+                    println!("      suggested relocation -> {dest}");
+                }
+            }
+        }
+        0
+    })
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let state = match engine::AppState::new() {
@@ -170,6 +289,10 @@ pub fn run() {
             commands::get_note,
             commands::save_note,
             commands::delete_note,
+            docsync::list_docsync_candidates,
+            docsync::run_docsync,
+            code_sweep::list_code_sweep_candidates,
+            code_sweep::run_code_relocation,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Librarian");
