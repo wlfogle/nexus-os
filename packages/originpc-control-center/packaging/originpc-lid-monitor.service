@@ -1,0 +1,19 @@
+[Unit]
+Description=OriginPC Lid Monitor (RGB keyboard clear on lid close)
+After=graphical-session.target
+
+[Service]
+Type=simple
+# systemd --user units already run as the invoking user; the archived
+# package's system unit set "User=%i" in a non-templated unit, which is
+# never substituted and fails to start. Installing this as a --user unit
+# instead removes the need for a User= directive and for root entirely
+# (RGB access only needs the hidraw udev permission from
+# 99-originpc-rgb.rules, not root).
+Environment=DISPLAY=:0
+ExecStart=%h/.local/share/originpc-control-center/lid-monitor-daemon.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "OriginPC Control Center",
+  "version": "0.1.0",
+  "identifier": "dev.nexus-os.originpc-control-center",
+  "build": {
+    "frontendDist": "../frontend/dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npm --prefix frontend run dev",
+    "beforeBuildCommand": "npm --prefix frontend run build"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "main",
+        "title": "OriginPC Control Center",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600,
+        "resizable": true,
+        "center": true
+      },
+      {
+        "label": "osd",
+        "title": "Hotkey OSD",
+        "url": "osd.html",
+        "width": 420,
+        "height": 120,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "visible": false,
+        "skipTaskbar": true,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["deb", "appimage"],
+    "category": "Utility",
+    "shortDescription": "RGB keyboard, fan, power and hotkey control for OriginPC/Clevo laptops",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.png"
+    ],
+    "linux": {
+      "deb": {
+        "depends": []
+      }
+    }
+  }
+}

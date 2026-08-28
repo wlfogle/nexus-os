@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=OriginPC Flexikey
+Comment=Configure key remaps and macros
+Exec=originpc-flexikey
+Icon=input-keyboard
+Terminal=false
+Type=Application
+Categories=Settings;HardwareSettings;
+Keywords=flexikey;macro;remap;keyboard;
+StartupNotify=true

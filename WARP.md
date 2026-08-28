@@ -139,6 +139,17 @@ See [PHASE5_ARCHITECTURE.md](PHASE5_ARCHITECTURE.md) for full spec and implement
 Pop!_OS 22.04 on Intel i9-13900HX + RTX 4080 + 64 GB DDR5.
 Preferred package manager: `nala` (not raw `apt`).
 
+**Before running any package-install command** (`nala`/`apt`/`apt-get`, locally
+or on any remote host/container via `ssh`/`pct exec`), first check for and
+terminate stale/orphaned installer processes holding `dpkg`/`apt` locks:
+- Check for lock holders: `ps aux | grep -E 'apt|dpkg|nala'` and
+  `fuser /var/lib/dpkg/lock-frontend /var/cache/debconf/config.dat`.
+- A cancelled/interrupted install command can leave an orphaned process
+  running server-side (reparented, PPID 0) that holds these locks
+  indefinitely, causing the next install attempt to hang or fail.
+- Kill any stale holder first (safe if it's in interruptible sleep, `S`
+  state; do not kill `D`-state/uninterruptible processes), then retry.
+
 ### Laptop host policy (2026-08-03)
 
 - **NO Docker.** All Docker/containerd packages are purged from the laptop and

@@ -117,6 +117,17 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
   - **Phase 3** (open) — promote an idea into an n8n workflow.
   - Built because Phase 1 was designed, parked, forgotten, and then re-invented
     from scratch. **Check `packages/` before proposing anything new.**
+- **`nexus-os/packages/originpc-control-center/`** — Linux replacement for the
+  Clevo/OriginPC Windows Control Center suite (laptop is an OriginPC EON17-X,
+  ITE 8910 keyboard, USB `048d:8910`), added 2026-08-14. PyQt5 GUI (RGB, fan,
+  power, system monitoring, lid-monitor), **Flexikey** (evdev/uinput key
+  remap + macros, no vendor protocol needed), and **Fn hotkeys + OSD** via a
+  new small GPL kernel module (`kernel/clevo-hotkeys/`) bound to this
+  machine's previously-unclaimed Clevo ACPI-WMI GUID
+  (`ABBC0F6B-8EA1-11D1-...`). GPU/CPU overclocking is deliberately **not**
+  implemented — see the package README for why. Supersedes
+  `scripts/gaming/clevo-kbd-rgb` for interactive use; that CLI script stays
+  for scripting/presets since it shares the same RGB protocol.
 
 ## 7. Maintenance
 - Re-run consolidation any time: `python3 nexus-os/scripts/nexus-consolidate.py`
