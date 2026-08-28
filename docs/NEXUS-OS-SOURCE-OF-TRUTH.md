@@ -1,7 +1,7 @@
 # NexusOS — Source of Truth
 
 > The single **current** reference for NexusOS + the media stack. If anything
-> elsewhere disagrees with this file, **this file wins**. Last updated 2026-08-07.
+> elsewhere disagrees with this file, **this file wins**. Last updated 2026-08-28.
 > Legacy/forerunner material is labeled as such so it is never mistaken for live.
 
 ## 0. Where the code lives (changed 2026-08-07)
@@ -114,7 +114,11 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
     reversible; repo-owned files are never touched. 50 unit tests.
     Routes across the 42 local models by content class with confidence-based
     escalation, draining the queue one model at a time to avoid VRAM thrashing.
-  - **Phase 3** (open) — promote an idea into an n8n workflow.
+  - **Phase 3** (`nexus-brain.py`) — implemented 2026-08-28. `POST
+    /api/note/<id>/promote` marks the idea actionable, fires a configurable
+    n8n webhook, and asks a local Ollama model to draft an importable n8n
+    workflow JSON, stored on the note. Both n8n and Ollama stay optional
+    bolt-ons: unset, promote just flips status with no network calls.
   - Built because Phase 1 was designed, parked, forgotten, and then re-invented
     from scratch. **Check `packages/` before proposing anything new.**
 
