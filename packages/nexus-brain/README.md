@@ -34,7 +34,8 @@ python3 nexus-brain.py --selftest     # verify
 python3 nexus-brain.py                # http://127.0.0.1:8700
 ```
 
-Config: `--host/--port/--db` or `NEXUS_BRAIN_{HOST,PORT,DB}`.
+Config: `--host/--port/--db` or `NEXUS_BRAIN_{HOST,PORT,DB}`. Promoting an
+idea into an action (Phase 3) is documented below.
 
 ## Phase 2 — Librarian (`desktop/`) — implemented
 
@@ -119,14 +120,30 @@ recovery path if a repo has to be reconstructed.
 For scanning and de-duplicating `~` against this repo, use the existing
 `nexus-os/scripts/nexus-consolidate.py`; it predates these and does that job.
 
-## Phase 3 — action layer (still open)
+## Phase 3 — action layer (`nexus-brain.py`) — implemented
 
-Promote an idea → fire an **n8n** webhook; then draft an n8n workflow JSON from
-the idea via Ollama. Reuse n8n + Ollama already on CT-300.
+`POST /api/note/<id>/promote` marks the idea `actionable`, fires an **n8n**
+webhook with the note, then asks a local **Ollama** model to draft an
+importable n8n workflow JSON for it. Both steps are optional bolt-ons on top
+of Phase 1 — an unset webhook or Ollama URL just skips that step (reported as
+`"attempted": false`), so promoting always succeeds even with n8n/Ollama down
+or never configured. A successfully drafted workflow is stored on the note
+(`workflow_json`, `promoted_at`) and returned inline; fetch it later via
+`GET /api/note/<id>`. The embedded UI adds a "promote → n8n" / "workflow"
+link per note.
+
+Config: `--n8n-webhook/NEXUS_BRAIN_N8N_WEBHOOK` (default off),
+`--ollama-url/NEXUS_BRAIN_OLLAMA_URL` (default `http://127.0.0.1:11434`),
+`--ollama-model/NEXUS_BRAIN_OLLAMA_MODEL` (default `qwen2.5-coder:7b`),
+`--n8n-timeout`/`--ollama-timeout` (seconds). Point `--n8n-webhook` at a
+workflow's webhook URL on CT-300's n8n (`http://192.168.12.30:5678/webhook/...`)
+to reuse the existing instance.
 
 ## Design rule
 
 Self-contained core. Ollama (AI) and n8n (action) are optional plug-ins, never
 hard dependencies — Librarian's inventory, duplicate detection and keyword
 search still work with Ollama down; only interpretation and semantic search
-degrade.
+degrade. Same rule for Phase 1/3: `nexus-brain.py` capture, search and status
+work with no config at all; promoting a note without a webhook or Ollama
+configured just flips its status, it never errors.
