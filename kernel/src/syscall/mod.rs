@@ -62,8 +62,10 @@ pub const SYS_FS_MKDIR_PATH: u64 = 22; // fs_mkdir_path(path_ptr) → 0 or -err
 pub const SYS_FS_WRITE_PATH: u64 = 23; // fs_write_path(path_ptr, data_ptr, len) → bytes
 pub const SYS_FS_APPEND_PATH:u64 = 24; // fs_append_path(path_ptr, data_ptr, len) → bytes
 pub const SYS_FS_REMOVE_PATH:u64 = 25; // fs_remove_path(path_ptr) → 0 or -err
-// ── Phase 6.3: pointer input ─────────────────────────────────────
+// ── Phase 6.3: pointer input ──────────────────────────────────────
 pub const SYS_READ_MOUSE_NB: u64 = 26; // read_mouse_nb(buf_ptr) → 1 (event written) or 0 (none)
+// ── Phase 6.4: user-space heap ──────────────────────────────────
+pub const SYS_BRK: u64 = 27; // brk(new_brk) → resulting brk, or -errno. brk(0) queries current brk.
 
 /// Largest program image SYS_EXEC will load from disk (1 MiB).
 const MAX_PROG_BYTES: usize = 1024 * 1024;
@@ -719,7 +721,8 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
             // address space.
             crate::exec::map_user_stack(child_pml4, crate::exec::EXEC_STACK_TOP);
             let child = match process::spawn_ring3(
-                b"program", entry, crate::exec::EXEC_STACK_TOP, child_pml4, personality,
+                b"program", entry, crate::exec::EXEC_STACK_TOP, child_pml4,
+                crate::exec::EXEC_HEAP_BASE, personality,
             ) {
                 Some(c) => c,
                 None    => {
@@ -743,6 +746,74 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
                 unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
                 process::set_state(parent, process::ProcessState::Running);
             }
+        }
+
+        // ── SYS_BRK ──────────────────────────────────────
+        // brk(new_brk) → resulting brk (u64), or -errno.  brk(0) is a pure
+        // query (returns the current brk without changing anything) since 0
+        // is never a valid heap address — every heap region starts well above
+        // the null/low guard page (see USER_HEAP_BASE / EXEC_HEAP_BASE).
+        //
+        // Grows/shrinks the process's own heap mapping in-place: pages between
+        // the page-aligned extents of the old and new brk are mapped (via a
+        // freshly zeroed frame) or unmapped-and-freed. Never touches any page
+        // outside that delta, so a no-op brk (new_brk == current brk) does
+        // zero allocation work.
+        SYS_BRK => {
+            let pid = scheduler::current_id();
+            let (base, cur_brk) = process::get_heap(pid);
+            let pml4 = process::get_pml4(pid);
+            if base == 0 || pml4 == 0 {
+                return -38; // ENOSYS — process has no reserved heap region
+            }
+            let requested = a1;
+            if requested == 0 {
+                return cur_brk as i64;
+            }
+            // Per-process heap cap. Generous for a shell/small native program;
+            // revisit once real userspace programs need more.
+            const HEAP_MAX: u64 = 64 * 1024 * 1024;
+            if requested < base || requested > base + HEAP_MAX {
+                return -12; // ENOMEM
+            }
+
+            const PAGE: u64 = 4096;
+            let page_align_up = |x: u64| (x + PAGE - 1) & !(PAGE - 1);
+            let old_end = page_align_up(cur_brk);
+            let new_end = page_align_up(requested);
+
+            if new_end > old_end {
+                let mut v = old_end;
+                while v < new_end {
+                    let frame = crate::memory::physical::alloc_frame();
+                    unsafe {
+                        core::ptr::write_bytes(
+                            crate::memory::paging::phys_to_virt(frame) as *mut u8,
+                            0,
+                            PAGE as usize,
+                        );
+                    }
+                    crate::memory::paging::map_page_in(
+                        pml4, v, frame,
+                        crate::memory::paging::flags::PRESENT
+                            | crate::memory::paging::flags::WRITABLE
+                            | crate::memory::paging::flags::USER
+                            | crate::memory::paging::flags::NO_EXECUTE,
+                    );
+                    v += PAGE;
+                }
+            } else if new_end < old_end {
+                let mut v = new_end;
+                while v < old_end {
+                    if let Some(phys) = crate::memory::paging::unmap_page_in(pml4, v) {
+                        unsafe { crate::memory::physical::free_frame(phys); }
+                    }
+                    v += PAGE;
+                }
+            }
+
+            process::set_heap_brk(pid, requested);
+            requested as i64
         }
 
         _ => {

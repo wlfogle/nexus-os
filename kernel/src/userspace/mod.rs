@@ -27,6 +27,13 @@ pub const USER_CODE_BASE:  u64 = 0x0000_0080_0000_0000;  // 512 GB (PML4[1])
 /// User-space stack top — same PML4 entry, different PDPT entry.
 pub const USER_STACK_TOP:  u64 = 0x0000_0080_1000_0000;  // 512 GB + 256 MB
 
+/// Base of the shell's SYS_BRK heap region (Phase 6.4).  Placed 256 MB past
+/// USER_STACK_TOP so it can never collide with the code page(s) near
+/// USER_CODE_BASE or the single fixed stack page just below USER_STACK_TOP;
+/// both stay put and never grow, so this gap is permanent. Still well inside
+/// the same 1 GB PDPT entry as the rest of the shell's mappings.
+pub const USER_HEAP_BASE:  u64 = USER_STACK_TOP + 0x1000_0000;  // 512 GB + 512 MB
+
 /// User page flags: Present + Writable + User-accessible + No-Execute for data.
 const USER_DATA_FLAGS: u64 = paging::flags::PRESENT
     | paging::flags::WRITABLE
@@ -153,6 +160,7 @@ fn spawn_user_process(name: &[u8], user_rip: u64, user_rsp_top: u64, pml4_phys: 
         user_rip,
         user_rsp_top,
         pml4_phys,
+        USER_HEAP_BASE,
         process::ProcessPersonality::Nexus,
     )
 }

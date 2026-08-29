@@ -69,6 +69,15 @@ pub struct Process {
     pub pml4_phys: u64,
     /// Syscall ABI used by this process.
     pub personality: ProcessPersonality,
+    /// Lowest address of this process's heap region (Phase 6.4: SYS_BRK).
+    /// 0 means "no heap" — kernel threads and any ring-3 process spawned
+    /// without a reserved heap region (neither currently exists, but the
+    /// zero-default keeps SYS_BRK safely rejecting such processes).
+    pub heap_base: u64,
+    /// Current program break: [heap_base, heap_brk) is the logical heap size
+    /// requested so far. Physical pages are only mapped up to the page-aligned
+    /// extent of heap_brk — see SYS_BRK in syscall/mod.rs.
+    pub heap_brk: u64,
     /// Kernel stack storage (lives inside the PCB for simplicity).
     pub stack: [u8; KSTACK_SIZE],
 }
@@ -87,6 +96,8 @@ impl Process {
             last_exit:        0,
             pml4_phys:        0,
             personality:      ProcessPersonality::Nexus,
+            heap_base:        0,
+            heap_brk:         0,
             stack:            [0u8; KSTACK_SIZE],
         }
     }
@@ -216,6 +227,7 @@ pub fn spawn_ring3(
     user_rip: u64,
     user_rsp: u64,
     pml4_phys: u64,
+    heap_base: u64,
     personality: ProcessPersonality,
 ) -> Option<u64> {
     let id = NEXT_ID.fetch_add(1, Ordering::Relaxed);
@@ -253,6 +265,8 @@ pub fn spawn_ring3(
     slot.kernel_stack_top = stack_top;
     slot.pml4_phys        = pml4_phys;
     slot.personality      = personality;
+    slot.heap_base        = heap_base;
+    slot.heap_brk         = heap_base;
     slot.state            = ProcessState::Ready;
 
     Some(id)
@@ -262,6 +276,24 @@ pub fn spawn_ring3(
 pub fn get_pml4(id: u64) -> u64 {
     let table = TABLE.lock();
     table.iter().find(|p| p.id == id).map(|p| p.pml4_phys).unwrap_or(0)
+}
+
+/// Return `(heap_base, heap_brk)` for a process. `(0, 0)` if it has no heap
+/// region (e.g. a kernel thread, which never issues SYS_BRK anyway).
+pub fn get_heap(id: u64) -> (u64, u64) {
+    let table = TABLE.lock();
+    table.iter()
+        .find(|p| p.id == id)
+        .map(|p| (p.heap_base, p.heap_brk))
+        .unwrap_or((0, 0))
+}
+
+/// Update the current program break after SYS_BRK (un)maps the backing pages.
+pub fn set_heap_brk(id: u64, new_brk: u64) {
+    let mut table = TABLE.lock();
+    if let Some(p) = table.iter_mut().find(|p| p.id == id) {
+        p.heap_brk = new_brk;
+    }
 }
 
 /// Return IDs of all processes in BlockedOnKey state.

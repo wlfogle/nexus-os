@@ -32,6 +32,13 @@ pub const EXEC_BASE: u64 = 0x0000_0080_4000_0000;
 /// Top of the stack handed to executed programs (PML4[1], PDPT[5]).
 pub const EXEC_STACK_TOP: u64 = 0x0000_0080_5000_0000;
 
+/// Base of an executed program's SYS_BRK heap region (Phase 6.4).  Placed
+/// 256 MB past EXEC_STACK_TOP (1.5 GB into PML4[1]'s PDPT[1], the same 1 GB
+/// PDPT entry EXEC_BASE and EXEC_STACK_TOP already live in) — clear of both
+/// the code page(s) near EXEC_BASE and the single fixed stack page just below
+/// EXEC_STACK_TOP, with room to grow up to HEAP_MAX before hitting PDPT[2].
+pub const EXEC_HEAP_BASE: u64 = EXEC_STACK_TOP + 0x1000_0000;
+
 /// Lowest legal user virtual address.  Keep the null/low guard page unmapped,
 /// but allow conventional static Linux ELF bases such as 0x400000 now that each
 /// process owns a private PML4[0].

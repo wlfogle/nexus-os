@@ -51,6 +51,7 @@ BITS 64
 %define SYS_FS_WRITE_PATH 23
 %define SYS_FS_APPEND_PATH 24
 %define SYS_FS_REMOVE_PATH 25
+%define SYS_BRK           27
 
 ; ── Buffer sizes (must all fit on one 4 096-byte stack page) ─────────────
 %define CMD_BUF_SIZE   256
@@ -710,6 +711,56 @@ fn_dispatch:
     jmp  .fin
 .nappend:
 
+    ; ── memtest ── exercises SYS_BRK end-to-end: query, grow by one page, write
+    ; and read back through the freshly mapped page, then re-query for
+    ; consistency. Proves the page is really mapped and writable, not just
+    ; that the syscall returns a plausible-looking number.
+    mov  rdi, r12
+    lea  rsi, [rel kw_memtest]
+    mov  rdx, 7
+    call fn_match
+    test rax, rax
+    jnz  .nmemtest
+
+    mov  rax, SYS_BRK
+    xor  rdi, rdi
+    syscall                              ; rax = old_brk (query, no growth)
+    test rax, rax
+    js   .memtest_fail
+    mov  rbx, rax                        ; rbx = old_brk — safe across syscalls
+
+    lea  rdi, [rbx + 4096]
+    mov  rax, SYS_BRK
+    syscall                              ; rax = new_brk, or -errno
+    test rax, rax
+    js   .memtest_fail
+    lea  rcx, [rbx + 4096]               ; expected value, computed fresh
+    cmp  rax, rcx
+    jne  .memtest_fail
+
+    mov  byte [rbx], 0xAB                ; write through the newly mapped page
+    movzx eax, byte [rbx]                ; read it back
+    cmp  al, 0xAB
+    jne  .memtest_fail
+
+    mov  rax, SYS_BRK                    ; re-query — must still read back new_brk
+    xor  rdi, rdi
+    syscall
+    lea  rcx, [rbx + 4096]
+    cmp  rax, rcx
+    jne  .memtest_fail
+
+    lea  rsi, [rel str_memtest_ok]
+    mov  rdx, str_memtest_ok_len
+    call fn_write
+    jmp  .fin
+.memtest_fail:
+    lea  rsi, [rel str_memtest_fail]
+    mov  rdx, str_memtest_fail_len
+    call fn_write
+    jmp  .fin
+.nmemtest:
+
     ; ── Unknown command ───────────────────────────────────────────────────────
     lea  rsi, [rel str_unk_pfx]
     mov  rdx, str_unk_pfx_len
@@ -767,6 +818,7 @@ str_help:
     db  "  append <p> <text> - append/create file", 13, 10
     db  "  rm <p>  - remove file or empty directory", 13, 10
     db  "  ps       - list running processes", 13, 10
+    db  "  memtest  - verify SYS_BRK (heap) end-to-end", 13, 10
     db  "  clear    - clear the screen", 13, 10
     db  "  reboot   - exit shell and reboot", 13, 10
 str_help_len equ $ - str_help
@@ -852,6 +904,14 @@ str_ai_port:
     db  "nexus.ai"
 str_ai_port_len equ $ - str_ai_port
 
+str_memtest_ok:
+    db  "memtest: PASS (brk grew, page mapped, write/read-back verified)", 13, 10
+str_memtest_ok_len equ $ - str_memtest_ok
+
+str_memtest_fail:
+    db  "memtest: FAIL", 13, 10
+str_memtest_fail_len equ $ - str_memtest_fail
+
 ; ── Command keyword literals (length matched, no null terminator needed) ─────
 kw_help:    db  "help"
 kw_version: db  "version"
@@ -868,3 +928,4 @@ kw_mkdir:   db  "mkdir"
 kw_rm:      db  "rm"
 kw_write:   db  "write"
 kw_append:  db  "append"
+kw_memtest: db  "memtest"
