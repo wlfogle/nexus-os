@@ -14,13 +14,35 @@
 
 pub mod device;
 
-use smoltcp::iface::{Config, Interface, SocketSet};
-use smoltcp::socket::dhcpv4;
+use alloc::vec::Vec;
+use spin::Mutex;
+use smoltcp::iface::{Config, Interface, SocketHandle, SocketSet};
+use smoltcp::socket::{dhcpv4, tcp};
 use smoltcp::time::Instant;
-use smoltcp::wire::{EthernetAddress, HardwareAddress, IpCidr};
+use smoltcp::wire::{EthernetAddress, HardwareAddress, IpAddress, IpCidr, IpEndpoint, Ipv4Address};
 use crate::drivers::{pci, virtio};
 use crate::timer;
 use device::NetDevice;
+
+/// Persistent network state, kept alive past `init()` so later kernel code
+/// (e.g. the AI Core's Ollama client) can open TCP sockets against the same
+/// interface. Everything here is kernel-internal; there is no syscall surface.
+struct NetState {
+    iface: Interface,
+    device: NetDevice,
+    sockets: SocketSet<'static>,
+}
+
+static NET_STATE: Mutex<Option<NetState>> = Mutex::new(None);
+
+/// Ephemeral local port counter for outgoing TCP connections.
+static NEXT_LOCAL_PORT: core::sync::atomic::AtomicU16 = core::sync::atomic::AtomicU16::new(49152);
+
+fn alloc_local_port() -> u16 {
+    use core::sync::atomic::Ordering;
+    let p = NEXT_LOCAL_PORT.fetch_add(1, Ordering::Relaxed);
+    if p < 49152 { 49152 } else { p }
+}
 
 /// VirtIO PCI vendor ID.
 const VIRTIO_VENDOR: u16 = 0x1AF4;
@@ -146,4 +168,83 @@ pub fn init() {
             "[net]  DHCP timed out after {} ms (frames rx={} tx={}) — no DHCP server?",
             DHCP_TIMEOUT_MS, rx, tx);
     }
+
+    // Keep the interface, device, and socket set alive past this function so
+    // later kernel code (e.g. the AI Core's Ollama client) can open TCP
+    // sockets against the same interface via `tcp_request`.
+    *NET_STATE.lock() = Some(NetState { iface, device: nic, sockets });
+}
+
+/// Send `request` over a new TCP connection to `ip:port` and return whatever
+/// bytes the peer sends back before closing (or before `timeout_ms` elapses).
+///
+/// Blocking: drives the interface's poll loop itself, matching the DHCP
+/// bring-up above. Intended to be called from kernel-mode tasks (e.g.
+/// `task_nexus_ai`) — there is no syscall wrapper since callers already run
+/// in the kernel.
+pub fn tcp_request(
+    ip: Ipv4Address,
+    port: u16,
+    request: &[u8],
+    timeout_ms: u64,
+) -> Result<Vec<u8>, &'static str> {
+    let mut guard = NET_STATE.lock();
+    let state = guard.as_mut().ok_or("net: interface not initialised")?;
+
+    let rx_buffer = tcp::SocketBuffer::new(alloc::vec![0u8; 4096]);
+    let tx_buffer = tcp::SocketBuffer::new(alloc::vec![0u8; 4096]);
+    let mut socket = tcp::Socket::new(rx_buffer, tx_buffer);
+
+    let remote = IpEndpoint::new(IpAddress::Ipv4(ip), port);
+    let local_port = alloc_local_port();
+    socket
+        .connect(state.iface.context(), remote, local_port)
+        .map_err(|_| "net: tcp connect failed")?;
+
+    let handle: SocketHandle = state.sockets.add(socket);
+
+    let start = timer::millis();
+    let mut sent = false;
+    let mut response: Vec<u8> = Vec::new();
+
+    let result = loop {
+        let ts = Instant::from_millis(timer::millis() as i64);
+        state.iface.poll(ts, &mut state.device, &mut state.sockets);
+
+        let socket = state.sockets.get_mut::<tcp::Socket>(handle);
+
+        if !sent && socket.can_send() {
+            if socket.send_slice(request).is_ok() {
+                sent = true;
+            }
+        }
+
+        while socket.can_recv() {
+            let mut buf = [0u8; 512];
+            match socket.recv_slice(&mut buf) {
+                Ok(0) => break,
+                Ok(n) => response.extend_from_slice(&buf[..n]),
+                Err(_) => break,
+            }
+        }
+
+        if sent && !socket.may_recv() && !response.is_empty() {
+            break Ok(response);
+        }
+
+        if timer::millis().wrapping_sub(start) > timeout_ms {
+            break Err("net: tcp_request timed out");
+        }
+
+        if socket.state() == tcp::State::Closed && !sent {
+            break Err("net: connection closed before request could be sent");
+        }
+
+        for _ in 0..2_000 {
+            core::hint::spin_loop();
+        }
+    };
+
+    state.sockets.remove(handle);
+    result
 }

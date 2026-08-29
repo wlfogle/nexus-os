@@ -62,6 +62,8 @@ pub const SYS_FS_MKDIR_PATH: u64 = 22; // fs_mkdir_path(path_ptr) → 0 or -err
 pub const SYS_FS_WRITE_PATH: u64 = 23; // fs_write_path(path_ptr, data_ptr, len) → bytes
 pub const SYS_FS_APPEND_PATH:u64 = 24; // fs_append_path(path_ptr, data_ptr, len) → bytes
 pub const SYS_FS_REMOVE_PATH:u64 = 25; // fs_remove_path(path_ptr) → 0 or -err
+// ── Phase 6.3: pointer input ─────────────────────────────────────
+pub const SYS_READ_MOUSE_NB: u64 = 26; // read_mouse_nb(buf_ptr) → 1 (event written) or 0 (none)
 
 /// Largest program image SYS_EXEC will load from disk (1 MiB).
 const MAX_PROG_BYTES: usize = 1024 * 1024;
@@ -418,12 +420,38 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
             }
         }
 
-        // ── SYS_READ_CHAR_NB ─────────────────────────────────────────────
+        // ── SYS_READ_CHAR_NB ───────────────────────────────────
         // Non-blocking read — returns -1 immediately if no key waiting
         SYS_READ_CHAR_NB => {
             match crate::io::keyboard::try_read() {
                 Some(ch) => ch as i64,
                 None     => -1,
+            }
+        }
+
+        // ── SYS_READ_MOUSE_NB ─────────────────────────────────
+        // read_mouse_nb(buf_ptr) → 1 if an event was written to buf_ptr (5
+        // bytes: dx:i16 LE, dy:i16 LE, buttons:u8 with bit0=left, bit1=right,
+        // bit2=middle), or 0 if no event is queued. Non-blocking, matching
+        // SYS_READ_CHAR_NB's shape rather than SYS_READ_CHAR's blocking one
+        // — a full unified blocking key+mouse event queue is follow-up work.
+        SYS_READ_MOUSE_NB => {
+            match crate::io::mouse::try_read() {
+                Some(ev) => {
+                    let buf_ptr = a1 as *mut u8;
+                    let dx = ev.dx.to_le_bytes();
+                    let dy = ev.dy.to_le_bytes();
+                    let buttons = (ev.left as u8) | ((ev.right as u8) << 1) | ((ev.middle as u8) << 2);
+                    unsafe {
+                        core::ptr::write(buf_ptr, dx[0]);
+                        core::ptr::write(buf_ptr.add(1), dx[1]);
+                        core::ptr::write(buf_ptr.add(2), dy[0]);
+                        core::ptr::write(buf_ptr.add(3), dy[1]);
+                        core::ptr::write(buf_ptr.add(4), buttons);
+                    }
+                    1
+                }
+                None => 0,
             }
         }
 
@@ -437,10 +465,10 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
             let buf = unsafe {
                 core::slice::from_raw_parts_mut(
                     buf_ptr,
-                    num_sectors * crate::drivers::virtio::blk::SECTOR_SIZE,
+                    num_sectors * crate::drivers::blockdev::SECTOR_SIZE,
                 )
             };
-            match crate::drivers::virtio::blk::read_sectors(lba, buf) {
+            match crate::drivers::blockdev::read_sectors(lba, buf) {
                 Ok(())  => 0,
                 Err(_)  => -5, // EIO
             }
@@ -456,10 +484,10 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
             let buf = unsafe {
                 core::slice::from_raw_parts(
                     buf_ptr,
-                    num_sectors * crate::drivers::virtio::blk::SECTOR_SIZE,
+                    num_sectors * crate::drivers::blockdev::SECTOR_SIZE,
                 )
             };
-            match crate::drivers::virtio::blk::write_sectors(lba, buf) {
+            match crate::drivers::blockdev::write_sectors(lba, buf) {
                 Ok(())  => 0,
                 Err(_)  => -5, // EIO
             }

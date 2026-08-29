@@ -20,6 +20,7 @@ pub const PIC2_OFFSET: u8 = 0x28;
 /// IRQ numbers (relative to offset; add PIC1_OFFSET for actual INT vector).
 pub const IRQ_TIMER:    u8 = 0;
 pub const IRQ_KEYBOARD: u8 = 1;
+pub const IRQ_MOUSE:    u8 = 12;
 
 // ICW1 / ICW2 / ICW3 / ICW4 constants
 const ICW1_INIT:    u8 = 0x10;
@@ -62,9 +63,10 @@ pub fn init() {
         m_data.write(0xFF);
         s_data.write(0xFF);
 
-        // … then unmask IRQ0 (timer) and IRQ1 (keyboard)
+        // … then unmask IRQ0 (timer), IRQ1 (keyboard), and IRQ12 (mouse)
         unmask(IRQ_TIMER);
         unmask(IRQ_KEYBOARD);
+        unmask(IRQ_MOUSE);
     }
 }
 

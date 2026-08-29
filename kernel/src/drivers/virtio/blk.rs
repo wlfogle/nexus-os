@@ -206,6 +206,10 @@ pub fn capacity() -> u64 {
     DISK.lock().as_ref().map(|d| d.capacity).unwrap_or(0)
 }
 
+pub fn is_present() -> bool {
+    DISK.lock().is_some()
+}
+
 // ─── Internal: single-sector I/O ─────────────────────────────────────────────
 
 impl VirtioBlk {

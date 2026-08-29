@@ -291,6 +291,9 @@ pub extern "C" fn _start() -> ! {
         io::keyboard::init();
         kprintln!("[kbd]  i8042 initialised — scanning enabled, IRQ1 unmasked");
 
+        io::mouse::init();
+        kprintln!("[mouse] PS/2 mouse initialised — IRQ12 unmasked");
+
         scheduler::init();                      // register idle process
 
         // ── Phase 4: Syscall interface + user-space process ───────────────
@@ -381,13 +384,19 @@ macro_rules! kprintln {
 /// Phase 5.0: responds with a structured mock reply so the IPC pipeline and
 /// port-discovery path are fully exercised.  The Ollama HTTP client that sends
 /// real prompts ships in Phase 5.1 once the network stack is available.
+///
+/// x86_64-only: depends on `net::tcp_request`, which in turn depends on the
+/// x86_64 VirtIO-net/smoltcp stack. Never spawned on AArch64 (see the boot
+/// sequence above), so this — and the two helpers below it — are compiled
+/// out there rather than left as a link-time trap.
+#[cfg(target_arch = "x86_64")]
 extern "C" fn task_nexus_ai() -> ! {
     use ipc::{ipc_recv, ipc_send, Message, ANY, MSG_AI_RESPONSE};
     use ipc::ports::port_register;
 
     port_register(b"nexus.ai").expect("nexus-ai: failed to register port");
     kprintln!("[nexus-ai] AI Core online — port 'nexus.ai' registered");
-    kprintln!("[nexus-ai] Phase 5.0: mock inference active (Ollama HTTP in Phase 5.1)");
+    kprintln!("[nexus-ai] Phase 5.1: real Ollama HTTP client active");
 
     let mut req = Message::new(0, 0);
     loop {
@@ -396,17 +405,110 @@ extern "C" fn task_nexus_ai() -> ! {
         let query = req.as_str();
         kprintln!("[nexus-ai] request from pid={}: {}", req.from, query);
 
-        // Phase 5.0: canned response so IPC round-trip is proven.
-        // Phase 5.1: issue HTTP POST to http://localhost:11434/api/generate
-        let reply_text = alloc::format!(
-            "AI Core v0.5 [Phase 5.0]: received '{}' \
-             (Ollama HTTP client ships in Phase 5.1)",
-            if query.len() > 40 { &query[..40] } else { query }
-        );
+        let reply_text = ai_generate(query);
         let reply = Message::with_str(req.from, MSG_AI_RESPONSE, &reply_text);
         ipc_send(req.from, reply).ok();
         kprintln!("[nexus-ai] response sent to pid={}", req.from);
     }
+}
+
+/// Ask Ollama to generate a reply to `prompt` over a real TCP connection.
+/// Falls back to a diagnostic string (never panics) if the network stack
+/// isn't up, the connection fails, or the reply can't be parsed — the shell
+/// and IPC round-trip must keep working even with Ollama unreachable.
+#[cfg(target_arch = "x86_64")]
+fn ai_generate(prompt: &str) -> alloc::string::String {
+    use smoltcp::wire::Ipv4Address;
+
+    // QEMU user-mode networking gateway; also the host's address as seen from
+    // a real bridged/NAT'd interface in most other setups.
+    const OLLAMA_IP: Ipv4Address = Ipv4Address::new(10, 0, 2, 2);
+    const OLLAMA_PORT: u16 = 11434;
+    const TIMEOUT_MS: u64 = 30_000;
+
+    // Escape the prompt minimally for JSON (quotes/backslashes/control chars).
+    let mut escaped = alloc::string::String::with_capacity(prompt.len());
+    for c in prompt.chars() {
+        match c {
+            '"' => escaped.push_str("\\\""),
+            '\\' => escaped.push_str("\\\\"),
+            '\n' => escaped.push_str("\\n"),
+            '\r' => {}
+            c if (c as u32) < 0x20 => {}
+            c => escaped.push(c),
+        }
+    }
+
+    let body = alloc::format!(
+        "{{\"model\":\"llama3.2:3b\",\"prompt\":\"{}\",\"stream\":false}}",
+        escaped
+    );
+    let request = alloc::format!(
+        "POST /api/generate HTTP/1.1\r\n\
+         Host: {}:{}\r\n\
+         Content-Type: application/json\r\n\
+         Content-Length: {}\r\n\
+         Connection: close\r\n\
+         \r\n\
+         {}",
+        OLLAMA_IP, OLLAMA_PORT, body.len(), body
+    );
+
+    let response = match net::tcp_request(OLLAMA_IP, OLLAMA_PORT, request.as_bytes(), TIMEOUT_MS) {
+        Ok(bytes) => bytes,
+        Err(e) => return alloc::format!("[nexus-ai] Ollama unreachable: {}", e),
+    };
+
+    let text = match core::str::from_utf8(&response) {
+        Ok(s) => s,
+        Err(_) => return alloc::string::String::from("[nexus-ai] Ollama replied with invalid UTF-8"),
+    };
+
+    // Split HTTP headers from body (blank-line separator), then pull the
+    // "response" field out of Ollama's JSON with a small hand-rolled scan —
+    // no serde in this no_std kernel binary.
+    let json = match text.split_once("\r\n\r\n") {
+        Some((_headers, body)) => body,
+        None => text,
+    };
+    match extract_json_string_field(json, "response") {
+        Some(s) => s,
+        None => alloc::format!("[nexus-ai] unexpected Ollama reply: {}",
+            if json.len() > 200 { &json[..200] } else { json }),
+    }
+}
+
+/// Find `"key":"value"` in a JSON object and return `value` with `\n`/`\"`/`\\`
+/// escapes undone. Good enough for Ollama's flat, single-line response field;
+/// does not handle nested objects/arrays in the value.
+#[cfg(target_arch = "x86_64")]
+fn extract_json_string_field(json: &str, key: &str) -> Option<alloc::string::String> {
+    let needle = alloc::format!("\"{}\"", key);
+    let key_pos = json.find(&needle)?;
+    let after_key = &json[key_pos + needle.len()..];
+    let colon = after_key.find(':')?;
+    let after_colon = after_key[colon + 1..].trim_start();
+    if !after_colon.starts_with('"') {
+        return None;
+    }
+    let value_start = &after_colon[1..];
+    let mut out = alloc::string::String::new();
+    let mut chars = value_start.chars();
+    while let Some(c) = chars.next() {
+        match c {
+            '"' => return Some(out),
+            '\\' => match chars.next() {
+                Some('n') => out.push('\n'),
+                Some('t') => out.push('\t'),
+                Some('"') => out.push('"'),
+                Some('\\') => out.push('\\'),
+                Some(other) => out.push(other),
+                None => break,
+            },
+            c => out.push(c),
+        }
+    }
+    None
 }
 
 // ─── Global allocator error handler ──────────────────────────────────────────

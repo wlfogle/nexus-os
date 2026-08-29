@@ -216,6 +216,15 @@ pub fn try_read() -> Option<u8> {
     KEY_BUF.lock().pop()
 }
 
+/// Push an already-decoded character into the same ring buffer PS/2 scancode
+/// translation feeds, and wake any process blocked in `SYS_READ_CHAR`.
+/// Used by `drivers::usb_hid` so USB keyboards are indistinguishable from a
+/// PS/2 keyboard to every caller above this module.
+pub fn push_translated(ch: u8) {
+    KEY_BUF.lock().push(ch);
+    wake_blocked_on_key();
+}
+
 /// Returns `true` if at least one key is waiting.
 pub fn has_key() -> bool {
     !KEY_BUF.lock().is_empty()

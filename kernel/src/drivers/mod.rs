@@ -11,6 +11,8 @@ pub mod virtio;
 pub mod nvme;
 #[cfg(target_arch = "x86_64")]
 pub mod ahci;
+#[cfg(target_arch = "x86_64")]
+pub mod blockdev;
 
 #[cfg(target_arch = "x86_64")]
 use pci::PciDevice;
@@ -99,27 +101,33 @@ pub fn read_bar_addr(d: &PciDevice, bar_index: u8) -> u64 {
 }
 
 /// Map an MMIO physical region and return a kernel virtual address to access
-/// it.  Regions below 4 GiB are already covered by Limine's HHDM, so we reuse
-/// the direct map.  Higher regions (64-bit BAR windows) are mapped explicitly
-/// as uncacheable pages — those PML4 paths are not pre-populated by Limine, so
-/// `map_page` creates fresh tables without any huge-page conflict.
+/// it.
+///
+/// Always maps explicitly, regardless of address: MMIO BARs frequently land in
+/// the PCI hole just below 4 GiB (common on both QEMU's q35 machine type and
+/// real PC/laptop chipsets), which is *not* backed by real RAM and therefore
+/// not covered by Limine's HHDM mapping despite being < 4 GiB — a previous
+/// version of this function assumed anything below 4 GiB was HHDM-covered and
+/// skipped mapping it, which page-faulted the first time a device's BAR (e.g.
+/// AHCI's ABAR) landed in that hole. `map_page`'s existing-mapping check makes
+/// this safe to call unconditionally: addresses genuinely already covered by
+/// HHDM (real RAM) hit the idempotent "already mapped to the same frame"
+/// return path and are a no-op; addresses in an unmapped MMIO hole get a fresh
+/// uncacheable mapping created.
 #[cfg(target_arch = "x86_64")]
 pub fn map_mmio(phys: u64, size: usize) -> u64 {
     use crate::memory::paging;
-    const FOUR_GIB: u64 = 4 * 1024 * 1024 * 1024;
     let virt = paging::phys_to_virt(phys);
-    if phys >= FOUR_GIB {
-        let page_flags = paging::flags::PRESENT
-            | paging::flags::WRITABLE
-            | paging::flags::NO_CACHE
-            | paging::flags::NO_EXECUTE;
-        let start = phys & !0xFFF;
-        let end = (phys + size as u64 + 0xFFF) & !0xFFF;
-        let mut p = start;
-        while p < end {
-            paging::map_page(paging::phys_to_virt(p), p, page_flags);
-            p += 0x1000;
-        }
+    let page_flags = paging::flags::PRESENT
+        | paging::flags::WRITABLE
+        | paging::flags::NO_CACHE
+        | paging::flags::NO_EXECUTE;
+    let start = phys & !0xFFF;
+    let end = (phys + size as u64 + 0xFFF) & !0xFFF;
+    let mut p = start;
+    while p < end {
+        paging::map_page(paging::phys_to_virt(p), p, page_flags);
+        p += 0x1000;
     }
     virt
 }

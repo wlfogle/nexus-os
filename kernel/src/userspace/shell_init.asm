@@ -37,7 +37,10 @@ BITS 64
 %define SYS_EXIT       1
 %define SYS_WRITE      2
 %define SYS_GETPID     3
+%define SYS_IPC_SEND   5
+%define SYS_IPC_RECV   6
 %define SYS_SLEEP      9
+%define SYS_IPC_QUERY  10
 %define SYS_READ_CHAR  13
 %define SYS_FS_LIST       17
 %define SYS_FS_READ       18
@@ -356,7 +359,75 @@ fn_dispatch:
     jmp  .fin
 .ne:
 
-    ; ── ps ───────────────────────────────────────────────────────────────────
+    ; ── ai <prompt> ─────────────────────────────────────────────────────────────────────
+    mov  rdi, r12
+    lea  rsi, [rel kw_ai]
+    mov  rdx, 2
+    call fn_match
+    test rax, rax
+    jnz  .nai
+    lea  rsi, [r12 + 2]                 ; advance past "ai"
+    cmp  byte [rsi], ' '
+    jne  .ai_usage
+    inc  rsi
+    cmp  byte [rsi], 0
+    je   .ai_usage
+    mov  rbx, rsi                       ; rbx = prompt pointer (survives syscalls)
+
+    ; Resolve the "nexus.ai" service name to its pid.
+    mov  rax, SYS_IPC_QUERY
+    lea  rdi, [rel str_ai_port]
+    mov  rsi, str_ai_port_len
+    xor  rdx, rdx
+    syscall                             ; rax = pid, or negative if not found
+    test rax, rax
+    js   .ai_noservice
+    push rax                            ; stash pid on the user stack (safe across syscalls)
+
+    ; Send the prompt.
+    mov  rsi, rbx
+    call fn_strlen                      ; rcx = prompt length
+    mov  rax, SYS_IPC_SEND
+    pop  rdi                            ; rdi = nexus-ai pid
+    mov  rsi, rbx                       ; rsi = prompt pointer
+    mov  rdx, rcx                       ; rdx = prompt length
+    syscall
+    test rax, rax
+    js   .ai_err
+
+    ; Block for the reply (nexus-ai's Ollama call may take a while).
+    mov  rax, SYS_IPC_RECV
+    xor  rdi, rdi                       ; from = ANY
+    lea  rsi, [r13 + NUM_BUF_SIZE]      ; fs_buf as the receive buffer
+    mov  rdx, FS_BUF_SIZE
+    syscall                             ; rax = bytes received, or negative
+    test rax, rax
+    js   .ai_err
+    lea  rsi, [r13 + NUM_BUF_SIZE]
+    mov  rdx, rax
+    call fn_write
+    lea  rsi, [rel str_nl]
+    mov  rdx, 1
+    call fn_write
+    jmp  .fin
+.ai_noservice:
+    lea  rsi, [rel str_ai_noservice]
+    mov  rdx, str_ai_noservice_len
+    call fn_write
+    jmp  .fin
+.ai_err:
+    lea  rsi, [rel str_ai_err]
+    mov  rdx, str_ai_err_len
+    call fn_write
+    jmp  .fin
+.ai_usage:
+    lea  rsi, [rel str_ai_usage]
+    mov  rdx, str_ai_usage_len
+    call fn_write
+    jmp  .fin
+.nai:
+
+    ; ── ps ─────────────────────────────────────────────────────────────────────
     mov  rdi, r12
     lea  rsi, [rel kw_ps]
     mov  rdx, 2
@@ -687,6 +758,7 @@ str_help:
     db  "  version  - OS version string", 13, 10
     db  "  uname    - system information", 13, 10
     db  "  echo <x> - print argument to screen", 13, 10
+    db  "  ai <p>   - ask the AI Core (Ollama) a prompt", 13, 10
     db  "  ls [path]- list files (root or a subdirectory)", 13, 10
     db  "  cat <f>  - print a file's contents (path ok)", 13, 10
     db  "  run <f>  - load and run an ELF program", 13, 10
@@ -764,12 +836,29 @@ str_append_usage:
     db  "usage: append <path> <text>", 13, 10
 str_append_usage_len equ $ - str_append_usage
 
+str_ai_usage:
+    db  "usage: ai <prompt>", 13, 10
+str_ai_usage_len equ $ - str_ai_usage
+
+str_ai_noservice:
+    db  "ai: nexus-ai service not found", 13, 10
+str_ai_noservice_len equ $ - str_ai_noservice
+
+str_ai_err:
+    db  "ai: request failed", 13, 10
+str_ai_err_len equ $ - str_ai_err
+
+str_ai_port:
+    db  "nexus.ai"
+str_ai_port_len equ $ - str_ai_port
+
 ; ── Command keyword literals (length matched, no null terminator needed) ─────
 kw_help:    db  "help"
 kw_version: db  "version"
 kw_uname:   db  "uname"
 kw_clear:   db  "clear"
 kw_echo:    db  "echo"
+kw_ai:      db  "ai"
 kw_ps:      db  "ps"
 kw_reboot:  db  "reboot"
 kw_ls:      db  "ls"

@@ -5,8 +5,8 @@
 use spin::Lazy;
 use x86_64::structures::idt::InterruptDescriptorTable;
 
-use super::{gdt::DOUBLE_FAULT_IST, interrupts, timer_isr, keyboard_irq};
-use crate::timer::pic::{PIC1_OFFSET, IRQ_KEYBOARD};
+use super::{gdt::DOUBLE_FAULT_IST, interrupts, timer_isr, keyboard_irq, mouse_irq};
+use crate::timer::pic::{PIC1_OFFSET, PIC2_OFFSET, IRQ_KEYBOARD, IRQ_MOUSE};
 
 static IDT: Lazy<InterruptDescriptorTable> = Lazy::new(|| {
     let mut idt = InterruptDescriptorTable::new();
@@ -49,6 +49,9 @@ static IDT: Lazy<InterruptDescriptorTable> = Lazy::new(|| {
     // IRQ1 = PS/2 Keyboard (INT 0x21)
     idt[(PIC1_OFFSET + IRQ_KEYBOARD) as usize]
         .set_handler_fn(keyboard_irq::keyboard_irq_handler);
+    // IRQ12 = PS/2 Mouse (INT 0x2C, on the slave PIC: PIC2_OFFSET + (12-8))
+    idt[(PIC2_OFFSET + (IRQ_MOUSE - 8)) as usize]
+        .set_handler_fn(mouse_irq::mouse_irq_handler);
 
     idt
 });
