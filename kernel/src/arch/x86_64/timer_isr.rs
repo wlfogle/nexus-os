@@ -11,6 +11,23 @@
 
 use core::arch::naked_asm;
 
+/// Send this tick's End-Of-Interrupt through whichever interrupt
+/// controller is currently responsible for delivery: the Local APIC once
+/// Phase K5 increment 3 has brought it (and the I/O APIC) up, or the
+/// legacy 8259 PIC before that / if no MADT was available. Called from the
+/// naked ISR below via a plain `call` (not inlined asm) so the EOI logic
+/// doesn't need duplicating in assembly for each possible controller — see
+/// the safety note at its call site for why an ordinary Rust `call`/`ret`
+/// pair is safe to use at that specific point in the handler.
+#[no_mangle]
+extern "C" fn send_timer_eoi() {
+    if super::lapic::is_active() {
+        super::lapic::eoi();
+    } else {
+        crate::timer::pic::send_eoi(crate::timer::pic::IRQ_TIMER);
+    }
+}
+
 /// Timer IRQ0 handler — installed at IDT vector 0x20.
 #[unsafe(naked)]
 pub extern "x86-interrupt" fn timer_isr_naked(
@@ -43,9 +60,16 @@ pub extern "x86-interrupt" fn timer_isr_naked(
             // ── Switch to next process's stack ────────────────────────────
             "mov rsp, rax",
 
-            // ── Send PIC EOI (master PIC at 0x20) ─────────────────────────
-            "mov al, 0x20",
-            "out 0x20, al",
+            // ── Send EOI (PIC or LAPIC, whichever is active) ──────────────
+            // Safe to `call` a normal Rust fn here even though RSP now
+            // points into the *next* process's own kernel stack (not the
+            // stack this ISR started on): `call` pushes an 8-byte return
+            // address and the matching `ret` pops it straight back off,
+            // leaving RSP exactly where it was before the call. The bytes
+            // touched live below the current RSP in that process's kernel
+            // stack, which is unused headroom, not live saved-register
+            // data (see process::spawn's stack layout).
+            "call send_timer_eoi",
 
             // ── Restore GP registers of the next process ──────────────────
             "pop r15",

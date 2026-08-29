@@ -9,6 +9,11 @@ use x86_64::structures::idt::InterruptStackFrame;
 pub extern "x86-interrupt" fn mouse_irq_handler(_frame: InterruptStackFrame) {
     crate::io::mouse::handle_irq();
 
-    // Send End-of-Interrupt to both PICs (IRQ >= 8 needs the slave EOI too).
-    crate::timer::pic::send_eoi(crate::timer::pic::IRQ_MOUSE);
+    // Send End-of-Interrupt to whichever controller delivered this IRQ
+    // (the legacy path needs both PICs' EOI since IRQ12 >= 8).
+    if super::lapic::is_active() {
+        super::lapic::eoi();
+    } else {
+        crate::timer::pic::send_eoi(crate::timer::pic::IRQ_MOUSE);
+    }
 }

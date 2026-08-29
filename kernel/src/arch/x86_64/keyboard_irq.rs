@@ -10,6 +10,10 @@ pub extern "x86-interrupt" fn keyboard_irq_handler(_frame: InterruptStackFrame) 
     // Read scancode and process it (the driver reads port 0x60 internally)
     crate::io::keyboard::handle_irq();
 
-    // Send End-of-Interrupt to the master PIC
-    crate::timer::pic::send_eoi(crate::timer::pic::IRQ_KEYBOARD);
+    // Send End-of-Interrupt to whichever controller delivered this IRQ.
+    if super::lapic::is_active() {
+        super::lapic::eoi();
+    } else {
+        crate::timer::pic::send_eoi(crate::timer::pic::IRQ_KEYBOARD);
+    }
 }

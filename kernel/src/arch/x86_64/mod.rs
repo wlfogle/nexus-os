@@ -3,7 +3,9 @@
 pub mod gdt;
 pub mod idt;
 pub mod interrupts;
+pub mod ioapic;
 pub mod keyboard_irq;
+pub mod lapic;
 pub mod mouse_irq;
 pub mod timer_isr;
 

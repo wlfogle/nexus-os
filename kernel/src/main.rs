@@ -322,6 +322,46 @@ pub extern "C" fn _start() -> ! {
         io::mouse::init();
         kprintln!("[mouse] PS/2 mouse initialised — IRQ12 unmasked");
 
+        // ── Phase K5 increment 3: Local APIC + I/O APIC ─────────────────
+        // Supersedes the legacy 8259 PIC as the interrupt-routing path for
+        // the same three IRQs (timer/keyboard/mouse) whenever the MADT
+        // gave us both a Local APIC and an I/O APIC address; every handler
+        // stays installed at the exact same IDT vectors either way (see
+        // arch::x86_64::{lapic,ioapic}). Falls back to leaving the PIC path
+        // untouched (already fully set up above) if ACPI/MADT is
+        // unavailable or incomplete — exactly the K1-K4 degrade-gracefully
+        // precedent this whole ACPI subsystem was built on.
+        match acpi::madt() {
+            Some(m) if m.local_apic_addr != 0 && m.ioapic_addr != 0 => {
+                arch::x86_64::lapic::init(m.local_apic_addr);
+                arch::x86_64::ioapic::init(m.ioapic_addr, m.ioapic_gsi_base);
+                let bsp_id = arch::x86_64::lapic::id();
+
+                let route = |isa_irq: u8, vector: u8| {
+                    let gsi = m.isa_irq_to_gsi(isa_irq);
+                    let (active_low, level_triggered) = m.isa_irq_polarity_trigger(isa_irq);
+                    arch::x86_64::ioapic::set_redirection(
+                        gsi, vector, bsp_id, false, active_low, level_triggered,
+                    );
+                    gsi
+                };
+                let gsi_timer = route(timer::pic::IRQ_TIMER, timer::pic::PIC1_OFFSET + timer::pic::IRQ_TIMER);
+                let gsi_kbd   = route(timer::pic::IRQ_KEYBOARD, timer::pic::PIC1_OFFSET + timer::pic::IRQ_KEYBOARD);
+                let gsi_mouse = route(timer::pic::IRQ_MOUSE, timer::pic::PIC2_OFFSET + (timer::pic::IRQ_MOUSE - 8));
+
+                // Now that the I/O APIC owns these lines, the 8259 must
+                // never be allowed to also raise them — two controllers
+                // both live for the same wire would double-deliver.
+                timer::pic::mask_all();
+                kprintln!(
+                    "[ioapic] routed via I/O APIC (bsp lapic id={}): timer->gsi{} kbd->gsi{} mouse->gsi{}; legacy 8259 PIC masked",
+                    bsp_id, gsi_timer, gsi_kbd, gsi_mouse
+                );
+            }
+            Some(_) => kprintln!("[ioapic] MADT missing Local APIC/IOAPIC address — staying on legacy 8259 PIC"),
+            None => kprintln!("[ioapic] no MADT — staying on legacy 8259 PIC"),
+        }
+
         if !drivers::xhci::init() {
             kprintln!("[xhci] no USB controller found");
         }

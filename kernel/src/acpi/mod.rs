@@ -89,6 +89,41 @@ pub struct Madt {
     /// Count of enabled Processor Local APIC entries — i.e. usable CPUs,
     /// matching what Limine's own `SmpResponse::cpu_count` should report.
     pub cpu_count: usize,
+    /// Legacy ISA IRQ → GSI overrides (Interrupt Source Override entries,
+    /// MADT type 2, bus==0/ISA only). Index = ISA IRQ number (0-15). `None`
+    /// means no override — the GSI equals the ISA IRQ number, the common
+    /// case. Real firmware very commonly overrides IRQ0 (the PIT) to a
+    /// different GSI (e.g. GSI 2), so this can never be assumed identity
+    /// without actually checking — see `isa_irq_to_gsi`.
+    pub iso: [Option<u32>; 16],
+    /// MPS INTI flags paired with each `iso` entry: bits 0-1 = polarity
+    /// (00/01 = active-high, 11 = active-low), bits 2-3 = trigger mode
+    /// (00/01 = edge, 11 = level). `0` ("conforms to bus spec") means the
+    /// ISA default of active-high/edge. See `isa_irq_polarity_trigger`.
+    pub iso_flags: [u16; 16],
+}
+
+impl Madt {
+    /// Resolve a legacy ISA IRQ number to its actual Global System
+    /// Interrupt, honoring any Interrupt Source Override instead of
+    /// assuming identity (`gsi == isa_irq`), which is only the default in
+    /// the *absence* of an override.
+    pub fn isa_irq_to_gsi(&self, isa_irq: u8) -> u32 {
+        self.iso.get(isa_irq as usize).copied().flatten().unwrap_or(isa_irq as u32)
+    }
+
+    /// Polarity/trigger mode to use when programming this ISA IRQ's I/O
+    /// APIC redirection entry: `(active_low, level_triggered)`. Defaults to
+    /// `(false, false)` (active-high, edge-triggered — the ISA/8259
+    /// default) when there's no override or its flags say "conforms to bus
+    /// spec", matching every override this driver has ever needed to
+    /// actually honor (IRQ0/1/12).
+    pub fn isa_irq_polarity_trigger(&self, isa_irq: u8) -> (bool, bool) {
+        let flags = self.iso_flags.get(isa_irq as usize).copied().unwrap_or(0);
+        let polarity = flags & 0x3;
+        let trigger = (flags >> 2) & 0x3;
+        (polarity == 3, trigger == 3)
+    }
 }
 
 struct AcpiInfo {
@@ -281,6 +316,24 @@ fn parse_madt(virt: u64, len: usize) -> Madt {
                 // I/O APIC: byte 4..8 = address, byte 8..12 = GSI base.
                 madt.ioapic_addr     = unsafe { core::ptr::read_unaligned((virt + off + 4) as *const u32) };
                 madt.ioapic_gsi_base = unsafe { core::ptr::read_unaligned((virt + off + 8) as *const u32) };
+            }
+            2 => {
+                // Interrupt Source Override: byte 2 = bus (0=ISA), byte 3 =
+                // source IRQ, bytes 4..8 = GSI, bytes 8..10 = flags. Only
+                // ISA overrides matter to this driver (everything it routes
+                // — timer/keyboard/mouse — is an ISA IRQ).
+                let bus = unsafe { core::ptr::read_unaligned((virt + off + 2) as *const u8) };
+                if bus == 0 {
+                    let irq = unsafe { core::ptr::read_unaligned((virt + off + 3) as *const u8) } as usize;
+                    if irq < 16 {
+                        madt.iso[irq] = Some(unsafe {
+                            core::ptr::read_unaligned((virt + off + 4) as *const u32)
+                        });
+                        madt.iso_flags[irq] = unsafe {
+                            core::ptr::read_unaligned((virt + off + 8) as *const u16)
+                        };
+                    }
+                }
             }
             _ => {}
         }

@@ -90,6 +90,19 @@ pub fn unmask(irq: u8) {
     }
 }
 
+/// Mask every IRQ line on both PICs. Used once the I/O APIC has taken over
+/// interrupt routing (Phase K5 increment 3) so the legacy 8259 can never
+/// raise a spurious/duplicate interrupt alongside the I/O APIC. Unlike
+/// `init()`'s all-mask-then-unmask-three sequence, this does not remap the
+/// PICs again — they stay remapped to 0x20-0x2F (harmless while fully
+/// masked) rather than re-running the ICW handshake for no reason.
+pub fn mask_all() {
+    unsafe {
+        Port::<u8>::new(MASTER_DATA).write(0xFF);
+        Port::<u8>::new(SLAVE_DATA).write(0xFF);
+    }
+}
+
 /// Send End-Of-Interrupt signal.
 /// Must be called at the end of every IRQ handler.
 #[inline]
