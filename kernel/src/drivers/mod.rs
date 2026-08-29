@@ -15,6 +15,8 @@ pub mod ahci;
 pub mod blockdev;
 #[cfg(target_arch = "x86_64")]
 pub mod xhci;
+#[cfg(target_arch = "x86_64")]
+pub mod usb_hid;
 
 #[cfg(target_arch = "x86_64")]
 use pci::PciDevice;

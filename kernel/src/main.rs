@@ -310,6 +310,15 @@ pub extern "C" fn _start() -> ! {
             .expect("failed to spawn nexus-ai");
         kprintln!("[ai]   nexus-ai AI Core daemon spawned");
 
+        // ── Phase K4: USB HID polling kernel thread ───────────
+        // drivers::xhci is polling-only (no MSI/MSI-X interrupts), so
+        // something has to periodically drain its HID endpoint. Harmless
+        // to always spawn this even with no USB controller/device present
+        // -- usb_hid::poll() returns immediately in that case.
+        scheduler::spawn(b"usb-hid", task_usb_hid_poll)
+            .expect("failed to spawn usb-hid");
+        kprintln!("[xhci] USB HID polling thread spawned");
+
         // ── NexusOS Installer ───────────────────────────────────────────────
         // Runs only when disk is unformatted (first boot from ISO).
         if !fs::fat::is_mounted() {
@@ -413,6 +422,19 @@ extern "C" fn task_nexus_ai() -> ! {
         let reply = Message::with_str(req.from, MSG_AI_RESPONSE, &reply_text);
         ipc_send(req.from, reply).ok();
         kprintln!("[nexus-ai] response sent to pid={}", req.from);
+    }
+}
+
+/// Polls `drivers::usb_hid` once per timer tick (100 Hz) for a pending HID
+/// report. `drivers::xhci` has no interrupt path, so this kernel thread is
+/// what keeps USB keyboard/mouse input flowing -- `sti; hlt` between polls
+/// yields to the scheduler until the next tick, matching `idle_entry`'s
+/// own halt-until-interrupt pattern rather than busy-spinning a full core.
+#[cfg(target_arch = "x86_64")]
+extern "C" fn task_usb_hid_poll() -> ! {
+    loop {
+        drivers::usb_hid::poll();
+        unsafe { core::arch::asm!("sti; hlt", options(nomem, nostack)); }
     }
 }
 

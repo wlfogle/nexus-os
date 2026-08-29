@@ -91,8 +91,9 @@ const PORTSC_RW1C_MASK: u32 =
     (1 << 17) | (1 << 18) | (1 << 19) | (1 << 20) | (1 << 21) | (1 << 22) | (1 << 23);
 const PORTSC_SPEED_SHIFT: u32 = 10; // Port Speed ID (RO), bits 13:10
 
-const TRB_TYPE_ENABLE_SLOT_CMD:    u32 = 9;
-const TRB_TYPE_ADDRESS_DEVICE_CMD: u32 = 11;
+const TRB_TYPE_ENABLE_SLOT_CMD:        u32 = 9;
+const TRB_TYPE_ADDRESS_DEVICE_CMD:     u32 = 11;
+const TRB_TYPE_CONFIGURE_ENDPOINT_CMD: u32 = 12;
 
 // Port/Slot-Context "Protocol Speed ID" values in the default (no
 // vendor-specific PSI table) assignment xHCI controllers use — the same
@@ -103,7 +104,8 @@ const SPEED_LOW:   u8 = 2;
 const SPEED_HIGH:  u8 = 3;
 const SPEED_SUPER: u8 = 4;
 
-const EP_TYPE_CONTROL: u32 = 4;
+const EP_TYPE_CONTROL:      u32 = 4;
+const EP_TYPE_INTERRUPT_IN: u32 = 7;
 
 // ─── Runtime register offsets (from runtime base = MMIO + RTSOFF) ───────────
 
@@ -122,6 +124,7 @@ const TRB_CYCLE: u32 = 1 << 0;
 
 const TRB_TYPE_NOOP_CMD:        u32 = 23;
 const TRB_TYPE_LINK:            u32 = 6;
+const TRB_TYPE_NORMAL:          u32 = 1;
 const TRB_TYPE_SETUP_STAGE:     u32 = 2;
 const TRB_TYPE_DATA_STAGE:      u32 = 3;
 const TRB_TYPE_STATUS_STAGE:    u32 = 4;
@@ -132,7 +135,23 @@ const TRB_TYPE_PORT_STS_CHANGE: u32 = 34;
 const COMPLETION_SUCCESS:       u8 = 1;
 const COMPLETION_SHORT_PACKET:  u8 = 13;
 
-const DESC_TYPE_DEVICE: u16 = 1;
+const DESC_TYPE_DEVICE:        u16 = 1;
+const DESC_TYPE_CONFIGURATION: u16 = 2;
+const DESC_TYPE_INTERFACE:     u8  = 4;
+const DESC_TYPE_ENDPOINT:      u8  = 5;
+
+// HID class-specific requests (USB HID 1.11 §7.2), sent to the interface:
+// bmRequestType = Host-to-Device | Class | Interface = 0x21.
+const HID_REQ_TYPE:      u8  = 0x21;
+const HID_SET_IDLE:      u8  = 0x0A;
+const HID_SET_PROTOCOL:  u8  = 0x0B;
+const HID_PROTOCOL_BOOT: u16 = 0;
+
+/// Which boot-protocol report shape an interrupt-IN endpoint delivers,
+/// from the HID interface's bInterfaceProtocol byte (1=keyboard, 2=mouse
+/// are the only two the USB HID boot protocol defines).
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum HidKind { Keyboard, Mouse, Other }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -285,6 +304,32 @@ fn max_packet_size_for_speed(speed: u8) -> u16 {
     }
 }
 
+/// Device Context Index for an endpoint address (USB's bEndpointAddress:
+/// bit 7 = direction, bits 0-3 = endpoint number). xHCI DCI = 2*epnum + (1
+/// if IN else 0); EP0 is always DCI 1, and every other endpoint's DCI
+/// starts at 2 (OUT) or 3 (IN) for endpoint number 1.
+fn endpoint_dci(ep_addr: u8) -> u8 {
+    let ep_num = ep_addr & 0x0F;
+    let is_in = ep_addr & 0x80 != 0;
+    ep_num * 2 + if is_in { 1 } else { 0 }
+}
+
+/// Convert a USB endpoint descriptor's bInterval (meaning differs by
+/// speed) into the xHCI Endpoint Context's Interval field, which always
+/// represents 2^Interval * 125us (xHCI spec §6.2.3.6). For High/Super
+/// Speed, bInterval already *is* that exponent, offset by one (1..=16 maps
+/// to 0..=15). For Low/Full Speed, bInterval is a frame count in 1ms units
+/// (1ms = 2^3 * 125us), so the exponent is floor(log2(bInterval)) + 3.
+fn xhci_interval(speed: u8, b_interval: u8) -> u32 {
+    let b = (b_interval as u32).max(1);
+    if speed == SPEED_HIGH || speed == SPEED_SUPER {
+        b.saturating_sub(1).min(15)
+    } else {
+        let log2 = 31 - b.leading_zeros();
+        (log2 + 3).min(15)
+    }
+}
+
 // ─── Driver state ──────────────────────────────────────
 
 /// Direction of a control transfer's Data Stage (also determines the
@@ -295,20 +340,38 @@ enum Direction {
     Out,
 }
 
+/// A configured HID interrupt-IN endpoint: its own transfer ring (separate
+/// from EP0's control ring), the one outstanding receive buffer currently
+/// posted to it, and enough bookkeeping to re-arm after each report.
+struct HidEndpoint {
+    dci:              u8,
+    ring:             Ring,
+    max_packet:       u16,
+    recv_buf_phys:    u64,
+    /// Physical address of the Normal TRB currently posted for the next
+    /// report, so `poll_hid_report` can confirm a Transfer Event actually
+    /// belongs to this endpoint's outstanding request before consuming it.
+    pending_trb_addr: u64,
+    kind:             HidKind,
+}
+
 /// A single addressed USB device. This driver only tracks one at a time
 /// (single root hub, first device found — see the module-level scope note);
 /// multi-device support is future work, not a limitation of this struct's
 /// shape specifically.
 struct UsbDevice {
     slot_id:  u8,
-    #[allow(dead_code)] // reported in boot logs today; will drive re-enumeration on unplug later
     port:     u8,
-    #[allow(dead_code)] // needed once usb_hid parses reports that vary by speed/timing
     speed:    u8,
     /// EP0's control-transfer ring — kept alive here so its producer
     /// index/cycle state survives between separate control transfers
-    /// (SET_CONFIGURATION, then later HID's SET_PROTOCOL/SET_IDLE, etc.).
+    /// (SET_CONFIGURATION, then HID's SET_PROTOCOL/SET_IDLE, etc.).
     ep0_ring: Ring,
+    /// Set once `configure_hid_endpoint` successfully configures the
+    /// device's interrupt-IN endpoint. `None` until then, and permanently
+    /// if the device turns out not to be a supported boot-protocol HID
+    /// device (e.g. no interrupt-IN endpoint found in its config descriptor).
+    hid_ep:   Option<HidEndpoint>,
 }
 
 pub struct Xhci {
@@ -378,6 +441,19 @@ pub fn init() -> bool {
                                             "[xhci] device descriptor: class={:#04x} vendor={:#06x} product={:#06x}",
                                             desc[4], vendor, product
                                         );
+                                        match x.configure_hid_endpoint() {
+                                            Ok(kind) => {
+                                                let kind_str = match kind {
+                                                    HidKind::Keyboard => "keyboard",
+                                                    HidKind::Mouse    => "mouse",
+                                                    HidKind::Other    => "other",
+                                                };
+                                                crate::kprintln!(
+                                                    "[xhci] HID interrupt-IN endpoint configured ({})", kind_str);
+                                            }
+                                            Err(e) => crate::kprintln!(
+                                                "[xhci] configure_hid_endpoint failed: {}", e),
+                                        }
                                     }
                                     Err(e) => crate::kprintln!("[xhci] get_device_descriptor failed: {}", e),
                                 }
@@ -621,7 +697,7 @@ impl Xhci {
             return Err("Address Device: command completed with a non-success code");
         }
 
-        self.device = Some(UsbDevice { slot_id, port, speed, ep0_ring });
+        self.device = Some(UsbDevice { slot_id, port, speed, ep0_ring, hid_ep: None });
         Ok(())
     }
 
@@ -741,6 +817,199 @@ impl Xhci {
         Ok(buf)
     }
 
+    /// Find a boot-protocol HID interface's interrupt-IN endpoint in the
+    /// device's configuration descriptor, then SET_CONFIGURATION, issue the
+    /// HID class requests (SET_PROTOCOL boot, SET_IDLE indefinite), and
+    /// Configure Endpoint to bring that interrupt-IN endpoint online. On
+    /// success, posts the first receive buffer and rings the endpoint's
+    /// doorbell so `poll_hid_report` can start draining reports immediately.
+    fn configure_hid_endpoint(&mut self) -> Result<HidKind, &'static str> {
+        // One generously-sized buffer covers configuration + interface +
+        // HID + endpoint descriptors for any simple single-interface boot
+        // device; a short read (fewer descriptors than the buffer) is
+        // normal and already tolerated by control_transfer's completion
+        // code check.
+        let mut cfg_buf = [0u8; 64];
+        let n = self.control_transfer(
+            0x80, 6, DESC_TYPE_CONFIGURATION << 8, 0, &mut cfg_buf, Direction::In,
+        )?;
+
+        let mut config_value: u8 = 0;
+        let mut interface_num: u8 = 0;
+        let mut interface_kind = HidKind::Other;
+        let mut ep_addr: Option<u8> = None;
+        let mut ep_max_packet: u16 = 0;
+        let mut ep_interval: u8 = 0;
+
+        let mut off = 0usize;
+        while off + 2 <= n {
+            let b_length = cfg_buf[off] as usize;
+            if b_length < 2 || off + b_length > n { break; }
+            let b_desc_type = cfg_buf[off + 1];
+
+            if b_desc_type as u16 == DESC_TYPE_CONFIGURATION && b_length >= 6 {
+                config_value = cfg_buf[off + 5];
+            } else if b_desc_type == DESC_TYPE_INTERFACE && b_length >= 9 {
+                interface_num = cfg_buf[off + 2];
+                interface_kind = match cfg_buf[off + 7] {
+                    1 => HidKind::Keyboard,
+                    2 => HidKind::Mouse,
+                    _ => HidKind::Other,
+                };
+            } else if b_desc_type == DESC_TYPE_ENDPOINT && b_length >= 7 && ep_addr.is_none() {
+                let addr  = cfg_buf[off + 2];
+                let attrs = cfg_buf[off + 3];
+                if attrs & 0x3 == 3 && addr & 0x80 != 0 { // Interrupt, IN direction
+                    ep_addr = Some(addr);
+                    ep_max_packet = u16::from_le_bytes([cfg_buf[off + 4], cfg_buf[off + 5]]) & 0x7FF;
+                    ep_interval = cfg_buf[off + 6];
+                }
+            }
+            off += b_length;
+        }
+
+        let ep_addr = ep_addr.ok_or("configure_hid_endpoint: no interrupt-IN endpoint found")?;
+        if interface_kind == HidKind::Other {
+            return Err("configure_hid_endpoint: not a recognized boot-protocol interface");
+        }
+
+        // SET_CONFIGURATION (standard request, device recipient).
+        self.control_transfer(0x00, 9, config_value as u16, 0, &mut [], Direction::Out)?;
+
+        // HID class requests (interface recipient): boot protocol, and an
+        // idle rate of 0 (report on every change — no artificial rate limit).
+        self.control_transfer(
+            HID_REQ_TYPE, HID_SET_PROTOCOL, HID_PROTOCOL_BOOT, interface_num as u16,
+            &mut [], Direction::Out)?;
+        self.control_transfer(
+            HID_REQ_TYPE, HID_SET_IDLE, 0, interface_num as u16,
+            &mut [], Direction::Out)?;
+
+        // Configure Endpoint: bring the interrupt-IN endpoint online.
+        let dci = endpoint_dci(ep_addr);
+        let ep_ring = Ring::new();
+        let ctx_sz = self.context_size as u64;
+        let input_phys = alloc_zeroed_frame();
+        let input_virt = paging::phys_to_virt(input_phys);
+        let (slot_id, port, speed) = {
+            let device = self.device.as_ref().ok_or("configure_hid_endpoint: no addressed device")?;
+            (device.slot_id, device.port, device.speed)
+        };
+        unsafe {
+            // Input Control Context: A0 (Slot, since Context Entries is
+            // changing) plus the Add flag for this endpoint's own DCI.
+            write_dword(input_virt, 1, 1 | (1 << dci));
+
+            // Slot Context, rebuilt with Context Entries raised to this
+            // endpoint's DCI (was 1 for EP0 alone).
+            let slot_off = input_virt + ctx_sz;
+            write_dword(slot_off, 0, ((speed as u32) << 20) | ((dci as u32) << 27));
+            write_dword(slot_off, 1, (port as u32) << 16);
+
+            // Endpoint Context at this endpoint's own context index.
+            let ep_off = input_virt + ctx_sz * (dci as u64);
+            let interval = xhci_interval(speed, ep_interval);
+            const CERR: u32 = 3;
+            write_dword(ep_off, 0, interval << 16);
+            write_dword(ep_off, 1,
+                (CERR << 1) | (EP_TYPE_INTERRUPT_IN << 3) | ((ep_max_packet as u32) << 16));
+            let deq_lo = (ep_ring.phys as u32 & !0xF) | 1; // DCS = 1 (initial cycle state)
+            let deq_hi = (ep_ring.phys >> 32) as u32;
+            write_dword(ep_off, 2, deq_lo);
+            write_dword(ep_off, 3, deq_hi);
+            write_dword(ep_off, 4, ep_max_packet as u32); // Average TRB Length
+        }
+
+        let trb = Trb {
+            parameter: input_phys,
+            status: 0,
+            control: (TRB_TYPE_CONFIGURE_ENDPOINT_CMD << 10) | ((slot_id as u32) << 24),
+        };
+        let cmd_addr = self.cmd_ring.enqueue_command(trb);
+        unsafe { w32(self.db_base, 0); } // command doorbell
+
+        let event = self.poll_matching_event(TRB_TYPE_CMD_COMPLETION, cmd_addr)?;
+        if event.completion_code() != COMPLETION_SUCCESS {
+            return Err("Configure Endpoint: command completed with a non-success code");
+        }
+
+        // Post the first receive buffer, save the endpoint state, then
+        // ring its doorbell so the controller starts servicing the ring.
+        let recv_buf_phys = alloc_zeroed_frame();
+        let mut hid_ep = HidEndpoint {
+            dci, ring: ep_ring, max_packet: ep_max_packet, recv_buf_phys,
+            pending_trb_addr: 0, kind: interface_kind,
+        };
+        let normal_trb = Trb {
+            parameter: recv_buf_phys,
+            status: ep_max_packet as u32,
+            control: (TRB_TYPE_NORMAL << 10) | (1 << 5 /* IOC */),
+        };
+        hid_ep.pending_trb_addr = hid_ep.ring.enqueue_command(normal_trb);
+        if let Some(device) = self.device.as_mut() {
+            device.hid_ep = Some(hid_ep);
+        }
+        unsafe { w32(self.db_base + slot_id as u64 * 4, dci as u32); } // ring the new endpoint's doorbell
+
+        Ok(interface_kind)
+    }
+
+    /// Non-blocking: if the event ring's next entry is a Transfer Event for
+    /// this device's HID endpoint's currently-posted receive buffer, copy
+    /// the report into `buf`, re-arm the endpoint for the next report, and
+    /// return the byte count. Anything else (no event yet, or an unrelated
+    /// event such as a Port Status Change) is logged if relevant and
+    /// discarded — the next call tries again, which is fine since this is
+    /// driven by a polling loop, not a one-shot synchronous wait.
+    fn poll_hid_report_inner(&mut self, buf: &mut [u8]) -> Option<usize> {
+        let pending_addr = self.device.as_ref()?.hid_ep.as_ref()?.pending_trb_addr;
+
+        let event = self.poll_event(1)?;
+        if event.trb_type() != TRB_TYPE_TRANSFER_EVENT || event.parameter != pending_addr {
+            if event.trb_type() == TRB_TYPE_PORT_STS_CHANGE {
+                crate::kprintln!("[xhci] hid poll: port status change event noted");
+            } else {
+                crate::kprintln!("[xhci] hid poll: ignoring event type {}", event.trb_type());
+            }
+            return None;
+        }
+
+        let (recv_buf_phys, max_packet) = {
+            let hid = self.device.as_ref()?.hid_ep.as_ref()?;
+            (hid.recv_buf_phys, hid.max_packet)
+        };
+        // The event's TRB Transfer Length field holds the residual (bytes
+        // NOT transferred), not the count transferred.
+        let residual = (event.status & 0x00FF_FFFF) as usize;
+        let n = (max_packet as usize).saturating_sub(residual).min(buf.len());
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                paging::phys_to_virt(recv_buf_phys) as *const u8, buf.as_mut_ptr(), n);
+        }
+
+        self.rearm_hid_endpoint();
+        Some(n)
+    }
+
+    /// Post a fresh Normal TRB for the next report and ring the endpoint's
+    /// doorbell again. Called after every report `poll_hid_report_inner`
+    /// consumes — an interrupt-IN endpoint only delivers one report per
+    /// posted buffer, so it must be continuously re-armed to keep receiving.
+    fn rearm_hid_endpoint(&mut self) {
+        let (slot_id, dci) = {
+            let Some(device) = self.device.as_mut() else { return; };
+            let Some(hid) = device.hid_ep.as_mut() else { return; };
+            let trb = Trb {
+                parameter: hid.recv_buf_phys,
+                status: hid.max_packet as u32,
+                control: (TRB_TYPE_NORMAL << 10) | (1 << 5 /* IOC */),
+            };
+            hid.pending_trb_addr = hid.ring.enqueue_command(trb);
+            (device.slot_id, hid.dci)
+        };
+        unsafe { w32(self.db_base + slot_id as u64 * 4, dci as u32); }
+    }
+
     /// Poll the event ring until an event of type `want_type` whose
     /// Parameter matches `expected_addr` appears (Command Completion events
     /// reference the command TRB; Transfer events reference whichever TRB
@@ -810,4 +1079,19 @@ fn wait_for(mut cond: impl FnMut() -> bool, timeout_msg: &'static str) -> Result
 /// Whether an xHCI controller was successfully brought up.
 pub fn is_present() -> bool {
     XHCI.lock().is_some()
+}
+
+/// Non-blocking: drains one pending HID report if the event ring has one
+/// ready for the addressed device's interrupt-IN endpoint. Intended to be
+/// called periodically (e.g. once per timer tick from a dedicated kernel
+/// thread — see `drivers::usb_hid`) to keep boot-protocol input flowing.
+/// Returns `None` whenever there's nothing to report yet, which is the
+/// overwhelmingly common case between actual key/mouse events, not an
+/// error condition.
+pub fn poll_hid_report(buf: &mut [u8]) -> Option<(usize, HidKind)> {
+    let mut guard = XHCI.lock();
+    let x = guard.as_mut()?;
+    let kind = x.device.as_ref()?.hid_ep.as_ref()?.kind;
+    let n = x.poll_hid_report_inner(buf)?;
+    Some((n, kind))
 }
