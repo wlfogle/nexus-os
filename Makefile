@@ -179,6 +179,7 @@ run-laptop: iso-laptop
 	$(QEMU_X86) \
 	    -cdrom $(BUILD_DIR)/nexusos-laptop.iso \
 	    -m 4G -cpu host -enable-kvm \
+	    -netdev user,id=n0 -device virtio-net-pci,netdev=n0,disable-modern=on \
 	    -serial stdio -display none \
 	    -no-reboot -no-shutdown
 
@@ -187,6 +188,7 @@ run-tiamat: iso-tiamat
 	$(QEMU_X86) \
 	    -cdrom $(BUILD_DIR)/nexusos-tiamat.iso \
 	    -m 8G -cpu host -enable-kvm \
+	    -netdev user,id=n0 -device virtio-net-pci,netdev=n0,disable-modern=on \
 	    -serial stdio -display none \
 	    -no-reboot -no-shutdown
 
@@ -230,6 +232,7 @@ run-install-laptop: iso-laptop
 	    -cdrom $(BUILD_DIR)/nexusos-laptop.iso \
 	    -drive file=$(DISK_LAPTOP),if=virtio \
 	    -m 4G -cpu host -enable-kvm \
+	    -netdev user,id=n0 -device virtio-net-pci,netdev=n0,disable-modern=on \
 	    -serial stdio -display none \
 	    -no-reboot -no-shutdown
 
@@ -241,6 +244,7 @@ run-installed-laptop:
 	    -drive file=$(DISK_LAPTOP),if=virtio \
 	    -bios $(OVMF) \
 	    -m 4G -cpu host -enable-kvm \
+	    -netdev user,id=n0 -device virtio-net-pci,netdev=n0,disable-modern=on \
 	    -serial stdio -display none \
 	    -no-reboot -no-shutdown
 
