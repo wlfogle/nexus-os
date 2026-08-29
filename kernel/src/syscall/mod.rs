@@ -101,32 +101,53 @@ const IA32_FMASK:          u32 = 0xC000_0084;
 const IA32_GS_BASE:        u32 = 0xC000_0101;
 const IA32_KERNEL_GS_BASE: u32 = 0xC000_0102;
 
-// ─── Per-CPU data (single CPU, accessed via GS after swapgs) ─────────────────
+// ─── Per-CPU data (one slot per core, each core's own GS.base points at
+// exactly one slot — see `init(core_id)`) ────────────────────────────
 
 /// Per-CPU state for syscall entry.
-/// `IA32_KERNEL_GS_BASE` points here; `swapgs` makes GS.base = &PERCPU.
+/// `IA32_KERNEL_GS_BASE` points at this core's own slot in `PERCPU`; every
+/// core keeps GS.base pointing there permanently (no swapgs — see `init`).
 #[repr(C)]
 pub struct PerCpu {
     /// Top of the current process's kernel stack.
     /// Syscall entry resets RSP here so each syscall starts fresh.
-    pub kernel_rsp: u64,   // offset 0
+    pub kernel_rsp: u64,   // offset 0 — read/written by the naked asm below
     /// Scratch slot — saves user RSP during syscall prologue.
-    pub user_rsp:   u64,   // offset 8
+    pub user_rsp:   u64,   // offset 8 — read/written by the naked asm below
+    /// This slot's own core id (Phase K5 increment 4). Appended after the
+    /// two fields the naked syscall entry addresses directly so their
+    /// hand-rolled `gs:[0]`/`gs:[8]` offsets never need to change.
+    pub core_id:    u64,   // offset 16 — read by `current_core_id()` only
 }
 
-/// The single CPU's per-CPU data block.
+/// One per-core slot, indexed by core id (0 = BSP). Only slot 0 is live
+/// until Phase K5 increment 5 brings up APs; every other slot stays zeroed
+/// (and unused — nothing points its GS.base there) until that core calls
+/// `init(core_id)` for itself.
 #[no_mangle]
-pub static mut PERCPU: PerCpu = PerCpu { kernel_rsp: 0, user_rsp: 0 };
+pub static mut PERCPU: [PerCpu; super::arch::x86_64::MAX_CPUS] =
+    [const { PerCpu { kernel_rsp: 0, user_rsp: 0, core_id: 0 } }; super::arch::x86_64::MAX_CPUS];
 
-/// Update PERCPU.kernel_rsp to the given process's kernel stack top.
-/// Called by the scheduler on every context switch to a user process.
-pub fn update_kernel_rsp(pid: u64) {
-    use crate::process::MAX_PROCS;
-    // Access the process table to get kernel_stack_top
-    // We re-export a helper from process module
+/// Update `core_id`'s PERCPU.kernel_rsp to the given process's kernel stack
+/// top. Called by the scheduler on every context switch to a user process,
+/// on whichever core is running that switch.
+pub fn update_kernel_rsp(core_id: usize, pid: u64) {
     if let Some(top) = process::get_kernel_stack_top(pid) {
-        unsafe { PERCPU.kernel_rsp = top; }
+        unsafe { PERCPU[core_id].kernel_rsp = top; }
     }
+}
+
+/// This core's own id, as recorded in its PERCPU slot by its own `init()`
+/// call. A cheap GS-relative read (no MMIO, no lock) usable from any
+/// context on any core once that core has run `init()` — the general "which
+/// core am I" primitive Phase K5 increment 5's per-AP code paths need.
+#[inline]
+pub fn current_core_id() -> usize {
+    let id: u64;
+    unsafe {
+        core::arch::asm!("mov {}, gs:[16]", out(reg) id, options(nomem, nostack, preserves_flags));
+    }
+    id as usize
 }
 
 fn exit_current(pid: u64, code: i64) -> i64 {
@@ -236,8 +257,15 @@ extern "C" {
     fn _nexus_syscall_entry();
 }
 
-/// Initialise syscall hardware.  Must be called after GDT is loaded.
-pub fn init() {
+/// Initialise syscall hardware for one core. Must be called after that
+/// core's own GDT is loaded, once per core (`core_id` identifies which
+/// `PERCPU` slot this core owns from now on — 0 for the BSP, the only
+/// caller until Phase K5 increment 5 brings up APs). All the MSRs written
+/// here (`EFER`/`STAR`/`LSTAR`/`FMASK`/`GS_BASE`/`KERNEL_GS_BASE`) are
+/// per-core hardware state, so this genuinely must run on every core, not
+/// just once globally — the values happen to be identical everywhere
+/// except `GS_BASE`/`KERNEL_GS_BASE`, which point at that core's own slot.
+pub fn init(core_id: usize) {
     unsafe {
         // 1. Enable EFER.SCE (Syscall Enable, bit 0)
         let mut efer = Msr::new(IA32_EFER);
@@ -256,19 +284,21 @@ pub fn init() {
         //    0x200 = IF (interrupt flag) — disable interrupts during syscall
         Msr::new(IA32_FMASK).write(0x200);
 
-        // 5. GS base: keep GS.base = &PERCPU at ALL times (ring 0 and ring 3).
-        //    The syscall stub does NOT swapgs, which avoids the swapgs
-        //    re-entrancy hazard: when one ring-3 process blocks *inside* a
-        //    syscall (GS would be swapped) and the scheduler runs another
-        //    ring-3 process that also issues a syscall, a swapgs-based design
-        //    reads the wrong shadow MSR and loads a garbage kernel stack.
-        //    We also point the swapgs-shadow MSR at &PERCPU so any stray
-        //    swapgs is harmless.  User programs here do not use GS.
-        let percpu = &raw const PERCPU as u64;
+        // 5. GS base: keep GS.base = &PERCPU[core_id] at ALL times (ring 0
+        //    and ring 3), for THIS core only. The syscall stub does NOT
+        //    swapgs, which avoids the swapgs re-entrancy hazard: when one
+        //    ring-3 process blocks *inside* a syscall (GS would be swapped)
+        //    and the scheduler runs another ring-3 process that also issues
+        //    a syscall, a swapgs-based design reads the wrong shadow MSR and
+        //    loads a garbage kernel stack. We also point the swapgs-shadow
+        //    MSR at the same slot so any stray swapgs is harmless. User
+        //    programs here do not use GS.
+        PERCPU[core_id].core_id = core_id as u64;
+        let percpu = &raw const PERCPU[core_id] as u64;
         Msr::new(IA32_GS_BASE).write(percpu);
         Msr::new(IA32_KERNEL_GS_BASE).write(percpu);
     }
-    crate::kprintln!("[syscall] STAR/LSTAR/FMASK/EFER/KERNEL_GS_BASE configured");
+    crate::kprintln!("[syscall] core {}: STAR/LSTAR/FMASK/EFER/KERNEL_GS_BASE configured", core_id);
 }
 
 // ─── Naked syscall entry (assembly) ──────────────────────────────────────────

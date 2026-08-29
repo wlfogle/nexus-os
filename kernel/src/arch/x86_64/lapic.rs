@@ -11,6 +11,8 @@
 use core::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use x86_64::registers::model_specific::Msr;
 
+use super::MAX_CPUS;
+
 const IA32_APIC_BASE: u32 = 0x1B;
 const APIC_BASE_ENABLE: u64 = 1 << 11;
 
@@ -103,4 +105,28 @@ pub fn eoi() {
     if virt != 0 {
         unsafe { write(virt, REG_EOI, 0) };
     }
+}
+
+// ─── core_id ↔ hardware LAPIC ID registry (Phase K5 increment 4) ─────────
+//
+// `syscall::current_core_id()` is the fast, GS-relative, allocation-free
+// dense array index used to pick per-core storage slots. This registry
+// links that index back to the raw hardware identity (`id()` above) that
+// IOAPIC redirection destinations and cross-checks actually need, so code
+// can go either direction without re-deriving one from the other. Only the
+// owning core ever writes its own slot (BSP writes index 0 here; each AP
+// will write its own index in Phase K5 increment 5), so this needs no lock.
+static mut CPU_LAPIC_IDS: [Option<u8>; MAX_CPUS] = [None; MAX_CPUS];
+
+/// Record that dense core index `core_id` is running on the hardware LAPIC
+/// ID this function reads right now. Must be called by that core itself,
+/// after `init()`.
+pub fn register_core(core_id: usize) {
+    unsafe { CPU_LAPIC_IDS[core_id] = Some(id()); }
+}
+
+/// The hardware LAPIC ID registered for a given dense core index, if any
+/// core has called `register_core(core_id)` yet.
+pub fn lapic_id_for_core(core_id: usize) -> Option<u8> {
+    unsafe { CPU_LAPIC_IDS[core_id] }
 }

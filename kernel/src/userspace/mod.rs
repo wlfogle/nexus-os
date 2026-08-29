@@ -129,9 +129,11 @@ pub fn spawn_user_init() -> u64 {
     // ── 4. Allocate IPC inbox ─────────────────────────────────────────────
     ipc::inbox_alloc(id);
 
-    // ── 5. Prime PERCPU with this process's kernel stack top ──────────────
+    // ── 5. Prime PERCPU with this process's kernel stack top ───────────────
+    // Runs during BSP boot, before any AP exists -- core 0 hardcoded here
+    // for the same reason as scheduler_tick's equivalent call.
     #[cfg(target_arch = "x86_64")]
-    crate::syscall::update_kernel_rsp(id);
+    crate::syscall::update_kernel_rsp(0, id);
 
     id
 }

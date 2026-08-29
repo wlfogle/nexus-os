@@ -9,9 +9,12 @@ pub mod x86_64;
 pub mod aarch64;
 
 /// Initialise all CPU-specific structures: GDT/IDT (x86_64) or VBAR (AArch64).
+/// Only ever called for the BSP (core 0) — Phase K5 increment 5's AP entry
+/// path calls `x86_64::init(core_id)` directly with each AP's own id instead
+/// of going through this one-time, architecture-dispatching entry point.
 pub fn init() {
     #[cfg(target_arch = "x86_64")]
-    x86_64::init();
+    x86_64::init(0);
 
     #[cfg(target_arch = "aarch64")]
     aarch64::init();

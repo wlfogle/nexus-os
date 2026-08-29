@@ -77,12 +77,17 @@ pub unsafe extern "C" fn scheduler_tick(current_rsp: u64) -> u64 {
     process::set_state(next_id, ProcessState::Running);
     CURRENT.store(next_id, Ordering::SeqCst);
 
-    // Update PERCPU.kernel_rsp (for syscall entry) and TSS.RSP0 (for ring-3 interrupts)
+    // Update PERCPU.kernel_rsp (for syscall entry) and TSS.RSP0 (for ring-3
+    // interrupts) on the core actually running this tick. Hardcoded to core
+    // 0 (the BSP) until Phase K5 increment 6 makes the scheduler track a
+    // current process *per core* instead of one global CURRENT — correct
+    // today because this ISR only ever runs on the BSP (no APs exist yet),
+    // but not a place to silently "forget" once increment 5/6 land.
     #[cfg(target_arch = "x86_64")]
-    crate::syscall::update_kernel_rsp(next_id);
+    crate::syscall::update_kernel_rsp(0, next_id);
     #[cfg(target_arch = "x86_64")]
     if let Some(top) = crate::process::get_kernel_stack_top(next_id) {
-        crate::arch::x86_64::gdt::update_rsp0(top);
+        crate::arch::x86_64::gdt::update_rsp0(0, top);
     }
 
     // Switch into the next process's address space.  User processes carry a

@@ -336,6 +336,10 @@ pub extern "C" fn _start() -> ! {
                 arch::x86_64::lapic::init(m.local_apic_addr);
                 arch::x86_64::ioapic::init(m.ioapic_addr, m.ioapic_gsi_base);
                 let bsp_id = arch::x86_64::lapic::id();
+                // Phase K5 increment 4: record core 0 (the BSP) -> its real
+                // hardware LAPIC ID, so future code can go either direction
+                // between the dense core index and the LAPIC identity.
+                arch::x86_64::lapic::register_core(0);
 
                 let route = |isa_irq: u8, vector: u8| {
                     let gsi = m.isa_irq_to_gsi(isa_irq);
@@ -368,8 +372,15 @@ pub extern "C" fn _start() -> ! {
 
         scheduler::init();                      // register idle process
 
-        // ── Phase 4: Syscall interface + user-space process ───────────────
-        syscall::init();
+        // ── Phase 4: Syscall interface + user-space process ─────────────
+        // Phase K5 increment 4: per-core GDT/TSS/PERCPU infrastructure. This
+        // is core 0 (the BSP) doing its own setup; each AP will call the
+        // same underlying functions with its own id in increment 5.
+        syscall::init(0);
+        kprintln!(
+            "[cpu]  core 0 (BSP) registered, lapic id={:?}",
+            arch::x86_64::lapic::lapic_id_for_core(0)
+        );
         let user_pid = userspace::spawn_user_init();
         kprintln!("[user] nexus-init spawned as pid={} (ring 3)", user_pid);
 
