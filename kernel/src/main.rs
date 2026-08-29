@@ -294,6 +294,10 @@ pub extern "C" fn _start() -> ! {
         io::mouse::init();
         kprintln!("[mouse] PS/2 mouse initialised — IRQ12 unmasked");
 
+        if !drivers::xhci::init() {
+            kprintln!("[xhci] no USB controller found");
+        }
+
         scheduler::init();                      // register idle process
 
         // ── Phase 4: Syscall interface + user-space process ───────────────

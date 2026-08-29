@@ -13,6 +13,8 @@ pub mod nvme;
 pub mod ahci;
 #[cfg(target_arch = "x86_64")]
 pub mod blockdev;
+#[cfg(target_arch = "x86_64")]
+pub mod xhci;
 
 #[cfg(target_arch = "x86_64")]
 use pci::PciDevice;
