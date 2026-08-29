@@ -66,7 +66,6 @@ const OP_USBSTS:  u64 = 0x04;
 const OP_CRCR:    u64 = 0x18;
 const OP_DCBAAP:  u64 = 0x30;
 const OP_CONFIG:  u64 = 0x38;
-#[allow(dead_code)] // used once port enumeration (the next increment) lands
 const OP_PORTSC0: u64 = 0x400; // PORTSC for port 1; port n is at + (n-1)*0x10
 
 const USBCMD_RS:    u32 = 1 << 0; // Run/Stop
@@ -76,6 +75,22 @@ const USBSTS_HCH: u32 = 1 << 0;  // Host Controller Halted
 const USBSTS_CNR: u32 = 1 << 11; // Controller Not Ready
 
 const CRCR_RCS: u64 = 1 << 0; // Ring Cycle State
+
+// PORTSC bits we touch. Bits 17/18/19/20/21/22/23 (CSC/PEC/WRC/OCC/PRC/PLC/
+// CEC) are RW1C "write 1 to clear" status-change bits: reading PORTSC and
+// writing the same value back would silently clear any of those that
+// happen to be set, discarding a status change we haven't looked at yet.
+// Every write below explicitly zeroes that whole mask except the exact
+// change bit (if any) we mean to acknowledge, so unrelated pending changes
+// are never lost.
+const PORTSC_CCS: u32 = 1 << 0;  // Current Connect Status (RO)
+const PORTSC_PED: u32 = 1 << 1;  // Port Enabled (RW — write 1 to disable, not used here)
+const PORTSC_PR:  u32 = 1 << 4;  // Port Reset (RW1S)
+const PORTSC_PRC: u32 = 1 << 21; // Port Reset Change (RW1C)
+const PORTSC_RW1C_MASK: u32 =
+    (1 << 17) | (1 << 18) | (1 << 19) | (1 << 20) | (1 << 21) | (1 << 22) | (1 << 23);
+
+const TRB_TYPE_ENABLE_SLOT_CMD: u32 = 9;
 
 // ─── Runtime register offsets (from runtime base = MMIO + RTSOFF) ───────────
 
@@ -277,11 +292,18 @@ pub fn init() -> bool {
     );
 
     match bringup(mmio) {
-        Ok(x) => {
+        Ok(mut x) => {
             crate::kprintln!(
                 "[xhci] online: max_slots={} max_ports={} context_size={}B",
                 x.max_slots, x.max_ports, x.context_size
             );
+            match x.scan_and_reset_port() {
+                Some(port) => match x.enable_slot() {
+                    Ok(slot) => crate::kprintln!("[xhci] port {} -> slot {} enabled", port, slot),
+                    Err(e)   => crate::kprintln!("[xhci] enable_slot failed: {}", e),
+                },
+                None => crate::kprintln!("[xhci] no connected USB devices found"),
+            }
             *XHCI.lock() = Some(x);
             true
         }
@@ -367,14 +389,8 @@ fn bringup(mmio: u64) -> Result<Xhci, &'static str> {
     let noop_addr = x.cmd_ring.enqueue_command(noop);
     unsafe { w32(x.db_base, 0); } // ring doorbell 0 (command doorbell), target field 0
 
-    let event = x.poll_event(50_000_000)
-        .ok_or("No-Op command timed out waiting for a completion event")?;
-    if event.trb_type() != TRB_TYPE_CMD_COMPLETION {
-        return Err("No-Op smoke test: unexpected event type");
-    }
-    if event.parameter != noop_addr {
-        return Err("No-Op smoke test: completion event does not match the command we issued");
-    }
+    let event = x.poll_command_completion(noop_addr)
+        .map_err(|_| "No-Op smoke test: timed out or never matched")?;
     if event.completion_code() != COMPLETION_SUCCESS {
         return Err("No-Op smoke test: command completed with a non-success code");
     }
@@ -383,6 +399,88 @@ fn bringup(mmio: u64) -> Result<Xhci, &'static str> {
 }
 
 impl Xhci {
+    /// Scan root-hub ports for a connected device, reset the first one
+    /// found, and return its port number (1-based) once the reset
+    /// completes and the port reports Enabled. Returns `None` if no port
+    /// currently has a device connected — a normal, expected state, not
+    /// an error.
+    fn scan_and_reset_port(&self) -> Option<u8> {
+        for port in 1..=self.max_ports {
+            let addr = self.op_base + OP_PORTSC0 + (port as u64 - 1) * 0x10;
+            let val = unsafe { r32(addr) };
+            if val & PORTSC_CCS == 0 {
+                continue; // nothing plugged into this port
+            }
+            crate::kprintln!("[xhci] port {} has a device connected (PORTSC={:#010x})", port, val);
+
+            // Request a reset. Clearing the RW1C mask (rather than leaving
+            // whatever was in `val`) means we don't re-arm/clear a change
+            // bit we haven't handled yet, while still setting PR.
+            unsafe { w32(addr, (val & !PORTSC_RW1C_MASK) | PORTSC_PR); }
+
+            if wait_for(|| unsafe { r32(addr) } & PORTSC_PRC != 0, "port reset timed out").is_err() {
+                crate::kprintln!("[xhci] port {} reset timed out", port);
+                continue;
+            }
+
+            // Acknowledge PRC (write 1 to clear just that bit) and check
+            // whether the port actually came up enabled.
+            let after = unsafe { r32(addr) };
+            unsafe { w32(addr, (after & !PORTSC_RW1C_MASK) | PORTSC_PRC); }
+
+            if after & PORTSC_PED == 0 {
+                crate::kprintln!("[xhci] port {} did not enable after reset", port);
+                continue;
+            }
+
+            crate::kprintln!("[xhci] port {} reset complete, enabled", port);
+            return Some(port);
+        }
+        None
+    }
+
+    /// Issue an Enable Slot command and return the Slot ID the controller
+    /// assigned, confirmed via its Command Completion event.
+    fn enable_slot(&mut self) -> Result<u8, &'static str> {
+        let trb = Trb { parameter: 0, status: 0, control: TRB_TYPE_ENABLE_SLOT_CMD << 10 };
+        let cmd_addr = self.cmd_ring.enqueue_command(trb);
+        unsafe { w32(self.db_base, 0); } // command doorbell
+
+        let event = self.poll_command_completion(cmd_addr)?;
+        if event.completion_code() != COMPLETION_SUCCESS {
+            return Err("Enable Slot: command completed with a non-success code");
+        }
+        Ok(event.slot_id())
+    }
+
+    /// Poll the event ring until a Command Completion Event matching
+    /// `expected_addr` appears. The event ring is a single stream shared by
+    /// every kind of event — in particular, `scan_and_reset_port`'s port
+    /// reset generates a Port Status Change Event that can (and in
+    /// practice does) land ahead of a subsequent command's completion
+    /// event. Treating "the next event" as automatically being the one we
+    /// asked for is wrong; this skips anything that isn't our match
+    /// (logging what it was) instead of misinterpreting it.
+    fn poll_command_completion(&mut self, expected_addr: u64) -> Result<Trb, &'static str> {
+        for _ in 0..32 {
+            let event = self.poll_event(50_000_000)
+                .ok_or("timed out waiting for a command completion event")?;
+            match event.trb_type() {
+                TRB_TYPE_CMD_COMPLETION if event.parameter == expected_addr => return Ok(event),
+                TRB_TYPE_CMD_COMPLETION => {
+                    crate::kprintln!("[xhci] ignoring a command completion for a different command");
+                }
+                TRB_TYPE_PORT_STS_CHANGE => {
+                    crate::kprintln!("[xhci] port status change event noted, still waiting for command completion");
+                }
+                other => {
+                    crate::kprintln!("[xhci] ignoring unexpected event type {} while waiting for command completion", other);
+                }
+            }
+        }
+        Err("gave up waiting for the matching command completion event after skipping 32 unrelated events")
+    }
+
     /// Poll the event ring for the next TRB the controller has produced,
     /// spinning up to `max_spins` times. Advances the consumer index/cycle
     /// state and updates `ERDP` (clearing the Event Handler Busy bit) once
