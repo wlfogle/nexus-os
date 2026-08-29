@@ -22,6 +22,8 @@ extern "C" {
 
 pub mod arch;
 #[cfg(target_arch = "x86_64")]
+pub mod acpi;
+#[cfg(target_arch = "x86_64")]
 pub mod drivers;
 // AArch64 VirtIO-MMIO block driver (QEMU virt machine)
 #[cfg(target_arch = "aarch64")]
@@ -56,6 +58,9 @@ use limine::{
     BaseRevision,
 };
 
+#[cfg(target_arch = "x86_64")]
+use limine::RsdpRequest;
+
 #[cfg(feature = "framebuffer")]
 use limine::FramebufferRequest;
 
@@ -84,6 +89,13 @@ static KADDR_REQUEST: KernelAddressRequest = KernelAddressRequest::new(0);
 #[used]
 #[link_section = ".limine_requests"]
 static KFILE_REQUEST: KernelFileRequest = KernelFileRequest::new(0);
+
+/// ACPI RSDP pointer (Phase K5) — x86_64 only; AArch64 (bahamut) has no
+/// ACPI tables to discover.
+#[cfg(target_arch = "x86_64")]
+#[used]
+#[link_section = ".limine_requests"]
+static RSDP_REQUEST: RsdpRequest = RsdpRequest::new(0);
 
 /// Framebuffer — laptop only.
 #[cfg(feature = "framebuffer")]
@@ -176,9 +188,25 @@ pub extern "C" fn _start() -> ! {
     memory::physical::init(mmap, hhdm_offset);
     kprintln!("[mem]  Physical frame allocator online");
 
-    // ── 5. Virtual memory / page tables ─────────────────────────────────────
+    // ── 5. Virtual memory / page tables ─────────────────────────────
     memory::paging::init(hhdm_offset);
     kprintln!("[mem]  Paging initialised");
+
+    // ── 5.5. ACPI table discovery (Phase K5) ────────────────────
+    // Needs paging::phys_to_virt (just initialised above) to walk the
+    // RSDT/XSDT and every table it points to. Purely additive: nothing
+    // downstream depends on this yet, and a missing/corrupt table just
+    // means later phases fall back to their pre-ACPI behavior.
+    #[cfg(target_arch = "x86_64")]
+    {
+        let rsdp_virt = RSDP_REQUEST
+            .get_response()
+            .get()
+            .and_then(|r| r.address.as_ptr())
+            .map(|p| p as u64)
+            .unwrap_or(0);
+        acpi::init(rsdp_virt);
+    }
 
     // ── 6. Kernel heap ──────────────────────────────────────────────────────
     memory::heap::init();
