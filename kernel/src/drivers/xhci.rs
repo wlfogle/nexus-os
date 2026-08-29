@@ -89,8 +89,21 @@ const PORTSC_PR:  u32 = 1 << 4;  // Port Reset (RW1S)
 const PORTSC_PRC: u32 = 1 << 21; // Port Reset Change (RW1C)
 const PORTSC_RW1C_MASK: u32 =
     (1 << 17) | (1 << 18) | (1 << 19) | (1 << 20) | (1 << 21) | (1 << 22) | (1 << 23);
+const PORTSC_SPEED_SHIFT: u32 = 10; // Port Speed ID (RO), bits 13:10
 
-const TRB_TYPE_ENABLE_SLOT_CMD: u32 = 9;
+const TRB_TYPE_ENABLE_SLOT_CMD:    u32 = 9;
+const TRB_TYPE_ADDRESS_DEVICE_CMD: u32 = 11;
+
+// Port/Slot-Context "Protocol Speed ID" values in the default (no
+// vendor-specific PSI table) assignment xHCI controllers use — the same
+// numeric encoding is shared verbatim between PORTSC's speed field and the
+// Slot Context's Speed field, so no translation is needed between them.
+const SPEED_FULL:  u8 = 1;
+const SPEED_LOW:   u8 = 2;
+const SPEED_HIGH:  u8 = 3;
+const SPEED_SUPER: u8 = 4;
+
+const EP_TYPE_CONTROL: u32 = 4;
 
 // ─── Runtime register offsets (from runtime base = MMIO + RTSOFF) ───────────
 
@@ -154,12 +167,13 @@ impl Trb {
 
 const RING_TRBS: usize = 256; // one 4 KiB page / 16 bytes per TRB
 
-/// A single producer-consumer TRB ring (used for both the command ring and
-/// the one event-ring segment). The last slot of a *command/transfer* ring
-/// is always a Link TRB pointing back to slot 0 (required by the spec so
-/// the controller knows where to wrap); the event ring has no Link TRB —
-/// the controller itself wraps via `ERDP`/`ERSTSZ`, so `enqueue` is never
-/// called on it, only `dequeue`.
+/// A single producer-consumer TRB ring: used for the Command Ring, and
+/// reused as-is for every per-endpoint Transfer Ring (EP0's control-transfer
+/// ring, later real HID interrupt-IN rings) — both share the exact same
+/// "flat array of TRBs terminated by a Link TRB" shape. Only the one event
+/// ring segment is structurally different (no Link TRB — the controller
+/// wraps it itself via `ERDP`/`ERSTSZ`), so it gets its own constructor and
+/// is only ever consumed via `peek_event`, never `enqueue_command`.
 struct Ring {
     virt:  u64,
     phys:  u64,
@@ -168,7 +182,7 @@ struct Ring {
 }
 
 impl Ring {
-    fn new_command_ring() -> Self {
+    fn new() -> Self {
         let phys = alloc_zeroed_frame();
         let virt = paging::phys_to_virt(phys);
         // Slot RING_TRBS-1 = Link TRB back to slot 0, cycle bit matching the
@@ -245,9 +259,52 @@ fn alloc_zeroed_frame() -> u64 {
     phys
 }
 
+/// Write one dword of a Slot/Endpoint/Input-Control context at `dword_index`
+/// (0-7 within that 32-byte context, regardless of whether the controller's
+/// actual context size is 32 or 64 bytes — the extra bytes in 64-byte mode
+/// are trailing padding after the same 8-dword layout, never additional
+/// meaningful fields).
+#[inline]
+unsafe fn write_dword(ctx_base: u64, dword_index: usize, value: u32) {
+    core::ptr::write_volatile((ctx_base as *mut u32).add(dword_index), value);
+}
+
+/// Max packet size (bytes) for EP0 given a device's Protocol Speed ID, used
+/// before any descriptor has actually been read from the device. This is
+/// the standard USB-spec default per speed class, not a guess: Low Speed
+/// devices are only ever 8, and High/Super Speed devices are fixed at
+/// 64/512 by spec — only Full Speed varies in principle (8/16/32/64), and 8
+/// is the always-safe conservative choice there.
+fn max_packet_size_for_speed(speed: u8) -> u16 {
+    match speed {
+        SPEED_LOW   => 8,
+        SPEED_FULL  => 8,
+        SPEED_HIGH  => 64,
+        SPEED_SUPER => 512,
+        _           => 8,
+    }
+}
+
 // ─── Driver state ─────────────────────────────────────────────────────────────
 
-#[allow(dead_code)] // op_base/dcbaa_virt are used once port/device enumeration (the next increment) lands
+/// A single addressed USB device. This driver only tracks one at a time
+/// (single root hub, first device found — see the module-level scope note);
+/// multi-device support is future work, not a limitation of this struct's
+/// shape specifically.
+struct UsbDevice {
+    #[allow(dead_code)] // used once control transfers (the next increment) ring the device doorbell
+    slot_id:  u8,
+    #[allow(dead_code)] // reported in boot logs today; will drive re-enumeration on unplug later
+    port:     u8,
+    #[allow(dead_code)] // needed once usb_hid parses reports that vary by speed/timing
+    speed:    u8,
+    /// EP0's control-transfer ring — kept alive here so its producer
+    /// index/cycle state survives between separate control transfers
+    /// (SET_CONFIGURATION, then later SET_PROTOCOL/SET_IDLE, etc.).
+    #[allow(dead_code)] // used once the control-transfer helper (the next increment) lands
+    ep0_ring: Ring,
+}
+
 pub struct Xhci {
     op_base:      u64, // Operational Registers virtual base
     rt_base:      u64, // Runtime Registers virtual base
@@ -260,6 +317,7 @@ pub struct Xhci {
     evt_ring:     Ring,
     evt_index:    usize, // next event-ring slot we expect the controller to produce
     evt_cycle:    bool,  // consumer cycle state for the event ring
+    device:       Option<UsbDevice>,
 }
 
 static XHCI: Mutex<Option<Xhci>> = Mutex::new(None);
@@ -299,8 +357,16 @@ pub fn init() -> bool {
             );
             match x.scan_and_reset_port() {
                 Some(port) => match x.enable_slot() {
-                    Ok(slot) => crate::kprintln!("[xhci] port {} -> slot {} enabled", port, slot),
-                    Err(e)   => crate::kprintln!("[xhci] enable_slot failed: {}", e),
+                    Ok(slot) => {
+                        crate::kprintln!("[xhci] port {} -> slot {} enabled", port, slot);
+                        let speed = x.port_speed(port);
+                        match x.address_device(slot, port, speed) {
+                            Ok(()) => crate::kprintln!(
+                                "[xhci] slot {} addressed (speed_id={})", slot, speed),
+                            Err(e) => crate::kprintln!("[xhci] address_device failed: {}", e),
+                        }
+                    }
+                    Err(e) => crate::kprintln!("[xhci] enable_slot failed: {}", e),
                 },
                 None => crate::kprintln!("[xhci] no connected USB devices found"),
             }
@@ -351,8 +417,8 @@ fn bringup(mmio: u64) -> Result<Xhci, &'static str> {
     let dcbaa_virt = paging::phys_to_virt(dcbaa_phys);
     unsafe { w64(op_base + OP_DCBAAP, dcbaa_phys); }
 
-    // ── Command ring ─────────────────────────────────────────────────────
-    let cmd_ring = Ring::new_command_ring();
+    // ── Command ring ───────────────────────────────────
+    let cmd_ring = Ring::new();
     unsafe { w64(op_base + OP_CRCR, cmd_ring.phys | CRCR_RCS); }
 
     // ── Event ring (one segment) + its segment table ────────────────────
@@ -382,6 +448,7 @@ fn bringup(mmio: u64) -> Result<Xhci, &'static str> {
     let mut x = Xhci {
         op_base, rt_base, db_base, max_slots, max_ports, context_size,
         dcbaa_virt, cmd_ring, evt_ring, evt_index: 0, evt_cycle: true,
+        device: None,
     };
 
     // ── Smoke test: issue a No-Op command, confirm its completion event ──
@@ -439,6 +506,13 @@ impl Xhci {
         None
     }
 
+    /// Root-hub port speed (Protocol Speed ID, PORTSC bits 13:10).
+    fn port_speed(&self, port: u8) -> u8 {
+        let addr = self.op_base + OP_PORTSC0 + (port as u64 - 1) * 0x10;
+        let val = unsafe { r32(addr) };
+        ((val >> PORTSC_SPEED_SHIFT) & 0xF) as u8
+    }
+
     /// Issue an Enable Slot command and return the Slot ID the controller
     /// assigned, confirmed via its Command Completion event.
     fn enable_slot(&mut self) -> Result<u8, &'static str> {
@@ -451,6 +525,85 @@ impl Xhci {
             return Err("Enable Slot: command completed with a non-success code");
         }
         Ok(event.slot_id())
+    }
+
+    /// Build the Input Context for a freshly-enabled slot (Input Control
+    /// Context with Slot+EP0 added, a Slot Context for a device directly
+    /// attached to the root hub with no upstream hub, and an EP0 Context
+    /// pointing at a fresh control-transfer ring), point the slot's DCBAA
+    /// entry at a fresh Output Device Context, and issue Address Device.
+    /// On success, stores the addressed device (including its EP0 ring, so
+    /// later control transfers can keep enqueueing onto it) in `self.device`.
+    fn address_device(&mut self, slot_id: u8, port: u8, speed: u8) -> Result<(), &'static str> {
+        let ctx_sz = self.context_size as u64;
+
+        // Input Context layout: [Input Control Context][Slot Context][EP0 Context],
+        // each `ctx_sz` bytes apart, all in one page (32B*3=96, 64B*3=192 —
+        // comfortably under 4 KiB either way).
+        let input_phys = alloc_zeroed_frame();
+        let input_virt = paging::phys_to_virt(input_phys);
+
+        // EP0's own control-transfer ring — a separate allocation from the
+        // Input Context, which the controller only reads once and never
+        // touches again after this command completes.
+        let ep0_ring = Ring::new();
+
+        unsafe {
+            // Input Control Context (context index 0): Add Context flags
+            // A0 (Slot) and A1 (EP0) — both required for Address Device.
+            // Drop Context flags (DW0) stay zero: nothing to drop on a
+            // brand new slot.
+            write_dword(input_virt, 1, 0b11);
+
+            // Slot Context (context index 1).
+            let slot_off = input_virt + ctx_sz;
+            const ROUTE_STRING: u32 = 0;   // directly attached to the root hub — no external hubs in this driver
+            const CONTEXT_ENTRIES: u32 = 1; // only EP0 (DCI 1) is valid so far
+            write_dword(slot_off, 0,
+                ROUTE_STRING | ((speed as u32) << 20) | (CONTEXT_ENTRIES << 27));
+            write_dword(slot_off, 1, (port as u32) << 16); // Root Hub Port Number
+            write_dword(slot_off, 2, 0); // Interrupter Target = 0 (our only interpreter)
+            write_dword(slot_off, 3, 0); // USB Device Address / Slot State: output-only, controller fills in
+
+            // EP0 Context (context index 2).
+            let ep0_off = input_virt + ctx_sz * 2;
+            let max_packet = max_packet_size_for_speed(speed) as u32;
+            const CERR: u32 = 3; // Error Count: retry up to 3 times before reporting a transaction error
+            write_dword(ep0_off, 1, (CERR << 1) | (EP_TYPE_CONTROL << 3) | (max_packet << 16));
+            let deq_lo = (ep0_ring.phys as u32 & !0xF) | 1; // bits 4-31 = TR Dequeue Pointer, bit0 DCS=1 (initial cycle state)
+            let deq_hi = (ep0_ring.phys >> 32) as u32;
+            write_dword(ep0_off, 2, deq_lo);
+            write_dword(ep0_off, 3, deq_hi);
+            write_dword(ep0_off, 4, 8); // Average TRB Length: spec-recommended default for control endpoints
+        }
+
+        // Point this slot's DCBAA entry at a fresh Output Device Context
+        // (Slot Context + EP0 Context only, no Input Control Context) —
+        // the controller copies the validated Input Context fields into
+        // this on a successful Address Device.
+        let dev_ctx_phys = alloc_zeroed_frame();
+        unsafe {
+            let dcbaa_entry = (self.dcbaa_virt as *mut u64).add(slot_id as usize);
+            core::ptr::write_volatile(dcbaa_entry, dev_ctx_phys);
+        }
+
+        let trb = Trb {
+            parameter: input_phys,
+            status: 0,
+            // BSR (bit 9) = 0: issue a real SET_ADDRESS to the device now,
+            // rather than only validating the Input Context.
+            control: (TRB_TYPE_ADDRESS_DEVICE_CMD << 10) | ((slot_id as u32) << 24),
+        };
+        let cmd_addr = self.cmd_ring.enqueue_command(trb);
+        unsafe { w32(self.db_base, 0); } // command doorbell
+
+        let event = self.poll_command_completion(cmd_addr)?;
+        if event.completion_code() != COMPLETION_SUCCESS {
+            return Err("Address Device: command completed with a non-success code");
+        }
+
+        self.device = Some(UsbDevice { slot_id, port, speed, ep0_ring });
+        Ok(())
     }
 
     /// Poll the event ring until a Command Completion Event matching
