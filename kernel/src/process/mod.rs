@@ -20,6 +20,29 @@ pub const KSTACK_SIZE: usize = 16 * 1024;
 /// Maximum simultaneous processes.
 pub const MAX_PROCS: usize = 64;
 
+/// Max simultaneously open file descriptors per process, on top of the fixed
+/// stdin/stdout/stderr triple (fds 0-2), which the syscall layer handles
+/// specially (serial I/O / SYS_READ_CHAR) rather than storing here.
+pub const MAX_FDS: usize = 8;
+
+/// One open file: which root-relative path it names and how far into it this
+/// fd has read/written so far. Does not hold a live `fatfs::File` handle —
+/// see the "Phase K3" comment in `fs::fat` for why re-opening by path on
+/// every operation is the deliberate design here, not a shortcut.
+#[derive(Clone, Copy)]
+pub struct FileDescriptor {
+    pub in_use:   bool,
+    pub path:     [u8; 128],
+    pub path_len: u8,
+    pub offset:   u64,
+}
+
+impl FileDescriptor {
+    const fn empty() -> Self {
+        Self { in_use: false, path: [0u8; 128], path_len: 0, offset: 0 }
+    }
+}
+
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ProcessState {
     Ready,
@@ -85,6 +108,9 @@ pub struct Process {
     /// requested so far. Physical pages are only mapped up to the page-aligned
     /// extent of heap_brk — see SYS_BRK in syscall/mod.rs.
     pub heap_brk: u64,
+    /// Open file descriptors, fd numbers 3.. (index 0 here = fd 3). fds 0-2
+    /// are reserved for stdin/stdout/stderr and never stored here.
+    pub fds: [FileDescriptor; MAX_FDS],
     /// Kernel stack storage (lives inside the PCB for simplicity).
     pub stack: [u8; KSTACK_SIZE],
 }
@@ -103,6 +129,7 @@ impl Process {
             personality:      ProcessPersonality::Nexus,
             heap_base:        0,
             heap_brk:         0,
+            fds:              [const { FileDescriptor::empty() }; MAX_FDS],
             stack:            [0u8; KSTACK_SIZE],
         }
     }
@@ -301,6 +328,66 @@ pub fn set_heap_brk(id: u64, new_brk: u64) {
     if let Some(p) = table.iter_mut().find(|p| p.id == id) {
         p.heap_brk = new_brk;
     }
+}
+
+// ─── Phase K3: per-process file descriptors ───────────────────────
+
+/// Allocate a free fd slot for `pid`, recording `path` (already root-relative
+/// and validated by the caller) and `start_offset`. Returns the fd number
+/// (>= 3) or `None` if the path is too long or the process has no free slot.
+pub fn open_fd(pid: u64, path: &str, start_offset: u64) -> Option<u64> {
+    if path.len() > 128 { return None; }
+    let mut table = TABLE.lock();
+    let p = table.iter_mut().find(|p| p.id == pid)?;
+    let slot_idx = p.fds.iter().position(|f| !f.in_use)?;
+    let fd = &mut p.fds[slot_idx];
+    fd.in_use = true;
+    fd.path[..path.len()].copy_from_slice(path.as_bytes());
+    fd.path_len = path.len() as u8;
+    fd.offset = start_offset;
+    Some(3 + slot_idx as u64)
+}
+
+/// Look up an open fd's path and current offset, copied out so the caller
+/// can do filesystem I/O (which takes its own separate lock) without
+/// holding the process table lock for the duration.
+pub fn fd_info(pid: u64, fd: u64) -> Option<([u8; 128], u8, u64)> {
+    if fd < 3 { return None; }
+    let idx = (fd - 3) as usize;
+    if idx >= MAX_FDS { return None; }
+    let table = TABLE.lock();
+    let p = table.iter().find(|p| p.id == pid)?;
+    let f = &p.fds[idx];
+    if !f.in_use { return None; }
+    Some((f.path, f.path_len, f.offset))
+}
+
+/// Update an open fd's offset after a read/write/lseek. No-op if the fd
+/// isn't actually open (e.g. closed concurrently — not reachable on this
+/// single-core kernel mid-syscall, but harmless either way).
+pub fn fd_set_offset(pid: u64, fd: u64, new_offset: u64) {
+    if fd < 3 { return; }
+    let idx = (fd - 3) as usize;
+    if idx >= MAX_FDS { return; }
+    let mut table = TABLE.lock();
+    if let Some(p) = table.iter_mut().find(|p| p.id == pid) {
+        if p.fds[idx].in_use { p.fds[idx].offset = new_offset; }
+    }
+}
+
+/// Close an open fd. Returns `false` if it wasn't open.
+pub fn close_fd(pid: u64, fd: u64) -> bool {
+    if fd < 3 { return false; }
+    let idx = (fd - 3) as usize;
+    if idx >= MAX_FDS { return false; }
+    let mut table = TABLE.lock();
+    if let Some(p) = table.iter_mut().find(|p| p.id == pid) {
+        if p.fds[idx].in_use {
+            p.fds[idx] = FileDescriptor::empty();
+            return true;
+        }
+    }
+    false
 }
 
 /// Return IDs of all processes in BlockedOnKey state.

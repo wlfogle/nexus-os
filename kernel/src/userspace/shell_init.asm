@@ -55,6 +55,12 @@ BITS 64
 %define SYS_SPAWN         28
 %define SYS_WAIT          29
 %define SYS_KILL          30
+%define SYS_OPEN          31
+%define SYS_CLOSE         32
+%define SYS_READ          33
+%define SYS_LSEEK         34
+%define O_CREAT           1
+%define O_TRUNC           2
 
 ; ── Buffer sizes (must all fit on one 4 096-byte stack page) ─────────────
 %define CMD_BUF_SIZE   256
@@ -914,6 +920,104 @@ fn_dispatch:
     jmp  .fin
 .nmemtest:
 
+    ; ── fdtest ── exercises SYS_OPEN/WRITE/CLOSE/READ/LSEEK end-to-end against a
+    ; real file on the mounted FAT32 disk: write via an fd, close, reopen
+    ; read-only, read back and compare, then verify SEEK_SET repositions the
+    ; fd correctly. Proves real disk I/O through fds, not just that the
+    ; syscalls return plausible numbers.
+    mov  rdi, r12
+    lea  rsi, [rel kw_fdtest]
+    mov  rdx, 6
+    call fn_match
+    test rax, rax
+    jnz  .nfdtest
+
+    mov  rax, SYS_OPEN
+    lea  rdi, [rel str_fdtest_path]
+    mov  rsi, O_CREAT | O_TRUNC
+    syscall                              ; rax = fd, or -err
+    test rax, rax
+    js   .fdtest_fail
+    mov  rbx, rax                        ; rbx = fd (write)
+
+    mov  rax, SYS_WRITE
+    mov  rdi, rbx
+    lea  rsi, [rel str_fdtest_data]
+    mov  rdx, str_fdtest_data_len
+    syscall                              ; rax = bytes written, or -err
+    cmp  rax, str_fdtest_data_len
+    jne  .fdtest_fail_close
+
+    mov  rax, SYS_CLOSE
+    mov  rdi, rbx
+    syscall
+    test rax, rax
+    js   .fdtest_fail
+
+    mov  rax, SYS_OPEN
+    lea  rdi, [rel str_fdtest_path]
+    xor  rsi, rsi                        ; flags = 0 (read-only, must exist)
+    syscall
+    test rax, rax
+    js   .fdtest_fail
+    mov  rbx, rax                        ; rbx = fd (read)
+
+    mov  rax, SYS_READ
+    mov  rdi, rbx
+    mov  rsi, r13                        ; num_buf as scratch (32 bytes)
+    mov  rdx, str_fdtest_data_len
+    syscall                              ; rax = bytes read
+    cmp  rax, str_fdtest_data_len
+    jne  .fdtest_fail_close
+
+    xor  rcx, rcx
+.fdtest_cmp:
+    cmp  rcx, str_fdtest_data_len
+    jge  .fdtest_cmp_ok
+    mov  al, [r13 + rcx]
+    lea  rdx, [rel str_fdtest_data]
+    cmp  al, [rdx + rcx]
+    jne  .fdtest_fail_close
+    inc  rcx
+    jmp  .fdtest_cmp
+.fdtest_cmp_ok:
+
+    mov  rax, SYS_LSEEK
+    mov  rdi, rbx
+    mov  rsi, 7
+    xor  rdx, rdx                        ; SEEK_SET = 0
+    syscall                              ; rax = new offset (should be 7)
+    cmp  rax, 7
+    jne  .fdtest_fail_close
+
+    mov  rax, SYS_READ
+    mov  rdi, rbx
+    mov  rsi, r13
+    mov  rdx, NUM_BUF_SIZE
+    syscall                              ; rax = bytes read from offset 7
+    mov  rcx, str_fdtest_data_len - 7
+    cmp  rax, rcx
+    jne  .fdtest_fail_close
+
+    mov  rax, SYS_CLOSE
+    mov  rdi, rbx
+    syscall
+
+    lea  rsi, [rel str_fdtest_ok]
+    mov  rdx, str_fdtest_ok_len
+    call fn_write
+    jmp  .fin
+.fdtest_fail_close:
+    mov  rax, SYS_CLOSE
+    mov  rdi, rbx
+    syscall
+.fdtest_fail:
+    lea  rsi, [rel str_fdtest_fail]
+    mov  rdx, str_fdtest_fail_len
+    call fn_write
+    jmp  .fin
+.nfdtest:
+
     ; ── Unknown command ───────────────────────────────────────────────────────
     lea  rsi, [rel str_unk_pfx]
     mov  rdx, str_unk_pfx_len
@@ -975,6 +1079,7 @@ str_help:
     db  "  wait <p> - block until pid <p> exits, print its exit code", 13, 10
     db  "  kill <p> - forcibly terminate pid <p>", 13, 10
     db  "  memtest  - verify SYS_BRK (heap) end-to-end", 13, 10
+    db  "  fdtest   - verify SYS_OPEN/READ/WRITE/CLOSE/LSEEK end-to-end", 13, 10
     db  "  clear    - clear the screen", 13, 10
     db  "  reboot   - exit shell and reboot", 13, 10
 str_help_len equ $ - str_help
@@ -1068,6 +1173,21 @@ str_memtest_fail:
     db  "memtest: FAIL", 13, 10
 str_memtest_fail_len equ $ - str_memtest_fail
 
+str_fdtest_path:
+    db  "/FDTEST.TXT", 0
+
+str_fdtest_data:
+    db  "Hello, fd!"
+str_fdtest_data_len equ $ - str_fdtest_data
+
+str_fdtest_ok:
+    db  "fdtest: PASS (open/write/close/reopen/read/seek all verified)", 13, 10
+str_fdtest_ok_len equ $ - str_fdtest_ok
+
+str_fdtest_fail:
+    db  "fdtest: FAIL", 13, 10
+str_fdtest_fail_len equ $ - str_fdtest_fail
+
 str_spawn_usage:
     db  "usage: spawn <file>", 13, 10
 str_spawn_usage_len equ $ - str_spawn_usage
@@ -1117,6 +1237,7 @@ kw_rm:      db  "rm"
 kw_write:   db  "write"
 kw_append:  db  "append"
 kw_memtest: db  "memtest"
+kw_fdtest:  db  "fdtest"
 kw_spawn:   db  "spawn"
 kw_wait:    db  "wait"
 kw_kill:    db  "kill"

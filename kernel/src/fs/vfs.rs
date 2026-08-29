@@ -83,3 +83,45 @@ pub fn remove(path: &str) -> Result<(), &'static str> {
     }
     fat::remove_path(rel)
 }
+
+// ─── Phase K3: fd-oriented operations (SYS_OPEN/SYS_READ/SYS_WRITE/SYS_LSEEK) ──
+
+/// Open (or create) the file at `path`. Returns the root-relative path string
+/// (for the caller to stash in the process's fd table) and, if truncated or
+/// newly created, an implicit size of 0.
+pub fn open(path: &str, create: bool, truncate: bool) -> Result<&str, &'static str> {
+    let rel = normalize(path)?;
+    if rel.is_empty() {
+        return Err("vfs: cannot open root");
+    }
+    fat::open_path(rel, create, truncate)?;
+    Ok(rel)
+}
+
+/// Size in bytes of the file at `path`.
+pub fn size(path: &str) -> Result<u64, &'static str> {
+    let rel = normalize(path)?;
+    if rel.is_empty() {
+        return Err("vfs: is a directory");
+    }
+    fat::file_size(rel)
+}
+
+/// Read up to `buf.len()` bytes from `path` starting at `offset`.
+pub fn read_at(path: &str, offset: u64, buf: &mut [u8]) -> Result<usize, &'static str> {
+    let rel = normalize(path)?;
+    if rel.is_empty() {
+        return Err("vfs: is a directory");
+    }
+    fat::read_path_at(rel, offset, buf)
+}
+
+/// Write `data` to `path` starting at `offset`, extending the file as
+/// needed without truncating anything beyond the written range.
+pub fn write_at(path: &str, offset: u64, data: &[u8]) -> Result<usize, &'static str> {
+    let rel = normalize(path)?;
+    if rel.is_empty() {
+        return Err("vfs: cannot write root");
+    }
+    fat::write_path_at(rel, offset, data)
+}

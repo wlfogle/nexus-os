@@ -70,6 +70,21 @@ pub const SYS_BRK: u64 = 27; // brk(new_brk) → resulting brk, or -errno. brk(0
 pub const SYS_SPAWN: u64 = 28; // spawn(name_ptr) → child pid, or -errno. Never blocks.
 pub const SYS_WAIT:  u64 = 29; // wait(pid) → that process's exit code, or -errno.
 pub const SYS_KILL:  u64 = 30; // kill(pid) → 0, or -errno.
+// ── Phase K3: fd-based file I/O ────────────────────────────────
+pub const SYS_OPEN:  u64 = 31; // open(path_ptr, flags) → fd (>=3), or -errno.
+pub const SYS_CLOSE: u64 = 32; // close(fd) → 0, or -errno.
+pub const SYS_READ:  u64 = 33; // read(fd, buf_ptr, len) → bytes read, or -errno. fd must be >= 3.
+pub const SYS_LSEEK: u64 = 34; // lseek(fd, offset, whence) → new offset, or -errno.
+
+/// SYS_OPEN flags (bitmask in arg2).
+pub const O_CREAT:  u64 = 1; // create the file if it doesn't exist
+pub const O_TRUNC:  u64 = 2; // truncate to zero length on open
+pub const O_APPEND: u64 = 4; // start the fd's offset at the current EOF
+
+/// SYS_LSEEK whence values (arg3).
+pub const SEEK_SET: u64 = 0;
+pub const SEEK_CUR: u64 = 1;
+pub const SEEK_END: u64 = 2;
 
 /// Largest program image SYS_EXEC will load from disk (1 MiB).
 const MAX_PROG_BYTES: usize = 1024 * 1024;
@@ -355,26 +370,44 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
             exit_current(pid, code)
         }
 
-        // ── SYS_WRITE ─────────────────────────────────────────────────────
+        // ── SYS_WRITE ───────────────────────────────────
         // write(fd, buf_ptr, len)
-        // fd 1 = stdout (kernel serial)
+        // fd 1 = stdout (kernel serial); fd >= 3 = an fd opened via SYS_OPEN,
+        // written at (and advancing) its saved offset.
         SYS_WRITE => {
             let fd  = a1;
             let ptr = a2 as *const u8;
             let len = a3 as usize;
 
-            if fd != 1 { return -22; } // EINVAL
-            if len > 4096 { return -7; } // E2BIG
-
-            // Safety: buf_ptr is from the calling process's user half, which is
-            // mapped in the address space active during this syscall (the
-            // caller's own PML4).  The kernel higher half is shared, so the
-            // copy below reads valid user memory.
-            let slice = unsafe { core::slice::from_raw_parts(ptr, len) };
-            if let Ok(s) = core::str::from_utf8(slice) {
-                crate::kprint!("{}", s);
+            if fd == 1 {
+                if len > 4096 { return -7; } // E2BIG
+                // Safety: buf_ptr is from the calling process's user half,
+                // mapped in the address space active during this syscall.
+                let slice = unsafe { core::slice::from_raw_parts(ptr, len) };
+                if let Ok(s) = core::str::from_utf8(slice) {
+                    crate::kprint!("{}", s);
+                }
+                return len as i64;
             }
-            len as i64
+            if fd < 3 { return -22; } // EINVAL — fd 0/2 not writable via this path
+
+            let pid = scheduler::current_id();
+            let (path_buf, path_len, offset) = match process::fd_info(pid, fd) {
+                Some(v) => v,
+                None    => return -9, // EBADF
+            };
+            let path = match core::str::from_utf8(&path_buf[..path_len as usize]) {
+                Ok(s)  => s,
+                Err(_) => return -22,
+            };
+            let data = unsafe { core::slice::from_raw_parts(ptr, len) };
+            match crate::fs::vfs::write_at(path, offset, data) {
+                Ok(n) => {
+                    process::fd_set_offset(pid, fd, offset + n as u64);
+                    n as i64
+                }
+                Err(_) => -5, // EIO
+            }
         }
 
         // ── SYS_GETPID ────────────────────────────────────────────────────
@@ -893,6 +926,106 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
 
             process::set_heap_brk(pid, requested);
             requested as i64
+        }
+
+        // ── SYS_OPEN ───────────────────────────────────
+        // open(path_ptr (NUL-term, <=255), flags) → fd (>= 3), or -errno.
+        // flags: O_CREAT=1, O_TRUNC=2, O_APPEND=4 (see constants above).
+        SYS_OPEN => {
+            let path_ptr = a1 as *const u8;
+            let flags    = a2;
+            let mut plen = 0usize;
+            unsafe {
+                while plen < 255 && *path_ptr.add(plen) != 0 { plen += 1; }
+            }
+            let path = match core::str::from_utf8(
+                unsafe { core::slice::from_raw_parts(path_ptr, plen) }
+            ) {
+                Ok(s)  => s,
+                Err(_) => return -22, // EINVAL
+            };
+            let create   = flags & O_CREAT  != 0;
+            let truncate = flags & O_TRUNC  != 0;
+            let append   = flags & O_APPEND != 0;
+            let rel = match crate::fs::vfs::open(path, create, truncate) {
+                Ok(rel) => rel,
+                Err(_)  => return -2, // ENOENT
+            };
+            let start_offset = if append {
+                crate::fs::vfs::size(path).unwrap_or(0)
+            } else {
+                0
+            };
+            let pid = scheduler::current_id();
+            match process::open_fd(pid, rel, start_offset) {
+                Some(fd) => fd as i64,
+                None     => -24, // EMFILE — no free fd slot
+            }
+        }
+
+        // ── SYS_CLOSE ──────────────────────────────────
+        // close(fd) → 0, or -errno.
+        SYS_CLOSE => {
+            let pid = scheduler::current_id();
+            if process::close_fd(pid, a1) { 0 } else { -9 } // EBADF
+        }
+
+        // ── SYS_READ ───────────────────────────────────
+        // read(fd, buf_ptr, len) → bytes read, or -errno. fd must be an fd
+        // opened via SYS_OPEN (>= 3) — keyboard input still goes through
+        // SYS_READ_CHAR/_NB, not this syscall.
+        SYS_READ => {
+            let pid     = scheduler::current_id();
+            let fd      = a1;
+            let buf_ptr = a2 as *mut u8;
+            let len     = a3 as usize;
+            let (path_buf, path_len, offset) = match process::fd_info(pid, fd) {
+                Some(v) => v,
+                None    => return -9, // EBADF
+            };
+            let path = match core::str::from_utf8(&path_buf[..path_len as usize]) {
+                Ok(s)  => s,
+                Err(_) => return -22,
+            };
+            let buf = unsafe { core::slice::from_raw_parts_mut(buf_ptr, len) };
+            match crate::fs::vfs::read_at(path, offset, buf) {
+                Ok(n) => {
+                    process::fd_set_offset(pid, fd, offset + n as u64);
+                    n as i64
+                }
+                Err(_) => -5, // EIO
+            }
+        }
+
+        // ── SYS_LSEEK ──────────────────────────────────
+        // lseek(fd, offset, whence) → new offset, or -errno.
+        // whence: SEEK_SET=0, SEEK_CUR=1, SEEK_END=2.
+        SYS_LSEEK => {
+            let pid     = scheduler::current_id();
+            let fd      = a1;
+            let off_arg = a2 as i64;
+            let whence  = a3;
+            let (path_buf, path_len, cur_offset) = match process::fd_info(pid, fd) {
+                Some(v) => v,
+                None    => return -9, // EBADF
+            };
+            let path = match core::str::from_utf8(&path_buf[..path_len as usize]) {
+                Ok(s)  => s,
+                Err(_) => return -22,
+            };
+            let base: i64 = match whence {
+                SEEK_SET => 0,
+                SEEK_CUR => cur_offset as i64,
+                SEEK_END => match crate::fs::vfs::size(path) {
+                    Ok(s)  => s as i64,
+                    Err(_) => return -5,
+                },
+                _ => return -22,
+            };
+            let new_offset = base + off_arg;
+            if new_offset < 0 { return -22; }
+            process::fd_set_offset(pid, fd, new_offset as u64);
+            new_offset
         }
 
         _ => {

@@ -356,6 +356,89 @@ pub fn read_file(path: &str, buf: &mut [u8]) -> Result<usize, &'static str> {
     read_path(path, buf)
 }
 
+// ─── Phase K3: fd-based I/O primitives ───────────────────────────────
+//
+// None of these keep a live `fatfs::File` handle across calls — like every
+// other function in this file, they re-open the file by path under the FS
+// lock each time. A `fatfs::File` borrows from the mounted `FileSystem`, so
+// holding one across syscalls would mean storing a borrow with the FS's
+// lifetime inside a `'static` per-process fd table; re-opening by saved
+// path + offset avoids that entirely at the cost of one extra directory
+// walk per call, which is fine at this OS's current I/O volume.
+
+/// Return the size in bytes of the file at `path`.
+pub fn file_size(path: &str) -> Result<u64, &'static str> {
+    let guard = FS.lock();
+    let fs    = guard.as_ref().ok_or("FAT32: not mounted")?;
+    let root  = fs.root_dir();
+    let mut file = root.open_file(path).map_err(|_| "FAT32: file not found")?;
+    file.seek(SeekFrom::End(0)).map_err(|_| "FAT32: seek failed")
+}
+
+/// Open (or create) the file at `path` so it's ready for fd-based I/O.
+/// Returns an error if it doesn't exist and `create` is false.
+pub fn open_path(path: &str, create: bool, truncate: bool) -> Result<(), &'static str> {
+    let guard = FS.lock();
+    let fs    = guard.as_ref().ok_or("FAT32: not mounted")?;
+    let root  = fs.root_dir();
+    let mut file = match root.open_file(path) {
+        Ok(f) => f,
+        Err(_) if create => root.create_file(path).map_err(|_| "FAT32: create failed")?,
+        Err(_) => return Err("FAT32: file not found"),
+    };
+    if truncate {
+        file.truncate().map_err(|_| "FAT32: truncate failed")?;
+    }
+    Ok(())
+}
+
+/// Read up to `buf.len()` bytes from `path` starting at byte `offset`.
+/// Returns the number of bytes actually read (0 at or past EOF).
+pub fn read_path_at(path: &str, offset: u64, buf: &mut [u8]) -> Result<usize, &'static str> {
+    let guard = FS.lock();
+    let fs    = guard.as_ref().ok_or("FAT32: not mounted")?;
+    let result = {
+        let root = fs.root_dir();
+        let mut file = root.open_file(path).map_err(|_| "FAT32: file not found")?;
+        file.seek(SeekFrom::Start(offset)).map_err(|_| "FAT32: seek failed")?;
+        let mut total = 0usize;
+        loop {
+            if total >= buf.len() { break; }
+            match file.read(&mut buf[total..]) {
+                Ok(0) => break,
+                Ok(n) => total += n,
+                Err(_) => { return Err("FAT32: read error"); }
+            }
+        }
+        Ok(total)
+    };
+    result
+}
+
+/// Write `data` at byte `offset`, extending the file if `offset + data.len()`
+/// is past the current end. Does not truncate anything beyond the written
+/// range — unlike `write_path`, which always overwrites the whole file.
+pub fn write_path_at(path: &str, offset: u64, data: &[u8]) -> Result<usize, &'static str> {
+    let guard = FS.lock();
+    let fs    = guard.as_ref().ok_or("FAT32: not mounted")?;
+    let result = {
+        let root = fs.root_dir();
+        let mut file = root.open_file(path).map_err(|_| "FAT32: file not found")?;
+        file.seek(SeekFrom::Start(offset)).map_err(|_| "FAT32: seek failed")?;
+        let mut written = 0usize;
+        while written < data.len() {
+            match file.write(&data[written..]) {
+                Ok(0) => { return Err("FAT32: disk full"); }
+                Ok(n) => written += n,
+                Err(_) => { return Err("FAT32: write error"); }
+            }
+        }
+        file.flush().map_err(|_| "FAT32: flush failed")?;
+        Ok(written)
+    };
+    result
+}
+
 /// Create or overwrite the file at `path` with `data`.
 pub fn write_file(path: &str, data: &[u8]) -> Result<(), &'static str> {
     write_path(path, data)
