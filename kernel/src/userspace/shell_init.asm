@@ -59,6 +59,8 @@ BITS 64
 %define SYS_CLOSE         32
 %define SYS_READ          33
 %define SYS_LSEEK         34
+%define SYS_REBOOT        35
+%define SYS_SHUTDOWN      36
 %define O_CREAT           1
 %define O_TRUNC           2
 
@@ -487,7 +489,8 @@ fn_dispatch:
     jmp  .fin
 .np:
 
-    ; ── reboot ───────────────────────────────────────────────────────────────
+    ; ── reboot ── real ACPI reset (or 8042 fallback); SYS_REBOOT never returns
+    ; on success, so reaching str_reboot_failed means both mechanisms failed.
     mov  rdi, r12
     lea  rsi, [rel kw_reboot]
     mov  rdx, 6
@@ -497,12 +500,34 @@ fn_dispatch:
     lea  rsi, [rel str_reboot]
     mov  rdx, str_reboot_len
     call fn_write
-    ; Signal the kernel to exit this process (scheduler drops to idle / reboot)
-    mov  rax, SYS_EXIT
-    mov  rdi, 0xFF              ; 0xFF = reboot intent
+    mov  rax, SYS_REBOOT
     syscall
-    jmp  $                      ; unreachable — kernel marks process Dead
+    lea  rsi, [rel str_reboot_failed]
+    mov  rdx, str_reboot_failed_len
+    call fn_write
+    jmp  .fin
 .nr:
+
+    ; ── shutdown ── ACPI S5 power-off. No universal fallback exists (unlike
+    ; reboot's 8042 pulse), so this can genuinely fail on machines without
+    ; a parseable _S5 DSDT object -- SYS_SHUTDOWN reports that rather than
+    ; hanging.
+    mov  rdi, r12
+    lea  rsi, [rel kw_shutdown]
+    mov  rdx, 8
+    call fn_match
+    test rax, rax
+    jnz  .nsd
+    lea  rsi, [rel str_shutdown]
+    mov  rdx, str_shutdown_len
+    call fn_write
+    mov  rax, SYS_SHUTDOWN
+    syscall
+    lea  rsi, [rel str_shutdown_failed]
+    mov  rdx, str_shutdown_failed_len
+    call fn_write
+    jmp  .fin
+.nsd:
 
     ; ── ls [path] ─────────────────────────────────────────────────────────────
     mov  rdi, r12
@@ -1081,7 +1106,8 @@ str_help:
     db  "  memtest  - verify SYS_BRK (heap) end-to-end", 13, 10
     db  "  fdtest   - verify SYS_OPEN/READ/WRITE/CLOSE/LSEEK end-to-end", 13, 10
     db  "  clear    - clear the screen", 13, 10
-    db  "  reboot   - exit shell and reboot", 13, 10
+    db  "  reboot   - reboot the machine (ACPI reset, or 8042 fallback)", 13, 10
+    db  "  shutdown - power off the machine (ACPI S5)", 13, 10
 str_help_len equ $ - str_help
 
 str_version:
@@ -1112,6 +1138,18 @@ str_ps_row_len equ $ - str_ps_row
 str_reboot:
     db  "System going down for reboot now...", 13, 10
 str_reboot_len equ $ - str_reboot
+
+str_reboot_failed:
+    db  "reboot: failed (no working reset mechanism found)", 13, 10
+str_reboot_failed_len equ $ - str_reboot_failed
+
+str_shutdown:
+    db  "System going down for power-off now...", 13, 10
+str_shutdown_len equ $ - str_shutdown
+
+str_shutdown_failed:
+    db  "shutdown: failed (ACPI S5 not available on this machine)", 13, 10
+str_shutdown_failed_len equ $ - str_shutdown_failed
 
 str_unk_pfx:
     db  "nexus: command not found: "
@@ -1228,7 +1266,8 @@ kw_clear:   db  "clear"
 kw_echo:    db  "echo"
 kw_ai:      db  "ai"
 kw_ps:      db  "ps"
-kw_reboot:  db  "reboot"
+kw_reboot:   db  "reboot"
+kw_shutdown: db  "shutdown"
 kw_ls:      db  "ls"
 kw_cat:     db  "cat"
 kw_run:     db  "run"

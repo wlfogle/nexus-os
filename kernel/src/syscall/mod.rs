@@ -75,6 +75,9 @@ pub const SYS_OPEN:  u64 = 31; // open(path_ptr, flags) → fd (>=3), or -errno.
 pub const SYS_CLOSE: u64 = 32; // close(fd) → 0, or -errno.
 pub const SYS_READ:  u64 = 33; // read(fd, buf_ptr, len) → bytes read, or -errno. fd must be >= 3.
 pub const SYS_LSEEK: u64 = 34; // lseek(fd, offset, whence) → new offset, or -errno.
+// ── Phase K5: ACPI power management ─────────────────────────
+pub const SYS_REBOOT:   u64 = 35; // reboot() → never returns on success; -errno on failure.
+pub const SYS_SHUTDOWN: u64 = 36; // shutdown() → never returns on success; -errno on failure.
 
 /// SYS_OPEN flags (bitmask in arg2).
 pub const O_CREAT:  u64 = 1; // create the file if it doesn't exist
@@ -1026,6 +1029,28 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
             if new_offset < 0 { return -22; }
             process::fd_set_offset(pid, fd, new_offset as u64);
             new_offset
+        }
+
+        // ── SYS_REBOOT ───────────────────────────────────
+        // reboot() → never returns — crate::acpi::reboot() always finds a way
+        // (ACPI reset register, or the universal 8042 controller pulse
+        // fallback) or halts as a last resort. No failure path exists here.
+        SYS_REBOOT => {
+            crate::acpi::reboot();
+        }
+
+        // ── SYS_SHUTDOWN ─────────────────────────────
+        // shutdown() → never returns on success; -1 if ACPI S5 power-off
+        // isn't available/parseable on this machine (no universal fallback
+        // exists for power-off the way the 8042 pulse covers reboot).
+        SYS_SHUTDOWN => {
+            match crate::acpi::shutdown() {
+                Ok(()) => 0,
+                Err(e) => {
+                    crate::kprintln!("[syscall] SYS_SHUTDOWN failed: {}", e);
+                    -1
+                }
+            }
         }
 
         _ => {

@@ -27,6 +27,7 @@
 //! in this same phase, built on top of what this module discovers.
 
 use spin::Mutex;
+use x86_64::instructions::port::Port;
 use crate::memory::paging;
 
 #[derive(Clone, Copy)]
@@ -296,4 +297,149 @@ pub fn fadt() -> Option<Fadt> {
 /// Copy of the discovered MADT, if any.
 pub fn madt() -> Option<Madt> {
     ACPI.lock().as_ref()?.madt
+}
+
+// ─── Power management (Phase K5, increment 2) ────────────────────────────
+
+/// Try the FADT's ACPI Reset Register. Only System I/O (space 1) and
+/// System Memory (space 0) address spaces are implemented — the two
+/// actually used in practice; anything else is treated as unsupported.
+/// Returns `Err` (never panics) if unsupported or if the write somehow
+/// didn't reset the machine, so `reboot()` can fall back to something
+/// universal instead of hanging.
+fn try_acpi_reset() -> Result<(), &'static str> {
+    let f = fadt().ok_or("no FADT")?;
+    if !f.reset_supported {
+        return Err("ACPI reset not supported by firmware");
+    }
+    match f.reset_reg_space {
+        1 => unsafe { // System I/O
+            let mut port: Port<u8> = Port::new(f.reset_reg_addr as u16);
+            port.write(f.reset_value);
+        },
+        0 => unsafe { // System Memory
+            let virt = paging::phys_to_virt(f.reset_reg_addr);
+            core::ptr::write_volatile(virt as *mut u8, f.reset_value);
+        },
+        _ => return Err("unsupported reset register address space"),
+    }
+    // A working reset happens immediately; reaching this line means it
+    // didn't, so report failure rather than silently continuing.
+    Err("ACPI reset register write did not reset the machine")
+}
+
+/// Universal fallback: pulse the 8042 keyboard controller's reset line
+/// (command 0xFE = "pulse output port bit 0", wired to the CPU's RESET pin
+/// on essentially every real x86 system and every emulator). This is the
+/// same technique used by every minimal OS's reboot path when ACPI reset
+/// is unavailable or unsupported — it needs no ACPI support at all.
+fn reset_via_8042() -> ! {
+    unsafe {
+        let mut status: Port<u8> = Port::new(0x64);
+        let mut spins = 0u32;
+        // Wait for the controller's input buffer to be clear (bit 1) before
+        // writing a command, bounded so a wedged controller can't hang us
+        // forever here (the 8042 pulse is the fallback of last resort, but
+        // it can't be allowed to itself hang forever if it isn't working).
+        while status.read() & 0x02 != 0 && spins < 100_000 { spins += 1; }
+        crate::kprintln!("[acpi] reboot: 8042 input buffer clear after {} spins, pulsing reset", spins);
+        let mut cmd: Port<u8> = Port::new(0x64);
+        cmd.write(0xFEu8);
+    }
+    // If the pulse didn't reset the machine, there is nothing else safe
+    // left to try — halt rather than fall through into undefined behavior.
+    crate::kprintln!("[acpi] reboot: 8042 pulse did not reset the machine");
+    loop { unsafe { core::arch::asm!("cli; hlt", options(nomem, nostack)); } }
+}
+
+/// Reboot the machine: try the ACPI Reset Register first, then
+/// unconditionally fall back to the 8042 controller pulse. Never returns.
+pub fn reboot() -> ! {
+    crate::kprintln!("[acpi] reboot: trying ACPI reset register...");
+    if let Err(e) = try_acpi_reset() {
+        crate::kprintln!("[acpi] reboot: ACPI reset unavailable ({}), falling back to 8042 pulse", e);
+    }
+    reset_via_8042();
+}
+
+/// Scan a DSDT for the `_S5_` object's Package and extract SLP_TYPa/
+/// SLP_TYPb. This is deliberately **not** a general AML interpreter — it
+/// only understands the specific, extremely common encoding real-world
+/// DSDTs use for this one object (a `PackageOp` immediately following the
+/// name, whose first two elements are each either a bare ZeroOp/OneOp
+/// byte or a `BytePrefix` + one literal byte). This is the same minimal
+/// technique essentially every hobby/minimal OS uses for ACPI shutdown
+/// (see e.g. the OSDev wiki's "Shutdown" page) rather than implementing
+/// full AML parsing for one two-integer object. Returns `None` — not a
+/// guess — if the encoding doesn't match what this recognizes.
+fn find_s5_sleep_type(dsdt_virt: u64, dsdt_len: usize) -> Option<(u8, u8)> {
+    let bytes = unsafe { core::slice::from_raw_parts(dsdt_virt as *const u8, dsdt_len) };
+    let pos = bytes.windows(4).position(|w| w == b"_S5_")?;
+    let mut i = pos + 4;
+
+    if bytes.get(i) != Some(&0x12) { return None; } // PackageOp
+    i += 1;
+
+    // PkgLength (ACPI spec §20.2.4): top 2 bits of the lead byte give how
+    // many extra length bytes follow (0-3). We only need to skip past it
+    // correctly to reach NumElements + the element list, not compute the
+    // actual length.
+    let lead = *bytes.get(i)?;
+    let extra_bytes = (lead >> 6) as usize;
+    i += 1 + extra_bytes;
+    i += 1; // NumElements
+
+    let mut values = [0u8; 2];
+    for slot in values.iter_mut() {
+        let op = *bytes.get(i)?;
+        match op {
+            0x00 | 0x01 => { *slot = op; i += 1; }         // ZeroOp / OneOp: value is the opcode itself
+            0x0A        => { *slot = *bytes.get(i + 1)?; i += 2; } // BytePrefix + literal byte
+            _ => return None, // an encoding we don't recognize -- bail out rather than guess
+        }
+    }
+    Some((values[0], values[1]))
+}
+
+/// Attempt ACPI S5 (soft power-off): locate `_S5`'s SLP_TYPa/b in the DSDT,
+/// then write `SLP_TYP | SLP_EN` to PM1a_CNT_BLK (and PM1b_CNT_BLK too, if
+/// present, using SLP_TYPb). Unlike `reboot()`, there is no universal
+/// fallback for power-off if this fails, so this returns `Err` instead of
+/// `!` — the caller (the shell) reports the failure and the machine
+/// simply keeps running, which is the only safe default.
+pub fn shutdown() -> Result<(), &'static str> {
+    let f = fadt().ok_or("no FADT (ACPI not available)")?;
+    if f.pm1a_cnt_blk == 0 { return Err("no PM1a_CNT_BLK in FADT"); }
+    if f.dsdt == 0 { return Err("no DSDT pointer in FADT"); }
+
+    let dsdt_virt = paging::phys_to_virt(f.dsdt as u64);
+    let dsdt_len = unsafe { core::ptr::read_unaligned((dsdt_virt + 4) as *const u32) } as usize;
+    if !(36..=(1 << 20)).contains(&dsdt_len) {
+        return Err("DSDT has an implausible length");
+    }
+
+    let (slp_typa, slp_typb) = find_s5_sleep_type(dsdt_virt, dsdt_len)
+        .ok_or("could not locate/parse the _S5 package in the DSDT")?;
+
+    const SLP_EN: u16 = 1 << 13;
+    unsafe {
+        let mut port: Port<u16> = Port::new(f.pm1a_cnt_blk as u16);
+        port.write(((slp_typa as u16) << 10) | SLP_EN);
+
+        if f.pm1b_cnt_blk != 0 {
+            let mut port_b: Port<u16> = Port::new(f.pm1b_cnt_blk as u16);
+            port_b.write(((slp_typb as u16) << 10) | SLP_EN);
+        }
+    }
+
+    // The power-off is not necessarily synchronous with the write above --
+    // confirmed against QEMU, whose ACPI PM1 control handler queues the
+    // actual shutdown for the next main-loop iteration rather than cutting
+    // power on the writing instruction itself. Spin briefly to give that a
+    // window to land instead of declaring failure the instant we're still
+    // executing; only report Err once a generous bound has elapsed.
+    for _ in 0..50_000_000u64 {
+        core::hint::spin_loop();
+    }
+    Err("PM1 control write did not power off the machine")
 }
