@@ -66,6 +66,10 @@ pub const SYS_FS_REMOVE_PATH:u64 = 25; // fs_remove_path(path_ptr) → 0 or -err
 pub const SYS_READ_MOUSE_NB: u64 = 26; // read_mouse_nb(buf_ptr) → 1 (event written) or 0 (none)
 // ── Phase 6.4: user-space heap ──────────────────────────────────
 pub const SYS_BRK: u64 = 27; // brk(new_brk) → resulting brk, or -errno. brk(0) queries current brk.
+// ── Phase K2: decoupled process spawn/wait/kill ──────────────────────
+pub const SYS_SPAWN: u64 = 28; // spawn(name_ptr) → child pid, or -errno. Never blocks.
+pub const SYS_WAIT:  u64 = 29; // wait(pid) → that process's exit code, or -errno.
+pub const SYS_KILL:  u64 = 30; // kill(pid) → 0, or -errno.
 
 /// Largest program image SYS_EXEC will load from disk (1 MiB).
 const MAX_PROG_BYTES: usize = 1024 * 1024;
@@ -109,14 +113,73 @@ pub fn update_kernel_rsp(pid: u64) {
 
 fn exit_current(pid: u64, code: i64) -> i64 {
     crate::kprintln!("[syscall] SYS_EXIT pid={} status={}", pid, code);
-    process::set_state(pid, process::ProcessState::Dead);
+    process::exit(pid, code);
     ipc::inbox_free(pid);
-    let parent = process::get_parent(pid);
-    if parent != 0 {
-        process::deliver_child_exit(parent, pid, code);
-    }
     unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
     0
+}
+
+/// Shared implementation for SYS_EXEC and SYS_SPAWN: read `name` off the
+/// FAT32 root, build a private address space, load it as a static ELF64,
+/// and spawn it ring-3 as a child of the calling process. Never waits —
+/// callers that want blocking semantics (SYS_EXEC) loop on `try_exit_code`
+/// themselves afterward.
+fn do_spawn(name: &str) -> Result<u64, i64> {
+    let mut buf = alloc::vec::Vec::<u8>::new();
+    buf.resize(MAX_PROG_BYTES, 0);
+    let n = match crate::fs::fat::read_file(name, &mut buf) {
+        Ok(n)  => n,
+        Err(_) => return Err(-2), // ENOENT
+    };
+
+    // Build a private address space for the child: a fresh PML4 that shares
+    // the kernel higher half but has an empty user half.
+    let child_pml4 = crate::memory::paging::alloc_user_pml4();
+
+    let entry = match crate::exec::load_elf(child_pml4, &buf[..n]) {
+        Ok(l)  => l.entry,
+        Err(e) => {
+            crate::kprintln!("[exec] load_elf failed: {}", e);
+            unsafe { crate::memory::paging::free_user_pml4(child_pml4); }
+            return Err(-8); // ENOEXEC
+        }
+    };
+
+    let personality = if entry < crate::userspace::USER_CODE_BASE {
+        process::ProcessPersonality::Linux
+    } else {
+        process::ProcessPersonality::Nexus
+    };
+
+    crate::exec::map_user_stack(child_pml4, crate::exec::EXEC_STACK_TOP);
+    let parent = scheduler::current_id();
+    let child = match process::spawn_ring3(
+        b"program", entry, crate::exec::EXEC_STACK_TOP, child_pml4,
+        crate::exec::EXEC_HEAP_BASE, parent, personality,
+    ) {
+        Some(c) => c,
+        None    => {
+            unsafe { crate::memory::paging::free_user_pml4(child_pml4); }
+            return Err(-11); // EAGAIN — no free process slot
+        }
+    };
+    ipc::inbox_alloc(child);
+    Ok(child)
+}
+
+/// Block the calling process until `child` exits, then reap it and return
+/// its exit code. Shared by SYS_EXEC and SYS_WAIT.
+fn wait_and_reap(child: u64) -> i64 {
+    let me = scheduler::current_id();
+    loop {
+        if let Some(code) = process::try_exit_code(child) {
+            process::reap(child);
+            return code;
+        }
+        process::set_state(me, process::ProcessState::BlockedOnChild);
+        unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
+        process::set_state(me, process::ProcessState::Running);
+    }
 }
 
 fn linux_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) -> i64 {
@@ -672,10 +735,14 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
             }
         }
 
-        // ── SYS_EXEC ──────────────────────────────────────────────────────
+        // ── SYS_EXEC ──────────────────────────────────────
         // exec(name_ptr (NUL-terminated)) → child exit code, or negative error.
         // Loads a static ELF64 from the FAT32 root, spawns it as a ring-3
-        // process, and blocks the caller until the child exits.
+        // process, and blocks the caller until the child exits. Equivalent to
+        // SYS_SPAWN immediately followed by SYS_WAIT on the returned pid —
+        // kept as a single syscall since "run a program and wait for it" is
+        // the common case and every existing caller (the shell's `run`) wants
+        // exactly that.
         SYS_EXEC => {
             let name_ptr = a1 as *const u8;
             let mut nlen = 0usize;
@@ -688,63 +755,75 @@ pub extern "C" fn nexus_syscall_dispatch(num: u64, a1: u64, a2: u64, a3: u64) ->
                 Ok(s)  => s,
                 Err(_) => return -22, // EINVAL
             };
+            match do_spawn(name) {
+                Ok(child) => wait_and_reap(child),
+                Err(e)    => e,
+            }
+        }
 
-            // Read the program image off the disk into a heap buffer.
-            let mut buf = alloc::vec::Vec::<u8>::new();
-            buf.resize(MAX_PROG_BYTES, 0);
-            let n = match crate::fs::fat::read_file(name, &mut buf) {
-                Ok(n)  => n,
-                Err(_) => return -2, // ENOENT
-            };
-
-            // Build a private address space for the child: a fresh PML4 that
-            // shares the kernel higher half but has an empty user half.
-            let child_pml4 = crate::memory::paging::alloc_user_pml4();
-
-            // Parse + map the ELF segments into the child's address space.
-            let entry = match crate::exec::load_elf(child_pml4, &buf[..n]) {
-                Ok(l)  => l.entry,
-                Err(e) => {
-                    crate::kprintln!("[exec] load_elf failed: {}", e);
-                    unsafe { crate::memory::paging::free_user_pml4(child_pml4); }
-                    return -8; // ENOEXEC
-                }
-            };
-
-            let personality = if entry < crate::userspace::USER_CODE_BASE {
-                process::ProcessPersonality::Linux
-            } else {
-                process::ProcessPersonality::Nexus
-            };
-
-            // Fresh user stack for the child, then spawn it ring-3 in its own
-            // address space.
-            crate::exec::map_user_stack(child_pml4, crate::exec::EXEC_STACK_TOP);
-            let child = match process::spawn_ring3(
-                b"program", entry, crate::exec::EXEC_STACK_TOP, child_pml4,
-                crate::exec::EXEC_HEAP_BASE, personality,
+        // ── SYS_SPAWN ───────────────────────────────────
+        // spawn(name_ptr (NUL-terminated)) → child pid, or negative error.
+        // Same load path as SYS_EXEC but returns immediately — the caller is
+        // free to keep running (or spawn more children) and collect the
+        // result later with SYS_WAIT, from a completely different point in
+        // its own execution. This is what makes background jobs possible.
+        SYS_SPAWN => {
+            let name_ptr = a1 as *const u8;
+            let mut nlen = 0usize;
+            unsafe {
+                while nlen < 255 && *name_ptr.add(nlen) != 0 { nlen += 1; }
+            }
+            let name = match core::str::from_utf8(
+                unsafe { core::slice::from_raw_parts(name_ptr, nlen) }
             ) {
-                Some(c) => c,
-                None    => {
-                    unsafe { crate::memory::paging::free_user_pml4(child_pml4); }
-                    return -11; // EAGAIN — no free process slot
-                }
+                Ok(s)  => s,
+                Err(_) => return -22, // EINVAL
             };
-            ipc::inbox_alloc(child);
+            match do_spawn(name) {
+                Ok(child) => child as i64,
+                Err(e)    => e,
+            }
+        }
 
-            // Block the caller until the child exits (SYS_EXIT wakes us).
-            let parent = scheduler::current_id();
-            process::set_wait_child(parent, child);
-            loop {
-                if let Some(code) = process::take_child_result(parent) {
-                    // The child is Dead and we are running in the parent's
-                    // address space again; reclaim the child's private space.
-                    unsafe { crate::memory::paging::free_user_pml4(child_pml4); }
-                    return code;
+        // ── SYS_WAIT ────────────────────────────────────
+        // wait(pid) → that process's exit code, or -10 (ECHILD) if `pid` is
+        // not a live-or-exited-but-unreaped process. Blocks until `pid`
+        // exits if it's still running — works whether `pid` already exited
+        // (a SYS_SPAWN result collected late) or exits sometime after this
+        // call, since the exit code lives on the child's own Zombie slot
+        // rather than a wait registration that had to be armed in advance.
+        SYS_WAIT => {
+            let pid = a1;
+            if pid == 0 || process::get_state(pid) == process::ProcessState::Dead {
+                return -10; // ECHILD — never existed, or already reaped
+            }
+            wait_and_reap(pid)
+        }
+
+        // ── SYS_KILL ────────────────────────────────────
+        // kill(pid) → 0, or -err. Forcibly terminates `pid` from outside its
+        // own context (unlike SYS_EXIT, which a process calls on itself).
+        // Safe on a single core: the caller is by definition the only process
+        // running right now, so `pid` is guaranteed Ready/Running-but-not-
+        // scheduled/Blocked*, never mid-execution — there is no "the target
+        // was between instructions" race to worry about. No permission model
+        // exists yet (any process may kill any other); that's a known gap
+        // for whenever multiple mutually-untrusting programs are a real
+        // scenario, not before.
+        SYS_KILL => {
+            let pid = a1;
+            let me  = scheduler::current_id();
+            if pid == me {
+                return -22; // EINVAL — use SYS_EXIT to terminate yourself
+            }
+            match process::get_state(pid) {
+                process::ProcessState::Dead   => -3,  // ESRCH — no such process
+                process::ProcessState::Zombie => 0,   // already exited — idempotent
+                _ => {
+                    ipc::inbox_free(pid);
+                    process::exit(pid, -9); // -9 mirrors SIGKILL as a sentinel exit code
+                    0
                 }
-                process::set_state(parent, process::ProcessState::BlockedOnChild);
-                unsafe { core::arch::asm!("sti; hlt; cli", options(nomem, nostack)); }
-                process::set_state(parent, process::ProcessState::Running);
             }
         }
 

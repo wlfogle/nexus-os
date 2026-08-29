@@ -161,6 +161,7 @@ fn spawn_user_process(name: &[u8], user_rip: u64, user_rsp_top: u64, pml4_phys: 
         user_rsp_top,
         pml4_phys,
         USER_HEAP_BASE,
+        0, // parent — the shell is the top-level process, nothing waits on it
         process::ProcessPersonality::Nexus,
     )
 }

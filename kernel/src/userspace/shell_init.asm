@@ -52,6 +52,9 @@ BITS 64
 %define SYS_FS_APPEND_PATH 24
 %define SYS_FS_REMOVE_PATH 25
 %define SYS_BRK           27
+%define SYS_SPAWN         28
+%define SYS_WAIT          29
+%define SYS_KILL          30
 
 ; ── Buffer sizes (must all fit on one 4 096-byte stack page) ─────────────
 %define CMD_BUF_SIZE   256
@@ -259,6 +262,31 @@ fn_u64dec:
     pop  r8
     pop  rcx
     pop  rbx
+    ret
+
+; =============================================================================
+; fn_u64parse — parse leading decimal digits from a string into a u64
+; In:  rsi = input string pointer (need not be NUL-terminated at any
+;            particular point — parsing simply stops at the first non-digit)
+; Out: rax = parsed value (0 if no digits were found)
+;      rcx = number of digit bytes consumed (0 means "not a number")
+; Does not advance rsi. Clobbers rax, rcx, rdx only.
+; =============================================================================
+fn_u64parse:
+    xor  rax, rax
+    xor  rcx, rcx
+.loop:
+    movzx edx, byte [rsi + rcx]
+    cmp  dl, '0'
+    jl   .done
+    cmp  dl, '9'
+    jg   .done
+    sub  dl, '0'
+    imul rax, rax, 10
+    add  rax, rdx
+    inc  rcx
+    jmp  .loop
+.done:
     ret
 
 ; =============================================================================
@@ -575,6 +603,131 @@ fn_dispatch:
     jmp  .fin
 .nrun:
 
+    ; ── spawn <file> ── like `run`, but returns immediately with the child's pid
+    ; instead of blocking. Collect its result later with `wait <pid>`.
+    mov  rdi, r12
+    lea  rsi, [rel kw_spawn]
+    mov  rdx, 5
+    call fn_match
+    test rax, rax
+    jnz  .nspawn
+    lea  rdi, [r12 + 5]                 ; advance past "spawn"
+    cmp  byte [rdi], ' '
+    jne  .spawn_usage
+    inc  rdi
+    cmp  byte [rdi], 0
+    je   .spawn_usage
+    mov  rax, SYS_SPAWN                 ; rdi already = filename (arg1, NUL-term)
+    syscall                             ; rax = child pid, or -err
+    test rax, rax
+    js   .spawn_err
+    mov  rbx, rax                       ; rbx = child pid — safe across fn_write
+    lea  rsi, [rel str_spawn_pfx]
+    mov  rdx, str_spawn_pfx_len
+    call fn_write
+    mov  rax, rbx
+    mov  rsi, r13
+    call fn_u64dec
+    mov  rsi, r13
+    call fn_write
+    lea  rsi, [rel str_nl]
+    mov  rdx, 1
+    call fn_write
+    jmp  .fin
+.spawn_err:
+    lea  rsi, [rel str_spawn_err]
+    mov  rdx, str_spawn_err_len
+    call fn_write
+    jmp  .fin
+.spawn_usage:
+    lea  rsi, [rel str_spawn_usage]
+    mov  rdx, str_spawn_usage_len
+    call fn_write
+    jmp  .fin
+.nspawn:
+
+    ; ── wait <pid> ── blocks until the given pid exits (spawned earlier via
+    ; `spawn` or still running), reaps it, and prints its exit code. Works
+    ; even if the pid already exited before `wait` was called.
+    mov  rdi, r12
+    lea  rsi, [rel kw_wait]
+    mov  rdx, 4
+    call fn_match
+    test rax, rax
+    jnz  .nwait
+    lea  rsi, [r12 + 4]                 ; advance past "wait"
+    cmp  byte [rsi], ' '
+    jne  .wait_usage
+    inc  rsi
+    cmp  byte [rsi], 0
+    je   .wait_usage
+    call fn_u64parse                    ; rax = pid, rcx = digits consumed
+    test rcx, rcx
+    jz   .wait_usage
+    mov  rdi, rax                       ; arg1 = pid
+    mov  rax, SYS_WAIT
+    syscall                             ; rax = exit code, or -err
+    test rax, rax
+    js   .wait_err
+    mov  rbx, rax                       ; rbx = exit code — safe across fn_write
+    lea  rsi, [rel str_wait_pfx]
+    mov  rdx, str_wait_pfx_len
+    call fn_write
+    mov  rax, rbx
+    mov  rsi, r13
+    call fn_u64dec
+    mov  rsi, r13
+    call fn_write
+    lea  rsi, [rel str_nl]
+    mov  rdx, 1
+    call fn_write
+    jmp  .fin
+.wait_err:
+    lea  rsi, [rel str_wait_err]
+    mov  rdx, str_wait_err_len
+    call fn_write
+    jmp  .fin
+.wait_usage:
+    lea  rsi, [rel str_wait_usage]
+    mov  rdx, str_wait_usage_len
+    call fn_write
+    jmp  .fin
+.nwait:
+
+    ; ── kill <pid> ───────────────────────────────────────────────
+    mov  rdi, r12
+    lea  rsi, [rel kw_kill]
+    mov  rdx, 4
+    call fn_match
+    test rax, rax
+    jnz  .nkill
+    lea  rsi, [r12 + 4]                 ; advance past "kill"
+    cmp  byte [rsi], ' '
+    jne  .kill_usage
+    inc  rsi
+    cmp  byte [rsi], 0
+    je   .kill_usage
+    call fn_u64parse
+    test rcx, rcx
+    jz   .kill_usage
+    mov  rdi, rax                       ; arg1 = pid
+    mov  rax, SYS_KILL
+    syscall
+    test rax, rax
+    js   .kill_err
+    jmp  .fin
+.kill_err:
+    lea  rsi, [rel str_kill_err]
+    mov  rdx, str_kill_err_len
+    call fn_write
+    jmp  .fin
+.kill_usage:
+    lea  rsi, [rel str_kill_usage]
+    mov  rdx, str_kill_usage_len
+    call fn_write
+    jmp  .fin
+.nkill:
+
     ; ── mkdir <path> ──────────────────────────────────────────────────────────
     mov  rdi, r12
     lea  rsi, [rel kw_mkdir]
@@ -818,6 +971,9 @@ str_help:
     db  "  append <p> <text> - append/create file", 13, 10
     db  "  rm <p>  - remove file or empty directory", 13, 10
     db  "  ps       - list running processes", 13, 10
+    db  "  spawn <f>- run a program in the background, print its pid", 13, 10
+    db  "  wait <p> - block until pid <p> exits, print its exit code", 13, 10
+    db  "  kill <p> - forcibly terminate pid <p>", 13, 10
     db  "  memtest  - verify SYS_BRK (heap) end-to-end", 13, 10
     db  "  clear    - clear the screen", 13, 10
     db  "  reboot   - exit shell and reboot", 13, 10
@@ -912,6 +1068,38 @@ str_memtest_fail:
     db  "memtest: FAIL", 13, 10
 str_memtest_fail_len equ $ - str_memtest_fail
 
+str_spawn_usage:
+    db  "usage: spawn <file>", 13, 10
+str_spawn_usage_len equ $ - str_spawn_usage
+
+str_spawn_err:
+    db  "spawn: failed to load program (not found or not a valid ELF)", 13, 10
+str_spawn_err_len equ $ - str_spawn_err
+
+str_spawn_pfx:
+    db  "spawn: pid="
+str_spawn_pfx_len equ $ - str_spawn_pfx
+
+str_wait_usage:
+    db  "usage: wait <pid>", 13, 10
+str_wait_usage_len equ $ - str_wait_usage
+
+str_wait_err:
+    db  "wait: no such process", 13, 10
+str_wait_err_len equ $ - str_wait_err
+
+str_wait_pfx:
+    db  "wait: exit code="
+str_wait_pfx_len equ $ - str_wait_pfx
+
+str_kill_usage:
+    db  "usage: kill <pid>", 13, 10
+str_kill_usage_len equ $ - str_kill_usage
+
+str_kill_err:
+    db  "kill: no such process", 13, 10
+str_kill_err_len equ $ - str_kill_err
+
 ; ── Command keyword literals (length matched, no null terminator needed) ─────
 kw_help:    db  "help"
 kw_version: db  "version"
@@ -929,3 +1117,6 @@ kw_rm:      db  "rm"
 kw_write:   db  "write"
 kw_append:  db  "append"
 kw_memtest: db  "memtest"
+kw_spawn:   db  "spawn"
+kw_wait:    db  "wait"
+kw_kill:    db  "kill"

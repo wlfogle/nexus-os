@@ -31,9 +31,18 @@ pub enum ProcessState {
     BlockedOnSend,
     /// Waiting for keyboard input — scheduler skips; IRQ1 handler wakes.
     BlockedOnKey,
-    /// Waiting for a spawned child process to exit (SYS_EXEC) — scheduler skips;
-    /// the child's SYS_EXIT wakes the parent via `deliver_child_exit`.
+    /// Waiting for a spawned child process to exit (SYS_EXEC/SYS_WAIT) —
+    /// scheduler skips this process while it polls for the child's exit.
     BlockedOnChild,
+    /// Exited but not yet reaped: a ring-3 process that owned a private
+    /// address space finished (SYS_EXIT or SYS_KILL) but nothing has called
+    /// SYS_WAIT on it yet. Kept out of the Dead/reusable pool so its
+    /// pml4_phys survives until `reap()` frees the address space —
+    /// reusing the slot (and silently overwriting pml4_phys) before that
+    /// would leak the exited process's entire address space. Processes with
+    /// no address space (pml4_phys == 0, e.g. kernel threads) skip this
+    /// state and go straight to Dead since there's nothing to reap.
+    Zombie,
 }
 
 /// Syscall personality for a ring-3 process.
@@ -55,14 +64,12 @@ pub struct Process {
     /// Top of the kernel stack (fixed; used to reset RSP on syscall entry).
     pub kernel_stack_top: u64,
     pub name:  [u8; 32],
-    /// PID of the process that spawned this one via SYS_EXEC (0 = none).
+    /// PID of the process that spawned this one via SYS_EXEC/SYS_SPAWN
+    /// (0 = none, e.g. the top-level shell or a kernel thread).
     pub parent: u64,
-    /// PID of the child this process is currently waiting on (0 = none).
-    pub wait_for: u64,
-    /// Set true when the awaited child has exited; consumed by the parent.
-    pub child_done: bool,
-    /// Exit code reported by the awaited child.
-    pub last_exit: i64,
+    /// This process's own exit code, valid once `state == Zombie` (or after
+    /// reaping, until the slot is reused). Set once by `exit()`.
+    pub exit_code: i64,
     /// Physical address of this process's PML4 (its private address space).
     /// 0 means "none" — the process runs in the shared kernel address space
     /// (all kernel threads).  The scheduler loads this into CR3 on switch.
@@ -91,9 +98,7 @@ impl Process {
             kernel_stack_top: 0,
             name:             [0u8; 32],
             parent:           0,
-            wait_for:         0,
-            child_done:       false,
-            last_exit:        0,
+            exit_code:        0,
             pml4_phys:        0,
             personality:      ProcessPersonality::Nexus,
             heap_base:        0,
@@ -228,6 +233,7 @@ pub fn spawn_ring3(
     user_rsp: u64,
     pml4_phys: u64,
     heap_base: u64,
+    parent: u64,
     personality: ProcessPersonality,
 ) -> Option<u64> {
     let id = NEXT_ID.fetch_add(1, Ordering::Relaxed);
@@ -267,6 +273,7 @@ pub fn spawn_ring3(
     slot.personality      = personality;
     slot.heap_base        = heap_base;
     slot.heap_brk         = heap_base;
+    slot.parent           = parent;
     slot.state            = ProcessState::Ready;
 
     Some(id)
@@ -318,17 +325,7 @@ pub fn get_kernel_stack_top(id: u64) -> Option<u64> {
         .map(|p| p.kernel_stack_top)
 }
 
-// ─── Parent / child-wait machinery (Phase 6 SYS_EXEC) ─────────────────────────
-
-/// Record `parent` as the parent of `child`, and mark `parent` as waiting on
-/// `child`.  Clears any stale child-exit result on the parent.
-pub fn set_wait_child(parent: u64, child: u64) {
-    let mut table = TABLE.lock();
-    for p in table.iter_mut() {
-        if p.id == child  { p.parent = parent; }
-        if p.id == parent { p.wait_for = child; p.child_done = false; p.last_exit = 0; }
-    }
-}
+// ─── Exit / wait / reap (Phase 6 SYS_EXEC, Phase K2 SYS_SPAWN/SYS_WAIT/SYS_KILL) ─
 
 /// Return the parent PID of `child` (0 if none).
 pub fn get_parent(child: u64) -> u64 {
@@ -336,31 +333,52 @@ pub fn get_parent(child: u64) -> u64 {
     table.iter().find(|p| p.id == child).map(|p| p.parent).unwrap_or(0)
 }
 
-/// Called from a child's SYS_EXIT: if `parent` is waiting on `child`, record the
-/// exit code, flag completion, and make the parent Ready again.
-pub fn deliver_child_exit(parent: u64, child: u64, code: i64) {
+/// Mark `pid` as exited with `code`, called from SYS_EXIT (on itself) or
+/// SYS_KILL (on another process). Transitions to `Zombie` if `pid` owns a
+/// private address space (so a later `reap()` can free it), or straight to
+/// `Dead` if it doesn't (kernel threads — nothing to reap).
+///
+/// Does not look up or notify any parent: a waiter discovers this by polling
+/// `try_exit_code(pid)` directly, which works whether SYS_WAIT was already
+/// blocked on `pid` or is called well after `pid` exited (the whole point of
+/// decoupling SYS_SPAWN from SYS_WAIT — a background child's result must
+/// survive until someone asks for it, not just if someone was already asking
+/// at the exact instant it exited).
+pub fn exit(pid: u64, code: i64) {
     let mut table = TABLE.lock();
-    if let Some(p) = table.iter_mut().find(|p| p.id == parent) {
-        if p.wait_for == child {
-            p.last_exit   = code;
-            p.child_done  = true;
-            p.wait_for    = 0;
-            if p.state == ProcessState::BlockedOnChild {
-                p.state = ProcessState::Ready;
-            }
-        }
+    if let Some(p) = table.iter_mut().find(|p| p.id == pid) {
+        p.exit_code = code;
+        p.state = if p.pml4_phys != 0 { ProcessState::Zombie } else { ProcessState::Dead };
     }
 }
 
-/// If `pid`'s awaited child has exited, consume and return its exit code.
-pub fn take_child_result(pid: u64) -> Option<i64> {
+/// Non-blocking: if `pid` has exited (state == Zombie), return its exit
+/// code. Returns `None` if it's still running or doesn't exist / was
+/// already reaped. Does not reap — call `reap(pid)` once you're done
+/// needing anything else about it.
+pub fn try_exit_code(pid: u64) -> Option<i64> {
+    let table = TABLE.lock();
+    table.iter()
+        .find(|p| p.id == pid && p.state == ProcessState::Zombie)
+        .map(|p| p.exit_code)
+}
+
+/// Reap a Zombie: free its private address space (if any) and return its
+/// slot to the Dead pool so a future spawn can reuse it. Frees the PML4
+/// with the table lock released (paging::free_user_pml4 walks the whole
+/// address space and takes the physical allocator's own lock — no need to
+/// hold the process table for that), then re-locks briefly to zero the slot.
+pub fn reap(pid: u64) {
+    let pml4 = {
+        let table = TABLE.lock();
+        table.iter().find(|p| p.id == pid).map(|p| p.pml4_phys).unwrap_or(0)
+    };
+    if pml4 != 0 {
+        unsafe { crate::memory::paging::free_user_pml4(pml4); }
+    }
     let mut table = TABLE.lock();
-    let p = table.iter_mut().find(|p| p.id == pid)?;
-    if p.child_done {
-        p.child_done = false;
-        Some(p.last_exit)
-    } else {
-        None
+    if let Some(p) = table.iter_mut().find(|p| p.id == pid) {
+        *p = Process::zero();
     }
 }
 
