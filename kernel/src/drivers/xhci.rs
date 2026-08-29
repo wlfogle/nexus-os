@@ -122,13 +122,17 @@ const TRB_CYCLE: u32 = 1 << 0;
 
 const TRB_TYPE_NOOP_CMD:        u32 = 23;
 const TRB_TYPE_LINK:            u32 = 6;
-const TRB_TYPE_CMD_COMPLETION:  u32 = 33;
-#[allow(dead_code)] // used once device transfer rings (the next increment) land
+const TRB_TYPE_SETUP_STAGE:     u32 = 2;
+const TRB_TYPE_DATA_STAGE:      u32 = 3;
+const TRB_TYPE_STATUS_STAGE:    u32 = 4;
 const TRB_TYPE_TRANSFER_EVENT:  u32 = 32;
-#[allow(dead_code)] // used once port enumeration (the next increment) lands
+const TRB_TYPE_CMD_COMPLETION:  u32 = 33;
 const TRB_TYPE_PORT_STS_CHANGE: u32 = 34;
 
-const COMPLETION_SUCCESS: u8 = 1;
+const COMPLETION_SUCCESS:       u8 = 1;
+const COMPLETION_SHORT_PACKET:  u8 = 13;
+
+const DESC_TYPE_DEVICE: u16 = 1;
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -154,12 +158,8 @@ impl Trb {
         (self.status >> 24) as u8
     }
 
-    /// Slot ID a Command Completion / Transfer event refers to. Unused until
-    /// the next increment (port/device enumeration needs it to know which
-    /// slot a completion event belongs to); kept alongside the other TRB
-    /// field accessors now since they're all part of the same format.
+    /// Slot ID a Command Completion / Transfer event refers to.
     #[inline]
-    #[allow(dead_code)]
     fn slot_id(&self) -> u8 {
         (self.control >> 24) as u8
     }
@@ -285,14 +285,21 @@ fn max_packet_size_for_speed(speed: u8) -> u16 {
     }
 }
 
-// ─── Driver state ─────────────────────────────────────────────────────────────
+// ─── Driver state ──────────────────────────────────────
+
+/// Direction of a control transfer's Data Stage (also determines the
+/// Status Stage's direction, which is always the opposite).
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Direction {
+    In,
+    Out,
+}
 
 /// A single addressed USB device. This driver only tracks one at a time
 /// (single root hub, first device found — see the module-level scope note);
 /// multi-device support is future work, not a limitation of this struct's
 /// shape specifically.
 struct UsbDevice {
-    #[allow(dead_code)] // used once control transfers (the next increment) ring the device doorbell
     slot_id:  u8,
     #[allow(dead_code)] // reported in boot logs today; will drive re-enumeration on unplug later
     port:     u8,
@@ -300,8 +307,7 @@ struct UsbDevice {
     speed:    u8,
     /// EP0's control-transfer ring — kept alive here so its producer
     /// index/cycle state survives between separate control transfers
-    /// (SET_CONFIGURATION, then later SET_PROTOCOL/SET_IDLE, etc.).
-    #[allow(dead_code)] // used once the control-transfer helper (the next increment) lands
+    /// (SET_CONFIGURATION, then later HID's SET_PROTOCOL/SET_IDLE, etc.).
     ep0_ring: Ring,
 }
 
@@ -361,8 +367,21 @@ pub fn init() -> bool {
                         crate::kprintln!("[xhci] port {} -> slot {} enabled", port, slot);
                         let speed = x.port_speed(port);
                         match x.address_device(slot, port, speed) {
-                            Ok(()) => crate::kprintln!(
-                                "[xhci] slot {} addressed (speed_id={})", slot, speed),
+                            Ok(()) => {
+                                crate::kprintln!(
+                                    "[xhci] slot {} addressed (speed_id={})", slot, speed);
+                                match x.get_device_descriptor() {
+                                    Ok(desc) => {
+                                        let vendor  = u16::from_le_bytes([desc[8],  desc[9]]);
+                                        let product = u16::from_le_bytes([desc[10], desc[11]]);
+                                        crate::kprintln!(
+                                            "[xhci] device descriptor: class={:#04x} vendor={:#06x} product={:#06x}",
+                                            desc[4], vendor, product
+                                        );
+                                    }
+                                    Err(e) => crate::kprintln!("[xhci] get_device_descriptor failed: {}", e),
+                                }
+                            }
                             Err(e) => crate::kprintln!("[xhci] address_device failed: {}", e),
                         }
                     }
@@ -456,7 +475,7 @@ fn bringup(mmio: u64) -> Result<Xhci, &'static str> {
     let noop_addr = x.cmd_ring.enqueue_command(noop);
     unsafe { w32(x.db_base, 0); } // ring doorbell 0 (command doorbell), target field 0
 
-    let event = x.poll_command_completion(noop_addr)
+    let event = x.poll_matching_event(TRB_TYPE_CMD_COMPLETION, noop_addr)
         .map_err(|_| "No-Op smoke test: timed out or never matched")?;
     if event.completion_code() != COMPLETION_SUCCESS {
         return Err("No-Op smoke test: command completed with a non-success code");
@@ -520,7 +539,7 @@ impl Xhci {
         let cmd_addr = self.cmd_ring.enqueue_command(trb);
         unsafe { w32(self.db_base, 0); } // command doorbell
 
-        let event = self.poll_command_completion(cmd_addr)?;
+        let event = self.poll_matching_event(TRB_TYPE_CMD_COMPLETION, cmd_addr)?;
         if event.completion_code() != COMPLETION_SUCCESS {
             return Err("Enable Slot: command completed with a non-success code");
         }
@@ -597,7 +616,7 @@ impl Xhci {
         let cmd_addr = self.cmd_ring.enqueue_command(trb);
         unsafe { w32(self.db_base, 0); } // command doorbell
 
-        let event = self.poll_command_completion(cmd_addr)?;
+        let event = self.poll_matching_event(TRB_TYPE_CMD_COMPLETION, cmd_addr)?;
         if event.completion_code() != COMPLETION_SUCCESS {
             return Err("Address Device: command completed with a non-success code");
         }
@@ -606,32 +625,150 @@ impl Xhci {
         Ok(())
     }
 
-    /// Poll the event ring until a Command Completion Event matching
-    /// `expected_addr` appears. The event ring is a single stream shared by
-    /// every kind of event — in particular, `scan_and_reset_port`'s port
-    /// reset generates a Port Status Change Event that can (and in
-    /// practice does) land ahead of a subsequent command's completion
-    /// event. Treating "the next event" as automatically being the one we
-    /// asked for is wrong; this skips anything that isn't our match
-    /// (logging what it was) instead of misinterpreting it.
-    fn poll_command_completion(&mut self, expected_addr: u64) -> Result<Trb, &'static str> {
-        for _ in 0..32 {
-            let event = self.poll_event(50_000_000)
-                .ok_or("timed out waiting for a command completion event")?;
-            match event.trb_type() {
-                TRB_TYPE_CMD_COMPLETION if event.parameter == expected_addr => return Ok(event),
-                TRB_TYPE_CMD_COMPLETION => {
-                    crate::kprintln!("[xhci] ignoring a command completion for a different command");
-                }
-                TRB_TYPE_PORT_STS_CHANGE => {
-                    crate::kprintln!("[xhci] port status change event noted, still waiting for command completion");
-                }
-                other => {
-                    crate::kprintln!("[xhci] ignoring unexpected event type {} while waiting for command completion", other);
+    /// Perform a standard control transfer on EP0: Setup stage (always), an
+    /// optional Data stage when `buf` is non-empty, and a Status stage in
+    /// the opposite direction from the Data stage (or IN if there was no
+    /// data at all, per spec). Blocks until the Transfer Event for the
+    /// Status stage TRB — the only one with IOC set, so it's the only one
+    /// that generates an event — arrives. `buf` is the source (Out) or
+    /// destination (In) for the Data stage; returns the number of bytes
+    /// actually transferred (requested length minus the event's residual
+    /// length).
+    fn control_transfer(
+        &mut self,
+        bm_request_type: u8,
+        b_request: u8,
+        w_value: u16,
+        w_index: u16,
+        buf: &mut [u8],
+        dir: Direction,
+    ) -> Result<usize, &'static str> {
+        // Take the device out for the duration of this call: its EP0 ring
+        // needs mutating (no borrow-checker ambiguity against `&mut self`
+        // this way), and it's put back before any point that could return
+        // early, so a failed transfer never permanently loses the device.
+        let mut device = self.device.take().ok_or("control_transfer: no addressed device")?;
+        let w_length = buf.len() as u16;
+
+        // Setup Stage TRB: the 8-byte USB setup packet packed directly into
+        // the TRB's Parameter field (Immediate Data — IDT bit set below).
+        let setup_packet: u64 =
+            (bm_request_type as u64)
+            | (b_request as u64) << 8
+            | (w_value as u64) << 16
+            | (w_index as u64) << 32
+            | (w_length as u64) << 48;
+        let trt: u32 = if w_length == 0 { 0 } else if dir == Direction::In { 3 } else { 2 };
+        let setup_trb = Trb {
+            parameter: setup_packet,
+            status: 8, // TRB Transfer Length is always 8 for a Setup Stage TRB
+            control: (TRB_TYPE_SETUP_STAGE << 10) | (1 << 6 /* IDT */) | (trt << 16),
+        };
+        device.ep0_ring.enqueue_command(setup_trb);
+
+        // Data Stage TRB, only when there's actually data to move.
+        let mut data_buf_phys = 0u64;
+        if w_length > 0 {
+            data_buf_phys = alloc_zeroed_frame(); // one page is far more than any descriptor needs
+            if dir == Direction::Out {
+                unsafe {
+                    core::ptr::copy_nonoverlapping(
+                        buf.as_ptr(), paging::phys_to_virt(data_buf_phys) as *mut u8, buf.len());
                 }
             }
+            let dir_bit: u32 = if dir == Direction::In { 1 << 16 } else { 0 };
+            let data_trb = Trb {
+                parameter: data_buf_phys,
+                status: w_length as u32,
+                control: (TRB_TYPE_DATA_STAGE << 10) | dir_bit,
+            };
+            device.ep0_ring.enqueue_command(data_trb);
         }
-        Err("gave up waiting for the matching command completion event after skipping 32 unrelated events")
+
+        // Status Stage TRB: direction is the opposite of the Data stage (or
+        // IN if there was no Data stage), IOC=1 so exactly one Transfer
+        // Event is generated for the whole transfer.
+        let status_dir_in = w_length == 0 || dir == Direction::Out;
+        let status_dir_bit: u32 = if status_dir_in { 1 << 16 } else { 0 };
+        let status_trb = Trb {
+            parameter: 0,
+            status: 0,
+            control: (TRB_TYPE_STATUS_STAGE << 10) | status_dir_bit | (1 << 5 /* IOC */),
+        };
+        let status_addr = device.ep0_ring.enqueue_command(status_trb);
+
+        let slot_id = device.slot_id;
+        self.device = Some(device); // restore before any further self-borrowing calls
+
+        unsafe { w32(self.db_base + slot_id as u64 * 4, 1); } // ring EP0's doorbell (DCI = 1)
+
+        let event = self.poll_matching_event(TRB_TYPE_TRANSFER_EVENT, status_addr)?;
+        let cc = event.completion_code();
+        if cc != COMPLETION_SUCCESS && cc != COMPLETION_SHORT_PACKET {
+            return Err("control_transfer: transfer completed with an error code");
+        }
+
+        if w_length > 0 && dir == Direction::In {
+            unsafe {
+                core::ptr::copy_nonoverlapping(
+                    paging::phys_to_virt(data_buf_phys) as *const u8, buf.as_mut_ptr(), buf.len());
+            }
+        }
+
+        // The event's TRB Transfer Length field holds the residual (bytes
+        // NOT transferred) on completion, not the count transferred.
+        let residual = (event.status & 0x00FF_FFFF) as usize;
+        Ok((w_length as usize).saturating_sub(residual))
+    }
+
+    /// GET_DESCRIPTOR(DEVICE): the standard first control transfer any USB
+    /// enumeration performs. Used here purely to prove the control pipe
+    /// `address_device` set up actually moves data end to end, before
+    /// `drivers::usb_hid` builds real class-specific requests on top of it.
+    fn get_device_descriptor(&mut self) -> Result<[u8; 18], &'static str> {
+        let mut buf = [0u8; 18];
+        let n = self.control_transfer(
+            0x80,                  // Device-to-host | Standard | Device recipient
+            6,                     // GET_DESCRIPTOR
+            DESC_TYPE_DEVICE << 8, // wValue: descriptor type=DEVICE, index 0
+            0,                     // wIndex
+            &mut buf,
+            Direction::In,
+        )?;
+        if n < 18 {
+            return Err("get_device_descriptor: short read");
+        }
+        Ok(buf)
+    }
+
+    /// Poll the event ring until an event of type `want_type` whose
+    /// Parameter matches `expected_addr` appears (Command Completion events
+    /// reference the command TRB; Transfer events reference whichever TRB
+    /// in the transfer had IOC set — the Status Stage TRB for every control
+    /// transfer this driver issues). The event ring is a single stream
+    /// shared by every kind of event — in particular, `scan_and_reset_port`'s
+    /// port reset generates a Port Status Change Event that can (and in
+    /// practice does) land ahead of a subsequent command/transfer's
+    /// completion. Treating "the next event" as automatically being the one
+    /// we asked for is wrong; this skips anything that isn't our exact
+    /// match (logging what it was) instead of misinterpreting it.
+    fn poll_matching_event(&mut self, want_type: u32, expected_addr: u64) -> Result<Trb, &'static str> {
+        for _ in 0..32 {
+            let event = self.poll_event(50_000_000)
+                .ok_or("timed out waiting for a matching event")?;
+            if event.trb_type() == want_type && event.parameter == expected_addr {
+                return Ok(event);
+            }
+            if event.trb_type() == TRB_TYPE_PORT_STS_CHANGE {
+                crate::kprintln!("[xhci] port status change event noted, still waiting for the expected completion");
+            } else {
+                crate::kprintln!(
+                    "[xhci] ignoring event type {} (parameter={:#x}) while waiting for type {} at {:#x}",
+                    event.trb_type(), event.parameter, want_type, expected_addr
+                );
+            }
+        }
+        Err("gave up waiting for the matching event after skipping 32 unrelated events")
     }
 
     /// Poll the event ring for the next TRB the controller has produced,
