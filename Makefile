@@ -54,7 +54,7 @@ setup:
 	    AR_FOR_TARGET=llvm-ar-14 RANLIB_FOR_TARGET=llvm-ranlib-14 \
 	    STRIP_FOR_TARGET=llvm-strip-14 NM_FOR_TARGET=llvm-nm-14 \
 	    READELF_FOR_TARGET=llvm-readelf-14 \
-	    ./configure --enable-bios --enable-bios-cd --enable-uefi-x86-64 --enable-uefi-cd && \
+	    ./configure --enable-bios --enable-bios-cd --enable-uefi-x86-64 --enable-uefi-aarch64 --enable-uefi-cd && \
 	    make -j$$(nproc)
 	@echo ""
 	@echo "Setup complete. Run 'make laptop', 'make tiamat', or 'make bahamut'."
