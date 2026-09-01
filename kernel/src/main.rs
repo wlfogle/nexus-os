@@ -59,7 +59,7 @@ use limine::{
 };
 
 #[cfg(target_arch = "x86_64")]
-use limine::RsdpRequest;
+use limine::{RsdpRequest, SmpInfo, SmpRequest};
 
 #[cfg(feature = "framebuffer")]
 use limine::FramebufferRequest;
@@ -96,6 +96,15 @@ static KFILE_REQUEST: KernelFileRequest = KernelFileRequest::new(0);
 #[used]
 #[link_section = ".limine_requests"]
 static RSDP_REQUEST: RsdpRequest = RsdpRequest::new(0);
+
+/// SMP bring-up (Phase K5 increment 5) — x86_64 only. Flags left at the
+/// default 0 (X2APIC disabled): `arch::x86_64::lapic` is a classic xAPIC
+/// MMIO driver, which would be the wrong register interface entirely if
+/// X2APIC (MSR-based) got enabled instead.
+#[cfg(target_arch = "x86_64")]
+#[used]
+#[link_section = ".limine_requests"]
+static SMP_REQUEST: SmpRequest = SmpRequest::new(0);
 
 /// Framebuffer — laptop only.
 #[cfg(feature = "framebuffer")]
@@ -381,6 +390,53 @@ pub extern "C" fn _start() -> ! {
             "[cpu]  core 0 (BSP) registered, lapic id={:?}",
             arch::x86_64::lapic::lapic_id_for_core(0)
         );
+
+        // ── Phase K5 increment 5: AP bring-up via Limine's SmpRequest ─────
+        // Limine has already parked every secondary CPU (64-bit long mode,
+        // paging on, its own temporary GDT/IDT, interrupts disabled) by the
+        // time we get here; writing a CPU's `goto_address` makes it jump to
+        // `ap_entry`. Scope is deliberately narrow: bring each AP up far
+        // enough to prove it's alive and correctly registered, then park it
+        // forever — it does NOT join the live scheduler/timer-interrupt path
+        // yet. `scheduler_tick` still hardcodes core 0 for its per-core
+        // updates (see its comment), and the I/O APIC only targets the BSP's
+        // LAPIC id, so nothing could safely give an AP real work before
+        // Phase K5 increment 6's per-CPU scheduler + lock audit lands.
+        let mut smp_resp_ptr = SMP_REQUEST.get_response();
+        match smp_resp_ptr.get_mut() {
+            Some(resp) => {
+                let bsp_lapic_id = resp.bsp_lapic_id;
+                let reported = resp.cpu_count;
+                let mut started = 0usize;
+                for cpu in resp.cpus().iter_mut() {
+                    if cpu.lapic_id == bsp_lapic_id {
+                        continue; // this entry describes the BSP; goto_address is unused for it
+                    }
+                    let core_id = started + 1; // 0 is always the BSP
+                    if core_id >= arch::x86_64::MAX_CPUS {
+                        kprintln!(
+                            "[smp]  lapic id={} has no free core slot (MAX_CPUS={}) — left parked by firmware",
+                            cpu.lapic_id, arch::x86_64::MAX_CPUS
+                        );
+                        continue;
+                    }
+                    // extra_argument must be visible to the AP before it starts
+                    // executing, so it's written before the goto_address store
+                    // that actually wakes it.
+                    cpu.extra_argument = core_id as u64;
+                    cpu.goto_address = ap_entry;
+                    started += 1;
+                }
+                kprintln!(
+                    "[smp]  {} CPU(s) reported by Limine (ACPI MADT cpu_count={:?}), {} AP(s) started",
+                    reported,
+                    acpi::madt().map(|m| m.cpu_count),
+                    started
+                );
+            }
+            None => kprintln!("[smp]  no SMP response from Limine — staying single-core"),
+        }
+
         let user_pid = userspace::spawn_user_init();
         kprintln!("[user] nexus-init spawned as pid={} (ring 3)", user_pid);
 
@@ -467,6 +523,59 @@ macro_rules! kprint {
 macro_rules! kprintln {
     ()              => ($crate::kprint!("\n"));
     ($($arg:tt)*)   => ($crate::kprint!("{}\n", format_args!($($arg)*)));
+}
+
+// ─── Phase K5 increment 5: Application Processor entry point ──────────
+
+/// Entry point for each Application Processor (AP), reached via the
+/// `goto_address` write in `_start()` above. Per the Limine protocol, CPU
+/// state on entry mirrors the BSP's own `_start()` entry state (64-bit long
+/// mode, paging enabled using the kernel's shared higher-half mapping,
+/// interrupts disabled) except the GDT/IDT loaded are Limine's own
+/// *temporary* ones — so this must redo the same per-core setup `_start()`
+/// does for the BSP before this core can be trusted with anything.
+/// `info.extra_argument` carries the dense `core_id` `_start()` assigned
+/// this CPU before writing `goto_address`.
+///
+/// Phase K5 increment 5 scope: bring the core up, prove it's alive and
+/// correctly registered, then park it forever with interrupts disabled. It
+/// does NOT join the live scheduler/timer-interrupt path yet — see the
+/// comment at the call site in `_start()` for why that has to wait for
+/// increment 6's per-CPU scheduler + lock audit.
+#[cfg(target_arch = "x86_64")]
+extern "C" fn ap_entry(info: *const SmpInfo) -> ! {
+    // Safety: `info` points at this CPU's own SmpInfo entry in Limine's
+    // response array, which `_start()` finished writing (extra_argument,
+    // then goto_address) before this core started executing.
+    let core_id = unsafe { (*info).extra_argument } as usize;
+
+    arch::x86_64::init(core_id);   // this core's own GDT/TSS, then the shared IDT
+    syscall::init(core_id);        // this core's own EFER/STAR/LSTAR/FMASK/GS_BASE
+
+    if let Some(m) = acpi::madt() {
+        if m.local_apic_addr != 0 {
+            // Each CPU has its own physical Local APIC hardware behind the
+            // same MMIO address, so this must run per-core, not just once
+            // on the BSP -- see arch::x86_64::lapic's own module docs.
+            arch::x86_64::lapic::init(m.local_apic_addr);
+            arch::x86_64::lapic::register_core(core_id);
+        }
+    }
+
+    kprintln!(
+        "[cpu]  core {} (AP) online, lapic id={:?}",
+        core_id,
+        arch::x86_64::lapic::lapic_id_for_core(core_id)
+    );
+
+    // Parked: no work is assigned to this core yet (Phase K5 increment 6).
+    // Nothing routes any IRQ here (the I/O APIC targets the BSP's LAPIC ID
+    // exclusively), so there is nothing to wake up for -- halting with
+    // IF=0 is the simplest, safest "do nothing" state until there's real
+    // per-core work to give it.
+    loop {
+        unsafe { core::arch::asm!("cli; hlt", options(nomem, nostack)); }
+    }
 }
 
 // ─── Phase 5: AI Core kernel thread ────────────────────────────────────────────
