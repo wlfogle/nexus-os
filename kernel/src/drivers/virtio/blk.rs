@@ -270,13 +270,24 @@ impl VirtioBlk {
         fence(Ordering::SeqCst);
         write16(self.io_base, REG_QUEUE_NOTIFY, 0);
 
-        // Poll used ring: used.idx is at offset 2 within the used ring
+        // Poll used ring: used.idx is at offset 2 within the used ring.
+        // Bounded, matching every other virtqueue-polling driver in this
+        // codebase (virtio_mmio's AArch64 counterpart, virtio::net,
+        // virtio_pci_modern) -- this loop previously had no bound at all,
+        // meaning a single non-completing request would hang the kernel
+        // forever instead of surfacing a diagnosable error.
         let used_idx_ptr = (self.used_virt + 2) as *const u16;
         let target = self.last_used_idx.wrapping_add(1);
+        let mut spins: u64 = 0;
+        const SPIN_LIMIT: u64 = 200_000_000;
         loop {
             fence(Ordering::SeqCst);
             if unsafe { core::ptr::read_volatile(used_idx_ptr) } == target { break; }
             core::hint::spin_loop();
+            spins += 1;
+            if spins > SPIN_LIMIT {
+                return Err("VirtIO-blk: I/O timeout");
+            }
         }
         self.last_used_idx = target;
 
