@@ -34,6 +34,12 @@ BUILD_DIR    := build
 LIMINE_DIR   := limine
 LIMINE_BIN   := $(LIMINE_DIR)/bin
 
+# Locally-built QEMU >= 8.2 (Bahamut Increment B0): the distro package predates
+# raspi4b (added in 8.2). Built from source, scoped to aarch64-softmmu only,
+# into toolchain/ (gitignored -- not part of the repo, reproduce with
+# `make setup-raspi4b-qemu`).
+QEMU_RASPI4B := toolchain/qemu-9.2.0/build/qemu-system-aarch64
+
 # ─── Default target ────────────────────────────────────────────────────────────
 .PHONY: all
 all: laptop tiamat bahamut
@@ -282,6 +288,46 @@ run-installed-bahamut:
 	    -bios $(AAVMF) \
 	    -drive file=$(DISK_BAHAMUT),if=none,id=hd0 \
 	    -device virtio-blk-device,drive=hd0 \
+	    -serial stdio -display none \
+	    -no-reboot -no-shutdown
+
+# ─── Bahamut Increment B0: local raspi4b QEMU test bed ─────────────────────────
+# The distro qemu-system-aarch64 (6.2.0) predates raspi4b (added in 8.2, and
+# Pop!_OS/Ubuntu jammy's repos offer nothing newer). This builds QEMU 9.2.0
+# from source, scoped to --target-list=aarch64-softmmu only (headless, no
+# GTK/SDL/VNC -- matches how every other target here is tested with
+# `-display none`), into toolchain/ so it never touches the system package.
+# Requires a newer meson than the system package (0.61.2); installed to
+# ~/.local/bin via pip --user, which does not affect system Python packages.
+.PHONY: setup-raspi4b-qemu
+setup-raspi4b-qemu:
+	@echo "==> Ensuring a modern meson/ninja are available (pip --user)..."
+	pip3 install --user --upgrade meson ninja
+	@echo "==> Fetching QEMU 9.2.0 source..."
+	@mkdir -p toolchain
+	@test -f toolchain/qemu-9.2.0.tar.xz || \
+	    wget -q -O toolchain/qemu-9.2.0.tar.xz https://download.qemu.org/qemu-9.2.0.tar.xz
+	@test -d toolchain/qemu-9.2.0 || \
+	    tar xf toolchain/qemu-9.2.0.tar.xz -C toolchain
+	@echo "==> Configuring + building QEMU (aarch64-softmmu only, headless)..."
+	@mkdir -p toolchain/qemu-9.2.0/build
+	cd toolchain/qemu-9.2.0/build && PATH="$$HOME/.local/bin:$$PATH" \
+	    ../configure --target-list=aarch64-softmmu \
+	        --disable-gtk --disable-sdl --disable-vnc --disable-docs \
+	        --enable-slirp && \
+	    PATH="$$HOME/.local/bin:$$PATH" ninja -j$$(nproc)
+	@echo ""
+	@echo "==> $(QEMU_RASPI4B) ready ($$($(QEMU_RASPI4B) --version | head -1))"
+
+# Informational smoke test only until Increments B1 (platform detection) and
+# B2 (real BCM2711 UART0) land -- the kernel still only knows QEMU virt's PL011
+# address (0x09000000), not raspi4b's real one (0xFE201000), so no serial
+# output is expected yet. This just confirms the raspi4b machine itself boots.
+.PHONY: run-raspi4b
+run-raspi4b: bahamut
+	@test -x $(QEMU_RASPI4B) || { echo "ERROR: run 'make setup-raspi4b-qemu' first"; exit 1; }
+	$(QEMU_RASPI4B) -M raspi4b -cpu cortex-a72 -m 2G \
+	    -kernel $(BUILD_DIR)/nexus-kernel-bahamut \
 	    -serial stdio -display none \
 	    -no-reboot -no-shutdown
 
