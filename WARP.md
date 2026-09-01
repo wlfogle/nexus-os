@@ -27,8 +27,8 @@ this repository.
 NexusOS is a **from-scratch Rust microkernel** — the world's first AI-native
 operating system.  No Linux.  No glibc.  No distro assumptions.
 
-**Current state: v0.6.0 — Phases 1–5 verified (QEMU + KVM). Ring-3 interactive shell boots.**  
-**Next: Phase 5.4 — Boot from installed disk; VirtIO-vsock → Ollama**
+**Current state: v0.6.2 — Phases 1–5 and Kernel Completion Roadmap K1–K5 verified under QEMU (`-smp 4`). Ring-3 interactive shell boots; ACPI/SMP (multi-core scheduling with per-AP LAPIC timers), xHCI/USB-HID, fd-based VFS, and process spawn/wait/kill are all live.**  
+**Next: Phase K6 — real-hardware graphics validation (Limine framebuffer on the i9-13900HX's Intel iGPU, bare metal). See the "NexusOS Kernel Completion Roadmap" plan for full detail on every K1–K6 increment.**
 
 The old Ubuntu/distro material is preserved under `legacy/` but is never built.
 
@@ -64,48 +64,42 @@ make bahamut && make iso-bahamut                   # AArch64
 
 | Module | Phase | Description |
 |--------|-------|-------------|
-| `arch/x86_64/{gdt,idt,interrupts,timer_isr}` | 1 | CPU structures, naked timer ISR |
+| `arch/x86_64/{gdt,idt,interrupts,timer_isr}` | 1 | CPU structures, naked timer ISR — `gdt`/`TSS` are now per-core arrays (K5.4) |
 | `arch/aarch64/exceptions` | 1 | AArch64 vector table, VBAR_EL1 |
 | `memory/{physical,paging,heap}` | 1 | Bitmap allocator (huge-page aware), 4-level paging, heap |
 | `io/{serial,uart,framebuffer}` | 1 | Serial/UART, 2x-scaled framebuffer console |
-| `timer/{pic,pit}` | 2 | 8259A PIC remap, 8253 PIT 100 Hz |
-| `process` | 2 | PCB, ring-0/ring-3 spawn, BlockedOnRecv/Send states |
-| `scheduler` | 2 | Round-robin preemptive, TSS.RSP0 + PERCPU updates |
+| `timer/{pic,pit}` | 2 | 8259A PIC remap, 8253 PIT 100 Hz — PIC now fully masked once the I/O APIC takes over (K5.3) |
+| `process` | 2 | PCB, ring-0/ring-3 spawn, per-process fd table + heap (K3/K1); every id-keyed lookup rejects pid 0 (K5.6 fix) |
+| `scheduler` | 2 | Preemptive round-robin — per-core `CURRENT`/runqueue pick with `PICK_LOCK` for genuine multi-core correctness (K5.6) |
 | `ipc/{mod,ports}` | 3 | Message queues (depth=8), blocking send/recv, named ports |
-| `syscall` | 4 | STAR/LSTAR/FMASK/EFER, GS-relative naked entry, 9 syscalls |
+| `syscall` | 4 | STAR/LSTAR/FMASK/EFER, GS-relative naked entry, per-core PERCPU array, 36 syscalls (see `kernel/src/syscall/mod.rs`) |
 | `userspace` | 4 | Ring-3 page mapping in PML4[1], NASM shell binary (shell_init.asm) |
 | `build.rs`  | 6 | Assembles userspace/shell_init.asm → OUT_DIR/shell_init.bin via NASM |
+| `acpi` | K5.1 | RSDP → RSDT/XSDT → FADT + MADT parsing, incl. Interrupt Source Override |
+| `arch/x86_64/{lapic,ioapic}` | K5.2–K5.6 | Local APIC + I/O APIC bring-up, AP registration, calibrated per-AP LAPIC periodic timer |
+| `drivers/xhci` + `drivers/usb_hid` | K4 | xHCI controller, USB HID boot-protocol keyboard/mouse |
+| `fs/{fat,vfs}` | K3 | FAT32 + per-process fd table (SYS_OPEN/CLOSE/READ/LSEEK) |
 
-## Phase 5: AI Core (In Progress)
+Full per-increment writeups (with verification methodology) live in the "NexusOS Kernel Completion Roadmap" plan, not duplicated here.
 
-### New Syscalls
+## Phase 5: AI Core — DONE
 
-| Syscall | Number | Purpose | Phase |
-|---------|--------|---------|-------|
-| `SYS_IPC_QUERY` | 7 | Resolve service name → port ID | 5.0 |
-| `SYS_IPC_TIMEOUT` | 8 | Set per-process recv timeout (ms) | 5.0 |
-| `SYS_GPU_MMAP` | 9 | Reserve GPU buffer region | 5.0 |
+Real Ollama HTTP client (`net::tcp_request`) is live, not a mock — the `nexus-ai` daemon serves `nexus.ai` IPC requests by making a real blocking TCP call to Ollama. [PHASE5_ARCHITECTURE.md](PHASE5_ARCHITECTURE.md) is the original **design doc** for this phase (syscall numbers/snippets there are illustrative pre-implementation sketches, superseded by the real numbering in `kernel/src/syscall/mod.rs` — e.g. `SYS_IPC_QUERY`/`SYS_IPC_TIMEOUT`/`SYS_GPU_MMAP` actually landed as 10/11/12, not 7/8/9). Kept for historical design context only.
 
-### Files to Implement
+## Kernel Completion Roadmap: K1–K6
 
-**Kernel:**
-- `kernel/src/syscall/handlers/syscall_ipc_query.rs` — port name resolution
-- `kernel/src/syscall/handlers/syscall_ipc_timeout.rs` — timeout management
-- `kernel/src/syscall/handlers/syscall_gpu_mmap.rs` — GPU memory stubs
-- `kernel/src/ipc/ports.rs` (update) — reserved port registry
-- `kernel/src/main.rs` (Phase 5 section) — spawn nexus-ai daemon
+Phases 1–5 above built the original AI-native foundation; **K1–K6** (a separate, later roadmap — see the "NexusOS Kernel Completion Roadmap" plan for full per-increment detail) closed out everything a daily-driver kernel still needed:
 
-**User-space:**
-- `userspace/nexus-ai/Cargo.toml` — daemon binary manifest
-- `userspace/nexus-ai/src/main.rs` — entry point, daemon loop
-- `userspace/nexus-ai/src/ipc.rs` — IPC message handling
-- `userspace/nexus-ai/src/ollama_client.rs` — Ollama HTTP client (stub)
-- `userspace/nexus-ai/src/inference.rs` — request handler
+| Phase | Scope | Status |
+|-------|-------|--------|
+| K1 | User-space heap (`SYS_BRK`) | DONE |
+| K2 | Decoupled process spawn/wait/kill, `Zombie` state | DONE |
+| K3 | Per-process fd table + offset-aware VFS (`SYS_OPEN/CLOSE/READ/LSEEK`) | DONE |
+| K4 | xHCI + USB HID (keyboard/mouse boot protocol) | DONE |
+| K5 | ACPI (RSDP/FADT/MADT), LAPIC/IOAPIC, per-core TSS/PERCPU, AP bring-up (Limine `SmpRequest`), per-CPU scheduler + calibrated AP LAPIC timers | DONE |
+| K6 | Real-hardware graphics validation (Limine framebuffer on real Intel iGPU) + VirtIO-GPU for the QEMU test path | Next |
 
-**Testing:**
-- `scripts/phase5-integration-test.sh` — boot + IPC verification
-
-See [PHASE5_ARCHITECTURE.md](PHASE5_ARCHITECTURE.md) for full spec and implementation guide.
+K5 in particular required a real-hardware-correctness mindset throughout: every increment was verified against real QEMU-reported architectural constants (not just "it boots"), and K5's final increment caught and fixed a genuine, previously-latent triple-fault bug (a `pid == 0` table-lookup ambiguity that only manifests once a second CPU core is actively scheduling) — see the plan's increment 6 writeup for the full root-cause analysis.
 
 ## Key Gotchas
 
@@ -186,11 +180,9 @@ Every function must be complete and working.  No stubs, no TODOs, no zombie code
 
 ## Future Phases
 
-- **Phase 5.1** — Full HTTP client for Ollama, JSON parsing, error handling
-- **Phase 5.2** — GPU memory abstraction, model caching
-- **Phase 5.3** — Multi-model scheduling, load balancing
-- **Phase 6** — NexusTerminal ↔ AI Core integration
-- **Phase 7** — VFS, network stack, package manager
+- **Phase K6** — Real-hardware graphics validation (bare-metal Limine framebuffer on the laptop's Intel iGPU) + VirtIO-GPU driver for QEMU
+- **Beyond K6 (explicitly deferred, see the Kernel Completion Roadmap plan)** — compositor/window manager, widget toolkit, desktop shell, file manager, GPU acceleration beyond mode-setting, filesystems beyond FAT32
+- **Long-term** — Linux/BSD/macOS/Win32 personality servers (see "The Mission" below)
 ---
 
 ## Session Continuity

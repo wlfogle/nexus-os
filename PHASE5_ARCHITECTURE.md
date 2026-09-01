@@ -1,7 +1,16 @@
 # Phase 5: AI Core Architecture — Implementation Reference
 
-**Status:** Implemented (v0.6.0)  
-**Phases Complete:** 1–5
+**Status:** Historical design doc — superseded by the real implementation.
+Kept for design context only; do not treat syscall numbers or code snippets
+below as authoritative. The real, current syscall table lives in
+`kernel/src/syscall/mod.rs` (36 syscalls as of the K1–K5 Kernel Completion
+Roadmap — e.g. `SYS_IPC_QUERY`/`SYS_IPC_TIMEOUT`/`SYS_GPU_MMAP` actually
+landed as 10/11/12, not 7/8/9 as sketched here), and the AI Core's HTTP
+client (`net::tcp_request`) is a real blocking TCP call to Ollama, not the
+mock `ollama_client.rs` shown below. See `WARP.md`'s "Phase 5: AI Core" and
+"Kernel Completion Roadmap: K1–K6" sections for current status.
+
+**Phases Complete:** 1–5, plus K1–K5 of the later Kernel Completion Roadmap
 
 ---
 
