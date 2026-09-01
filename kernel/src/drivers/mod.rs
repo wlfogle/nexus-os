@@ -8,6 +8,8 @@ pub mod pci;
 #[cfg(target_arch = "x86_64")]
 pub mod virtio;
 #[cfg(target_arch = "x86_64")]
+pub mod virtio_pci_modern;
+#[cfg(target_arch = "x86_64")]
 pub mod nvme;
 #[cfg(target_arch = "x86_64")]
 pub mod ahci;

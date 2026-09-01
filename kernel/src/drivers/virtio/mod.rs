@@ -5,6 +5,7 @@
 
 pub mod blk;
 pub mod net;
+pub mod gpu;
 
 use x86_64::instructions::port::Port;
 

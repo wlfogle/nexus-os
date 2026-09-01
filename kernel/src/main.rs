@@ -485,6 +485,15 @@ pub extern "C" fn _start() -> ! {
         kprintln!("[kbd]  PS/2 keyboard online — nexus-shell ready");
 
         net::init();
+
+        // ── Phase K6: VirtIO-GPU 2D driver (QEMU/dev-loop test path) ────
+        // Independent of the Limine framebuffer request handled earlier —
+        // that path already renders the boot console via whatever mode
+        // firmware/GOP set pre-boot on real hardware. This gives the
+        // QEMU-side dev loop a real GPU *driver* (resource lifecycle,
+        // scanout binding, host transfer/flush) to exercise, non-fatal to
+        // boot if no such device is attached.
+        drivers::virtio::gpu::init();
     }
 
     #[cfg(target_arch = "aarch64")]
