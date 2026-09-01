@@ -163,11 +163,12 @@ iso-bahamut: bahamut
 	cp $(BUILD_DIR)/nexus-kernel-bahamut   $(BUILD_DIR)/iso-bahamut/boot/nexus-kernel
 	cp $(BUILD_DIR)/nexus-kernel-bahamut   $(BUILD_DIR)/iso-bahamut/EFI/BOOT/nexus-kernel
 	cp iso_root/limine-bahamut.conf        $(BUILD_DIR)/iso-bahamut/boot/limine/limine.conf
+	cp $(LIMINE_BIN)/limine-uefi-cd.bin    $(BUILD_DIR)/iso-bahamut/boot/limine/
 	cp $(LIMINE_BIN)/BOOTAA64.EFI          $(BUILD_DIR)/iso-bahamut/EFI/BOOT/BOOTAA64.EFI
 	cp iso_root/limine-bahamut-uefi.conf   $(BUILD_DIR)/iso-bahamut/EFI/BOOT/limine.conf
 	printf '\\EFI\\BOOT\\BOOTAA64.EFI\r\n' > $(BUILD_DIR)/iso-bahamut/startup.nsh
 	$(XORRISO) -as mkisofs \
-	    --efi-boot EFI/BOOT/BOOTAA64.EFI \
+	    --efi-boot boot/limine/limine-uefi-cd.bin \
 	    -efi-boot-part --efi-boot-image --protective-msdos-label \
 	    $(BUILD_DIR)/iso-bahamut \
 	    -o $(BUILD_DIR)/nexusos-bahamut.iso
@@ -196,7 +197,8 @@ run-tiamat: iso-tiamat
 run-bahamut: iso-bahamut
 	$(QEMU_ARM) -M virt -cpu cortex-a72 -m 2G \
 	    -bios /usr/share/qemu-efi-aarch64/QEMU_EFI.fd \
-	    -cdrom $(BUILD_DIR)/nexusos-bahamut.iso \
+	    -drive file=$(BUILD_DIR)/nexusos-bahamut.iso,if=none,media=cdrom,id=cd0 \
+	    -device virtio-scsi-device,id=scsi0 -device scsi-cd,bus=scsi0.0,drive=cd0 \
 	    -serial stdio -display none \
 	    -no-reboot -no-shutdown
 
@@ -265,7 +267,8 @@ run-install-bahamut: iso-bahamut
 	@echo "    Watch serial for NexusOS Installer banner and 'Installation complete!'"
 	$(QEMU_ARM) -M virt -cpu cortex-a72 -m 2G \
 	    -bios $(AAVMF) \
-	    -cdrom $(BUILD_DIR)/nexusos-bahamut.iso \
+	    -drive file=$(BUILD_DIR)/nexusos-bahamut.iso,if=none,media=cdrom,id=cd0 \
+	    -device virtio-scsi-device,id=scsi0 -device scsi-cd,bus=scsi0.0,drive=cd0 \
 	    -drive file=$(DISK_BAHAMUT),if=none,id=hd0 \
 	    -device virtio-blk-device,drive=hd0 \
 	    -serial stdio -display none \
