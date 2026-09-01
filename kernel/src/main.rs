@@ -61,6 +61,9 @@ use limine::{
 #[cfg(target_arch = "x86_64")]
 use limine::{RsdpRequest, SmpInfo, SmpRequest};
 
+#[cfg(target_arch = "aarch64")]
+use limine::DtbRequest;
+
 #[cfg(feature = "framebuffer")]
 use limine::FramebufferRequest;
 
@@ -112,6 +115,14 @@ static SMP_REQUEST: SmpRequest = SmpRequest::new(0);
 #[link_section = ".limine_requests"]
 static FB_REQUEST: FramebufferRequest = FramebufferRequest::new(0);
 
+/// Device tree blob (Bahamut Increment B1) — AArch64 only; x86_64 has no DTB
+/// to discover. Used to tell QEMU's `virt` machine apart from real
+/// Raspberry Pi 4 hardware at boot -- see `arch::aarch64::platform`.
+#[cfg(target_arch = "aarch64")]
+#[used]
+#[link_section = ".limine_requests"]
+static DTB_REQUEST: DtbRequest = DtbRequest::new(0);
+
 // ─── Kernel entry point ───────────────────────────────────────────────────────
 
 /// Called by Limine after setting up paging, HHDM, and GDT stubs.
@@ -143,8 +154,25 @@ pub extern "C" fn _start() -> ! {
     kprintln!("\u{2502}  NexusOS Kernel v{}  [{:^10}]  \u{2502}",
               env!("CARGO_PKG_VERSION"), build_label());
     kprintln!("\u{2502}  World's First AI-Native OS             \u{2502}");
-    kprintln!("\u{2514}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2518}");
+    kprintln!("\u{2514}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2500}\u{2518}");
     kprintln!();
+
+    // ── 1c. AArch64 platform detection (Bahamut Increment B1) ─────────
+    // Runs before HHDM/memmap are even collected: Limine's DTB pointer is
+    // already directly usable (no phys_to_virt translation needed, unlike
+    // ACPI table contents below), and every later Bahamut driver increment
+    // (B2 UART0, B3 GIC-400, B4 EMMC2) needs to know which base addresses
+    // to program, so detecting this as early as possible is deliberate.
+    #[cfg(target_arch = "aarch64")]
+    {
+        let dtb_ptr = DTB_REQUEST
+            .get_response()
+            .get()
+            .and_then(|r| r.dtb_ptr.as_ptr())
+            .map(|p| p as u64)
+            .unwrap_or(0);
+        arch::aarch64::platform::detect(dtb_ptr);
+    }
 
     // ── 2. Collect Limine boot responses ────────────────────────────────────
     let hhdm = HHDM_REQUEST
