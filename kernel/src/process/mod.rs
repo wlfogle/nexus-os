@@ -209,6 +209,12 @@ pub fn spawn(name: &[u8], entry: u64) -> Option<u64> {
 
 /// Syscall personality of a process. Defaults to Nexus for unknown/dead IDs.
 pub fn get_personality(id: u64) -> ProcessPersonality {
+    // id 0 is never a real process (NEXT_ID starts at 1) -- it's both the
+    // "no process" sentinel used by the scheduler and the default `id`
+    // field of every dead/unspawned table slot (`Process::zero()`). Without
+    // this guard, `find(|p| p.id == 0)` would spuriously match the first
+    // such dead slot instead of correctly reporting "not found".
+    if id == 0 { return ProcessPersonality::Nexus; }
     let table = TABLE.lock();
     table
         .iter()
@@ -220,12 +226,19 @@ pub fn get_personality(id: u64) -> ProcessPersonality {
 /// Get the saved RSP of the currently-running process.
 /// Called from the context switch to snapshot where we are.
 pub fn get_rsp(id: u64) -> Option<u64> {
+    // See `get_personality` for why id 0 must never reach the table scan:
+    // a dead slot's default `rsp` field is also 0, so an unguarded lookup
+    // would return `Some(0)` (matching a dead slot) instead of `None`,
+    // defeating callers' `unwrap_or(current_rsp)` fallback and handing back
+    // a literal null stack pointer.
+    if id == 0 { return None; }
     let table = TABLE.lock();
     table.iter().find(|p| p.id == id).map(|p| p.rsp)
 }
 
 /// Update the saved RSP of a process (called after saving context).
 pub fn set_rsp(id: u64, rsp: u64) {
+    if id == 0 { return; }
     let mut table = TABLE.lock();
     if let Some(p) = table.iter_mut().find(|p| p.id == id) {
         p.rsp = rsp;
@@ -234,6 +247,7 @@ pub fn set_rsp(id: u64, rsp: u64) {
 
 /// Set process state.
 pub fn set_state(id: u64, state: ProcessState) {
+    if id == 0 { return; }
     let mut table = TABLE.lock();
     if let Some(p) = table.iter_mut().find(|p| p.id == id) {
         p.state = state;
@@ -242,6 +256,7 @@ pub fn set_state(id: u64, state: ProcessState) {
 
 /// Get process state.
 pub fn get_state(id: u64) -> ProcessState {
+    if id == 0 { return ProcessState::Dead; }
     let table = TABLE.lock();
     table.iter()
         .find(|p| p.id == id)
@@ -308,6 +323,8 @@ pub fn spawn_ring3(
 
 /// Physical address of a process's private PML4 (0 = shared kernel space).
 pub fn get_pml4(id: u64) -> u64 {
+    // See `get_rsp` for why id 0 is rejected before it can match a dead slot.
+    if id == 0 { return 0; }
     let table = TABLE.lock();
     table.iter().find(|p| p.id == id).map(|p| p.pml4_phys).unwrap_or(0)
 }
@@ -315,6 +332,7 @@ pub fn get_pml4(id: u64) -> u64 {
 /// Return `(heap_base, heap_brk)` for a process. `(0, 0)` if it has no heap
 /// region (e.g. a kernel thread, which never issues SYS_BRK anyway).
 pub fn get_heap(id: u64) -> (u64, u64) {
+    if id == 0 { return (0, 0); }
     let table = TABLE.lock();
     table.iter()
         .find(|p| p.id == id)
@@ -324,6 +342,7 @@ pub fn get_heap(id: u64) -> (u64, u64) {
 
 /// Update the current program break after SYS_BRK (un)maps the backing pages.
 pub fn set_heap_brk(id: u64, new_brk: u64) {
+    if id == 0 { return; }
     let mut table = TABLE.lock();
     if let Some(p) = table.iter_mut().find(|p| p.id == id) {
         p.heap_brk = new_brk;
@@ -406,6 +425,10 @@ pub fn blocked_on_key_ids(buf: &mut [u64]) -> usize {
 
 /// Get a process's kernel stack top address (for syscall PERCPU update).
 pub fn get_kernel_stack_top(id: u64) -> Option<u64> {
+    // See `get_rsp`: a dead slot's default `kernel_stack_top` is also 0,
+    // so id 0 must be rejected before it can spuriously match one via
+    // `Some(0)` (which callers would treat as a *valid* address of 0).
+    if id == 0 { return None; }
     let table = TABLE.lock();
     table.iter()
         .find(|p| p.id == id)
@@ -416,6 +439,7 @@ pub fn get_kernel_stack_top(id: u64) -> Option<u64> {
 
 /// Return the parent PID of `child` (0 if none).
 pub fn get_parent(child: u64) -> u64 {
+    if child == 0 { return 0; }
     let table = TABLE.lock();
     table.iter().find(|p| p.id == child).map(|p| p.parent).unwrap_or(0)
 }
@@ -432,6 +456,7 @@ pub fn get_parent(child: u64) -> u64 {
 /// survive until someone asks for it, not just if someone was already asking
 /// at the exact instant it exited).
 pub fn exit(pid: u64, code: i64) {
+    if pid == 0 { return; }
     let mut table = TABLE.lock();
     if let Some(p) = table.iter_mut().find(|p| p.id == pid) {
         p.exit_code = code;
@@ -444,6 +469,7 @@ pub fn exit(pid: u64, code: i64) {
 /// already reaped. Does not reap — call `reap(pid)` once you're done
 /// needing anything else about it.
 pub fn try_exit_code(pid: u64) -> Option<i64> {
+    if pid == 0 { return None; }
     let table = TABLE.lock();
     table.iter()
         .find(|p| p.id == pid && p.state == ProcessState::Zombie)
@@ -456,6 +482,7 @@ pub fn try_exit_code(pid: u64) -> Option<i64> {
 /// address space and takes the physical allocator's own lock — no need to
 /// hold the process table for that), then re-locks briefly to zero the slot.
 pub fn reap(pid: u64) {
+    if pid == 0 { return; }
     let pml4 = {
         let table = TABLE.lock();
         table.iter().find(|p| p.id == pid).map(|p| p.pml4_phys).unwrap_or(0)

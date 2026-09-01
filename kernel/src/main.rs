@@ -468,6 +468,17 @@ pub extern "C" fn _start() -> ! {
     kprintln!("[arch] Interrupts enabled — scheduler is LIVE");
     #[cfg(target_arch = "x86_64")]
     {
+        // ── Phase K5 increment 6: calibrate the LAPIC timer ─────────────
+        // Must happen after interrupts are enabled (timer::ticks() only
+        // advances once the PIT-driven timer IRQ can actually fire), and
+        // before any AP needs it. Every AP spin-waits on
+        // `lapic::timer_calibrated()` before touching its own timer
+        // registers (see `ap_entry`), so there's no ordering requirement
+        // between "APs already started" (main.rs, above) and this call.
+        if arch::x86_64::lapic::is_active() {
+            arch::x86_64::lapic::calibrate_timer();
+        }
+
         kprintln!();
         kprintln!("NexusOS v{} — Phase 5: Ring-3 shell + AI Core + PS/2 keyboard active.",
                   env!("CARGO_PKG_VERSION"));
@@ -537,11 +548,16 @@ macro_rules! kprintln {
 /// `info.extra_argument` carries the dense `core_id` `_start()` assigned
 /// this CPU before writing `goto_address`.
 ///
-/// Phase K5 increment 5 scope: bring the core up, prove it's alive and
-/// correctly registered, then park it forever with interrupts disabled. It
-/// does NOT join the live scheduler/timer-interrupt path yet — see the
-/// comment at the call site in `_start()` for why that has to wait for
-/// increment 6's per-CPU scheduler + lock audit.
+/// Phase K5 increment 5 brought the core up far enough to prove it's alive
+/// and correctly registered, then parked it. Increment 6 finishes the job:
+/// once the BSP's LAPIC timer calibration is ready, this core starts its
+/// own periodic LAPIC timer (its only possible timer interrupt source --
+/// the I/O APIC routes the PIT-driven tick exclusively to the BSP's LAPIC
+/// id) at the *same* IDT vector the legacy PIC/IOAPIC timer path already
+/// uses, so `scheduler_tick` starts running on this core with no IDT
+/// changes needed, and joins the same round-robin ready pool every other
+/// core picks from (see `scheduler::PICK_LOCK`'s doc comment for why that's
+/// now race-free across concurrent cores).
 #[cfg(target_arch = "x86_64")]
 extern "C" fn ap_entry(info: *const SmpInfo) -> ! {
     // Safety: `info` points at this CPU's own SmpInfo entry in Limine's
@@ -568,13 +584,27 @@ extern "C" fn ap_entry(info: *const SmpInfo) -> ! {
         arch::x86_64::lapic::lapic_id_for_core(core_id)
     );
 
-    // Parked: no work is assigned to this core yet (Phase K5 increment 6).
-    // Nothing routes any IRQ here (the I/O APIC targets the BSP's LAPIC ID
-    // exclusively), so there is nothing to wake up for -- halting with
-    // IF=0 is the simplest, safest "do nothing" state until there's real
-    // per-core work to give it.
+    // Wait for the BSP to finish calibrating the LAPIC timer against the
+    // PIT (see main.rs's post-"Interrupts enabled" block) before touching
+    // this core's own timer registers with an as-yet-unknown count value.
+    // Interrupts are still disabled here, so this is a plain busy-wait,
+    // not a scheduler-visible block.
+    while !arch::x86_64::lapic::timer_calibrated() {
+        core::hint::spin_loop();
+    }
+
+    let timer_vector = timer::pic::PIC1_OFFSET + timer::pic::IRQ_TIMER;
+    arch::x86_64::lapic::start_periodic_timer(timer_vector);
+
+    // From here on this core is a full scheduling participant: every timer
+    // tick calls the same `scheduler_tick` the BSP uses, indexed by this
+    // core's own `syscall::current_core_id()` slot. This function's own
+    // stack is abandoned the moment the first tick picks a process to run
+    // -- exactly how the BSP's own `_start()` stack is abandoned once its
+    // first tick fires, not a new pattern.
+    unsafe { core::arch::asm!("sti", options(nomem, nostack)); }
     loop {
-        unsafe { core::arch::asm!("cli; hlt", options(nomem, nostack)); }
+        unsafe { core::arch::asm!("hlt", options(nomem, nostack)); }
     }
 }
 

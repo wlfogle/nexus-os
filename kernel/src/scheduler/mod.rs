@@ -136,6 +136,18 @@ pub unsafe extern "C" fn scheduler_tick(current_rsp: u64) -> u64 {
     };
     CURRENT[core].store(next_id, Ordering::SeqCst);
 
+    // next_id == 0 means there is truly nothing schedulable on this core
+    // right now (only reachable when this core's own `cur_id` was also 0 —
+    // e.g. an AP's very first tick landing at the exact instant every real
+    // process happens to be Running-elsewhere/Blocked). id 0 is never a
+    // real process (`process::spawn*` start IDs at 1) and every
+    // `process::*` lookup now treats it as "not found" on purpose — so
+    // there is nothing to update or switch into. Just resume exactly where
+    // this tick was invoked from.
+    if next_id == 0 {
+        return current_rsp;
+    }
+
     // Update PERCPU.kernel_rsp (for syscall entry) and TSS.RSP0 (for ring-3
     // interrupts) on the core actually running this tick.
     #[cfg(target_arch = "x86_64")]

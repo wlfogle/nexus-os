@@ -8,7 +8,7 @@
 //! to the Local APIC's MMIO register instead of the 8259's I/O ports once
 //! this is active — see `is_active()`/`eoi()`.
 
-use core::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use core::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
 use x86_64::registers::model_specific::Msr;
 
 use super::MAX_CPUS;
@@ -17,13 +17,25 @@ const IA32_APIC_BASE: u32 = 0x1B;
 const APIC_BASE_ENABLE: u64 = 1 << 11;
 
 // Register offsets into the 4 KiB MMIO page (Intel SDM Vol. 3A, Table 10-1).
-const REG_ID:        u64 = 0x020;
-const REG_EOI:       u64 = 0x0B0;
-const REG_SVR:       u64 = 0x0F0;
-const REG_LVT_LINT0: u64 = 0x350;
-const REG_LVT_LINT1: u64 = 0x360;
+const REG_ID:            u64 = 0x020;
+const REG_EOI:           u64 = 0x0B0;
+const REG_SVR:           u64 = 0x0F0;
+const REG_LVT_LINT0:     u64 = 0x350;
+const REG_LVT_LINT1:     u64 = 0x360;
+const REG_LVT_TIMER:     u64 = 0x320;
+const REG_INITIAL_COUNT: u64 = 0x380;
+const REG_CURRENT_COUNT: u64 = 0x390;
+const REG_DIVIDE_CONFIG: u64 = 0x3E0;
 
 const LVT_MASKED: u32 = 1 << 16;
+const LVT_TIMER_PERIODIC: u32 = 1 << 17;
+
+/// Divide the LAPIC timer's input clock by 16 before counting down — an
+/// arbitrary but common choice (matches what most minimal kernels use)
+/// that keeps the raw count comfortably away from both the 32-bit overflow
+/// ceiling during calibration and single-digit counts that would make the
+/// calibration measurement imprecise.
+const DIVIDE_BY_16: u32 = 0b0011;
 
 static LAPIC_VIRT: AtomicU64 = AtomicU64::new(0);
 static ACTIVE: AtomicBool = AtomicBool::new(false);
@@ -129,4 +141,92 @@ pub fn register_core(core_id: usize) {
 /// core has called `register_core(core_id)` yet.
 pub fn lapic_id_for_core(core_id: usize) -> Option<u8> {
     unsafe { CPU_LAPIC_IDS[core_id] }
+}
+
+// ─── LAPIC timer (Phase K5 increment 6) ──────────────────────────────────
+//
+// Gives each AP a real, periodic interrupt source of its own so it can
+// actually call `scheduler_tick` instead of parking forever — the I/O APIC
+// only ever routes the PIT-driven timer IRQ to the BSP's LAPIC id (see
+// main.rs), so an AP has no other way to receive a timer interrupt.
+
+/// Calibrated LAPIC timer Initial Count for one Phase-2 scheduler tick
+/// period (`timer::TIMER_HZ`, currently 10 ms). `0` means "not yet
+/// calibrated" — every AP's `start_periodic_timer` waits for this to
+/// become nonzero before touching its own timer registers.
+///
+/// A single BSP-side calibration (see `calibrate_timer`) is reused by
+/// every AP rather than each core calibrating independently: the LAPIC
+/// timer runs off each core's local bus/crystal clock, which is shared
+/// across every core in the same package on all hardware this kernel
+/// targets, so per-core calibration would measure the same value anyway
+/// at the cost of a slower, more complex AP bring-up.
+static TIMER_INITIAL_COUNT: AtomicU32 = AtomicU32::new(0);
+
+/// Calibrate the LAPIC timer against the PIT (`crate::timer`), the only
+/// trusted wall-clock source available this early in boot. Must be called
+/// on the BSP, after `init()`, and after `arch::enable_interrupts()` has
+/// actually started the PIT tick counter advancing — `timer::ticks()`
+/// never moves while interrupts are disabled, so calling this any earlier
+/// would spin forever waiting for a clock that isn't running yet.
+pub fn calibrate_timer() {
+    let virt = LAPIC_VIRT.load(Ordering::Relaxed);
+    if virt == 0 {
+        return;
+    }
+
+    // 5 PIT ticks at TIMER_HZ=100 = 50 ms — long enough for a reasonably
+    // precise measurement, short enough not to noticeably delay boot.
+    const MEASURE_TICKS: u64 = 5;
+
+    unsafe {
+        write(virt, REG_DIVIDE_CONFIG, DIVIDE_BY_16);
+        // Masked one-shot: we poll Current Count ourselves rather than
+        // waiting for this measurement countdown to actually interrupt.
+        write(virt, REG_LVT_TIMER, LVT_MASKED);
+        write(virt, REG_INITIAL_COUNT, u32::MAX);
+    }
+
+    let start = crate::timer::ticks();
+    while crate::timer::ticks().wrapping_sub(start) < MEASURE_TICKS {
+        core::hint::spin_loop();
+    }
+
+    let remaining = unsafe { read(virt, REG_CURRENT_COUNT) };
+    let elapsed = u32::MAX - remaining;
+    let per_tick = (elapsed / MEASURE_TICKS as u32).max(1);
+
+    // Stop the one-shot countdown; `start_periodic_timer` reprograms this
+    // register (and puts the LVT entry into periodic mode) once each core
+    // is ready to actually start ticking.
+    unsafe { write(virt, REG_INITIAL_COUNT, 0); }
+
+    TIMER_INITIAL_COUNT.store(per_tick, Ordering::SeqCst);
+    crate::kprintln!(
+        "[lapic] timer calibrated: {} counts per {}ms tick (divide-by-16)",
+        per_tick, 1000 / crate::timer::TIMER_HZ
+    );
+}
+
+/// Whether `calibrate_timer()` has finished. Every AP's own timer bring-up
+/// waits on this rather than assuming any particular ordering between
+/// "BSP calibrates" and "AP wants to start its own timer".
+pub fn timer_calibrated() -> bool {
+    TIMER_INITIAL_COUNT.load(Ordering::Relaxed) != 0
+}
+
+/// Start this core's own LAPIC timer in periodic mode, delivering `vector`
+/// once per calibrated tick period forever. Must be called after this
+/// core's own `init()` and after `timer_calibrated()` is true.
+pub fn start_periodic_timer(vector: u8) {
+    let virt = LAPIC_VIRT.load(Ordering::Relaxed);
+    if virt == 0 {
+        return;
+    }
+    let count = TIMER_INITIAL_COUNT.load(Ordering::SeqCst);
+    unsafe {
+        write(virt, REG_DIVIDE_CONFIG, DIVIDE_BY_16);
+        write(virt, REG_LVT_TIMER, LVT_TIMER_PERIODIC | vector as u32);
+        write(virt, REG_INITIAL_COUNT, count);
+    }
 }
