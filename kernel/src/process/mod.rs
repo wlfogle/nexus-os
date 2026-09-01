@@ -469,13 +469,22 @@ pub fn reap(pid: u64) {
     }
 }
 
-/// Return IDs of all Ready or Running processes, in table order.
+/// Return IDs of all `Ready` processes, in table order.
+///
+/// Deliberately excludes `Running`: on a single core that was harmless (the
+/// one currently-executing process is always demoted to `Ready` before this
+/// scan runs, earlier in the same `scheduler_tick` call), but with multiple
+/// cores ticking concurrently and independently, a process actively
+/// executing on another core right now would otherwise still show up here
+/// and could be picked a second time — a real double-schedule race, not a
+/// theoretical one. A process only becomes eligible again once the core
+/// actually running it demotes it back to `Ready` on its own next tick.
 pub fn ready_ids(buf: &mut [u64]) -> usize {
     let table = TABLE.lock();
     let mut n = 0;
     for p in table.iter() {
         if n >= buf.len() { break; }
-        if p.state == ProcessState::Ready || p.state == ProcessState::Running {
+        if p.state == ProcessState::Ready {
             buf[n] = p.id;
             n += 1;
         }

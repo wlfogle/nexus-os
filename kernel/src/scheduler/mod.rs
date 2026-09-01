@@ -12,21 +12,62 @@
 //!      and executes IRETQ — landing in the next process.
 
 use core::sync::atomic::{AtomicU64, Ordering};
+use spin::Mutex;
 use crate::process::{self, ProcessState};
 use crate::ipc;
 
-/// ID of the currently-running process (0 = no process / boot context).
-static CURRENT: AtomicU64 = AtomicU64::new(0);
+/// Number of per-core `CURRENT` slots. x86_64 sizes this to the same
+/// `MAX_CPUS` the GDT/TSS/PERCPU arrays use (Phase K5 increments 4-5);
+/// every other architecture (aarch64/bahamut) doesn't run the scheduler on
+/// more than one core today, so a single slot is both correct and cheap.
+#[cfg(target_arch = "x86_64")]
+const MAX_CORES: usize = crate::arch::x86_64::MAX_CPUS;
+#[cfg(not(target_arch = "x86_64"))]
+const MAX_CORES: usize = 1;
 
-/// Round-robin cursor — index of the last-picked slot.
+/// This core's dense index, for indexing `CURRENT` below. On x86_64 this is
+/// the same GS-relative id `syscall::current_core_id()` already provides
+/// (populated by that core's own `syscall::init(core_id)` call); every
+/// other architecture has exactly one schedulable core today.
+#[cfg(target_arch = "x86_64")]
+#[inline]
+fn this_core() -> usize { crate::syscall::current_core_id() }
+#[cfg(not(target_arch = "x86_64"))]
+#[inline]
+fn this_core() -> usize { 0 }
+
+/// ID of the process currently running *on each core* (0 = no process /
+/// boot context on that core). A single global here — correct only because
+/// exactly one core ever ran the scheduler — was Phase K5's last real
+/// single-core assumption left in this file; see `scheduler_tick` for the
+/// matching per-core dispatch.
+static CURRENT: [AtomicU64; MAX_CORES] = [const { AtomicU64::new(0) }; MAX_CORES];
+
+/// Round-robin cursor — index of the last-picked slot. Shared across cores
+/// on purpose (one global rotation through the ready set, not a separate
+/// rotation per core), but every read-compute-write of it must happen
+/// inside `PICK_LOCK` — see `scheduler_tick`'s comment for why.
 static CURSOR: AtomicU64 = AtomicU64::new(0);
 
+/// Serializes the "pick the next ready process" decision across cores.
+/// `process::TABLE`'s own lock protects individual field reads/writes, but
+/// it does not make the round-robin *decision* atomic across the whole
+/// scan-then-claim sequence: two cores concurrently reading `CURSOR`,
+/// independently computing the same "next" id, and both marking it
+/// `Running` would double-schedule that process on two cores at once — a
+/// real bug with real concurrent callers, not a theoretical one now that
+/// APs exist. This lock is always acquired before any `process::TABLE`
+/// lock and never the reverse, so there is no lock-ordering / deadlock risk.
+static PICK_LOCK: Mutex<()> = Mutex::new(());
+
 /// Initialise the scheduler: register the boot context as process 0 (idle).
+/// Called once, by the BSP, before any AP exists — so core 0's slot is the
+/// only one that needs seeding here.
 pub fn init() {
     let id = process::spawn(b"idle", idle_entry as u64)
         .expect("scheduler: could not spawn idle process");
     ipc::inbox_alloc(id);
-    CURRENT.store(id, Ordering::SeqCst);
+    CURRENT[0].store(id, Ordering::SeqCst);
     crate::kprintln!("[sched] Scheduler initialized, idle process id={}", id);
 }
 
@@ -44,10 +85,19 @@ pub fn spawn(name: &[u8], entry: extern "C" fn() -> !) -> Option<u64> {
 /// Must only be called from the naked timer ISR with interrupts disabled.
 #[no_mangle]
 pub unsafe extern "C" fn scheduler_tick(current_rsp: u64) -> u64 {
-    #[cfg(target_arch = "x86_64")]
-    crate::timer::pit::tick();
+    let core = this_core();
 
-    let cur_id = CURRENT.load(Ordering::SeqCst);
+    // Only the BSP's timer interrupt is actually sourced from the PIT
+    // hardware (the I/O APIC routes it exclusively to the BSP's LAPIC id —
+    // see main.rs); an AP calling this via its own LAPIC timer must not
+    // also advance the PIT tick counter, or `timer::ticks()`/`millis()`
+    // would run faster than real time in proportion to core count.
+    #[cfg(target_arch = "x86_64")]
+    if core == 0 {
+        crate::timer::pit::tick();
+    }
+
+    let cur_id = CURRENT[core].load(Ordering::SeqCst);
 
     // Save the current process's stack pointer
     if cur_id != 0 {
@@ -57,37 +107,42 @@ pub unsafe extern "C" fn scheduler_tick(current_rsp: u64) -> u64 {
         }
     }
 
-    // Find next ready process (round-robin)
-    let mut ids = [0u64; 64];
-    let n = process::ready_ids(&mut ids);
+    // Pick the next ready process. The whole scan-decide-claim sequence
+    // runs under PICK_LOCK so no other core's concurrent tick can observe
+    // the same pre-claim snapshot and pick the same process — see
+    // PICK_LOCK's own doc comment for why that's a real race, not a
+    // theoretical one, now that more than one core can call this function.
+    let next_id = {
+        let _guard = PICK_LOCK.lock();
 
-    let next_id = if n == 0 {
-        // No ready processes — keep current (or spin in idle)
-        cur_id
-    } else {
-        // Advance cursor
-        let cursor = CURSOR.load(Ordering::SeqCst);
-        // Find next after cursor
-        let start = ids.iter().position(|&id| id > cursor).unwrap_or(0);
-        let next = ids[start];
-        CURSOR.store(next, Ordering::SeqCst);
-        next
+        let mut ids = [0u64; 64];
+        let n = process::ready_ids(&mut ids);
+
+        let next_id = if n == 0 {
+            // No ready processes — keep current (or spin in idle)
+            cur_id
+        } else {
+            // Advance cursor
+            let cursor = CURSOR.load(Ordering::SeqCst);
+            // Find next after cursor
+            let start = ids.iter().position(|&id| id > cursor).unwrap_or(0);
+            let next = ids[start];
+            CURSOR.store(next, Ordering::SeqCst);
+            next
+        };
+
+        process::set_state(next_id, ProcessState::Running);
+        next_id
     };
-
-    process::set_state(next_id, ProcessState::Running);
-    CURRENT.store(next_id, Ordering::SeqCst);
+    CURRENT[core].store(next_id, Ordering::SeqCst);
 
     // Update PERCPU.kernel_rsp (for syscall entry) and TSS.RSP0 (for ring-3
-    // interrupts) on the core actually running this tick. Hardcoded to core
-    // 0 (the BSP) until Phase K5 increment 6 makes the scheduler track a
-    // current process *per core* instead of one global CURRENT — correct
-    // today because this ISR only ever runs on the BSP (no APs exist yet),
-    // but not a place to silently "forget" once increment 5/6 land.
+    // interrupts) on the core actually running this tick.
     #[cfg(target_arch = "x86_64")]
-    crate::syscall::update_kernel_rsp(0, next_id);
+    crate::syscall::update_kernel_rsp(core, next_id);
     #[cfg(target_arch = "x86_64")]
     if let Some(top) = crate::process::get_kernel_stack_top(next_id) {
-        crate::arch::x86_64::gdt::update_rsp0(0, top);
+        crate::arch::x86_64::gdt::update_rsp0(core, top);
     }
 
     // Switch into the next process's address space.  User processes carry a
@@ -107,9 +162,9 @@ pub unsafe extern "C" fn scheduler_tick(current_rsp: u64) -> u64 {
     process::get_rsp(next_id).unwrap_or(current_rsp)
 }
 
-/// Return the ID of the currently-running process.
+/// Return the ID of the process currently running on *this* core.
 pub fn current_id() -> u64 {
-    CURRENT.load(Ordering::Relaxed)
+    CURRENT[this_core()].load(Ordering::Relaxed)
 }
 
 /// Idle process — runs when nothing else is runnable.
