@@ -56,9 +56,12 @@ repositories. Clone new work into the vault, never into `~`.
 ## 3. Media stack (CT-300, consolidated)
 All services on `192.168.12.30`: Riven frontend `:3000`, Riven backend `:8080`
 (+ RivenVFS FUSE at `/mount`), Jellyfin `:8096`, Caddy `:80/443`, PostgreSQL
-`:5432`, Redis `:6379`, n8n `:5678`, Threadfin `:34400`, Homarr `:7575`,
-Uptime Kuma `:3001`, Cockpit `:9090`, CrowdSec, JDownloader2 (headless Xvfb),
-aria2, MetaTube `:32217`, unified-guide `:7700`, Immich `:2283`
+`:5432`, Redis `:6379`, n8n `:5678`, Threadfin `:34400`, Homarr `:7575`
+(internal: next-server `:3010`, websocket `:3001`, fronted by nginx on `:7575`),
+Uptime Kuma `:3011` (moved 2026-09-17 from `:3001`, which collides with
+Homarr's internal websocket server), Cockpit `:9090`, CrowdSec,
+JDownloader2 (headless Xvfb), aria2, MetaTube `:32217`, unified-guide `:7700`,
+Immich `:2283`
 (native build — server/web via Node+pnpm, machine-learning via Python venv,
 core plugin via extism-js built from source since Debian 12's glibc predates
 the upstream prebuilt binary; own Postgres DB with VectorChord+pgvector,
