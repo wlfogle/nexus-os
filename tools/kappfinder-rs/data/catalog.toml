@@ -1,0 +1,1236 @@
+# kappfinder-rs built-in application catalog
+#
+# Each [[app]] is a recipe for one .desktop entry. The tool looks for `bin` on
+# $PATH; if it is installed but has no menu entry anywhere in the XDG
+# application directories, it offers to create one from this template.
+#
+# Fields:
+#   bin            (required) executable name to look for on $PATH
+#   name           (required) Name=
+#   generic_name   GenericName=
+#   comment        Comment=
+#   icon           Icon= — an icon *theme name*, never a path
+#   categories     Categories= — first element MUST be a freedesktop main category
+#   terminal       Terminal= — true for console/TUI programs
+#   keywords       Keywords=
+#   exec_args      appended verbatim after the binary path in Exec= (e.g. "%F")
+#   mime_types     MimeType=
+#   startup_notify StartupNotify= — defaults to !terminal
+#
+# Extend or override this without rebuilding by creating
+# $XDG_CONFIG_HOME/kappfinder-rs/catalog.toml using the same syntax. A user
+# entry with the same `bin` replaces the built-in one outright.
+
+# ---------------------------------------------------------------------------
+# Legacy X11 applications — KAppFinder's original reason to exist
+# ---------------------------------------------------------------------------
+
+[[app]]
+bin = "xclock"
+name = "X Clock"
+generic_name = "Clock"
+comment = "Analogue and digital clock for X"
+icon = "clock"
+categories = ["Utility", "Clock"]
+keywords = ["time", "clock", "x11"]
+
+[[app]]
+bin = "oclock"
+name = "Round Clock"
+generic_name = "Clock"
+comment = "Round analogue clock for X"
+icon = "clock"
+categories = ["Utility", "Clock"]
+keywords = ["time", "clock", "x11"]
+
+[[app]]
+bin = "xeyes"
+name = "X Eyes"
+comment = "A pair of eyes that follow the pointer"
+icon = "face-monkey"
+categories = ["Game", "Amusement"]
+keywords = ["toy", "pointer", "x11"]
+
+[[app]]
+bin = "xcalc"
+name = "X Calculator"
+generic_name = "Calculator"
+comment = "Scientific calculator for X"
+icon = "accessories-calculator"
+categories = ["Utility", "Calculator"]
+keywords = ["calculator", "maths", "x11"]
+
+[[app]]
+bin = "xload"
+name = "X Load Monitor"
+generic_name = "System Load Monitor"
+comment = "Graph of the system load average"
+icon = "utilities-system-monitor"
+categories = ["System", "Monitor"]
+keywords = ["load", "monitor", "x11"]
+
+[[app]]
+bin = "xmag"
+name = "X Magnifier"
+generic_name = "Screen Magnifier"
+comment = "Magnify part of the screen"
+icon = "zoom-in"
+categories = ["Utility", "Accessibility"]
+keywords = ["magnify", "zoom", "accessibility"]
+
+[[app]]
+bin = "xman"
+name = "X Manual Browser"
+generic_name = "Manual Page Viewer"
+comment = "Browse system manual pages"
+icon = "help-browser"
+categories = ["System", "Documentation"]
+keywords = ["man", "manual", "help", "documentation"]
+
+[[app]]
+bin = "xkill"
+name = "X Kill"
+comment = "Click a window to terminate its client"
+icon = "process-stop"
+categories = ["System", "Monitor"]
+keywords = ["kill", "window", "terminate"]
+
+[[app]]
+bin = "xfontsel"
+name = "X Font Selector"
+generic_name = "Font Browser"
+comment = "Preview and select X11 fonts"
+icon = "preferences-desktop-font"
+categories = ["Settings", "DesktopSettings"]
+keywords = ["font", "typeface", "x11"]
+
+[[app]]
+bin = "xfd"
+name = "X Font Display"
+generic_name = "Font Viewer"
+comment = "Display every glyph in an X font"
+icon = "preferences-desktop-font"
+categories = ["Settings", "DesktopSettings"]
+keywords = ["font", "glyph", "x11"]
+
+[[app]]
+bin = "xedit"
+name = "X Edit"
+generic_name = "Text Editor"
+comment = "Simple text editor for X"
+icon = "accessories-text-editor"
+categories = ["Utility", "TextEditor"]
+exec_args = "%F"
+mime_types = ["text/plain"]
+keywords = ["editor", "text", "x11"]
+
+[[app]]
+bin = "xmessage"
+name = "X Message"
+comment = "Display a message or query in a window"
+icon = "dialog-information"
+categories = ["Utility"]
+keywords = ["message", "dialog", "notify"]
+
+[[app]]
+bin = "xconsole"
+name = "X Console"
+generic_name = "System Message Viewer"
+comment = "Watch system console messages"
+icon = "utilities-log-viewer"
+categories = ["System", "Monitor"]
+keywords = ["console", "log", "messages"]
+
+[[app]]
+bin = "xclipboard"
+name = "X Clipboard"
+generic_name = "Clipboard Manager"
+comment = "View and edit X clipboard contents"
+icon = "edit-paste"
+categories = ["Utility"]
+keywords = ["clipboard", "copy", "paste"]
+
+[[app]]
+bin = "xbiff"
+name = "X Biff"
+generic_name = "Mail Notifier"
+comment = "Notifies when new mail arrives"
+icon = "mail-unread"
+categories = ["Network", "Email"]
+keywords = ["mail", "notify"]
+
+[[app]]
+bin = "bitmap"
+name = "Bitmap Editor"
+generic_name = "Bitmap Editor"
+comment = "Edit X11 bitmap images"
+icon = "applications-graphics"
+categories = ["Graphics", "2DGraphics", "RasterGraphics"]
+exec_args = "%F"
+keywords = ["bitmap", "pixel", "draw"]
+
+[[app]]
+bin = "editres"
+name = "Editres"
+generic_name = "X Resource Editor"
+comment = "Inspect and edit X client resources"
+icon = "preferences-system"
+categories = ["Development"]
+keywords = ["resources", "x11", "debug"]
+
+[[app]]
+bin = "viewres"
+name = "Viewres"
+generic_name = "Widget Class Browser"
+comment = "Browse the Xt widget class hierarchy"
+icon = "preferences-system"
+categories = ["Development"]
+keywords = ["widget", "x11", "hierarchy"]
+
+[[app]]
+bin = "xvidtune"
+name = "X Video Tuner"
+generic_name = "Monitor Tuner"
+comment = "Adjust X video mode timings"
+icon = "preferences-desktop-display"
+categories = ["Settings", "HardwareSettings"]
+keywords = ["monitor", "video", "timing"]
+
+[[app]]
+bin = "xrefresh"
+name = "X Refresh"
+comment = "Force a repaint of the whole screen"
+icon = "view-refresh"
+categories = ["Utility"]
+keywords = ["refresh", "repaint", "screen"]
+
+[[app]]
+bin = "xditview"
+name = "Xditview"
+generic_name = "Ditroff Viewer"
+comment = "View ditroff output"
+icon = "x-office-document"
+categories = ["Office", "Viewer"]
+exec_args = "%f"
+keywords = ["troff", "ditroff", "document"]
+
+# ---------------------------------------------------------------------------
+# Terminal emulators
+# ---------------------------------------------------------------------------
+
+[[app]]
+bin = "xterm"
+name = "XTerm"
+generic_name = "Terminal"
+comment = "Standard X terminal emulator"
+icon = "utilities-terminal"
+categories = ["System", "TerminalEmulator"]
+keywords = ["terminal", "shell", "command line"]
+
+[[app]]
+bin = "uxterm"
+name = "UXTerm"
+generic_name = "Terminal"
+comment = "XTerm with UTF-8 support"
+icon = "utilities-terminal"
+categories = ["System", "TerminalEmulator"]
+keywords = ["terminal", "shell", "unicode"]
+
+[[app]]
+bin = "urxvt"
+name = "rxvt-unicode"
+generic_name = "Terminal"
+comment = "Lightweight Unicode terminal emulator"
+icon = "utilities-terminal"
+categories = ["System", "TerminalEmulator"]
+keywords = ["terminal", "shell", "rxvt"]
+
+[[app]]
+bin = "st"
+name = "Simple Terminal"
+generic_name = "Terminal"
+comment = "suckless simple terminal emulator"
+icon = "utilities-terminal"
+categories = ["System", "TerminalEmulator"]
+keywords = ["terminal", "shell", "suckless"]
+
+# ---------------------------------------------------------------------------
+# System monitoring and process management (TUI)
+# ---------------------------------------------------------------------------
+
+[[app]]
+bin = "htop"
+name = "htop"
+generic_name = "Process Viewer"
+comment = "Interactive process viewer and system monitor"
+icon = "utilities-system-monitor"
+categories = ["System", "Monitor"]
+terminal = true
+keywords = ["process", "task", "cpu", "memory", "monitor"]
+
+[[app]]
+bin = "btop"
+name = "btop++"
+generic_name = "Resource Monitor"
+comment = "Resource monitor with CPU, memory, disk, and network graphs"
+icon = "utilities-system-monitor"
+categories = ["System", "Monitor"]
+terminal = true
+keywords = ["process", "cpu", "memory", "network", "monitor"]
+
+[[app]]
+bin = "bpytop"
+name = "bpytop"
+generic_name = "Resource Monitor"
+comment = "Python resource monitor with graphs"
+icon = "utilities-system-monitor"
+categories = ["System", "Monitor"]
+terminal = true
+keywords = ["process", "cpu", "memory", "monitor"]
+
+[[app]]
+bin = "gotop"
+name = "gotop"
+generic_name = "Activity Monitor"
+comment = "Terminal-based activity monitor"
+icon = "utilities-system-monitor"
+categories = ["System", "Monitor"]
+terminal = true
+keywords = ["process", "cpu", "monitor"]
+
+[[app]]
+bin = "atop"
+name = "atop"
+generic_name = "Resource Monitor"
+comment = "Advanced system and process monitor"
+icon = "utilities-system-monitor"
+categories = ["System", "Monitor"]
+terminal = true
+keywords = ["process", "resource", "monitor"]
+
+[[app]]
+bin = "glances"
+name = "Glances"
+generic_name = "System Monitor"
+comment = "Cross-platform system monitoring overview"
+icon = "utilities-system-monitor"
+categories = ["System", "Monitor"]
+terminal = true
+keywords = ["system", "monitor", "overview"]
+
+[[app]]
+bin = "iotop"
+name = "iotop"
+generic_name = "Disk I/O Monitor"
+comment = "Monitor per-process disk I/O"
+icon = "drive-harddisk"
+categories = ["System", "Monitor"]
+terminal = true
+keywords = ["disk", "io", "monitor"]
+
+[[app]]
+bin = "iftop"
+name = "iftop"
+generic_name = "Network Bandwidth Monitor"
+comment = "Display bandwidth usage per connection"
+icon = "network-wired"
+categories = ["Network", "Monitor"]
+terminal = true
+keywords = ["network", "bandwidth", "traffic"]
+
+[[app]]
+bin = "nethogs"
+name = "NetHogs"
+generic_name = "Network Monitor"
+comment = "Group network bandwidth by process"
+icon = "network-wired"
+categories = ["Network", "Monitor"]
+terminal = true
+keywords = ["network", "bandwidth", "process"]
+
+[[app]]
+bin = "bmon"
+name = "bmon"
+generic_name = "Bandwidth Monitor"
+comment = "Bandwidth monitor and rate estimator"
+icon = "network-wired"
+categories = ["Network", "Monitor"]
+terminal = true
+keywords = ["network", "bandwidth"]
+
+[[app]]
+bin = "nvtop"
+name = "nvtop"
+generic_name = "GPU Monitor"
+comment = "Interactive GPU process viewer"
+icon = "utilities-system-monitor"
+categories = ["System", "Monitor"]
+terminal = true
+keywords = ["gpu", "nvidia", "amd", "monitor"]
+
+[[app]]
+bin = "s-tui"
+name = "s-tui"
+generic_name = "CPU Stress Monitor"
+comment = "Monitor CPU temperature, frequency, and power"
+icon = "utilities-system-monitor"
+categories = ["System", "Monitor"]
+terminal = true
+keywords = ["cpu", "temperature", "stress", "thermal"]
+
+[[app]]
+bin = "powertop"
+name = "PowerTOP"
+generic_name = "Power Consumption Monitor"
+comment = "Diagnose power consumption and power management"
+icon = "battery"
+categories = ["System", "Monitor"]
+terminal = true
+keywords = ["power", "battery", "energy"]
+
+# ---------------------------------------------------------------------------
+# Files and storage
+# ---------------------------------------------------------------------------
+
+[[app]]
+bin = "ranger"
+name = "ranger"
+generic_name = "File Manager"
+comment = "Console file manager with Vi key bindings"
+icon = "system-file-manager"
+categories = ["System", "FileManager"]
+terminal = true
+keywords = ["files", "browser", "vim"]
+
+[[app]]
+bin = "nnn"
+name = "nnn"
+generic_name = "File Manager"
+comment = "Fast and tiny console file manager"
+icon = "system-file-manager"
+categories = ["System", "FileManager"]
+terminal = true
+keywords = ["files", "browser"]
+
+[[app]]
+bin = "lf"
+name = "lf"
+generic_name = "File Manager"
+comment = "Terminal file manager written in Go"
+icon = "system-file-manager"
+categories = ["System", "FileManager"]
+terminal = true
+keywords = ["files", "browser"]
+
+[[app]]
+bin = "mc"
+name = "Midnight Commander"
+generic_name = "File Manager"
+comment = "Two-pane console file manager"
+icon = "system-file-manager"
+categories = ["System", "FileManager"]
+terminal = true
+keywords = ["files", "browser", "commander"]
+
+[[app]]
+bin = "vifm"
+name = "vifm"
+generic_name = "File Manager"
+comment = "Two-pane file manager with Vi key bindings"
+icon = "system-file-manager"
+categories = ["System", "FileManager"]
+terminal = true
+keywords = ["files", "browser", "vim"]
+
+[[app]]
+bin = "broot"
+name = "broot"
+generic_name = "Directory Browser"
+comment = "Navigate directory trees interactively"
+icon = "folder"
+categories = ["System", "FileManager"]
+terminal = true
+keywords = ["files", "tree", "navigate"]
+
+[[app]]
+bin = "ncdu"
+name = "ncdu"
+generic_name = "Disk Usage Analyser"
+comment = "NCurses disk usage analyser"
+icon = "drive-harddisk"
+categories = ["System", "Filesystem"]
+terminal = true
+keywords = ["disk", "usage", "space", "du"]
+
+[[app]]
+bin = "gdu"
+name = "gdu"
+generic_name = "Disk Usage Analyser"
+comment = "Fast disk usage analyser"
+icon = "drive-harddisk"
+categories = ["System", "Filesystem"]
+terminal = true
+keywords = ["disk", "usage", "space"]
+
+[[app]]
+bin = "duf"
+name = "duf"
+generic_name = "Disk Usage Viewer"
+comment = "Disk usage and free space overview"
+icon = "drive-harddisk"
+categories = ["System", "Filesystem"]
+terminal = true
+keywords = ["disk", "free", "space", "df"]
+
+# ---------------------------------------------------------------------------
+# Text editors (console)
+# ---------------------------------------------------------------------------
+
+[[app]]
+bin = "vim"
+name = "Vim"
+generic_name = "Text Editor"
+comment = "Vi IMproved, a programmer's text editor"
+icon = "accessories-text-editor"
+categories = ["Utility", "TextEditor"]
+terminal = true
+exec_args = "%F"
+mime_types = ["text/plain"]
+keywords = ["editor", "vi", "text"]
+
+[[app]]
+bin = "nvim"
+name = "Neovim"
+generic_name = "Text Editor"
+comment = "Hyperextensible Vim-based text editor"
+icon = "accessories-text-editor"
+categories = ["Utility", "TextEditor"]
+terminal = true
+exec_args = "%F"
+mime_types = ["text/plain"]
+keywords = ["editor", "vim", "text"]
+
+[[app]]
+bin = "hx"
+name = "Helix"
+generic_name = "Text Editor"
+comment = "Post-modern modal text editor"
+icon = "accessories-text-editor"
+categories = ["Utility", "TextEditor"]
+terminal = true
+exec_args = "%F"
+mime_types = ["text/plain"]
+keywords = ["editor", "helix", "modal"]
+
+[[app]]
+bin = "kak"
+name = "Kakoune"
+generic_name = "Text Editor"
+comment = "Modal editor with multiple selections"
+icon = "accessories-text-editor"
+categories = ["Utility", "TextEditor"]
+terminal = true
+exec_args = "%F"
+mime_types = ["text/plain"]
+keywords = ["editor", "modal", "kakoune"]
+
+[[app]]
+bin = "micro"
+name = "micro"
+generic_name = "Text Editor"
+comment = "Modern and intuitive terminal text editor"
+icon = "accessories-text-editor"
+categories = ["Utility", "TextEditor"]
+terminal = true
+exec_args = "%F"
+mime_types = ["text/plain"]
+keywords = ["editor", "text"]
+
+[[app]]
+bin = "nano"
+name = "GNU nano"
+generic_name = "Text Editor"
+comment = "Small and friendly console text editor"
+icon = "accessories-text-editor"
+categories = ["Utility", "TextEditor"]
+terminal = true
+exec_args = "%F"
+mime_types = ["text/plain"]
+keywords = ["editor", "text"]
+
+[[app]]
+bin = "ne"
+name = "ne"
+generic_name = "Text Editor"
+comment = "The nice editor"
+icon = "accessories-text-editor"
+categories = ["Utility", "TextEditor"]
+terminal = true
+exec_args = "%F"
+keywords = ["editor", "text"]
+
+[[app]]
+bin = "joe"
+name = "JOE"
+generic_name = "Text Editor"
+comment = "Joe's Own Editor"
+icon = "accessories-text-editor"
+categories = ["Utility", "TextEditor"]
+terminal = true
+exec_args = "%F"
+keywords = ["editor", "text"]
+
+# ---------------------------------------------------------------------------
+# Multiplexers and session tools
+# ---------------------------------------------------------------------------
+
+[[app]]
+bin = "tmux"
+name = "tmux"
+generic_name = "Terminal Multiplexer"
+comment = "Detachable terminal sessions and panes"
+icon = "utilities-terminal"
+categories = ["System", "TerminalEmulator"]
+terminal = true
+keywords = ["multiplexer", "session", "panes"]
+
+[[app]]
+bin = "zellij"
+name = "Zellij"
+generic_name = "Terminal Workspace"
+comment = "Terminal workspace and multiplexer"
+icon = "utilities-terminal"
+categories = ["System", "TerminalEmulator"]
+terminal = true
+keywords = ["multiplexer", "session", "workspace"]
+
+[[app]]
+bin = "screen"
+name = "GNU Screen"
+generic_name = "Terminal Multiplexer"
+comment = "Full-screen window manager for terminals"
+icon = "utilities-terminal"
+categories = ["System", "TerminalEmulator"]
+terminal = true
+keywords = ["multiplexer", "session"]
+
+# ---------------------------------------------------------------------------
+# Audio and video
+# ---------------------------------------------------------------------------
+
+[[app]]
+bin = "cmus"
+name = "cmus"
+generic_name = "Music Player"
+comment = "Small, fast, console music player"
+icon = "audio-x-generic"
+categories = ["AudioVideo", "Audio", "Player"]
+terminal = true
+keywords = ["music", "audio", "player"]
+
+[[app]]
+bin = "mocp"
+name = "Music On Console"
+generic_name = "Music Player"
+comment = "Console audio player"
+icon = "audio-x-generic"
+categories = ["AudioVideo", "Audio", "Player"]
+terminal = true
+keywords = ["music", "audio", "player", "moc"]
+
+[[app]]
+bin = "ncmpcpp"
+name = "ncmpcpp"
+generic_name = "MPD Client"
+comment = "NCurses client for the Music Player Daemon"
+icon = "audio-x-generic"
+categories = ["AudioVideo", "Audio", "Player"]
+terminal = true
+keywords = ["mpd", "music", "player"]
+
+[[app]]
+bin = "musikcube"
+name = "musikcube"
+generic_name = "Music Player"
+comment = "Cross-platform terminal music player"
+icon = "audio-x-generic"
+categories = ["AudioVideo", "Audio", "Player"]
+terminal = true
+keywords = ["music", "audio", "player"]
+
+[[app]]
+bin = "cava"
+name = "CAVA"
+generic_name = "Audio Visualiser"
+comment = "Console audio visualiser for ALSA and PulseAudio"
+icon = "multimedia-volume-control"
+categories = ["AudioVideo", "Audio"]
+terminal = true
+keywords = ["visualiser", "spectrum", "audio"]
+
+[[app]]
+bin = "alsamixer"
+name = "ALSA Mixer"
+generic_name = "Audio Mixer"
+comment = "Console mixer for ALSA soundcards"
+icon = "multimedia-volume-control"
+categories = ["AudioVideo", "Audio", "Mixer"]
+terminal = true
+keywords = ["volume", "mixer", "alsa", "sound"]
+
+[[app]]
+bin = "pulsemixer"
+name = "pulsemixer"
+generic_name = "Audio Mixer"
+comment = "Console mixer for PulseAudio"
+icon = "multimedia-volume-control"
+categories = ["AudioVideo", "Audio", "Mixer"]
+terminal = true
+keywords = ["volume", "mixer", "pulseaudio", "sound"]
+
+[[app]]
+bin = "mpv"
+name = "mpv"
+generic_name = "Media Player"
+comment = "Versatile audio and video player"
+icon = "video-x-generic"
+categories = ["AudioVideo", "Video", "Player"]
+exec_args = "--player-operation-mode=pseudo-gui -- %U"
+mime_types = ["video/mp4", "video/x-matroska", "audio/mpeg", "audio/flac"]
+keywords = ["video", "audio", "player", "movie"]
+
+[[app]]
+bin = "mplayer"
+name = "MPlayer"
+generic_name = "Media Player"
+comment = "Movie player for Linux"
+icon = "video-x-generic"
+categories = ["AudioVideo", "Video", "Player"]
+exec_args = "%U"
+keywords = ["video", "player", "movie"]
+
+# ---------------------------------------------------------------------------
+# Network, chat, mail, news
+# ---------------------------------------------------------------------------
+
+[[app]]
+bin = "weechat"
+name = "WeeChat"
+generic_name = "IRC Client"
+comment = "Fast, light, extensible chat client"
+icon = "internet-group-chat"
+categories = ["Network", "IRCClient", "InstantMessaging"]
+terminal = true
+keywords = ["irc", "chat", "messaging"]
+
+[[app]]
+bin = "irssi"
+name = "Irssi"
+generic_name = "IRC Client"
+comment = "Modular console IRC client"
+icon = "internet-group-chat"
+categories = ["Network", "IRCClient"]
+terminal = true
+keywords = ["irc", "chat"]
+
+[[app]]
+bin = "profanity"
+name = "Profanity"
+generic_name = "XMPP Client"
+comment = "Console XMPP/Jabber chat client"
+icon = "internet-group-chat"
+categories = ["Network", "InstantMessaging"]
+terminal = true
+keywords = ["xmpp", "jabber", "chat"]
+
+[[app]]
+bin = "neomutt"
+name = "NeoMutt"
+generic_name = "Mail Client"
+comment = "Console mail reader with added features"
+icon = "internet-mail"
+categories = ["Network", "Email"]
+terminal = true
+keywords = ["mail", "email", "mutt"]
+
+[[app]]
+bin = "mutt"
+name = "Mutt"
+generic_name = "Mail Client"
+comment = "Console mail reader"
+icon = "internet-mail"
+categories = ["Network", "Email"]
+terminal = true
+keywords = ["mail", "email"]
+
+[[app]]
+bin = "aerc"
+name = "aerc"
+generic_name = "Mail Client"
+comment = "Efficient terminal email client"
+icon = "internet-mail"
+categories = ["Network", "Email"]
+terminal = true
+keywords = ["mail", "email"]
+
+[[app]]
+bin = "newsboat"
+name = "Newsboat"
+generic_name = "Feed Reader"
+comment = "RSS and Atom feed reader for the terminal"
+icon = "internet-news-reader"
+categories = ["Network", "Feed", "News"]
+terminal = true
+keywords = ["rss", "atom", "feed", "news"]
+
+[[app]]
+bin = "lynx"
+name = "Lynx"
+generic_name = "Web Browser"
+comment = "Text-mode web browser"
+icon = "web-browser"
+categories = ["Network", "WebBrowser"]
+terminal = true
+exec_args = "%u"
+keywords = ["web", "browser", "text"]
+
+[[app]]
+bin = "w3m"
+name = "w3m"
+generic_name = "Web Browser"
+comment = "Text-mode web browser with inline images"
+icon = "web-browser"
+categories = ["Network", "WebBrowser"]
+terminal = true
+exec_args = "%u"
+keywords = ["web", "browser", "text"]
+
+[[app]]
+bin = "links"
+name = "Links"
+generic_name = "Web Browser"
+comment = "Text and graphics mode web browser"
+icon = "web-browser"
+categories = ["Network", "WebBrowser"]
+terminal = true
+exec_args = "%u"
+keywords = ["web", "browser", "text"]
+
+[[app]]
+bin = "elinks"
+name = "ELinks"
+generic_name = "Web Browser"
+comment = "Advanced text-mode web browser"
+icon = "web-browser"
+categories = ["Network", "WebBrowser"]
+terminal = true
+exec_args = "%u"
+keywords = ["web", "browser", "text"]
+
+[[app]]
+bin = "nmtui"
+name = "Network Manager TUI"
+generic_name = "Network Configuration"
+comment = "Text interface for NetworkManager"
+icon = "network-wired"
+categories = ["Settings", "HardwareSettings"]
+terminal = true
+keywords = ["network", "wifi", "networkmanager", "connection"]
+
+[[app]]
+bin = "bluetuith"
+name = "bluetuith"
+generic_name = "Bluetooth Manager"
+comment = "TUI Bluetooth manager"
+icon = "bluetooth"
+categories = ["Settings", "HardwareSettings"]
+terminal = true
+keywords = ["bluetooth", "pairing"]
+
+[[app]]
+bin = "tcpdump"
+name = "tcpdump"
+generic_name = "Packet Analyser"
+comment = "Capture and inspect network packets"
+icon = "network-wired"
+categories = ["Network", "Monitor"]
+terminal = true
+keywords = ["packet", "capture", "network", "sniffer"]
+
+# ---------------------------------------------------------------------------
+# Development
+# ---------------------------------------------------------------------------
+
+[[app]]
+bin = "tig"
+name = "tig"
+generic_name = "Git Browser"
+comment = "Text-mode interface for Git"
+icon = "applications-development"
+categories = ["Development", "RevisionControl"]
+terminal = true
+keywords = ["git", "vcs", "history"]
+
+[[app]]
+bin = "lazygit"
+name = "lazygit"
+generic_name = "Git Client"
+comment = "Simple terminal UI for Git commands"
+icon = "applications-development"
+categories = ["Development", "RevisionControl"]
+terminal = true
+keywords = ["git", "vcs"]
+
+[[app]]
+bin = "gitui"
+name = "GitUI"
+generic_name = "Git Client"
+comment = "Blazing fast terminal UI for Git"
+icon = "applications-development"
+categories = ["Development", "RevisionControl"]
+terminal = true
+keywords = ["git", "vcs"]
+
+[[app]]
+bin = "lazydocker"
+name = "lazydocker"
+generic_name = "Container Manager"
+comment = "Terminal UI for Docker and Compose"
+icon = "applications-development"
+categories = ["Development"]
+terminal = true
+keywords = ["docker", "containers"]
+
+[[app]]
+bin = "ctop"
+name = "ctop"
+generic_name = "Container Monitor"
+comment = "Top-like interface for container metrics"
+icon = "utilities-system-monitor"
+categories = ["System", "Monitor"]
+terminal = true
+keywords = ["docker", "containers", "monitor"]
+
+[[app]]
+bin = "k9s"
+name = "K9s"
+generic_name = "Kubernetes Client"
+comment = "Terminal UI to manage Kubernetes clusters"
+icon = "applications-development"
+categories = ["Development"]
+terminal = true
+keywords = ["kubernetes", "k8s", "cluster"]
+
+[[app]]
+bin = "gdb"
+name = "GDB"
+generic_name = "Debugger"
+comment = "The GNU debugger"
+icon = "applications-development"
+categories = ["Development", "Debugger"]
+terminal = true
+keywords = ["debug", "gdb"]
+
+[[app]]
+bin = "cgdb"
+name = "CGDB"
+generic_name = "Debugger"
+comment = "Curses front end for GDB"
+icon = "applications-development"
+categories = ["Development", "Debugger"]
+terminal = true
+keywords = ["debug", "gdb", "curses"]
+
+[[app]]
+bin = "lldb"
+name = "LLDB"
+generic_name = "Debugger"
+comment = "The LLVM debugger"
+icon = "applications-development"
+categories = ["Development", "Debugger"]
+terminal = true
+keywords = ["debug", "llvm"]
+
+[[app]]
+bin = "r2"
+name = "radare2"
+generic_name = "Reverse Engineering Framework"
+comment = "Disassemble, debug, and analyse binaries"
+icon = "applications-development"
+categories = ["Development", "Debugger"]
+terminal = true
+keywords = ["disassembler", "reverse", "binary"]
+
+[[app]]
+bin = "sqlite3"
+name = "SQLite Shell"
+generic_name = "Database Shell"
+comment = "Interactive shell for SQLite databases"
+icon = "applications-development"
+categories = ["Development", "Database"]
+terminal = true
+keywords = ["sql", "database", "sqlite"]
+
+# ---------------------------------------------------------------------------
+# Office and productivity
+# ---------------------------------------------------------------------------
+
+[[app]]
+bin = "calcurse"
+name = "Calcurse"
+generic_name = "Calendar"
+comment = "Console calendar and scheduling application"
+icon = "x-office-calendar"
+categories = ["Office", "Calendar"]
+terminal = true
+keywords = ["calendar", "todo", "schedule"]
+
+[[app]]
+bin = "task"
+name = "Taskwarrior"
+generic_name = "Task Manager"
+comment = "Command-line task and todo manager"
+icon = "x-office-calendar"
+categories = ["Office", "ProjectManagement"]
+terminal = true
+keywords = ["todo", "tasks", "gtd"]
+
+[[app]]
+bin = "vd"
+name = "VisiData"
+generic_name = "Tabular Data Viewer"
+comment = "Explore and edit tabular data in the terminal"
+icon = "x-office-spreadsheet"
+categories = ["Office", "Spreadsheet"]
+terminal = true
+exec_args = "%F"
+keywords = ["csv", "spreadsheet", "data"]
+
+[[app]]
+bin = "sc-im"
+name = "sc-im"
+generic_name = "Spreadsheet"
+comment = "NCurses spreadsheet program"
+icon = "x-office-spreadsheet"
+categories = ["Office", "Spreadsheet"]
+terminal = true
+exec_args = "%F"
+keywords = ["spreadsheet", "calc"]
+
+# ---------------------------------------------------------------------------
+# Graphics and documents (GUI apps that often ship without an entry)
+# ---------------------------------------------------------------------------
+
+[[app]]
+bin = "feh"
+name = "feh"
+generic_name = "Image Viewer"
+comment = "Fast, lightweight image viewer"
+icon = "multimedia-photo-viewer"
+categories = ["Graphics", "2DGraphics", "RasterGraphics", "Viewer"]
+exec_args = "%F"
+mime_types = ["image/jpeg", "image/png", "image/gif", "image/bmp"]
+keywords = ["image", "photo", "viewer"]
+
+[[app]]
+bin = "sxiv"
+name = "sxiv"
+generic_name = "Image Viewer"
+comment = "Simple X image viewer"
+icon = "multimedia-photo-viewer"
+categories = ["Graphics", "2DGraphics", "RasterGraphics", "Viewer"]
+exec_args = "%F"
+mime_types = ["image/jpeg", "image/png", "image/gif"]
+keywords = ["image", "photo", "viewer"]
+
+[[app]]
+bin = "nsxiv"
+name = "nsxiv"
+generic_name = "Image Viewer"
+comment = "Neo Simple X Image Viewer"
+icon = "multimedia-photo-viewer"
+categories = ["Graphics", "2DGraphics", "RasterGraphics", "Viewer"]
+exec_args = "%F"
+mime_types = ["image/jpeg", "image/png", "image/gif"]
+keywords = ["image", "photo", "viewer"]
+
+[[app]]
+bin = "qiv"
+name = "qiv"
+generic_name = "Image Viewer"
+comment = "Quick image viewer for X"
+icon = "multimedia-photo-viewer"
+categories = ["Graphics", "2DGraphics", "RasterGraphics", "Viewer"]
+exec_args = "%F"
+keywords = ["image", "photo", "viewer"]
+
+[[app]]
+bin = "xpdf"
+name = "Xpdf"
+generic_name = "PDF Viewer"
+comment = "Lightweight PDF viewer for X"
+icon = "application-pdf"
+categories = ["Office", "Viewer"]
+exec_args = "%f"
+mime_types = ["application/pdf"]
+keywords = ["pdf", "document", "viewer"]
+
+[[app]]
+bin = "mupdf"
+name = "MuPDF"
+generic_name = "PDF Viewer"
+comment = "Lightweight PDF and XPS viewer"
+icon = "application-pdf"
+categories = ["Office", "Viewer"]
+exec_args = "%f"
+mime_types = ["application/pdf", "application/epub+zip"]
+keywords = ["pdf", "epub", "document", "viewer"]
+
+[[app]]
+bin = "zathura"
+name = "Zathura"
+generic_name = "Document Viewer"
+comment = "Keyboard-driven document viewer"
+icon = "application-pdf"
+categories = ["Office", "Viewer"]
+exec_args = "%f"
+mime_types = ["application/pdf", "application/epub+zip"]
+keywords = ["pdf", "djvu", "epub", "document"]
+
+[[app]]
+bin = "gv"
+name = "GV"
+generic_name = "PostScript Viewer"
+comment = "View PostScript and PDF documents"
+icon = "application-pdf"
+categories = ["Office", "Viewer"]
+exec_args = "%f"
+mime_types = ["application/postscript", "application/pdf"]
+keywords = ["postscript", "ps", "pdf", "viewer"]
+
+[[app]]
+bin = "xsane"
+name = "XSane"
+generic_name = "Scanning Utility"
+comment = "Scanner front end for SANE"
+icon = "scanner"
+categories = ["Graphics", "Scanning"]
+keywords = ["scan", "scanner", "sane"]
+
+# ---------------------------------------------------------------------------
+# Miscellaneous GUI utilities
+# ---------------------------------------------------------------------------
+
+[[app]]
+bin = "gkrellm"
+name = "GKrellM"
+generic_name = "System Monitor"
+comment = "Stacked system monitor widgets"
+icon = "utilities-system-monitor"
+categories = ["System", "Monitor"]
+keywords = ["monitor", "cpu", "memory", "widgets"]
+
+[[app]]
+bin = "conky"
+name = "Conky"
+generic_name = "System Monitor"
+comment = "Lightweight desktop system monitor"
+icon = "utilities-system-monitor"
+categories = ["System", "Monitor"]
+keywords = ["monitor", "desktop", "widget"]
+
+[[app]]
+bin = "virt-viewer"
+name = "Virtual Machine Viewer"
+generic_name = "VM Console"
+comment = "Display the graphical console of a virtual machine"
+icon = "computer"
+categories = ["System", "Emulator"]
+keywords = ["virtual", "vm", "spice", "vnc"]
+
+[[app]]
+bin = "x2goclient"
+name = "X2Go Client"
+generic_name = "Remote Desktop Client"
+comment = "Connect to remote X2Go sessions"
+icon = "preferences-desktop-remote-desktop"
+categories = ["Network", "RemoteAccess"]
+keywords = ["remote", "desktop", "x2go"]
+
+[[app]]
+bin = "etherape"
+name = "EtherApe"
+generic_name = "Network Monitor"
+comment = "Graphical network traffic monitor"
+icon = "network-wired"
+categories = ["Network", "Monitor"]
+keywords = ["network", "traffic", "graph"]
+
+[[app]]
+bin = "tkdiff"
+name = "TkDiff"
+generic_name = "Diff Viewer"
+comment = "Graphical side-by-side diff viewer"
+icon = "applications-development"
+categories = ["Development", "RevisionControl"]
+keywords = ["diff", "compare", "merge"]
+
+[[app]]
+bin = "xarchiver"
+name = "Xarchiver"
+generic_name = "Archive Manager"
+comment = "Create and extract compressed archives"
+icon = "package-x-generic"
+categories = ["Utility", "Archiving", "Compression"]
+exec_args = "%F"
+keywords = ["archive", "zip", "tar", "compress"]
+
+# ---------------------------------------------------------------------------
+# Toys and amusements — KAppFinder shipped a Toys category too
+# ---------------------------------------------------------------------------
+
+[[app]]
+bin = "cmatrix"
+name = "cmatrix"
+comment = "Scrolling Matrix-style terminal animation"
+icon = "applications-games"
+categories = ["Game", "Amusement"]
+terminal = true
+keywords = ["matrix", "screensaver", "animation"]
+
+[[app]]
+bin = "cbonsai"
+name = "cbonsai"
+comment = "Grow a bonsai tree in your terminal"
+icon = "applications-games"
+categories = ["Game", "Amusement"]
+terminal = true
+keywords = ["bonsai", "tree", "animation"]
+
+[[app]]
+bin = "asciiquarium"
+name = "Asciiquarium"
+comment = "An aquarium rendered in ASCII art"
+icon = "applications-games"
+categories = ["Game", "Amusement"]
+terminal = true
+keywords = ["aquarium", "ascii", "animation"]
+
+[[app]]
+bin = "nyancat"
+name = "Nyancat"
+comment = "The Nyan Cat animation, in a terminal"
+icon = "applications-games"
+categories = ["Game", "Amusement"]
+terminal = true
+keywords = ["nyan", "cat", "animation"]
+
+[[app]]
+bin = "mapscii"
+name = "MapSCII"
+generic_name = "Map Viewer"
+comment = "Browse world maps in the terminal"
+icon = "applications-internet"
+categories = ["Education", "Maps"]
+terminal = true
+keywords = ["map", "openstreetmap", "geography"]
