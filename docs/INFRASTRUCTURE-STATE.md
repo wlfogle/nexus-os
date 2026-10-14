@@ -1,0 +1,1087 @@
+# Infrastructure State (generated)
+
+> **Do not edit by hand.** Regenerate with
+> `python3 nexus-os/scripts/infra-audit.py --write`.
+> Everything below was measured, not remembered.
+> Last scan: 2026-10-14 18:16:32
+
+## Hosts
+
+### tiamat - `192.168.12.242`
+- Role: Proxmox VE host
+- Status: UP (ss over ssh)
+- Listening:
+  - `22` (sshd)
+  - `25` (master)
+  - `53` (dnsmasq)
+  - `80` (filebrowser)
+  - `85` (pvedaemon worke)
+  - `111` (rpcbind)
+  - `139` (smbd)
+  - `445` (smbd)
+  - `1347`
+  - `2049`
+  - `3128` (spiceproxy work)
+  - `3389` (xrdp)
+  - `4000` (nxd)
+  - `4849` (rpc.mountd)
+  - `5445` (rpc.mountd)
+  - `5900` (x11vnc)
+  - `5901` (Xvnc)
+  - `6080` (websockify)
+  - `7001` (nxnode.bin)
+  - `7002` (nxnode.bin)
+  - `8000` (node)
+  - `8006` (pveproxy worker)
+  - `8008` (python3)
+  - `8765` (python3)
+  - `9090` (systemd)
+  - `9277` (warp-terminal)
+  - `12001` (nxnode.bin)
+  - `12002` (nxnode.bin)
+  - `13647` (rpc.mountd)
+  - `18151` (rpc.mountd)
+  - `20727` (rpc.statd)
+  - `21221` (nxserver.bin)
+  - `22097`
+  - `23060` (nxserver.bin)
+  - `24593` (rpc.statd)
+  - `25002` (nxrunner.bin)
+  - `32601` (rpc.mountd)
+  - `43407` (rpc.mountd)
+
+### ct-300 mediastack - `192.168.12.30`
+- Role: Consolidated media stack LXC
+- Status: UP (ss over ssh)
+- Listening:
+  - `22` (sshd)
+  - `25` (master)
+  - `80` (caddy)
+  - `111` (rpcbind)
+  - `443` (caddy)
+  - `1867` (Sportarr)
+  - `2019` (caddy)
+  - `2049`
+  - `2283` (immich-api)
+  - `3000` (MainThread)
+  - `3002` (MainThread)
+  - `3003` (gunicorn)
+  - `3010` (next-server (v1)
+  - `3011` (uptime-kuma)
+  - `3306` (mariadbd)
+  - `4330` (pmlogger)
+  - `5050` (flexget)
+  - `5432` (postgres)
+  - `5678` (MainThread)
+  - `5679` (MainThread)
+  - `5900` (x11vnc)
+  - `6060` (crowdsec)
+  - `6379` (redis-server)
+  - `6767` (python3)
+  - `6800` (aria2c)
+  - `7474` (autobrr)
+  - `7575` (nginx)
+  - `7655` (pulse)
+  - `7700` (python3)
+  - `8080` (python)
+  - `8081` (crowdsec)
+  - `8096` (jellyfin)
+  - `8282` (granian)
+  - `9090` (cockpit-tls)
+  - `9091` (pulse)
+  - `9876` (python3)
+  - `9877` (python3)
+  - `19888` (apache2)
+  - `32217` (metatube-server)
+  - `32348` (filebrowser)
+  - `33125` (rpc.statd)
+  - `33571` (flexget)
+  - `34400` (threadfin)
+  - `34647` (rpc.mountd)
+  - `34895` (rpc.mountd)
+  - `35097` (immich)
+  - `36031`
+  - `40735` (rpc.mountd)
+  - `44321` (pmcd)
+  - `44322` (pmproxy)
+  - `44323` (pmproxy)
+  - `44547`
+  - `46279` (rpc.mountd)
+  - `49873` (rpc.mountd)
+  - `50129` (rpc.mountd)
+  - `51821` (aria2c)
+  - `58521` (rpc.statd)
+
+### bahamut - `192.168.12.244`
+- Role: Pi 4 edge node, Tailscale subnet router
+- Status: UP (ss over ssh)
+- Listening:
+  - `22` (sshd)
+  - `25` (master)
+  - `53` (AdGuardHome)
+  - `80` (caddy)
+  - `111` (rpcbind)
+  - `443` (caddy)
+  - `2019` (caddy)
+  - `2049`
+  - `4000` (nxd)
+  - `5252` (frontend)
+  - `5253` (frontend)
+  - `5901` (Xtigervnc)
+  - `6060` (AdGuardHome)
+  - `7001` (nxnode.bin)
+  - `8080` (vaultwarden)
+  - `8081` (AdGuardHome)
+  - `8082` (java)
+  - `9090` (systemd)
+  - `9191` (pulse-agent)
+  - `9277` (warp-terminal)
+  - `12001` (nxnode.bin)
+  - `22070` (nxserver.bin)
+  - `22828` (nxserver.bin)
+  - `25001` (nxrunner.bin)
+  - `34147` (tailscaled)
+  - `41679` (rpc.mountd)
+  - `42473`
+  - `44155`
+  - `46077` (rpc.statd)
+  - `46461` (rpc.statd)
+  - `47645` (rpc.mountd)
+  - `48753` (rpc.mountd)
+  - `53831` (rpc.mountd)
+  - `54295` (rpc.mountd)
+  - `55494` (tailscaled)
+  - `55789` (rpc.mountd)
+
+### vm-100 openwrt - `192.168.12.222`
+- Role: Primary router + WireGuard server
+- Status: UP (ss over ssh)
+- Listening:
+  - `22`
+  - `53`
+  - `80`
+  - `443`
+  - `7681`
+  - `8000`
+  - `8101`
+
+### vm-990 haos - `192.168.12.123`
+- Role: Home Assistant OS
+- Status: UP (tcp probe)
+- Listening:
+  - `8123`
+
+### archer stella - `192.168.12.254`
+- Role: LAN gateway / DHCP
+- Status: UP (tcp probe)
+- Listening:
+  - `80`
+  - `443`
+
+## Retired hosts
+
+Deliberately gone. Referencing these in live config is a bug.
+
+- `192.168.12.100` - wireguard CT - server moved to OpenWrt VM-100
+- `192.168.12.104` - vaultwarden CT - retired in the CT-300 consolidation
+- `192.168.12.107` - authentik CT - retired in the CT-300 consolidation
+- `192.168.12.210` - prowlarr CT - *arr stack replaced by Riven
+- `192.168.12.214` - sonarr CT - *arr stack replaced by Riven
+- `192.168.12.225` - radarr CT - *arr stack replaced by Riven
+- `192.168.12.250` - CT-900 ziggy - stopped
+- `192.168.12.251` - CT-501 HABridge - retired in the CT-300 consolidation
+
+## Ollama models installed
+
+- `all-minilm:latest`
+- `dolphin-mistral:7b`
+- `moondream:latest`
+- `nomic-embed-text:latest`
+- `qwen3.5:4b`
+- `qwen3.5:9b`
+
+## Drift
+
+881 stale reference(s) found:
+
+- **dead** `/media/loufogle/Data/Repos/ai-powerhouse-setup/iso-build/archiso-method-clone/airootfs/etc/skel/ai-powerhouse-setup/self-hosting/scripts/setup-wireguard-ghost-mode.sh:21` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/ai-powerhouse-setup/iso-build/archiso-method/airootfs/etc/skel/ai-powerhouse-setup/self-hosting/scripts/setup-wireguard-ghost-mode.sh:21` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/ai-powerhouse-setup/self-hosting/scripts/setup-wireguard-ghost-mode.sh:21` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/awesome-stack/NETWORKING.md:48` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/awesome-stack/NETWORKING.md:51` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/awesome-stack/NETWORKING.md:56` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/awesome-stack/NETWORKING.md:60` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/awesome-stack/NETWORKING.md:61` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/awesome-stack/NETWORKING.md:78` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/awesome-stack/NETWORKING.md:118` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/awesome-stack/NETWORKING.md:119` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/awesome-stack/NETWORKING.md:120` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/awesome-stack/NETWORKING.md:126` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/awesome-stack/NETWORKING.md:127` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/awesome-stack/NETWORKING.md:130` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/awesome-stack/docs/router settings.md:206` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/awesome-stack/docs/_organized/configuration/router settings.md:206` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **wrong-port** `/media/loufogle/Data/Repos/bulletproof-mediastack/Jdown-real-debrid.md:1` - 192.168.12.242 (tiamat) is up but nothing is listening on 32743
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/README.md:20` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **wrong-port** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/README.md:23` - 192.168.12.244 (bahamut) is up but nothing is listening on 3000
+- **wrong-port** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/README.md:24` - 192.168.12.244 (bahamut) is up but nothing is listening on 51821
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/README.md:25` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/README.md:26` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/README.md:93` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/README.md:94` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/README.md:96` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **wrong-port** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/app/src/main/java/com/tiamat/mediastack/MediaService.kt:72` - 192.168.12.244 (bahamut) is up but nothing is listening on 3000
+- **wrong-port** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/app/src/main/java/com/tiamat/mediastack/MediaService.kt:80` - 192.168.12.244 (bahamut) is up but nothing is listening on 51821
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/app/src/main/java/com/tiamat/mediastack/MediaService.kt:88` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/app/src/main/java/com/tiamat/mediastack/MediaService.kt:96` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/app/src/main/java/com/tiamat/mediastack/MediaService.kt:122` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/app/src/main/java/com/tiamat/mediastack/MediaService.kt:146` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/app/src/main/res/xml/network_security_config.xml:12` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/app/src/main/res/xml/network_security_config.xml:14` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/app/src/main/res/xml/network_security_config.xml:16` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/app/src/main/res/xml/network_security_config.xml:22` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/android-app/app/src/main/res/xml/network_security_config.xml:24` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/clients/firetv.md:41` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/clients/firetv.md:44` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/clients/laptop.md:11` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/clients/laptop.md:13` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/clients/tablet.md:26` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/clients/tablet.md:29` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/clients/tablet.md:43` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/clients/tablet.md:45` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/clients/tablet.md:50` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/CREDENTIALS.md:69` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/CREDENTIALS.md:72` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/CREDENTIALS.md:73` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **wrong-port** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/CREDENTIALS.md:76` - 192.168.12.242 (tiamat) is up but nothing is listening on 5055
+- **wrong-port** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/CREDENTIALS.md:87` - 192.168.12.244 (bahamut) is up but nothing is listening on 51821
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/HOMARR.md:25` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/HOMARR.md:26` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/HOMARR.md:35` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/HOMARR.md:72` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/HOMARR.md:73` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/HOMARR.md:79` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/HOMARR.md:104` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/HOMARR.md:105` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/HOMARR.md:108` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/HOME-ASSISTANT.md:100` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/HOME-ASSISTANT.md:101` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/HOME-ASSISTANT.md:102` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/HOME-ASSISTANT.md:115` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:71` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:86` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:186` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:201` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:264` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:279` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:343` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:355` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:359` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:372` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:387` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:454` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:472` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:578` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:596` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:607` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:627` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:1251` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/INVENTORY-TIAMAT.md:1269` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/NETWORKING.md:51` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/NETWORKING.md:54` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/NETWORKING.md:62` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/NETWORKING.md:66` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/NETWORKING.md:67` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/NETWORKING.md:96` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/NETWORKING.md:139` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/NETWORKING.md:140` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/NETWORKING.md:141` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/NETWORKING.md:147` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/NETWORKING.md:148` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/NETWORKING.md:149` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/NETWORKING.md:157` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **wrong-port** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/NETWORKING.md:167` - 192.168.12.244 (bahamut) is up but nothing is listening on 51821
+- **wrong-port** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/OPTIMIZATIONS.md:55` - 192.168.12.242 (tiamat) is up but nothing is listening on 32743
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:6` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:7` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:11` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:14` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:16` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:17` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:21` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:22` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:52` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:59` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:113` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:117` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:120` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:124` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:128` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:129` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:233` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PLAN.md:234` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PROXMOX-INSTALL.md:22` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PROXMOX-INSTALL.md:25` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/PROXMOX-INSTALL.md:27` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/TROUBLESHOOTING.md:57` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/TROUBLESHOOTING.md:123` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/TROUBLESHOOTING.md:128` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/VOICE-CONTROL.md:17` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/VOICE-CONTROL.md:23` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/VOICE-CONTROL.md:50` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/VOICE-CONTROL.md:76` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/VOICE-CONTROL.md:107` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/VOICE-CONTROL.md:112` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/VOICE-CONTROL.md:113` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/VOICE-CONTROL.md:114` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/VOICE-CONTROL.md:115` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/VOICE-CONTROL.md:116` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/VOICE-CONTROL.md:117` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/VOICE-CONTROL.md:118` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/VOICE-CONTROL.md:119` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/VOICE-CONTROL.md:217` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/VOICE-CONTROL.md:230` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/VOICE-CONTROL.md:236` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/awesome-stack/ULTIMATE-OPTIMIZATION-PLAN.md:305` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/awesome-stack/router settings.md:206` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/docs/errors/HA-2026-04-15.md:3` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/authentik/setup-authentik.sh:76` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/authentik/setup-authentik.sh:77` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/homeassistant/automations.yaml:59` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/homeassistant/automations.yaml:73` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/homeassistant/binary_sensor.yaml:31` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/homeassistant/binary_sensor.yaml:38` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/homeassistant/binary_sensor.yaml:54` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/homeassistant/binary_sensor.yaml:61` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/homeassistant/binary_sensor.yaml:68` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/homeassistant/deploy.sh:15` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/homeassistant/rest_commands.yaml:28` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/homeassistant/rest_commands.yaml:35` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/homeassistant/rest_commands.yaml:42` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/homeassistant/rest_commands.yaml:65` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/homeassistant/rest_commands.yaml:74` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/homeassistant/rest_commands.yaml:84` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/homeassistant/rest_commands.yaml:93` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/homeassistant/sensors.yaml:57` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/homeassistant/sensors.yaml:71` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/traefik/dynamic/download-stack.yml:24` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/traefik/dynamic/download-stack.yml:28` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/traefik/dynamic/download-stack.yml:32` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/traefik/dynamic/infrastructure.yml:21` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/traefik/dynamic/infrastructure.yml:25` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/traefik/dynamic/smart-home.yml:16` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/traefik/dynamic/smart-home.yml:22` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/wireguard-server/proxmox-lxc-configs.md:12` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/wireguard-server/setup-wg-server.sh:63` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/pi/vaultwarden/Caddyfile:5` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/scripts/setup-ssh-keys.sh:27` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/bulletproof-mediastack/scripts/setup-ssh-keys.sh:91` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/grandma-media-stack/scripts/setup-wireguard-ghost-mode.sh:21` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **wrong-port** `/media/loufogle/Data/Repos/homelab-media-stack/Jdown-real-debrid.md:1` - 192.168.12.242 (tiamat) is up but nothing is listening on 32743
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/README.md:10` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/README.md:15` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/README.md:18` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/README.md:20` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/README.md:26` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/README.md:27` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/README.md:54` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/README.md:55` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/README.md:98` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/README.md:99` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/android-app/app/src/main/java/com/tiamat/mediastack/MediaService.kt:66` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/android-app/app/src/main/java/com/tiamat/mediastack/MediaService.kt:74` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/android-app/app/src/main/java/com/tiamat/mediastack/MediaService.kt:134` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **wrong-port** `/media/loufogle/Data/Repos/homelab-media-stack/android-app/app/src/main/java/com/tiamat/mediastack/MediaService.kt:179` - 192.168.12.244 (bahamut) is up but nothing is listening on 3000
+- **wrong-port** `/media/loufogle/Data/Repos/homelab-media-stack/android-app/app/src/main/java/com/tiamat/mediastack/MediaService.kt:187` - 192.168.12.244 (bahamut) is up but nothing is listening on 51821
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/android-app/app/src/main/java/com/tiamat/mediastack/MediaService.kt:195` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/android-app/app/src/main/java/com/tiamat/mediastack/MediaService.kt:211` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/android-app/app/src/main/res/xml/network_security_config.xml:10` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/android-app/app/src/main/res/xml/network_security_config.xml:14` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/android-app/app/src/main/res/xml/network_security_config.xml:17` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/android-app/app/src/main/res/xml/network_security_config.xml:19` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/android-app/app/src/main/res/xml/network_security_config.xml:22` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/clients/firetv.md:41` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/clients/firetv.md:44` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/clients/laptop.md:11` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/clients/laptop.md:13` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/clients/tablet.md:26` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/clients/tablet.md:29` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/clients/tablet.md:43` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/clients/tablet.md:45` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/clients/tablet.md:50` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/config/media-pipeline-watchdog.sample.json:16` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/config/media-pipeline-watchdog.sample.json:44` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/config/media-pipeline-watchdog.sample.json:51` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/CT-213-RDTCLIENT.md:67` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/CT-213-RDTCLIENT.md:67` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/CT-213-RDTCLIENT.md:96` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/HOMARR.md:25` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/HOMARR.md:26` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/HOMARR.md:35` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/HOMARR.md:72` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/HOMARR.md:73` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/HOMARR.md:79` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **wrong-port** `/media/loufogle/Data/Repos/homelab-media-stack/docs/HOMARR.md:84` - 192.168.12.244 (bahamut) is up but nothing is listening on 3000
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/HOMARR.md:104` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/HOMARR.md:105` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/HOMARR.md:108` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/HOME-ASSISTANT.md:100` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/HOME-ASSISTANT.md:101` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/HOME-ASSISTANT.md:102` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/HOME-ASSISTANT.md:115` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/INDEXERS.md:11` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/INDEXERS.md:12` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/NETWORKING.md:51` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/NETWORKING.md:54` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/NETWORKING.md:59` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/NETWORKING.md:63` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/NETWORKING.md:64` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/NETWORKING.md:81` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/NETWORKING.md:121` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/NETWORKING.md:122` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/NETWORKING.md:123` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/NETWORKING.md:129` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/NETWORKING.md:130` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/NETWORKING.md:131` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/NETWORKING.md:138` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **wrong-port** `/media/loufogle/Data/Repos/homelab-media-stack/docs/NETWORKING.md:148` - 192.168.12.244 (bahamut) is up but nothing is listening on 51821
+- **wrong-port** `/media/loufogle/Data/Repos/homelab-media-stack/docs/OPTIMIZATIONS.md:55` - 192.168.12.242 (tiamat) is up but nothing is listening on 32743
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:6` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:7` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:11` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:14` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:16` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:17` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:21` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:22` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:52` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:59` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:113` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:117` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:120` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:124` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:128` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:129` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:233` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PLAN.md:234` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PROXMOX-INSTALL.md:22` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PROXMOX-INSTALL.md:25` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/PROXMOX-INSTALL.md:27` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TIAMAT-AGENT-FIXES.md:82` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TIAMAT-AGENT-FIXES.md:92` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TIAMAT-AGENT-FIXES.md:100` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TIAMAT-AGENT-FIXES.md:263` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TIAMAT-AGENT-FIXES.md:273` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TIAMAT-AGENT-FIXES.md:281` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TIAMAT-AGENT-FIXES.md:444` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TIAMAT-AGENT-FIXES.md:450` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TIAMAT-PHASE10.md:55` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TIAMAT-PHASE10.md:79` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TIAMAT-PHASE7.md:67` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TIAMAT-PHASE7.md:68` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TIAMAT-PHASE7.md:69` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TIAMAT-PHASE7.md:76` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TIAMAT-PHASE7.md:77` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TIAMAT-PHASE7.md:112` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TROUBLESHOOTING.md:57` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TROUBLESHOOTING.md:123` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TROUBLESHOOTING.md:128` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TVHEADEND.md:367` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/TVHEADEND.md:391` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/VOICE-CONTROL.md:17` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/VOICE-CONTROL.md:23` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/VOICE-CONTROL.md:50` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/VOICE-CONTROL.md:76` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/VOICE-CONTROL.md:107` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/VOICE-CONTROL.md:112` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/VOICE-CONTROL.md:113` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/VOICE-CONTROL.md:114` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/VOICE-CONTROL.md:115` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/VOICE-CONTROL.md:116` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/VOICE-CONTROL.md:117` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/VOICE-CONTROL.md:118` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/VOICE-CONTROL.md:119` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/VOICE-CONTROL.md:217` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/VOICE-CONTROL.md:230` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/VOICE-CONTROL.md:236` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/CREDENTIALS.md:33` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/CREDENTIALS.md:35` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/CREDENTIALS.md:36` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/CREDENTIALS.md:62` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/CREDENTIALS.md:65` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **wrong-port** `/media/loufogle/Data/Repos/homelab-media-stack/docs/CREDENTIALS.md:69` - 192.168.12.242 (tiamat) is up but nothing is listening on 32743
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/CREDENTIALS.md:74` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/CREDENTIALS.md:76` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/CREDENTIALS.md:79` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **wrong-port** `/media/loufogle/Data/Repos/homelab-media-stack/docs/CREDENTIALS.md:87` - 192.168.12.244 (bahamut) is up but nothing is listening on 3000
+- **wrong-port** `/media/loufogle/Data/Repos/homelab-media-stack/docs/CREDENTIALS.md:88` - 192.168.12.244 (bahamut) is up but nothing is listening on 51821
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/awesome-stack/ULTIMATE-OPTIMIZATION-PLAN.md:305` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/awesome-stack/router settings.md:206` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/docs/errors/HA-2026-04-15.md:3` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/authentik/setup-authentik.sh:76` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/authentik/setup-authentik.sh:77` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/homeassistant/automations.yaml:59` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/homeassistant/automations.yaml:73` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/homeassistant/binary_sensor.yaml:31` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/homeassistant/binary_sensor.yaml:38` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/homeassistant/binary_sensor.yaml:54` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/homeassistant/binary_sensor.yaml:61` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/homeassistant/binary_sensor.yaml:68` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/homeassistant/deploy.sh:15` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/homeassistant/rest_commands.yaml:28` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/homeassistant/rest_commands.yaml:35` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/homeassistant/rest_commands.yaml:42` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/homeassistant/rest_commands.yaml:65` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/homeassistant/rest_commands.yaml:74` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/homeassistant/rest_commands.yaml:84` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/homeassistant/rest_commands.yaml:93` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/homeassistant/sensors.yaml:57` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/homeassistant/sensors.yaml:71` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/traefik/dynamic/download-stack.yml:24` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/traefik/dynamic/download-stack.yml:28` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/traefik/dynamic/download-stack.yml:32` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/traefik/dynamic/infrastructure.yml:21` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/traefik/dynamic/infrastructure.yml:25` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/traefik/dynamic/smart-home.yml:16` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/traefik/dynamic/smart-home.yml:22` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/wireguard-server/proxmox-lxc-configs.md:12` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/wireguard-server/setup-wg-server.sh:63` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/pi/vaultwarden/Caddyfile:5` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/create-jellyseerr-ct.sh:50` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/create-jellyseerr-ct.sh:51` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/deploy-decluttarr.sh:105` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/deploy-decluttarr.sh:109` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/deploy-media-stack.sh:65` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/deploy-media-stack.sh:208` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/deploy-phase5.sh:293` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/deploy-recyclarr.sh:72` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/deploy-recyclarr.sh:86` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/install-seerr-ct242.sh:73` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/install-seerr-ct242.sh:74` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/monitor-media-stack.sh:25` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/monitor-media-stack.sh:27` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/monitor-media-stack.sh:28` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/monitor-media-stack.sh:49` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/monitor-media-stack.sh:50` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/monitor-media-stack.sh:58` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/monitor-media-stack.sh:69` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/monitor-media-stack.sh:81` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/setup-ssh-keys.sh:27` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/setup-ssh-keys.sh:91` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/stack-watchdog.sh:70` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/stack-watchdog.sh:83` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/verify-pipeline.sh:16` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/verify-pipeline.sh:17` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/verify-pipeline.sh:18` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/verify-pipeline.sh:217` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/infrastructure/authentik/setup-authentik.sh:76` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/infrastructure/authentik/setup-authentik.sh:77` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/infrastructure/wireguard-server/proxmox-lxc-configs.md:12` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/infrastructure/wireguard-server/setup-wg-server.sh:63` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/infrastructure/homeassistant/binary_sensor.yaml:18` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **wrong-port** `/media/loufogle/Data/Repos/nexus-mediastack/infrastructure/homeassistant/rest_commands.yaml:100` - 192.168.12.30 (ct-300 mediastack) is up but nothing is listening on 3001
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/infrastructure/traefik/dynamic/download-stack.yml:24` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/infrastructure/traefik/dynamic/download-stack.yml:28` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/infrastructure/traefik/dynamic/download-stack.yml:32` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/infrastructure/traefik/dynamic/infrastructure.yml:25` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/infrastructure/traefik/dynamic/smart-home.yml:16` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/infrastructure/traefik/dynamic/smart-home.yml:22` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **wrong-port** `/media/loufogle/Data/Repos/nexus-mediastack/infrastructure/wireguard-tools/client/wg0-nm-helper.sh:26` - 192.168.12.222 (vm-100 openwrt) is up but nothing is listening on 51820
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/clients/android/README.md:20` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **wrong-port** `/media/loufogle/Data/Repos/nexus-mediastack/clients/android/README.md:24` - 192.168.12.244 (bahamut) is up but nothing is listening on 51821
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/clients/android/README.md:26` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/clients/android/README.md:94` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/clients/android/README.md:96` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/clients/android/app/src/main/java/com/tiamat/mediastack/MediaService.kt:101` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/clients/android/app/src/main/java/com/tiamat/mediastack/MediaService.kt:155` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/clients/android/app/src/main/res/xml/network_security_config.xml:18` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/docs/NETWORKING.md:28` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **wrong-port** `/media/loufogle/Data/Repos/nexus-mediastack/docs/NETWORKING.md:58` - 192.168.12.222 (vm-100 openwrt) is up but nothing is listening on 51820
+- **wrong-port** `/media/loufogle/Data/Repos/nexus-mediastack/docs/NETWORKING.md:75` - 192.168.12.244 (bahamut) is up but nothing is listening on 51821
+- **dead** `/media/loufogle/Data/Repos/nexus-mediastack/docs/SERVICES.md:173` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **wrong-port** `/media/loufogle/Data/Repos/nexus-mediastack/docs/SERVICES.md:207` - 192.168.12.222 (vm-100 openwrt) is up but nothing is listening on 51820
+- **wrong-port** `/media/loufogle/Data/Repos/nexus-os/docs/INCIDENT-2026-07-28.md:67` - 192.168.12.222 (vm-100 openwrt) is up but nothing is listening on 51820
+- **wrong-port** `/media/loufogle/Data/Repos/nexus-os/docs/NEXUS-OS-SOURCE-OF-TRUTH.md:51` - 192.168.12.222 (vm-100 openwrt) is up but nothing is listening on 51820
+- **wrong-port** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/main.rs:2549` - 192.168.12.30 (ct-300 mediastack) is up but nothing is listening on 8088
+- **dead** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:139` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:140` - 192.168.12.107 is retired (authentik CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:141` - 192.168.12.100 is retired (wireguard CT - server moved to OpenWrt VM-100)
+- **dead** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:142` - 192.168.12.210 is retired (prowlarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:143` - 192.168.12.214 is retired (sonarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:144` - 192.168.12.225 is retired (radarr CT - *arr stack replaced by Riven)
+- **dead** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:145` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:146` - 192.168.12.250 is retired (CT-900 ziggy - stopped)
+- **dead** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:185` - 192.168.12.251 is retired (CT-501 HABridge - retired in the CT-300 consolidation)
+- **wrong-port** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:187` - 192.168.12.244 (bahamut) is up but nothing is listening on 3000
+- **dead** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:189` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **dead** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:191` - 192.168.12.104 is retired (vaultwarden CT - retired in the CT-300 consolidation)
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/fix_ai_setup.sh:25` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/fix_ai_setup.sh:46` - model 'llama2:3b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/fix_ai_setup.sh:46` - model 'phi:2.7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/fix_ai_setup.sh:60` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/lib_complex.rs:299` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/lib_complex.rs:388` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/lib_complex.rs:389` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/lib_complex.rs:390` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/lib_complex.rs:391` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/lib_complex.rs:392` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/lib_complex.rs:393` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/lib_complex.rs:394` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/lib_complex.rs:1159` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/lib_complex.rs:1160` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/lib_complex.rs:1161` - model 'llama2:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/lib_complex.rs:1162` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/lib_complex.rs:1163` - model 'neural-chat:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/modules/ollama.rs:361` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/modules/ollama.rs:362` - model 'llama3.1:70b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/modules/ollama.rs:363` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/modules/ollama.rs:364` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/modules/ollama.rs:365` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/modules/ollama.rs:367` - model 'qwen2:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/modules/ollama.rs:368` - model 'gemma2:9b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/modules/ollama.rs:369` - model 'llava:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/modules/ollama.rs:376` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/modules/ollama.rs:377` - model 'llama3.1:70b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/modules/ollama.rs:378` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/modules/ollama.rs:379` - model 'llava:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/Ai-Coding-Assistant/src-tauri/src/modules/ollama.rs:382` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/transform-to-ai-powerhouse.sh:342` - model 'llama2:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/ai-ml/ollama-integration.sh:132` - model 'llama2:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/ai-ml/ollama-integration.sh:147` - model 'llama2:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/ai-ml/ollama-integration.sh:165` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/ai-ml/ollama-integration.sh:166` - model 'llama2:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/ai-ml/ollama-integration.sh:167` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/ai-ml/ollama-integration.sh:178` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/iso-build/archiso-method-clone/airootfs/etc/skel/ai-powerhouse-setup/transform-to-ai-powerhouse.sh:342` - model 'llama2:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/iso-build/archiso-method-clone/airootfs/etc/skel/ai-powerhouse-setup/ai-ml/ollama-integration.sh:132` - model 'llama2:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/iso-build/archiso-method-clone/airootfs/etc/skel/ai-powerhouse-setup/ai-ml/ollama-integration.sh:147` - model 'llama2:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/iso-build/archiso-method-clone/airootfs/etc/skel/ai-powerhouse-setup/ai-ml/ollama-integration.sh:165` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/iso-build/archiso-method-clone/airootfs/etc/skel/ai-powerhouse-setup/ai-ml/ollama-integration.sh:166` - model 'llama2:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/iso-build/archiso-method-clone/airootfs/etc/skel/ai-powerhouse-setup/ai-ml/ollama-integration.sh:167` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/iso-build/archiso-method-clone/airootfs/etc/skel/ai-powerhouse-setup/ai-ml/ollama-integration.sh:178` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/iso-build/archiso-method/airootfs/etc/skel/ai-powerhouse-setup/transform-to-ai-powerhouse.sh:342` - model 'llama2:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/iso-build/archiso-method/airootfs/etc/skel/ai-powerhouse-setup/ai-ml/ollama-integration.sh:132` - model 'llama2:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/iso-build/archiso-method/airootfs/etc/skel/ai-powerhouse-setup/ai-ml/ollama-integration.sh:147` - model 'llama2:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/iso-build/archiso-method/airootfs/etc/skel/ai-powerhouse-setup/ai-ml/ollama-integration.sh:165` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/iso-build/archiso-method/airootfs/etc/skel/ai-powerhouse-setup/ai-ml/ollama-integration.sh:166` - model 'llama2:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/iso-build/archiso-method/airootfs/etc/skel/ai-powerhouse-setup/ai-ml/ollama-integration.sh:167` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-powerhouse-setup/iso-build/archiso-method/airootfs/etc/skel/ai-powerhouse-setup/ai-ml/ollama-integration.sh:178` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-sysadmin-supreme/src-tauri/src/system/mod.rs:464` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-sysadmin-supreme/src-tauri/src/system/mod.rs:465` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-sysadmin-supreme/src-tauri/src/system/mod.rs:466` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-sysadmin-supreme/src-tauri/src/system/mod.rs:470` - model 'llama3.1:70b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-sysadmin-supreme/src-tauri/src/system/mod.rs:480` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ai-sysadmin-supreme/src-tauri/src/system/mod.rs:481` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/awesome-stack/ai-docs-processor.py:24` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/awesome-stack/fast-ai-processor.py:22` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/bulletproof-mediastack/infrastructure/ziggy-ai/docker-compose.yml:41` - model 'searxng:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/bulletproof-mediastack/scripts/setup-tiamat-optimize.sh:226` - model 'llama3.2:3b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/bulletproof-mediastack/scripts/setup-tiamat-optimize.sh:227` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/bulletproof-mediastack/scripts/setup-tiamat-optimize.sh:228` - model 'qwen2.5:3b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/homelab-media-stack/infrastructure/ziggy-ai/docker-compose.yml:41` - model 'searxng:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/homelab-media-stack/media-stack/docker-compose.yml:16` - model 'jellyfin:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/homelab-media-stack/media-stack/docker-compose.yml:37` - model 'sonarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/homelab-media-stack/media-stack/docker-compose.yml:54` - model 'radarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/homelab-media-stack/media-stack/docker-compose.yml:71` - model 'prowlarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/homelab-media-stack/media-stack/docker-compose.yml:86` - model 'qbittorrent:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/homelab-media-stack/media-stack/docker-compose.yml:105` - model 'overseerr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/homelab-media-stack/media-stack/docker-compose.yml:120` - model 'bazarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/homelab-media-stack/media-stack/docker-compose.yml:137` - model 'homarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/homelab-media-stack/media-stack/docker-compose.yml:153` - model 'mediastack-control:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/homelab-media-stack/media-stack/docker-compose.yml:169` - model 'rdtclient:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/homelab-media-stack/media-stack/docker-compose.yml:202` - model 'searxng:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/setup-tiamat-optimize.sh:226` - model 'llama3.2:3b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/setup-tiamat-optimize.sh:227` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/homelab-media-stack/scripts/setup-tiamat-optimize.sh:228` - model 'qwen2.5:3b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:315` - model 'llama3.1:70b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:316` - model 'codellama:34b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:317` - model 'mistral-nemo:12b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:320` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:321` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:322` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:325` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:326` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:327` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:333` - model 'llama3.1:70b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:334` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:335` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:336` - model 'codellama:34b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:337` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:338` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:339` - model 'mistral-nemo:12b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:340` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/i9-13900hx-optimizations/optimize-ollama-system.sh:448` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-mediastack/infrastructure/ziggy-ai/docker-compose.yml:41` - model 'searxng:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-mediastack/scripts/setup-tiamat-optimize.sh:227` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-mediastack/scripts/setup-tiamat-optimize.sh:228` - model 'qwen2.5:3b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/autofix.sh:25` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/autofix.sh:36` - model 'deepseek-coder-v2:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/autofix.sh:151` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-code-checker.sh:23` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-code-checker.sh:56` - model 'deepseek-coder-v2:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-code-checker.sh:163` - model 'model_name:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-code-checker.sh:168` - model 'model_name:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-gui-standalone.py:51` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-gui-standalone.py:231` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-gui-standalone.py:231` - model 'deepseek-coder-v2:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-gui-standalone.py:231` - model 'qwen2.5-coder:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-gui-standalone.py:232` - model 'codellama:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-gui-standalone.py:232` - model 'codegemma:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-gui-standalone.py:232` - model 'llama3.1:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-gui-standalone.py:235` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-gui-standalone.py:1231` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-gui.py:41` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-gui.py:162` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-gui.py:162` - model 'deepseek-coder-v2:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-gui.py:162` - model 'qwen2.5-coder:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-gui.py:163` - model 'codellama:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-gui.py:163` - model 'codegemma:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-gui.py:163` - model 'llama3.1:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/ai/ollama-checker/ollama-gui.py:166` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:315` - model 'llama3.1:70b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:316` - model 'codellama:34b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:317` - model 'mistral-nemo:12b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:320` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:321` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:322` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:325` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:326` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:327` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:333` - model 'llama3.1:70b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:334` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:335` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:336` - model 'codellama:34b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:337` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:338` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:339` - model 'mistral-nemo:12b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:340` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/core/config/hw/optimize-ollama-system.sh:448` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:315` - model 'llama3.1:70b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:316` - model 'codellama:34b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:317` - model 'mistral-nemo:12b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:320` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:321` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:322` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:325` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:326` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:327` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:333` - model 'llama3.1:70b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:334` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:335` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:336` - model 'codellama:34b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:337` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:338` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:339` - model 'mistral-nemo:12b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:340` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/i9-13900hx-optimizations/optimize-ollama-system.sh:448` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/src-tauri/src/config.rs:84` - model 'llama3.2:3b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/src-tauri/src/config.rs:85` - model 'qwen2.5-coder:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/src-tauri/src/config.rs:86` - model 'qwen2.5:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/src-tauri/src/config.rs:87` - model 'llama3.2-vision:11b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/src-tauri/src/config.rs:88` - model 'codestral:22b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/src-tauri/src/config.rs:89` - model 'phi4:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/src-tauri/src/config.rs:328` - model 'llama3.2:3b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/src-tauri/src/config.rs:329` - model 'qwen2.5-coder:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/src-tauri/src/config.rs:330` - model 'qwen2.5:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/src-tauri/src/config.rs:332` - model 'llama3.2-vision:11b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/src-tauri/src/config.rs:333` - model 'codestral:22b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-brain/desktop/src-tauri/src/config.rs:334` - model 'phi4:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/agent.rs:720` - model 'llama3.2-vision:11b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:54` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:67` - model 'deepseek-coder-v2:16b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:391` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:400` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:445` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:454` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:463` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:472` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:481` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:490` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:499` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:508` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:517` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:570` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:572` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:573` - model 'gemma2:9b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:576` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:578` - model 'codeqwen:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:579` - model 'deepseek-coder:6.7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:580` - model 'magicoder:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:581` - model 'starcoder2:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:582` - model 'codegemma:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:585` - model 'phi3.5:3.8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:586` - model 'llama3.2:1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:587` - model 'tinyllama:1.1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:588` - model 'tinydolphin:1.1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:589` - model 'stablelm2:1.6b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:590` - model 'orca-mini:3b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:593` - model 'llava:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:594` - model 'llava:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:824` - model 'llama3.2:1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:826` - model 'tinyllama:1.1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:827` - model 'qwen2.5:0.5b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/ai.rs:828` - model 'gemma2:2b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/main.rs:2564` - model 'llama3.3:70b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:124` - model 'hermes3:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:125` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:126` - model 'nous-hermes2:10.7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:135` - model 'deepseek-coder-v2:16b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:137` - model 'yi-coder:9b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:138` - model 'codeqwen:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:139` - model 'magicoder:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:140` - model 'codegemma:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:141` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:147` - model 'deepseek-coder-v2:16b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:148` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:149` - model 'granite-code:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:150` - model 'deepseek-coder:6.7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:151` - model 'starcoder2:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:157` - model 'llama3.3:70b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:158` - model 'mixtral:8x7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:160` - model 'gemma2:9b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:161` - model 'solar:10.7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:162` - model 'wizard-vicuna-uncensored:30b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:169` - model 'llama3.2-vision:90b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:170` - model 'llava:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:171` - model 'llava:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:179` - model 'phi3.5:3.8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:180` - model 'tinydolphin:1.1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:181` - model 'stablelm2:1.6b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:182` - model 'orca-mini:3b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/model_router.rs:216` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/vision_commands.rs:572` - model 'llava:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/src-tauri/src/vision_commands.rs:572` - model 'llama3.2-vision:11b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/autofix.sh:26` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/autofix.sh:37` - model 'deepseek-coder-v2:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/autofix.sh:152` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-code-checker.sh:23` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-code-checker.sh:56` - model 'deepseek-coder-v2:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-code-checker.sh:163` - model 'model_name:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-code-checker.sh:168` - model 'model_name:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-gui-standalone.py:76` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-gui-standalone.py:260` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-gui-standalone.py:260` - model 'deepseek-coder-v2:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-gui-standalone.py:260` - model 'qwen2.5-coder:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-gui-standalone.py:261` - model 'codellama:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-gui-standalone.py:261` - model 'codegemma:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-gui-standalone.py:261` - model 'llama3.1:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-gui-standalone.py:264` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-gui-standalone.py:1260` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-gui.py:41` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-gui.py:162` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-gui.py:162` - model 'deepseek-coder-v2:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-gui.py:162` - model 'qwen2.5-coder:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-gui.py:163` - model 'codellama:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-gui.py:163` - model 'codegemma:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-gui.py:163` - model 'llama3.1:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-code-checker/ollama-gui.py:166` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/ollama-manager-gui/ollama_manager_gui.py:588` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/universal-zfs-installer/install.sh:753` - model 'jellyfin:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/universal-zfs-installer/install.sh:767` - model 'qbittorrent:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/universal-zfs-installer/install.sh:784` - model 'radarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/universal-zfs-installer/install.sh:798` - model 'sonarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/packages/universal-zfs-installer/install.sh:812` - model 'jackett:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:196` - model 'llama3.2:3b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:197` - model 'qwen2.5:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:198` - model 'qwen2.5-coder:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:199` - model 'llama3.2-vision:11b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:200` - model 'codestral:22b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/scripts/infra-audit.py:201` - model 'phi4:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/fix_ai_setup.sh:25` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/fix_ai_setup.sh:46` - model 'llama2:3b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/fix_ai_setup.sh:46` - model 'phi:2.7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/fix_ai_setup.sh:60` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/lib_complex.rs:299` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/lib_complex.rs:388` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/lib_complex.rs:389` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/lib_complex.rs:390` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/lib_complex.rs:391` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/lib_complex.rs:392` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/lib_complex.rs:393` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/lib_complex.rs:394` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/lib_complex.rs:1159` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/lib_complex.rs:1160` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/lib_complex.rs:1161` - model 'llama2:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/lib_complex.rs:1162` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/lib_complex.rs:1163` - model 'neural-chat:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/modules/ollama.rs:361` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/modules/ollama.rs:362` - model 'llama3.1:70b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/modules/ollama.rs:363` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/modules/ollama.rs:364` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/modules/ollama.rs:365` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/modules/ollama.rs:367` - model 'qwen2:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/modules/ollama.rs:368` - model 'gemma2:9b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/modules/ollama.rs:369` - model 'llava:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/modules/ollama.rs:376` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/modules/ollama.rs:377` - model 'llama3.1:70b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/modules/ollama.rs:378` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/modules/ollama.rs:379` - model 'llava:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ai-coding-assistant/src-tauri/src/modules/ollama.rs:382` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:28` - model 'llama3.2:1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:351` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:360` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:405` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:414` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:423` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:432` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:441` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:450` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:459` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:468` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:477` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:524` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:526` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:527` - model 'gemma2:9b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:530` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:532` - model 'codeqwen:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:533` - model 'deepseek-coder:6.7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:534` - model 'magicoder:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:535` - model 'starcoder2:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:536` - model 'codegemma:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:539` - model 'phi3.5:3.8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:540` - model 'llama3.2:1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:541` - model 'tinyllama:1.1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:542` - model 'tinydolphin:1.1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:543` - model 'stablelm2:1.6b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:544` - model 'orca-mini:3b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:547` - model 'llava:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:548` - model 'llava:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:799` - model 'llama3.2:1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:801` - model 'tinyllama:1.1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:802` - model 'qwen2.5:0.5b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/nexus-terminal/src-tauri/src/ai.rs:803` - model 'gemma2:2b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-os/userspace/apps/ollama-manager/ollama_manager_gui.py:588` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:28` - model 'llama3.2:1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:351` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:360` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:405` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:414` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:423` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:432` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:441` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:450` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:459` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:468` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:477` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:523` - model 'llama3.2:3b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:524` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:525` - model 'qwen2.5:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:526` - model 'mistral:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:527` - model 'gemma2:9b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:530` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:531` - model 'qwen2.5-coder:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:532` - model 'codeqwen:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:533` - model 'deepseek-coder:6.7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:534` - model 'magicoder:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:535` - model 'starcoder2:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:536` - model 'codegemma:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:539` - model 'phi3.5:3.8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:540` - model 'llama3.2:1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:541` - model 'tinyllama:1.1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:542` - model 'tinydolphin:1.1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:543` - model 'stablelm2:1.6b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:544` - model 'orca-mini:3b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:547` - model 'llava:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:548` - model 'llava:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:799` - model 'llama3.2:1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:801` - model 'tinyllama:1.1b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:802` - model 'qwen2.5:0.5b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/ai.rs:803` - model 'gemma2:2b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/nexus-terminal/src-tauri/src/intelligent_agent.rs:357` - model 'qwen2.5-coder:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/autofix.sh:25` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/autofix.sh:36` - model 'deepseek-coder-v2:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/autofix.sh:151` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-code-checker.sh:23` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-code-checker.sh:56` - model 'deepseek-coder-v2:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-code-checker.sh:163` - model 'model_name:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-code-checker.sh:168` - model 'model_name:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-gui-standalone.py:51` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-gui-standalone.py:231` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-gui-standalone.py:231` - model 'deepseek-coder-v2:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-gui-standalone.py:231` - model 'qwen2.5-coder:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-gui-standalone.py:232` - model 'codellama:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-gui-standalone.py:232` - model 'codegemma:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-gui-standalone.py:232` - model 'llama3.1:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-gui-standalone.py:235` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-gui-standalone.py:1231` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-gui.py:41` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-gui.py:162` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-gui.py:162` - model 'deepseek-coder-v2:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-gui.py:162` - model 'qwen2.5-coder:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-gui.py:163` - model 'codellama:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-gui.py:163` - model 'codegemma:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-gui.py:163` - model 'llama3.1:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-code-checker/ollama-gui.py:166` - model 'granite-code:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ollama-manager-gui/ollama_manager_gui.py:588` - model 'llama3.1:8b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/proxmox-awesome-media-stack/install-awesome-media-stack.sh:360` - model 'plex:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/proxmox-awesome-media-stack/install-awesome-media-stack.sh:414` - model 'jellyfin:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/proxmox-awesome-media-stack/install-awesome-media-stack.sh:468` - model 'sonarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/proxmox-awesome-media-stack/install-awesome-media-stack.sh:518` - model 'radarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/proxmox-awesome-media-stack/install-awesome-media-stack.sh:568` - model 'lidarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/proxmox-awesome-media-stack/install-awesome-media-stack.sh:618` - model 'qbittorrent:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/proxmox-awesome-media-stack/install-awesome-media-stack.sh:670` - model 'prowlarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/proxmox-awesome-media-stack/install-awesome-media-stack.sh:718` - model 'overseerr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/proxmox-awesome-media-stack/install-awesome-media-stack.sh:764` - model 'tautulli:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/proxmox-awesome-media-stack/install-awesome-media-stack.sh:812` - model 'homer:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/proxmox-awesome-media-stack/install-awesome-media-stack.sh:1091` - model 'audiobookshelf:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/proxmox-awesome-media-stack/install-awesome-media-stack.sh:1140` - model 'calibre-web:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/proxmox-awesome-media-stack/install-awesome-media-stack.sh:1189` - model 'jellyseerr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/proxmox-awesome-media-stack/install-awesome-media-stack.sh:1236` - model 'pulsarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/proxmox-awesome-media-stack/install-awesome-media-stack.sh:1282` - model 'wireguard:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ultimate-zfs-installer/install-everything.sh:299` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ultimate-zfs-installer/install-everything.sh:300` - model 'llama2:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ultimate-zfs-installer/install-everything.sh:344` - model 'jellyfin:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ultimate-zfs-installer/install-everything.sh:358` - model 'qbittorrent:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ultimate-zfs-installer/install-everything.sh:373` - model 'radarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ultimate-zfs-installer/install-everything.sh:387` - model 'sonarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ultimate-zfs-installer/install-everything.sh:401` - model 'jackett:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ultimate-zfs-installer/install-with-live-user.sh:286` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ultimate-zfs-installer/install-with-live-user.sh:287` - model 'llama2:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ultimate-zfs-installer/install-with-live-user.sh:331` - model 'jellyfin:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ultimate-zfs-installer/install-with-live-user.sh:345` - model 'qbittorrent:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ultimate-zfs-installer/install-with-live-user.sh:360` - model 'radarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ultimate-zfs-installer/install-with-live-user.sh:374` - model 'sonarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/ultimate-zfs-installer/install-with-live-user.sh:388` - model 'jackett:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/universal-zfs-installer/install.sh:753` - model 'jellyfin:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/universal-zfs-installer/install.sh:767` - model 'qbittorrent:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/universal-zfs-installer/install.sh:784` - model 'radarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/universal-zfs-installer/install.sh:798` - model 'sonarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/universal-zfs-installer/install.sh:812` - model 'jackett:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:391` - model 'llama2:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:392` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:396` - model 'llama2:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:397` - model 'codellama:13b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:465` - model 'tensorflow-notebook:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:475` - model 'tensorflow:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:605` - model 'jellyfin:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:645` - model 'prowlarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:663` - model 'sonarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:683` - model 'radarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:703` - model 'qbittorrent:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:753` - model 'nextcloud:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:778` - model 'documentserver:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:830` - model 'prometheus:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:845` - model 'grafana:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:861` - model 'node-exporter:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:983` - model 'rust:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/install-ai-powerhouse-gaming.sh:1046` - model 'code-server:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-ai-powerhouse-gaming.sh:350` - model 'llama2:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-ai-powerhouse-gaming.sh:351` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-ai-powerhouse-gaming.sh:422` - model 'jellyfin:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-ai-powerhouse-gaming.sh:443` - model 'sonarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-ai-powerhouse-gaming.sh:458` - model 'radarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-ai-powerhouse-gaming.sh:473` - model 'prowlarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-ai-powerhouse-gaming.sh:487` - model 'qbittorrent:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-ai-powerhouse-gaming.sh:513` - model 'prometheus:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-ai-powerhouse-gaming.sh:524` - model 'grafana:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-ai-powerhouse-gaming.sh:537` - model 'node-exporter:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-fixed.sh:350` - model 'llama2:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-fixed.sh:351` - model 'codellama:7b' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-fixed.sh:422` - model 'jellyfin:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-fixed.sh:443` - model 'sonarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-fixed.sh:458` - model 'radarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-fixed.sh:473` - model 'prowlarr:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-fixed.sh:487` - model 'qbittorrent:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-fixed.sh:513` - model 'prometheus:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-fixed.sh:524` - model 'grafana:latest' is referenced but not installed
+- **model** `/media/loufogle/Data/Repos/zfs-installer-enhanced/post-install-fixed.sh:537` - model 'node-exporter:latest' is referenced but not installed
