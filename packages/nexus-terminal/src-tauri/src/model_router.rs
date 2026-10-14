@@ -124,16 +124,16 @@ pub async fn select_model(kind: TaskKind, ollama_url: &str) -> String {
                 "hermes3:8b",
                 "llama3.1:8b",
                 "nous-hermes2:10.7b",
-                "llama3.2:3b",
-                "phi4:latest",
+                "qwen3.5:4b",
+                "qwen3.5:9b",
             ],
         ),
         TaskKind::CodeFix => (
             "AGENT_CODE_MODEL",
             &[
-                "codestral:22b",
+                "qwen3.5:9b",
                 "deepseek-coder-v2:16b",
-                "qwen2.5-coder:7b",
+                "qwen3.5:9b",
                 "yi-coder:9b",
                 "codeqwen:7b",
                 "magicoder:7b",
@@ -156,7 +156,7 @@ pub async fn select_model(kind: TaskKind, ollama_url: &str) -> String {
             &[
                 "llama3.3:70b",
                 "mixtral:8x7b",
-                "phi4:latest",
+                "qwen3.5:9b",
                 "gemma2:9b",
                 "solar:10.7b",
                 "wizard-vicuna-uncensored:30b",
@@ -165,7 +165,7 @@ pub async fn select_model(kind: TaskKind, ollama_url: &str) -> String {
         TaskKind::Vision => (
             "VISION_MODEL",
             &[
-                "llama3.2-vision:11b",
+                "qwen3.5:9b",
                 "llama3.2-vision:90b",
                 "llava:13b",
                 "llava:7b",
@@ -175,7 +175,7 @@ pub async fn select_model(kind: TaskKind, ollama_url: &str) -> String {
         TaskKind::FastChat => (
             "AGENT_FAST_MODEL",
             &[
-                "llama3.2:3b",
+                "qwen3.5:4b",
                 "phi3.5:3.8b",
                 "tinydolphin:1.1b",
                 "stablelm2:1.6b",

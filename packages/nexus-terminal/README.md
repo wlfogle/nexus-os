@@ -133,7 +133,7 @@ curl -fsSL https://ollama.ai/install.sh | sh
 
 # Pull recommended models
 ollama pull codellama:7b
-ollama pull qwen2.5-coder:7b
+ollama pull qwen3.5:9b
 ollama pull magicoder:7b
 ```
 

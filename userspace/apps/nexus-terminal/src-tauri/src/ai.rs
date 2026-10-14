@@ -520,15 +520,15 @@ impl AIService {
         // Smart model selection priority list
         let preferred_models = vec![
             // General purpose models (good balance of performance and size)
-            "llama3.2:3b",
+            "qwen3.5:4b",
             "llama3.1:8b", 
-            "qwen2.5:7b",
+            "qwen3.5:9b",
             "mistral:7b",
             "gemma2:9b",
             
             // Code-specific models
             "codellama:7b",
-            "qwen2.5-coder:7b",
+            "qwen3.5:9b",
             "codeqwen:7b",
             "deepseek-coder:6.7b",
             "magicoder:7b",

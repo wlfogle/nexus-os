@@ -194,7 +194,7 @@ From prior Copilot analysis:
 | Feature | Status |
 |---------|--------|
 | Screen capture | ✅ `scrap` + 200ms compositor flush fix for GNOME X11 |
-| Vision model | ✅ `llama3.2-vision:11b` via Ollama `/api/chat` |
+| Vision model | ✅ `qwen3.5:9b` via Ollama `/api/chat` |
 | OCR | ✅ Via vision model (no Tesseract dependency) |
 | 📸 camera button | ✅ In UDI — captures screen + describes in 2-3 sentences |
 | Agent `screenshot` tool | ✅ Agent can autonomously call screenshot to see the screen |
@@ -239,7 +239,7 @@ From prior Copilot analysis:
 ### Model & Capability Upgrades
 | Feature | Status |
 |---------|--------|
-| `codestral:22b` agent | ✅ 12GB Mistral code model, fits RTX 4080 VRAM exactly |
+| `qwen3.5:9b` agent | ✅ 12GB Mistral code model, fits RTX 4080 VRAM exactly |
 | `llama3.3:70b` deep mode | ✅ `**` prefix routes to 42GB model |
 | `**` deep mode prefix | ✅ Complex tasks use the most capable local model |
 | `@file` injection | ✅ `@src/agent.rs` injects file content into query |
@@ -262,8 +262,8 @@ From prior Copilot analysis:
 |------|-------------|
 | `web_search` | DuckDuckGo + SearXNG if `SEARXNG_URL` set |
 | `mcp_call` | JSON-RPC to any MCP server (HA, Nextcloud, Obsidian) |
-| `screenshot` | Screen capture + `llama3.2-vision:11b` analysis |
-| `predict_command` | History + `llama3.2:3b` ghost text prediction |
+| `screenshot` | Screen capture + `qwen3.5:9b` analysis |
+| `predict_command` | History + `qwen3.5:4b` ghost text prediction |
 
 ### Phase 3 — Next
 - RAG: `nomic-embed-text:latest` embeddings, codebase indexing
@@ -350,11 +350,11 @@ The fix: encode the workflow in Rust, use the model only for generation.
 | TaskKind | Env Override | Auto-priority chain |
 |----------|-------------|---------------------|
 | ToolUse | `AGENT_TOOL_MODEL` | hermes3:8b → llama3.1:8b → nous-hermes2:10.7b |
-| CodeFix | `AGENT_CODE_MODEL` | codestral:22b → deepseek-coder-v2:16b → qwen2.5-coder:7b → yi-coder:9b |
+| CodeFix | `AGENT_CODE_MODEL` | qwen3.5:9b → deepseek-coder-v2:16b → qwen3.5:9b → yi-coder:9b |
 | CodeAnalysis | `AGENT_ANALYSIS_MODEL` | deepseek-coder-v2:16b → granite-code → ... |
 | DeepReason | `AGENT_DEEP_MODEL` | llama3.3:70b → mixtral:8x7b → phi4 |
-| Vision | `VISION_MODEL` | llama3.2-vision:11b → llava:13b → ... |
-| FastChat | `AGENT_FAST_MODEL` | llama3.2:3b → phi3.5:3.8b → ... |
+| Vision | `VISION_MODEL` | qwen3.5:9b → llava:13b → ... |
+| FastChat | `AGENT_FAST_MODEL` | qwen3.5:4b → phi3.5:3.8b → ... |
 | Embed | `EMBED_MODEL` | nomic-embed-text → all-minilm |
 - Queries Ollama `/api/tags`, caches 60s, validates overrides against installed models
 - `analyze_code` (single file) now uses CodeAnalysis model

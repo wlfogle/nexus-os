@@ -57,15 +57,15 @@ design:
 
 ```
 image        moondream ──────────────┐
-                                     ├─► llama3.2-vision:11b
-code/script/config  qwen2.5-coder:7b ─┐
-doc/prose (>2 KB)   qwen2.5:7b       ─┼─► codestral:22b ──► phi4
-everything else     llama3.2:3b ─────┘
+                                     ├─► qwen3.5:9b
+code/script/config  qwen3.5:9b ─┐
+doc/prose (>2 KB)   qwen3.5:9b       ─┼─► qwen3.5:9b ──► phi4
+everything else     qwen3.5:4b ─────┘
 ```
 
-Confirmed in practice on a live run: `qwen2.5-coder:7b` took the config and
-source files, `qwen2.5:7b` the prose, `llama3.2:3b` the short odds and ends, and
-a screenshot escalated from `moondream` to `llama3.2-vision:11b`, which
+Confirmed in practice on a live run: `qwen3.5:9b` took the config and
+source files, `qwen3.5:9b` the prose, `qwen3.5:4b` the short odds and ends, and
+a screenshot escalated from `moondream` to `qwen3.5:9b`, which
 correctly described it as a recording of a Konsole session.
 
 ### Search

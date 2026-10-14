@@ -310,7 +310,7 @@ pub async fn detect_ui_elements(image_path: String) -> Result<Vec<UIElement>, St
     Ok(elements)
 }
 
-/// Query AI with vision capabilities using Ollama chat API + llama3.2-vision:11b
+/// Query AI with vision capabilities using Ollama chat API + qwen3.5:9b
 #[command]
 pub async fn query_vision_ai(
     prompt: String,
@@ -334,13 +334,13 @@ pub async fn query_vision_ai(
         image
     };
     
-    let model = "llama3.2-vision:11b";
+    let model = "qwen3.5:9b";
 
     // Unload the text model from VRAM before loading the vision model.
-    // RTX 4080 has 16 GB VRAM; codestral:22b uses ~12 GB and
-    // llama3.2-vision:11b uses ~8 GB — they cannot coexist.
+    // RTX 4080 has 16 GB VRAM; qwen3.5:9b uses ~12 GB and
+    // qwen3.5:9b uses ~8 GB — they cannot coexist.
     let agent_model = std::env::var("AGENT_MODEL")
-        .unwrap_or_else(|_| "codestral:22b".to_string());
+        .unwrap_or_else(|_| "qwen3.5:9b".to_string());
     let ollama_base = format!("http://{}:{}", host, port);
     unload_model(&ollama_base, &agent_model).await;
 
@@ -383,7 +383,7 @@ pub async fn query_vision_ai(
 }
 
 /// Run real Tesseract OCR against an image file for precise, ground-truth text
-/// extraction. Small local vision-language models (llama3.2-vision:11b) frequently
+/// extraction. Small local vision-language models (qwen3.5:9b) frequently
 /// hallucinate or misread exact on-screen text in dense UI screenshots, so this is
 /// combined with the vision model's description rather than relied on alone.
 /// Upscaling 2x before OCR significantly improves recall of typical UI text sizes;

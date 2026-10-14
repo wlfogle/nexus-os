@@ -354,7 +354,7 @@ impl Default for AgentConfig {
                 AgentCapability::Learning,
                 AgentCapability::WebBrowsing,
             ],
-            model: std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "qwen2.5-coder:7b".to_string()),
+            model: std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "qwen3.5:9b".to_string()),
             temperature: 0.7,
             max_tokens: 4096,
         }

@@ -1,7 +1,7 @@
 {
   "scan_id": "88bb1b71-08c2-4363-89bf-a1cee9457497",
   "generated_at": "2026-06-12T19:28:58.871794872+00:00",
-  "model_used": "qwen2.5-coder:7b",
+  "model_used": "qwen3.5:9b",
   "config": {
     "scan_roots": [
       "/tmp/nexus-codex-test"
