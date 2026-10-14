@@ -327,6 +327,14 @@ class Ref:
 
 
 def _is_commented(line: str) -> bool:
+    """True for comment lines.
+
+    Comments are excluded from both findings and rewrites. A comment very often
+    documents the *old* state on purpose -- "was pointed at X, which is now
+    dead" -- so rewriting it inverts the fact it was recording. This rewriter
+    did exactly that to a Caddyfile comment on 2026-10-14 before the check was
+    added here.
+    """
     s = line.lstrip()
     return s.startswith(("#", "//", "<!--", "*", "- #"))
 
@@ -573,7 +581,7 @@ def plan_rewrites(repos: list[Path], all_repos: bool = False) -> list[Rewrite]:
                 continue
             skip = ignored_lines(text)
             for lineno, line in enumerate(text.splitlines(), 1):
-                if lineno in skip:
+                if lineno in skip or _is_commented(line):
                     continue
                 _, subs = _plan_line(line)
                 for old, new, why in subs:
@@ -605,7 +613,7 @@ def apply_rewrites(plans: list[Rewrite]) -> int:
         lines = text.splitlines()
         dirty = False
         for i, line in enumerate(lines):
-            if (i + 1) in skip:
+            if (i + 1) in skip or _is_commented(line):
                 continue
             new_line, subs = _plan_line(line)
             if subs and new_line != line:
