@@ -4,14 +4,14 @@
 /// Pipeline:
 ///   1. History match  — O(n) scan of recent commands starting with partial_input (instant)
 ///   2. Frequency rank — prefer commands run more often
-///   3. AI prediction  — llama3.2:3b completes the command or suggests the next one
+///   3. AI prediction  — qwen3.5:4b completes the command or suggests the next one
 ///                       (only if history has no strong match, or input is empty)
 
 use reqwest::Client;
 use std::collections::HashMap;
 use std::time::Duration;
 
-const PREDICT_MODEL: &str = "llama3.2:3b";
+const PREDICT_MODEL: &str = "qwen3.5:4b";
 const MAX_PREDICT_TOKENS: u32 = 40; // Short prediction — just a command, not an essay
 
 /// Predict the next / completed command.
@@ -49,7 +49,7 @@ pub async fn predict_command(
         }
     }
 
-    // ── Stage 2: AI prediction via llama3.2:3b ────────────────────────────────
+    // ── Stage 2: AI prediction via qwen3.5:4b ────────────────────────────────
     let client = match Client::builder()
         .timeout(Duration::from_secs(8))
         .build()

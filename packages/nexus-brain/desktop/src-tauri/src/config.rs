@@ -56,21 +56,42 @@ impl Default for ModelRouting {
     fn default() -> Self {
         Self {
             embed: "nomic-embed-text:latest".into(),
-            triage: "llama3.2:3b".into(),
-            code: "qwen2.5-coder:7b".into(),
-            docs: "qwen2.5:7b".into(),
+            triage: "qwen3.5:4b".into(),
+            code: "qwen3.5:9b".into(),
+            docs: "qwen3.5:9b".into(),
             vision: "moondream:latest".into(),
-            vision_escalate: "llama3.2-vision:11b".into(),
-            escalate: "codestral:22b".into(),
-            escalate_max: "phi4:latest".into(),
+            vision_escalate: "qwen3.5:9b".into(),
+            escalate: "qwen3.5:9b".into(),
+            escalate_max: "qwen3.5:9b".into(),
             escalate_below: 0.55,
         }
     }
 }
 
-/// Bump when the built-in prune lists change, so an existing `config.json`
-/// picks up the new entries instead of silently pinning the old ones.
-pub const CONFIG_VERSION: u32 = 2;
+/// Bump when the built-in prune lists or model routing change, so an existing
+/// `config.json` picks up the new entries instead of silently pinning the old
+/// ones.
+pub const CONFIG_VERSION: u32 = 3;
+
+/// Models removed from the local Ollama library on 2026-10-13, mapped to the
+/// model that replaced them.
+///
+/// Changing `ModelRouting::default()` alone is not enough: any machine that has
+/// already run the app has a persisted `config.json`, and that file keeps
+/// pinning whatever it was written with. Without this remap the Librarian would
+/// keep requesting deleted models forever and fail on every file it routes.
+// infra-audit: ignore-start -- these names are the mapping's input data.
+// Letting the rewriter "update" them collapses each pair to new -> new, which
+// silently turns this migration into a no-op.
+pub const RETIRED_MODELS: &[(&str, &str)] = &[
+    ("llama3.2:3b", "qwen3.5:4b"),
+    ("qwen2.5-coder:7b", "qwen3.5:9b"),
+    ("qwen2.5:7b", "qwen3.5:9b"),
+    ("llama3.2-vision:11b", "qwen3.5:9b"),
+    ("codestral:22b", "qwen3.5:9b"),
+    ("phi4:latest", "qwen3.5:9b"),
+];
+// infra-audit: ignore-end
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
@@ -203,6 +224,28 @@ impl Config {
         merge(&mut self.prune_names, &defaults.prune_names);
         merge(&mut self.prune_fragments, &defaults.prune_fragments);
 
+        // Repoint any routing slot that still names a deleted model.
+        let remap = |slot: &mut String| {
+            if let Some((_, replacement)) =
+                RETIRED_MODELS.iter().find(|(old, _)| *old == slot.as_str())
+            {
+                *slot = (*replacement).to_string();
+            }
+        };
+        let m = &mut self.models;
+        for slot in [
+            &mut m.embed,
+            &mut m.triage,
+            &mut m.code,
+            &mut m.docs,
+            &mut m.vision,
+            &mut m.vision_escalate,
+            &mut m.escalate,
+            &mut m.escalate_max,
+        ] {
+            remap(slot);
+        }
+
         self.version = CONFIG_VERSION;
         true
     }
@@ -276,6 +319,49 @@ mod tests {
         // The user's own additions survive.
         assert!(old.prune_names.iter().any(|p| p == "my-own-junk-dir"));
         assert!(old.prune_fragments.iter().any(|p| p == "/custom/fragment/"));
+    }
+
+    #[test]
+    fn migration_repoints_retired_models() {
+        // infra-audit: ignore-start -- this fixture must keep naming the
+        // deleted models; rewriting them would make the test assert nothing.
+        // A v2 config written before the 2026-10-13 prune: every slot names a
+        // model that has since been deleted from the local Ollama library.
+        let mut old = Config {
+            version: 2,
+            models: super::ModelRouting {
+                embed: "nomic-embed-text:latest".into(),
+                triage: "llama3.2:3b".into(),
+                code: "qwen2.5-coder:7b".into(),
+                docs: "qwen2.5:7b".into(),
+                vision: "moondream:latest".into(),
+                vision_escalate: "llama3.2-vision:11b".into(),
+                escalate: "codestral:22b".into(),
+                escalate_max: "phi4:latest".into(),
+                escalate_below: 0.55,
+            },
+            ..Config::default()
+        };
+        // infra-audit: ignore-end
+
+        assert!(old.migrate(), "a v2 config must report that it changed");
+
+        for (retired, _) in super::RETIRED_MODELS {
+            for slot in [
+                &old.models.triage, &old.models.code, &old.models.docs,
+                &old.models.vision, &old.models.vision_escalate,
+                &old.models.escalate, &old.models.escalate_max,
+            ] {
+                assert_ne!(
+                    slot, retired,
+                    "{retired} was deleted from Ollama and must not survive migration"
+                );
+            }
+        }
+
+        // Slots whose models still exist are left alone.
+        assert_eq!(old.models.embed, "nomic-embed-text:latest");
+        assert_eq!(old.models.vision, "moondream:latest");
     }
 
     #[test]

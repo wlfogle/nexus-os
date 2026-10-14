@@ -22,7 +22,7 @@ pub struct AIConfig {
 
 /// Ranked preference list for the agent model.
 /// Priority: instruction-following reliability over raw code capability.
-/// codestral:22b is a CODE COMPLETION model — poor at tool selection rules.
+/// qwen3.5:9b is a CODE COMPLETION model — poor at tool selection rules.
 /// llama3.1:8b is an INSTRUCTION model — reliably picks the right tool.
 const AGENT_MODEL_PREFERENCES: &[&str] = &[
     "llama3.1",         // PRIMARY: instruction-following, reliable tool selection
@@ -60,8 +60,8 @@ impl Default for AIConfig {
         let ollama_port = std::env::var("OLLAMA_PORT").unwrap_or_else(|_| "11434".to_string());
         let ollama_url = format!("http://{}:{}", ollama_host, ollama_port);
         // Default agent_model — overridden at startup by auto_detect_and_set_model()
-        // MUST be a tool-calling capable model. codestral:22b is the best fit for RTX 4080 12GB.
-        let agent_model = std::env::var("AGENT_MODEL").unwrap_or_else(|_| "codestral:22b".to_string());
+        // MUST be a tool-calling capable model. qwen3.5:9b is the best fit for RTX 4080 12GB.
+        let agent_model = std::env::var("AGENT_MODEL").unwrap_or_else(|_| "qwen3.5:9b".to_string());
         Self {
             ollama_url,
             default_model: std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "deepseek-coder-v2:16b".to_string()),
@@ -566,15 +566,15 @@ impl AIService {
         // Smart model selection priority list
         let preferred_models = vec![
             // General purpose models (good balance of performance and size)
-            "llama3.2:3b",
+            "qwen3.5:4b",
             "llama3.1:8b", 
-            "qwen2.5:7b",
+            "qwen3.5:9b",
             "mistral:7b",
             "gemma2:9b",
             
             // Code-specific models
             "codellama:7b",
-            "qwen2.5-coder:7b",
+            "qwen3.5:9b",
             "codeqwen:7b",
             "deepseek-coder:6.7b",
             "magicoder:7b",

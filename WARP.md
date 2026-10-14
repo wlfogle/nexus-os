@@ -1,6 +1,6 @@
 # WARP.md — nexus-os
 
-**Read this file at the start of every session. Read `docs/NEXUS-OS-SOURCE-OF-TRUTH.md` first — it wins over all other docs.**
+**Read this file at the start of every session. Read `docs/NEXUS-OS-SOURCE-OF-TRUTH.md` first — it wins over all other docs. Read `MISTAKES.md` before planning or editing code.**
 
 ## Infrastructure Quick Reference (2026-07-28)
 
@@ -189,11 +189,14 @@ Every function must be complete and working.  No stubs, no TODOs, no zombie code
 
 **IMPORTANT: At the start of EVERY conversation, before doing anything else:**
 1. Read `docs/NEXUS-OS-SOURCE-OF-TRUTH.md` — it wins over every other doc.
-2. Read `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/PROGRESS.md`
+2. Read `MISTAKES.md` — confirmed past failures and the rule to apply instead.
+   Re-read the relevant entries before planning or editing code, not just at
+   session start. After any confirmed mistake or user correction, add an entry.
+3. Read `/media/loufogle/Data/Repos/nexus-os/packages/nexus-terminal/PROGRESS.md`
    to get current state.
-3. Check `git --no-pager log --oneline -5` in `/media/loufogle/Data/Repos/nexus-os`
+4. Check `git --no-pager log --oneline -5` in `/media/loufogle/Data/Repos/nexus-os`
    to see recent commits.
-4. You are already caught up. Do not ask the user to explain what we were doing.
+5. You are already caught up. Do not ask the user to explain what we were doing.
 
 Before proposing a new package or tool, **check `packages/` first**. Ideas here
 get designed, parked, forgotten and then re-invented — that is the specific

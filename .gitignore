@@ -43,6 +43,9 @@ __pycache__/
 *.swp
 *.swo
 *~
+# Kate writes `.<name>.kate-swp`, which `*.swp` does not match (the suffix is
+# `-swp`, not `.swp`). One of these was committed by accident on 2026-10-14.
+*.kate-swp
 
 # OS-specific
 .DS_Store
@@ -115,6 +118,16 @@ userspace/apps/*/build/
 userspace/apps/*/.next/
 userspace/apps/*/.vite/
 userspace/apps/*/out/
+
+# The single-level globs above only reach one directory deep, so a package with
+# its own sub-project (e.g. `packages/foo/frontend/node_modules/`) slipped past
+# them -- 2019 such files were committed by accident on 2026-10-14. These depth
+# independent rules catch build output wherever it is nested.
+node_modules/
+**/node_modules/
+**/dist/
+**/.vite/
+**/.next/
 
 # Test artifacts
 test-results/

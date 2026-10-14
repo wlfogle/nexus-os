@@ -2789,7 +2789,7 @@ use reqwest::Client;
 use std::collections::HashMap;
 use std::time::Duration;
 
-const PREDICT_MODEL: &str = "llama3.2:3b";
+const PREDICT_MODEL: &str = "qwen3.5:4b";
 const MAX_PREDICT_TOKENS: u32 = 40; // Short prediction — just a command, not an essay
 
 /// Predict the next / completed command.
@@ -2827,7 +2827,7 @@ pub async fn predict_command(
  }
  }
 
- // ── Stage 2: AI prediction via llama3.2:3b ───────────────────────────────────────────────
+ // ── Stage 2: AI prediction via qwen3.5:4b ───────────────────────────────────────────────
  let client = match Client::builder()
  .timeout(Duration::from_secs(8))
  .build()
@@ -2958,7 +2958,7 @@ pub struct AIConfig {
 
 /// Ranked preference list for the agent model.
 /// Priority: instruction-following reliability over raw code capability.
-/// codestral:22b is a CODE COMPLETION model — poor at tool selection rules.
+/// qwen3.5:9b is a CODE COMPLETION model — poor at tool selection rules.
 /// llama3.1:8b is an INSTRUCTION model — reliably picks the right tool.
 const AGENT_MODEL_PREFERENCES: &[&str] = &[
  "llama3.1", // PRIMARY: instruction-following, reliability

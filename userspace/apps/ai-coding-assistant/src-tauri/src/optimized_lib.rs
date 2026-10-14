@@ -51,7 +51,7 @@ static LANGUAGE_PATTERNS: Lazy<HashMap<&'static str, Vec<&'static str>>> = Lazy:
 static MODEL_SELECTION: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
     let mut models = HashMap::new();
     models.insert("rust", "codellama:7b");
-    models.insert("python", "qwen2.5-coder:7b");
+    models.insert("python", "qwen3.5:9b");
     models.insert("javascript", "codegemma:7b");
     models.insert("typescript", "codegemma:7b");
     models.insert("go", "codegemma:7b");

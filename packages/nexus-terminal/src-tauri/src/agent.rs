@@ -134,8 +134,8 @@ list_services, hardware_info, proxmox_list,
 analyze_code(path, analysis_type) — AI code review: errors|style|security|performance|cleanup|all,
 autofix_code(path, dry_run) — AI rewrites file with fixes; always dry_run=true first,
 ask_user(question, options) — show clickable buttons to the user and WAIT for their answer,
-screenshot — capture the LIVE screen and see it with llama3.2-vision:11b,
-analyze_image(path, prompt) — analyze an EXISTING image file on disk with llama3.2-vision:11b,
+screenshot — capture the LIVE screen and see it with qwen3.5:9b,
+analyze_image(path, prompt) — analyze an EXISTING image file on disk with qwen3.5:9b,
 ping_host(host, port) — REAL, unfakeable network reachability check; use for ANY "is X up/reachable" question"#;
 
 // ── Ollama native function-calling types ──────────────────────────────────────
@@ -746,7 +746,7 @@ Always call this BEFORE making destructive changes or when the user said 'scan' 
             kind: "function",
             function: ToolFunction {
                 name: "analyze_image",
-                description: "Analyze an EXISTING image file (screenshot, photo, diagram) already saved on disk. Combines llama3.2-vision:11b (layout/context) with real Tesseract OCR (exact ground-truth text) since the vision model alone can misread or hallucinate on-screen text. ALWAYS use this for paths ending in .png/.jpg/.jpeg/.gif/.webp/.bmp/.tiff/.ico — NEVER use read_file, read_files, analyze_code, or autofix_code on image files; those only handle UTF-8 text and will fail.",
+                description: "Analyze an EXISTING image file (screenshot, photo, diagram) already saved on disk. Combines qwen3.5:9b (layout/context) with real Tesseract OCR (exact ground-truth text) since the vision model alone can misread or hallucinate on-screen text. ALWAYS use this for paths ending in .png/.jpg/.jpeg/.gif/.webp/.bmp/.tiff/.ico — NEVER use read_file, read_files, analyze_code, or autofix_code on image files; those only handle UTF-8 text and will fail.",
                 parameters: serde_json::json!({
                     "type": "object",
                     "properties": {
@@ -1732,7 +1732,7 @@ async fn exec_tool(name: &str, args: &serde_json::Value, default_cwd: &str, sess
                 Ok(description) => description,
                 Err(e) => format!("ERROR: image analysis failed: {}", e),
             };
-            // llama3.2-vision:11b frequently hallucinates or misreads exact on-screen
+            // qwen3.5:9b frequently hallucinates or misreads exact on-screen
             // text in dense UI screenshots. Cross-check with real Tesseract OCR, which
             // gives exact ground-truth wording when it succeeds.
             match crate::vision_commands::ocr_extract_text(path).await {

@@ -2885,7 +2885,7 @@ async fn build_system_optimize_prompt(_original: &str) -> String {
 
 /// Replace @path/to/file or @/path/to/image.png with file content or vision analysis.
 /// Text files: inject content inline.
-/// Images (png/jpg/gif/webp/bmp): analyze with llama3.2-vision:11b and inject description.
+/// Images (png/jpg/gif/webp/bmp): analyze with qwen3.5:9b and inject description.
 /// This gives NexusTerminal the same "give me a file or picture" capability as Oz.
 async fn inject_file_references(message: &str) -> String {
     let mut result = message.to_string();
@@ -3086,7 +3086,7 @@ async fn run_cmd_capture(
 
 // ── Predictive command engine ───────────────────────────────────────
 /// Returns a predicted command completion or next command.
-/// History-first (instant), AI-enhanced (llama3.2:3b, ~500ms).
+/// History-first (instant), AI-enhanced (qwen3.5:4b, ~500ms).
 #[tauri::command]
 async fn predict_command(
     partial_input: String,

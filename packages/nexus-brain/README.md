@@ -63,10 +63,10 @@ against a 12 GB GPU. Two consequences shaped the design:
   whole bucket before the next loads, so multi-gigabyte weights are not evicted
   and reloaded per file.
 - **Escalation instead of brute force.** Cheap models take the bulk
-  (`llama3.2:3b` triage, `qwen2.5-coder:7b` for code, `qwen2.5:7b` for prose,
+  (`qwen3.5:4b` triage, `qwen3.5:9b` for code, `qwen3.5:9b` for prose,
   `moondream` for images). Only files scoring below the confidence threshold are
-  retried on `codestral:22b`, then `phi4`. Vision escalates to
-  `llama3.2-vision:11b`. All configurable in Settings.
+  retried on `qwen3.5:9b`, then `phi4`. Vision escalates to
+  `qwen3.5:9b`. All configurable in Settings.
 
 ### Safety
 
