@@ -80,6 +80,9 @@ pub const CONFIG_VERSION: u32 = 3;
 /// already run the app has a persisted `config.json`, and that file keeps
 /// pinning whatever it was written with. Without this remap the Librarian would
 /// keep requesting deleted models forever and fail on every file it routes.
+// infra-audit: ignore-start -- these names are the mapping's input data.
+// Letting the rewriter "update" them collapses each pair to new -> new, which
+// silently turns this migration into a no-op.
 pub const RETIRED_MODELS: &[(&str, &str)] = &[
     ("llama3.2:3b", "qwen3.5:4b"),
     ("qwen2.5-coder:7b", "qwen3.5:9b"),
@@ -88,6 +91,7 @@ pub const RETIRED_MODELS: &[(&str, &str)] = &[
     ("codestral:22b", "qwen3.5:9b"),
     ("phi4:latest", "qwen3.5:9b"),
 ];
+// infra-audit: ignore-end
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
@@ -319,6 +323,8 @@ mod tests {
 
     #[test]
     fn migration_repoints_retired_models() {
+        // infra-audit: ignore-start -- this fixture must keep naming the
+        // deleted models; rewriting them would make the test assert nothing.
         // A v2 config written before the 2026-10-13 prune: every slot names a
         // model that has since been deleted from the local Ollama library.
         let mut old = Config {
@@ -336,6 +342,7 @@ mod tests {
             },
             ..Config::default()
         };
+        // infra-audit: ignore-end
 
         assert!(old.migrate(), "a v2 config must report that it changed");
 

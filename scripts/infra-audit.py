@@ -224,12 +224,6 @@ class HostState:
     def ports(self) -> set[int]:
         return {l.port for l in self.listeners}
 
-    def process_for(self, port: int) -> str | None:
-        for l in self.listeners:
-            if l.port == port:
-                return l.process
-        return None
-
 
 def tcp_open(ip: str, port: int, timeout: float = TCP_TIMEOUT) -> bool:
     try:
@@ -452,13 +446,6 @@ class Finding:
         """Findings in archived repos are history, not drift."""
         return is_active(self.ref.path)
 
-    def location(self) -> str:
-        try:
-            rel = self.ref.path.relative_to(self.ref.path.parents[len(self.ref.path.parts) - 1])
-        except (ValueError, IndexError):
-            rel = self.ref.path
-        return f"{rel}:{self.ref.line}"
-
 
 def analyse(states: dict[str, HostState], refs: list[Ref]) -> list[Finding]:
     findings: list[Finding] = []
@@ -509,8 +496,34 @@ class Rewrite:
     old: str
     new: str
     why: str
-    before: str
-    after: str
+
+
+# Opt-out markers. Some source legitimately *names* retired things as data --
+# a remap table, or a test asserting that retired names do not survive. Those
+# lines must survive the rewriter, or it destroys the very mapping that makes
+# it correct. Filename-based exemption is too blunt here (`config.rs` is not a
+# name worth blanket-skipping), so the opt-out is explicit and greppable.
+IGNORE_LINE = "infra-audit: ignore"
+IGNORE_START = "infra-audit: ignore-start"
+IGNORE_END = "infra-audit: ignore-end"
+
+
+def ignored_lines(text: str) -> set[int]:
+    """1-based line numbers the rewriter must leave alone."""
+    out: set[int] = set()
+    inside = False
+    for lineno, line in enumerate(text.splitlines(), 1):
+        if IGNORE_START in line:
+            inside = True
+            out.add(lineno)
+            continue
+        if IGNORE_END in line:
+            inside = False
+            out.add(lineno)
+            continue
+        if inside or IGNORE_LINE in line:
+            out.add(lineno)
+    return out
 
 
 def _plan_line(line: str) -> tuple[str, list[tuple[str, str, str]]]:
@@ -558,15 +571,14 @@ def plan_rewrites(repos: list[Path], all_repos: bool = False) -> list[Rewrite]:
                 text = path.read_text(encoding="utf-8")
             except (OSError, UnicodeDecodeError):
                 continue
+            skip = ignored_lines(text)
             for lineno, line in enumerate(text.splitlines(), 1):
-                new_line, subs = _plan_line(line)
-                if not subs:
+                if lineno in skip:
                     continue
+                _, subs = _plan_line(line)
                 for old, new, why in subs:
                     plans.append(Rewrite(path=path, line=lineno, old=old,
-                                         new=new, why=why,
-                                         before=line.strip()[:160],
-                                         after=new_line.strip()[:160]))
+                                         new=new, why=why))
     return plans
 
 
@@ -589,9 +601,12 @@ def apply_rewrites(plans: list[Rewrite]) -> int:
         except (OSError, UnicodeDecodeError):
             continue
         had_trailing_nl = text.endswith("\n")
+        skip = ignored_lines(text)
         lines = text.splitlines()
         dirty = False
         for i, line in enumerate(lines):
+            if (i + 1) in skip:
+                continue
             new_line, subs = _plan_line(line)
             if subs and new_line != line:
                 lines[i] = new_line
