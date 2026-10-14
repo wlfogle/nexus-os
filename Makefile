@@ -40,6 +40,10 @@ LIMINE_BIN   := $(LIMINE_DIR)/bin
 # `make setup-raspi4b-qemu`).
 QEMU_RASPI4B := toolchain/qemu-9.2.0/build/qemu-system-aarch64
 
+# AArch64 binutils, for extracting the raw Linux/arm64 Image (see image-bahamut).
+OBJCOPY_ARM  := aarch64-linux-gnu-objcopy
+NM_ARM       := aarch64-linux-gnu-nm
+
 # ─── Default target ────────────────────────────────────────────────────────────
 .PHONY: all
 all: laptop tiamat bahamut
@@ -179,6 +183,41 @@ iso-bahamut: bahamut
 	    $(BUILD_DIR)/iso-bahamut \
 	    -o $(BUILD_DIR)/nexusos-bahamut.iso
 	@echo "==> $(BUILD_DIR)/nexusos-bahamut.iso ready"
+
+# ─── Raw Linux/arm64 Image (custom boot stub, no Limine) ──────────────────────
+#
+# The Limine/UEFI path above never produced serial output on AArch64 (see
+# docs/BAHAMUT_BOOT.md). kernel/src/arch/aarch64/boot.rs replaces it with the
+# Linux/arm64 kernel image boot protocol -- the same one U-Boot's `booti`, the
+# Pi firmware, and `qemu -kernel` all speak -- so no UEFI firmware or
+# bootloader is involved at all.
+#
+# `--pad-to=__kernel_end` is load-bearing, not a tidiness measure: `-O binary`
+# drops .bss because it is NOBITS, but the trampoline's page tables and boot
+# stack live there and it never zeroes them itself. Padding the flat image out
+# to __kernel_end physically materialises that range as zeroes, exactly as an
+# ELF loader would. Without it the trampoline would install page tables built
+# on top of whatever bytes happened to be in DRAM.
+.PHONY: image-bahamut
+image-bahamut: bahamut
+	@echo "==> Extracting raw Linux/arm64 Image [bahamut]"
+	@KEND=$$($(NM_ARM) $(BUILD_DIR)/nexus-kernel-bahamut | awk '/ __kernel_end$$/ {print $$1}'); \
+	 test -n "$$KEND" || { echo "ERROR: __kernel_end not defined -- check kernel/nexus-aarch64.ld"; exit 1; }; \
+	 $(OBJCOPY_ARM) -O binary --pad-to=0x$$KEND \
+	     $(BUILD_DIR)/nexus-kernel-bahamut \
+	     $(BUILD_DIR)/nexusos-bahamut.Image
+	@echo "==> $(BUILD_DIR)/nexusos-bahamut.Image ready ($$(stat -c%s $(BUILD_DIR)/nexusos-bahamut.Image) bytes)"
+
+# Direct kernel boot: no -bios, no UEFI, no Limine. QEMU loads the Image per
+# the arm64 boot protocol, generates a DTB and passes it in x0 -- precisely
+# what the trampoline expects.
+.PHONY: run-image-bahamut
+run-image-bahamut: image-bahamut
+	@echo "==> Direct kernel boot (no UEFI) [bahamut]"
+	$(QEMU_ARM) -M virt -cpu cortex-a72 -m 2G \
+	    -kernel $(BUILD_DIR)/nexusos-bahamut.Image \
+	    -serial stdio -display none \
+	    -no-reboot -no-shutdown
 
 # ─── QEMU tests ────────────────────────────────────────────────────────────────
 .PHONY: run-laptop
