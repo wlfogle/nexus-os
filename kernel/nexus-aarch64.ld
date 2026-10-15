@@ -87,6 +87,21 @@ SECTIONS {
         __ttbr1_l2 = .;
         . += 4096;
 
+        /* HHDM L1 table (Increment C3). The trampoline's TTBR1 mapping above
+         * covers only the 16 MiB kernel image, and TTBR0's identity map is
+         * Device-nGnRnE -- correct for MMIO, wrong for RAM, since Device
+         * memory forbids the unaligned accesses ordinary Rust performs and
+         * is uncached.
+         *
+         * memory::paging resolves every page-table walk through
+         * phys_to_virt(), so a direct map of physical RAM as Normal WB is a
+         * hard prerequisite for map_page(), and therefore for heap::init()
+         * and everything downstream of it. Mapped at L0[256] of TTBR1
+         * (0xffff800000000000), which is a different L0 slot from the kernel
+         * image at L0[511], so the two never collide. */
+        __ttbr1_hhdm_l1 = .;
+        . += 4096;
+
         /* Boot stack. The trampoline loads __boot_stack_top into SP *after*
          * enabling the MMU, via its high-VA literal, so these frames are never
          * aliased through both the Device identity map and the Normal kernel

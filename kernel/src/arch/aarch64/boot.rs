@@ -185,6 +185,39 @@ global_asm!(
     "cmp  x8, #8",                     // 8 * 2 MiB = 16 MiB kernel-image mapping cap
     "b.lt 3b",
 
+    // ── Build the HHDM: physical RAM, Normal WB, at 0xffff800000000000 ────
+    // Increment C3. `memory::paging` resolves every page-table walk through
+    // `phys_to_virt()`, so without a direct map of physical memory
+    // `map_page()` cannot write a table entry at all -- which blocks
+    // `heap::init()` and everything downstream of it.
+    //
+    // This cannot reuse the TTBR0 identity map: that is Device-nGnRnE, which
+    // is correct for MMIO but wrong for RAM, since Device memory forbids the
+    // unaligned accesses ordinary Rust emits and is uncached.
+    //
+    // Four 1 GiB blocks cover the low 4 GiB, spanning all of QEMU virt's RAM.
+    // L0[256] of TTBR1 is 0xffff800000000000; the kernel image lives at
+    // L0[511], so the two mappings never overlap.
+    "adrp x2, __ttbr1_l0",
+    "add  x2, x2, :lo12:__ttbr1_l0",
+    "adrp x3, __ttbr1_hhdm_l1",
+    "add  x3, x3, :lo12:__ttbr1_hhdm_l1",
+    "orr  x5, x3, #0x3",               // Table descriptor (Valid + Table)
+    "mov  x9, #256",
+    "str  x5, [x2, x9, lsl #3]",       // TTBR1 L0[256] -> HHDM L1 table
+
+    "mov  x6, #0x705",                 // AF | AttrIndx=1 (Normal) | SH=Inner | Block
+    "mov  x7, #0",                     // physical base of this block
+    "mov  x8, #0",                     // loop index / L1 slot
+    "mov  x10, #0x40000000",           // 1 GiB step (same ADD-immediate limit as above)
+    "4:",
+    "orr  x9, x7, x6",
+    "str  x9, [x3, x8, lsl #3]",
+    "add  x7, x7, x10",
+    "add  x8, x8, #1",
+    "cmp  x8, #4",                     // 4 * 1 GiB = low 4 GiB direct-mapped
+    "b.lt 4b",
+
     // ── Program TTBR0_EL1 / TTBR1_EL1 (physical addresses, PC-relative) ────
     "adrp x1, __ttbr0_l0",
     "add  x1, x1, :lo12:__ttbr0_l0",
@@ -277,6 +310,7 @@ extern "C" {
     static __ttbr1_l0: [u8; 4096];
     static __ttbr1_l1: [u8; 4096];
     static __ttbr1_l2: [u8; 4096];
+    static __ttbr1_hhdm_l1: [u8; 4096];
     static __boot_stack_top: u8;
     static __kernel_load_base: u8;
     static __kernel_end: u8;
@@ -288,6 +322,18 @@ extern "C" {
 /// fails loudly (a clear panic) instead of silently running off the mapped
 /// range and faulting on unrelated, hard-to-diagnose memory accesses.
 const TRAMPOLINE_KERNEL_MAP_CAP: u64 = 16 * 1024 * 1024;
+
+/// Base of the direct map built by the trampoline's `4:` loop (Increment C3).
+///
+/// `memory::paging::phys_to_virt` adds this to a physical address, so it is
+/// the offset the rest of the kernel must be initialised with. Chosen to sit
+/// at TTBR1 L0[256], well clear of the kernel image at L0[511].
+pub const HHDM_BASE: u64 = 0xffff_8000_0000_0000;
+
+/// How much physical memory the trampoline's direct map covers (4 * 1 GiB).
+/// Anything beyond this is not reachable through `phys_to_virt` until a
+/// later increment extends the map.
+pub const HHDM_COVERAGE: u64 = 4 * 1024 * 1024 * 1024;
 
 /// Rust continuation, entered by the trampoline above at the kernel's normal
 /// linked (high VA) address with `x0` = the DTB physical pointer, per the
@@ -320,12 +366,53 @@ extern "C" fn aarch64_boot_stub_main(dtb_phys: u64) -> ! {
         TRAMPOLINE_KERNEL_MAP_CAP,
     );
 
+    // Increment B2: which PL011 to talk to depends on the board, so the DTB
+    // has to be classified before there is any console to report it on.
+    // `detect_quiet` is the silent variant for exactly this ordering; the
+    // result is logged a few lines below, once the UART is live.
+    //
+    // The DTB pointer arrives as a *physical* address in x0 per the
+    // Linux/arm64 boot protocol, and is readable here because the
+    // trampoline's TTBR0 identity-maps the low 4 GiB.
+    let platform = crate::arch::aarch64::platform::detect_quiet(dtb_phys);
+    let (ibrd, fbrd) = crate::arch::aarch64::platform::uart_divisors(platform);
+    crate::io::uart::configure(
+        crate::arch::aarch64::platform::uart_base(platform),
+        ibrd,
+        fbrd,
+    );
+
     crate::io::init_early();
     crate::kprintln!();
+    crate::arch::aarch64::platform::log_detected();
     crate::kprintln!("[boot] AArch64 custom boot stub: EL/MMU bring-up complete, running at high VA");
     crate::kprintln!("[boot] dtb_phys           : {:#018x}", dtb_phys);
     crate::kprintln!("[boot] kernel image size  : {} KiB (cap {} KiB)",
         image_memsz / 1024, TRAMPOLINE_KERNEL_MAP_CAP / 1024);
+
+    // Prove the HHDM actually works before anything depends on it.
+    //
+    // The DTB is a known-value probe: its first four bytes are the FDT magic
+    // 0xd00dfeed, and it was just read successfully through the *identity*
+    // map during platform detection. Reading the same bytes through the
+    // direct map must therefore yield the same answer. A wrong L0 slot, a
+    // bad block descriptor or wrong memory attributes all show up here as
+    // garbage or a fault, rather than silently much later inside the first
+    // `map_page()` call.
+    if dtb_phys != 0 && dtb_phys < HHDM_COVERAGE {
+        let via_hhdm = unsafe {
+            core::ptr::read_volatile((HHDM_BASE + dtb_phys) as *const u32)
+        };
+        let ok = u32::from_be(via_hhdm) == 0xd00d_feed;
+        crate::kprintln!(
+            "[mem]  HHDM at {:#018x} covering {} GiB: DTB magic via direct map = {:#010x} ({})",
+            HHDM_BASE,
+            HHDM_COVERAGE / (1024 * 1024 * 1024),
+            u32::from_be(via_hhdm),
+            if ok { "OK" } else { "MISMATCH" },
+        );
+        assert!(ok, "aarch64 boot stub: HHDM direct map is not mapping physical memory correctly");
+    }
 
     loop {
         crate::arch::halt();

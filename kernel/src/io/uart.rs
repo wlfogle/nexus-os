@@ -1,15 +1,25 @@
 //! AArch64 PL011 UART Driver — Bahamut
 //!
-//! MMIO base address 0x09000000 — matches QEMU's `virt` machine type.
-//! Limine identity-maps low physical memory before calling _start, so
-//! physical 0x09000000 == virtual 0x09000000 during early boot.
-//! After HHDM is established, use phys_to_virt(0x09000000) if remapping.
+//! The MMIO base is **not** fixed: QEMU `virt` puts PL011 at 0x09000000,
+//! the BCM2711 (Pi 4) puts UART0 at 0xFE201000, and the baud divisors differ
+//! too because the reference clocks differ (24 MHz vs 48 MHz). Increment B2
+//! therefore configures both at runtime from
+//! `arch::aarch64::platform::{uart_base, uart_divisors}` before `init()`.
+//!
+//! Either address is reachable during early boot: the Limine path
+//! identity-maps low physical memory, and the custom boot stub's TTBR0
+//! identity-maps the low 4 GiB as Device-nGnRnE. After HHDM is established,
+//! `remap()` can move the base to a higher-half address.
 
 use core::fmt;
 use spin::Mutex;
 
-// QEMU virt machine PL011 UART
+// Default: QEMU virt machine PL011. Overridden by `configure()` once the
+// platform is known -- kept as the default so a boot path that never calls
+// `configure()` behaves exactly as it did before Increment B2.
 const UART_BASE: usize = 0x0900_0000;
+const DEFAULT_IBRD: u32 = 13;
+const DEFAULT_FBRD: u32 = 1;
 
 // PL011 register offsets (in bytes; each register is 32-bit)
 const DR:     usize = 0x000;   // Data Register
@@ -36,11 +46,13 @@ const LCR_H_FEN:    u32 = 1 << 4;      // FIFO enable
 
 struct Pl011Uart {
     base: usize,
+    ibrd: u32,
+    fbrd: u32,
 }
 
 impl Pl011Uart {
     const fn new(base: usize) -> Self {
-        Self { base }
+        Self { base, ibrd: DEFAULT_IBRD, fbrd: DEFAULT_FBRD }
     }
 
     #[inline]
@@ -53,8 +65,9 @@ impl Pl011Uart {
         core::ptr::write_volatile((self.base + offset) as *mut u32, val);
     }
 
-    /// Initialise: 115200 baud assuming a 24 MHz UART clock (QEMU default).
-    ///   IBRD = 13, FBRD = 1  →  24_000_000 / (16 × (13 + 1/64)) ≈ 115200
+    /// Initialise at 115200 baud using the divisors set by `configure()`
+    /// (defaults suit QEMU virt's 24 MHz clock; the BCM2711's 48 MHz clock
+    /// needs different ones -- see `platform::uart_divisors`).
     unsafe fn init(&self) {
         // Disable UART
         self.write_reg(CR, 0);
@@ -62,9 +75,9 @@ impl Pl011Uart {
         self.write_reg(IMSC, 0);
         // Wait for any in-progress transmission to finish
         while self.read_reg(FR) & FR_BUSY != 0 {}
-        // Baud rate: IBRD=13, FBRD=1
-        self.write_reg(IBRD, 13);
-        self.write_reg(FBRD, 1);
+        // Baud rate divisors for this board's UART reference clock
+        self.write_reg(IBRD, self.ibrd);
+        self.write_reg(FBRD, self.fbrd);
         // 8-bit, FIFO enabled, 1 stop bit, no parity
         self.write_reg(LCR_H, LCR_H_WLEN_8 | LCR_H_FEN);
         // Re-enable UART with TX + RX
@@ -115,6 +128,19 @@ impl fmt::Write for Pl011Uart {
 // ─── Singleton ───────────────────────────────────────────────────────────────
 
 static UART: Mutex<Pl011Uart> = Mutex::new(Pl011Uart::new(UART_BASE));
+
+/// Point the driver at this board's UART before `init()`.
+///
+/// Must run before any output is attempted: on a Pi 4 the default QEMU
+/// `virt` base is simply the wrong device, and writes to it are silently
+/// discarded -- which is exactly why Bahamut produced no serial output at
+/// all prior to Increment B2.
+pub fn configure(base: usize, ibrd: u32, fbrd: u32) {
+    let mut uart = UART.lock();
+    uart.base = base;
+    uart.ibrd = ibrd;
+    uart.fbrd = fbrd;
+}
 
 /// Called once during early boot.
 pub fn init() {

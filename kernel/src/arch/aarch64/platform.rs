@@ -85,14 +85,62 @@ fn decode(v: u8) -> Platform {
 /// `base` pointer elsewhere in this codebase). Caches the result: safe and
 /// cheap to call more than once. Logs the outcome either way.
 pub fn detect(dtb_ptr: u64) -> Platform {
+    let result = detect_quiet(dtb_ptr);
+    log_detected();
+    result
+}
+
+/// Detect and cache the platform **without printing anything**.
+///
+/// Increment B2: the UART base address itself depends on which board this
+/// is, so detection has to complete before there is any working console to
+/// report it on. `detect()` above keeps the original print-as-you-go
+/// behaviour for the Limine path, where the console is already up.
+pub fn detect_quiet(dtb_ptr: u64) -> Platform {
     let result = parse_root_compatible(dtb_ptr).unwrap_or(Platform::Unknown);
     DETECTED.store(encode(result), Ordering::Relaxed);
-    match result {
+    result
+}
+
+/// Report the cached detection result. Safe to call only once a console is
+/// usable -- see `detect_quiet`.
+pub fn log_detected() {
+    match current() {
         Platform::QemuVirt => crate::kprintln!("[platform] detected: QEMU virt"),
         Platform::RaspberryPi4 => crate::kprintln!("[platform] detected: real Raspberry Pi 4 (BCM2711)"),
         Platform::Unknown => crate::kprintln!("[platform] detected: unknown (no/unrecognised DTB) -- falling back to QEMU virt addresses"),
     }
-    result
+}
+
+/// PL011 UART0 MMIO base for a platform (Increment B2).
+///
+/// QEMU `virt` puts PL011 at 0x0900_0000. The BCM2711 puts UART0 at
+/// 0xFE20_1000 in the default "low peripheral" window (`arm_peri_high=0`),
+/// which is where the Pi firmware leaves it unless explicitly reconfigured.
+/// Both are inside the low 4 GiB the boot trampoline identity-maps as
+/// Device-nGnRnE, so either is reachable before the MMU is reconfigured.
+pub fn uart_base(p: Platform) -> usize {
+    match p {
+        Platform::RaspberryPi4 => 0xFE20_1000,
+        // Unknown falls back to QEMU virt, matching log_detected()'s wording.
+        Platform::QemuVirt | Platform::Unknown => 0x0900_0000,
+    }
+}
+
+/// PL011 integer/fractional baud divisors for 115200 on a platform.
+///
+/// The divisor depends on the UART reference clock, which is not the same
+/// on both boards, so a single hardcoded pair cannot be right for both:
+///   QEMU virt : 24 MHz -> 24e6 / (16 * 115200) = 13.02  -> IBRD 13, FBRD 1
+///   BCM2711   : 48 MHz -> 48e6 / (16 * 115200) = 26.04  -> IBRD 26, FBRD 3
+/// (FBRD is the fraction * 64, rounded.) QEMU ignores baud for emulated
+/// serial, but real Pi hardware does not -- a wrong divisor there is the
+/// difference between clean output and line noise.
+pub fn uart_divisors(p: Platform) -> (u32, u32) {
+    match p {
+        Platform::RaspberryPi4 => (26, 3),
+        Platform::QemuVirt | Platform::Unknown => (13, 1),
+    }
 }
 
 /// The most recently detected platform. Returns `Platform::Unknown` if
@@ -151,7 +199,8 @@ fn classify_compatible(dtb: &[u8], value_off: usize, len: usize) -> Platform {
             .map(|p| start + p)
             .unwrap_or(len);
         if let Ok(s) = core::str::from_utf8(&value[start..end]) {
-            crate::kprintln!("[platform] DTB root compatible: \"{}\"", s);
+            // Deliberately silent: Increment B2 calls this before the UART
+            // base is known, so there is no console to print to yet.
             if s == "raspberrypi,4-model-b" {
                 return Platform::RaspberryPi4;
             }
