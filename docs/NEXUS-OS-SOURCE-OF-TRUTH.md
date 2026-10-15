@@ -1,7 +1,7 @@
 # NexusOS — Source of Truth
 
 > The single **current** reference for NexusOS + the media stack. If anything
-> elsewhere disagrees with this file, **this file wins**. Last updated 2026-10-14.
+> elsewhere disagrees with this file, **this file wins**. Last updated 2026-10-15.
 > Legacy/forerunner material is labeled as such so it is never mistaken for live.
 >
 > **Measured facts live in [`INFRASTRUCTURE-STATE.md`](INFRASTRUCTURE-STATE.md),
@@ -57,6 +57,17 @@ repositories. Clone new work into the vault, never into `~`.
 - **VM-990** `192.168.12.123` — Home Assistant OS. HA web UI `:8123` → `ha.tiamat.local`. Credentials: `haos/haos`. **Critical — stop only when reducing I/O pressure.**
 - **Archer AX55 Pro** `192.168.12.254` — upstream NAT/WiFi. **DMZ → 192.168.12.222** (all inbound to OpenWrt). Built-in WireGuard VPN Server must remain **disabled** (conflicts with OpenWrt on port 51820). Still primary DHCP server for 192.168.12.0/24.
 - **Laptop** `192.168.1.188` (wired, Spectrum direct) / `192.168.12.172` (WiFi, Archer) — Pop!_OS, i9-13900HX, RTX 4080, **control center**.
+- **Laptop controller keyboard workaround (2026-10-15, X11):** the Manba One
+  exposes `Manba One BFM Keyboard` (`1949:0402`), observed holding
+  `XF86HomePage` (keycode 180) and triggering Firefox. The keyboard-only
+  `InputClass` rule is tracked at `scripts/hardware/99-manba-one-keyboard.conf`.
+  Install with `sudo install -m 0644 scripts/hardware/99-manba-one-keyboard.conf /etc/X11/xorg.conf.d/99-manba-one-keyboard.conf`.
+  Existing sessions need `xinput disable 'Manba One BFM Keyboard'`; the rule
+  takes effect on the next Xorg session and survives reboots/reconnections.
+  It does not disable the gamepad interface. Verify after reconnecting that
+  the keyboard interface is absent from `xinput list` and gamepad controls
+  still work. Remove the installed rule to undo the persistent setting, then
+  start a new Xorg session. This rule does not apply to Wayland.
 - **ISP:** Spectrum gigabit `74.134.128.100`. Archer AX55 Pro "Stella" **Router mode** `192.168.12.254` (WAN: `192.168.1.61` via Spectrum SAX1V1K at `192.168.1.1`).
 - **WireGuard server:** OpenWrt `10.92.29.1`. **Clients:** laptop `10.92.29.2`, Tiamat `10.92.29.3`, CT-300 `10.92.29.5`. **ALL clients split-tunnel** (`AllowedIPs = 10.92.29.0/24` only, no DNS override — full-tunnel was killing internet/apt). All LAN clients endpoint: `192.168.12.222:51820`. External clients: `74.134.128.100:51820` → DMZ → OpenWrt.
 - **Cockpit** (laptop localhost:9090): remote hosts configured — Tiamat `192.168.12.242` (user: cockpit), Bahamut `192.168.12.244` (user: root), CT-300 `192.168.12.30` (user: root).
