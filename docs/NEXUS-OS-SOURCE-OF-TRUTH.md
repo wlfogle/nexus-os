@@ -272,8 +272,16 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
 - **Preserved and verified:** display brightness, zram/swap, four VM sysctls,
   SSD scheduler rule, Ollama context/cache/model-store configuration, weekly
   TRIM, graphics mode and intentional service masks. Zero failed system/user
-  units. Actual battery-source transitions and reboot persistence have not
-  been tested; no reboot, package upgrade or stress test was performed.
+  units. No package upgrade or stress test was performed.
+- **Persistence verified:** synthetic `power_supply` change events left the
+  policy unchanged while the adapter still reported AC. After the subsequent
+  user-authorized reboot (19:12:43 local), a new boot ID was confirmed against
+  the saved checkpoint. All 32 governor/EPP settings, System76 active/enabled
+  state, masked/inactive competitors, turbo and 100% ceiling persisted.
+  Protected file hashes and VM sysctls also match the original backup.
+  Checkpoints: `pre-reboot-power-test.json` and `post-reboot-power-test.json`
+  in the rollback directory below. A real physical AC/battery transition
+  remains untested; synthetic events do not emulate unplugging the adapter.
 - **Rollback backup:** `/var/backups/nexus-power-20261015-190711/` contains the
   original tlp/cpufrequtils configuration plus `state.json` with service state,
   SysV runlevel links, CPU policies, brightness and preserved-setting hashes.
