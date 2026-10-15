@@ -1,0 +1,5 @@
+--- a/xstartup
++++ b/xstartup
+@@ -21 +21 @@
+-firefox-esr &
++# Start Firefox manually when needed; keep this edge host lightweight.

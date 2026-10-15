@@ -93,7 +93,8 @@ Immich `:2283`
 (native build — server/web via Node+pnpm, machine-learning via Python venv,
 core plugin via extism-js built from source since Debian 12's glibc predates
 the upstream prebuilt binary; own Postgres DB with VectorChord+pgvector,
-Redis DB index 1), flexget `:5050` (pipx venv), autobrr `:7474` (Go binary).
+Redis DB index 1), flexget `:5050` (pipx venv), autobrr `:7474` (Go binary),
+Pulse `:7655` (5.1.30; private data on a dedicated SSD-backed mount).
 Immich/flexget/autobrr were migrated 2026-08-02 from Docker containers on the
 laptop's HomeDock stack to native CT-300 services.
 
@@ -296,3 +297,49 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
   backed-up defaults, unmask the two units and restore their original
   enablement/profile from that record. Do not restore competing managers
   routinely: System76 and TLP both document that they should not run together.
+
+## 12. Tiamat and Bahamut optimization (2026-10-15)
+- Both hosts have zero failed system services and clean package dependency
+  checks. No host or guest was rebooted; no broad upgrades or guest disk
+  migrations were performed. Laptop power tuning was not copied to servers.
+- **Tiamat:** the HDD showed severe I/O pressure, with a pre-change sample
+  around 295 ms average latency. SMART passes with no pending/reallocated/
+  uncorrectable sectors; one historical SATA CRC error remains a watch item.
+  The HDD holds the pve root/thin volumes and media; the separate pve-ssd
+  thin pool had ~223 GiB almost entirely unused.
+- **Pulse storage:** hot-added CT-300 `mp2` as
+  `local-ssd:vm-300-disk-0,mp=/etc/pulse,backup=1,size=8G`.
+  `/etc/pulse` now resolves to `/dev/mapper/pve--ssd-vm--300--disk--0` (ext4).
+  Complete data/config/history were copied privately and checksum-verified;
+  SQLite checks passed on SSD. Directory mode 0700, auth-file mode 0600,
+  pulse ownership, encryption key, nodes and API tokens were preserved.
+  Active database file descriptors were verified on the SSD filesystem.
+- Guard `/etc/systemd/system/pulse.service.d/30-ssd-data.conf` requires the
+  data path to be a mountpoint; tracked at `docs/setup/pulse-ssd-data.conf`.
+  Only Pulse was paused/restarted. VM-100, VM-990 and CT-300 retained their
+  process identities throughout the successful cutover.
+- **Recovery:** the initial source-side SQLite check stalled and timed out.
+  Original data/service were restored, and the owned blocked validator was
+  terminated gracefully. The corrected cutover avoids source SQLite scans.
+  The requested local login had a genuine bcrypt mismatch; only its password
+  hash was replaced. Health, controlled login and authenticated state requests
+  now return 200; no authentication bypass, token reset or reinstallation.
+  The private temporary recovery hash was removed after validation.
+- **Backups:** Tiamat and CT-300 have root-only records in
+  `/var/backups/nexus-host-opt-20261015-3r7uxgm5-ssd/`; the container's
+  `pulse-data-hdd/` retains the pre-cutover store. Original-attempt recovery
+  records remain in `/var/backups/nexus-host-opt-20261015-3r7uxgm5/`.
+  These contain sensitive deployment data and must not be exported or committed.
+- **Bahamut:** removed only `firefox-esr &` from `/root/.vnc/xstartup` and
+  closed that browser gracefully. Browser/profile data and VNC remain intact.
+  Reproducible patch: `docs/setup/bahamut-vnc-no-browser.patch`.
+  Available RAM rose from ~331 MiB to ~1139 MiB and stayed near 1.1 GiB.
+  AdGuard, Vaultwarden, Caddy and VNC retained their PIDs; DNS and HTTP health
+  checks pass. Backup: `/var/backups/nexus-host-opt-20261015-3r7uxgm5/`.
+- **Remaining:** Tiamat's HDD latency sampled ~30–74 ms after the move, but
+  I/O pressure remains substantial and workload conditions differ, so this is
+  not a controlled performance benchmark. HDD thin-pool utilization is ~90%
+  and media filesystem utilization ~91%. Further guest storage placement on
+  SSD needs a separate migration plan. Bahamut reports historical
+  undervoltage/throttling (`0x50000`), with no current flags; check physical
+  power if it recurs. No clock/voltage/firmware or swap changes were made.

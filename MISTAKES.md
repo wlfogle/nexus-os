@@ -14,6 +14,11 @@ Do not record transient tool failures or unverified guesses.
 
 ---
 
+### [2026-10-15] Scanning SQLite on a saturated source disk during cutover
+**Mistake:** Paused Pulse and ran a full SQLite check on its HDD source; the operation exceeded the wrapper deadline and left a blocked read-only helper. The first rollback health check ran before startup was ready.
+**Root cause:** Source random-read validation competed with severe HDD I/O pressure, and terminating the wrapper did not cancel the attached helper.
+**Prevention:** Preserve the original store, cancel only owned maintenance helpers, stream copy progress, verify checksums privately, run bounded SQLite checks on the SSD copy, and wait for application readiness during rollback. Preserve the already-repaired authentication when retrying storage work.
+**Verification:** Pulse health and authenticated access succeed, database file descriptors resolve to SSD, and router/HA/container process identities remain unchanged.
 ### [2026-10-15] Assuming a package-manager name identifies its executable
 **Mistake:** Invoked `nala install` without detecting that a pip mocking tool and local Python modules shadowed the distro frontend.
 **Root cause:** PATH and Python import precedence selected unrelated or incompatible packages; dpkg also recorded Python files that were missing.
