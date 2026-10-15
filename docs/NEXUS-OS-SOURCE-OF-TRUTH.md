@@ -212,10 +212,39 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
   The separate Windows VM
   `/home/loufogle/VirtualBox VMs/Win11/Win11.vdi` allocates 20.57 GiB and is
   registered with VirtualBox; do not remove its disk directly.
-- Other review candidates: SWTOR ~62 GiB (Steam), Phantom Doctrine 24.59 GiB
+- At the initial review: SWTOR ~62 GiB (Steam), Phantom Doctrine 24.59 GiB
   (PortProton/GOG), HumanitZ 23.09 GiB (Wine), Android emulator snapshots
   8.54 GiB total, expunged trash 4.30 GiB (Windows installer files), Google
   Takeout archive 3.30 GiB and `~/disability-app-tauri.zip` 1.60 GiB.
   These are review candidates, not approved deletions. No individual game
   asset, model blob, snapshot or personal archive was removed. The Diablo
   installation does not fit in Data's current free space.
+
+## 10. Authorized cleanup and canonical Ollama store (2026-10-15)
+- **Current storage:** root has ~168 GiB available (81% used), Data ~90 GiB,
+  and the dedicated model partition ~294 GiB available (8% used).
+- **Removed with user authorization:** Xenoblade image
+  `~/.wine/drive_c/Games/Xenoblade Chronicles X - Definitive Edition/data/games/XCX_DE.nsp`
+  (13.40 GiB); both `~/Downloads/takeout-20260802T01191*.zip` archives
+  (3.30 GiB total); older TiamatsStack_Test emulator `snapshots/default_boot`
+  (2.02 GiB); local user trash including expunged files (4.30 GiB).
+  Data-volume user trash was also emptied. No emulator base disks were removed.
+- **Newest snapshot retained:** `~/.android/avd/Pixel_Tablet.avd/snapshots/default_boot`,
+  dated September 11. The older Tiamat snapshot was dated May 16.
+- **Canonical laptop Ollama model directory:**
+  `/media/loufogle/73cf9511-0af0-4ac4-9d83-ee21eb17ff5d/models`.
+  This is a separate mounted ext4 partition, not the Data partition.
+  The Ollama service already had `OLLAMA_MODELS` set to this path.
+- Compared all 11 blobs in the discovered local `/root/.ollama/models` store:
+  one identical destination blob was deduplicated; ten missing blobs were
+  transferred through temporary files and published after SHA256 verification.
+  Source hashes were checked against blob filenames; destination hashes and
+  manifest references were verified before removing local copies (10.15 GiB).
+  Imported `deepseek-coder-v2:16b` and `granite-code:latest` manifests without
+  overwriting existing tags. Ollama lists eight models; both imported models
+  pass metadata queries and their blobs are readable by the service user.
+- `/root/.ollama/models` now symlinks to the canonical store, preventing
+  duplicate root-local downloads. Metadata-only backup:
+  `/root/.ollama/models.metadata-backup-20261015-190038`.
+  Keep the model partition mounted for Ollama; no service restart or reboot
+  was required. This pass reclaimed approximately 33.2 GiB from root.
