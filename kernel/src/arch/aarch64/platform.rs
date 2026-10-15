@@ -183,6 +183,175 @@ fn cstr_at(dtb: &[u8], off: usize, limit: usize) -> Option<&str> {
     core::str::from_utf8(&slice[..end]).ok()
 }
 
+/// A physical memory region as reported by a DTB `/memory` node.
+#[derive(Clone, Copy, Debug)]
+pub struct MemoryRegion {
+    pub base: u64,
+    pub size: u64,
+}
+
+/// Validate the DTB header and return the whole blob as a slice, plus the
+/// structure- and strings-block offsets.
+///
+/// Shared by every parser here so the bounds and magic checks exist in one
+/// place. Everything after this point is safe Rust operating on a slice.
+fn dtb_slice<'a>(dtb_ptr: u64) -> Option<(&'a [u8], usize, usize)> {
+    if dtb_ptr == 0 {
+        return None;
+    }
+    let header: &[u8] = unsafe { core::slice::from_raw_parts(dtb_ptr as *const u8, 16) };
+    if be32(header, 0)? != FDT_MAGIC {
+        return None;
+    }
+    let totalsize = be32(header, 4)? as usize;
+    if totalsize == 0 || totalsize > MAX_DTB_SIZE {
+        return None;
+    }
+    let off_dt_struct = be32(header, 8)? as usize;
+    let off_dt_strings = be32(header, 12)? as usize;
+    if off_dt_struct >= totalsize || off_dt_strings >= totalsize {
+        return None;
+    }
+    let dtb: &[u8] = unsafe { core::slice::from_raw_parts(dtb_ptr as *const u8, totalsize) };
+    Some((dtb, off_dt_struct, off_dt_strings))
+}
+
+/// Read `cells` consecutive big-endian u32s as one integer.
+///
+/// Device tree addresses and sizes are variable-width: `#address-cells` and
+/// `#size-cells` say how many 32-bit cells each occupies. QEMU virt and the
+/// Pi 4 both use 2/2 (64-bit), but the spec permits 1, so this must not
+/// assume. Values wider than 64 bits are rejected rather than truncated.
+fn read_cells(dtb: &[u8], off: usize, cells: u32) -> Option<u64> {
+    if cells == 0 || cells > 2 {
+        return None;
+    }
+    let mut v = 0u64;
+    for i in 0..cells as usize {
+        v = (v << 32) | be32(dtb, off + i * 4)? as u64;
+    }
+    Some(v)
+}
+
+/// Collect the physical memory regions a DTB advertises, into `out`.
+/// Returns how many were written.
+///
+/// Increment C3. Without Limine there is no `MemmapResponse`, so the
+/// physical frame allocator has to learn the machine's RAM layout from the
+/// device tree -- the same source real Linux uses on arm64.
+///
+/// Note the caller still has to reserve whatever is already occupied: a
+/// `/memory` node describes *all* installed RAM, including the frames the
+/// running kernel and the DTB itself are sitting in. Handing this to an
+/// allocator unmodified would let it allocate the kernel out from under
+/// itself.
+pub fn memory_regions(dtb_ptr: u64, out: &mut [MemoryRegion]) -> usize {
+    let (dtb, off_dt_struct, off_dt_strings) = match dtb_slice(dtb_ptr) {
+        Some(v) => v,
+        None => return 0,
+    };
+    let totalsize = dtb.len();
+
+    // Devicetree Specification v0.4 defaults, used only if the root node
+    // omits them (neither QEMU virt nor the Pi 4 does).
+    let mut addr_cells: u32 = 2;
+    let mut size_cells: u32 = 1;
+
+    let mut depth: i32 = 0;
+    let mut in_memory = false;
+    let mut count = 0usize;
+    let mut pos = off_dt_struct;
+
+    while pos + 4 <= totalsize {
+        let tok = match be32(dtb, pos) {
+            Some(t) => t,
+            None => break,
+        };
+        pos += 4;
+        match tok {
+            FDT_BEGIN_NODE => {
+                let name_start = pos;
+                while pos < totalsize && dtb[pos] != 0 {
+                    pos += 1;
+                }
+                let name = core::str::from_utf8(&dtb[name_start..pos]).unwrap_or("");
+                pos = align4(pos + 1);
+                depth += 1;
+                // Memory nodes are children of the root, named `memory` or
+                // `memory@<address>` per the spec.
+                if depth == 2 && (name == "memory" || name.starts_with("memory@")) {
+                    in_memory = true;
+                }
+            }
+            FDT_END_NODE => {
+                depth -= 1;
+                if depth < 2 {
+                    in_memory = false;
+                }
+            }
+            FDT_PROP => {
+                if pos + 8 > totalsize {
+                    break;
+                }
+                let len = match be32(dtb, pos) {
+                    Some(l) => l as usize,
+                    None => break,
+                };
+                let nameoff = match be32(dtb, pos + 4) {
+                    Some(n) => n as usize,
+                    None => break,
+                };
+                pos += 8;
+                if pos + len > totalsize {
+                    break;
+                }
+                let name = cstr_at(dtb, off_dt_strings + nameoff, totalsize);
+
+                if depth == 1 {
+                    match name {
+                        Some("#address-cells") => {
+                            if let Some(v) = be32(dtb, pos) {
+                                addr_cells = v;
+                            }
+                        }
+                        Some("#size-cells") => {
+                            if let Some(v) = be32(dtb, pos) {
+                                size_cells = v;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+
+                if in_memory && name == Some("reg") {
+                    let pair = ((addr_cells + size_cells) as usize) * 4;
+                    if pair > 0 {
+                        let mut off = pos;
+                        while off + pair <= pos + len && count < out.len() {
+                            let base = read_cells(dtb, off, addr_cells);
+                            let size = read_cells(dtb, off + addr_cells as usize * 4, size_cells);
+                            if let (Some(base), Some(size)) = (base, size) {
+                                if size > 0 {
+                                    out[count] = MemoryRegion { base, size };
+                                    count += 1;
+                                }
+                            }
+                            off += pair;
+                        }
+                    }
+                }
+
+                pos += align4(len);
+            }
+            FDT_NOP => {}
+            FDT_END => break,
+            _ => break,
+        }
+    }
+
+    count
+}
+
 /// The `compatible` property is one or more NUL-separated strings,
 /// most-specific first (matches how the Linux kernel itself resolves
 /// `compatible`). A match on *any* of them is sufficient.

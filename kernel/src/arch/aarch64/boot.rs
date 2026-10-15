@@ -414,6 +414,28 @@ extern "C" fn aarch64_boot_stub_main(dtb_phys: u64) -> ! {
         assert!(ok, "aarch64 boot stub: HHDM direct map is not mapping physical memory correctly");
     }
 
+    // Increment C3 step 2: learn the RAM layout from the device tree, the
+    // same source Linux uses on arm64. Without Limine there is no
+    // MemmapResponse for `physical::init` to consume.
+    let mut regions = [crate::arch::aarch64::platform::MemoryRegion { base: 0, size: 0 }; 8];
+    let n = crate::arch::aarch64::platform::memory_regions(dtb_phys, &mut regions);
+    if n == 0 {
+        crate::kprintln!("[mem]  no /memory node in DTB -- cannot size physical RAM");
+    }
+    let mut total = 0u64;
+    for r in regions.iter().take(n) {
+        total += r.size;
+        crate::kprintln!(
+            "[mem]  DTB /memory: {:#018x}..{:#018x} ({} MiB)",
+            r.base,
+            r.base + r.size,
+            r.size / (1024 * 1024),
+        );
+    }
+    if n > 0 {
+        crate::kprintln!("[mem]  total RAM reported by DTB: {} MiB", total / (1024 * 1024));
+    }
+
     loop {
         crate::arch::halt();
     }
