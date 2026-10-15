@@ -195,17 +195,21 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
 - Removed only regenerable Steam shader cache (13.32 GiB) and thumbnail cache
   (0.57 GiB), with Steam confirmed stopped. Games, prefixes, saves, trash,
   archives and VM images were preserved. Shaders will regenerate as needed.
-  Root now has ~31 GiB available (97% used); Data has ~90 GiB available.
+  Cache-only cleanup raised root free space to ~31 GiB (97% used); subsequent
+  authorized Vortex removal raised it to ~135 GiB (85% used).
+  Data remains at ~90 GiB available.
 - Flatpak reports no unused runtimes in either installation; pinned runtimes
   were retained. Kept the running 7.1.1 kernel and 7.0.11 fallback.
 - Largest review candidate: Diablo IV, 162.41 GiB, in Battle.net's Steam
   prefix `~/.steam/debian-installation/steamapps/compatdata/2209283482/pfx/drive_c/Program Files (x86)/Diablo IV`.
   The non-Steam shortcut was identified as Battle.net; this is not orphaned
   shader data. Use its launcher to uninstall the game, preserving the prefix.
-- `/var/lib/libvirt/images/Vortex.qcow2` allocates 103.60 GiB (250 GiB virtual).
-  No reference was found in checked system/session VM definitions or libvirt
-  XML; absence of a reference does not establish that the data is disposable.
-  All four registered libvirt VMs were shut off. The separate Windows VM
+- **User-authorized deletion:** removed `/var/lib/libvirt/images/Vortex.qcow2`
+  and `/var/lib/libvirt/images/Vortex-NoBL.qcow2`, reclaiming 103.60 GiB.
+  Verified no open handles, references in checked system/session libvirt XML,
+  or dependencies among four other inspected QCOW backing chains before
+  deletion. All four registered libvirt VMs remain defined and shut off.
+  The separate Windows VM
   `/home/loufogle/VirtualBox VMs/Win11/Win11.vdi` allocates 20.57 GiB and is
   registered with VirtualBox; do not remove its disk directly.
 - Other review candidates: SWTOR ~62 GiB (Steam), Phantom Doctrine 24.59 GiB
@@ -213,5 +217,5 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
   8.54 GiB total, expunged trash 4.30 GiB (Windows installer files), Google
   Takeout archive 3.30 GiB and `~/disability-app-tauri.zip` 1.60 GiB.
   These are review candidates, not approved deletions. No individual game
-  asset, model blob, snapshot or personal archive was removed. Neither the
-  Diablo installation nor Vortex image fits in Data's current free space.
+  asset, model blob, snapshot or personal archive was removed. The Diablo
+  installation does not fit in Data's current free space.
