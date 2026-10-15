@@ -181,7 +181,7 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
   windowed splash test exits 0 without errors. Reproducible patch:
   `docs/setup/purpur-night-qt5.patch`; original theme file is retained as
   `Splash.qml.before-qt5-fix` beside the installed QML.
-- **Remaining, not repaired:** root is 99% used (~17 GiB available) after
+- **At the initial health scan:** root was 99% used (~17 GiB available) after
   reclaiming ~1.2 GB of package-download caches. Games, VM disks and personal
   files were not deleted or relocated. SciPy and Tornado still have missing
   distro files: their installed ESM versions are unavailable from configured
@@ -190,3 +190,28 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
   performed; Livepatch stays off. Waydroid lacks binder support because the
   running kernel has `CONFIG_ANDROID_BINDER_IPC` unset; no kernel replacement
   or reboot was attempted.
+
+## 9. Storage cleanup and review (2026-10-15)
+- Removed only regenerable Steam shader cache (13.32 GiB) and thumbnail cache
+  (0.57 GiB), with Steam confirmed stopped. Games, prefixes, saves, trash,
+  archives and VM images were preserved. Shaders will regenerate as needed.
+  Root now has ~31 GiB available (97% used); Data has ~90 GiB available.
+- Flatpak reports no unused runtimes in either installation; pinned runtimes
+  were retained. Kept the running 7.1.1 kernel and 7.0.11 fallback.
+- Largest review candidate: Diablo IV, 162.41 GiB, in Battle.net's Steam
+  prefix `~/.steam/debian-installation/steamapps/compatdata/2209283482/pfx/drive_c/Program Files (x86)/Diablo IV`.
+  The non-Steam shortcut was identified as Battle.net; this is not orphaned
+  shader data. Use its launcher to uninstall the game, preserving the prefix.
+- `/var/lib/libvirt/images/Vortex.qcow2` allocates 103.60 GiB (250 GiB virtual).
+  No reference was found in checked system/session VM definitions or libvirt
+  XML; absence of a reference does not establish that the data is disposable.
+  All four registered libvirt VMs were shut off. The separate Windows VM
+  `/home/loufogle/VirtualBox VMs/Win11/Win11.vdi` allocates 20.57 GiB and is
+  registered with VirtualBox; do not remove its disk directly.
+- Other review candidates: SWTOR ~62 GiB (Steam), Phantom Doctrine 24.59 GiB
+  (PortProton/GOG), HumanitZ 23.09 GiB (Wine), Android emulator snapshots
+  8.54 GiB total, expunged trash 4.30 GiB (Windows installer files), Google
+  Takeout archive 3.30 GiB and `~/disability-app-tauri.zip` 1.60 GiB.
+  These are review candidates, not approved deletions. No individual game
+  asset, model blob, snapshot or personal archive was removed. Neither the
+  Diablo installation nor Vortex image fits in Data's current free space.
