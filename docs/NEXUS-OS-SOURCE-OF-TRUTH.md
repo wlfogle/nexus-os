@@ -280,8 +280,15 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
   state, masked/inactive competitors, turbo and 100% ceiling persisted.
   Protected file hashes and VM sysctls also match the original backup.
   Checkpoints: `pre-reboot-power-test.json` and `post-reboot-power-test.json`
-  in the rollback directory below. A real physical AC/battery transition
-  remains untested; synthetic events do not emulate unplugging the adapter.
+  in the rollback directory below. Synthetic events do not emulate unplugging
+  the adapter; the separate physical test below covers that case.
+- **Physical AC/battery test passed:** at 19:17:52 local, AC online changed
+  from 1 to 0 and BAT0 reported Discharging; reconnect at 19:18:03 restored
+  AC online to 1 and BAT0 to Not charging at 100% capacity. Balanced stayed
+  selected throughout; all 32 policies retained `powersave` and
+  `balance_performance`, turbo remained enabled, System76 stayed active and
+  both competitors stayed masked/inactive. This verifies stable policy across
+  a real source change, not automatic switching to the Battery Life profile.
 - **Rollback backup:** `/var/backups/nexus-power-20261015-190711/` contains the
   original tlp/cpufrequtils configuration plus `state.json` with service state,
   SysV runlevel links, CPU policies, brightness and preserved-setting hashes.
