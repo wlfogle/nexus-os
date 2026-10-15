@@ -248,3 +248,36 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
   `/root/.ollama/models.metadata-backup-20261015-190038`.
   Keep the model partition mounted for Ollama; no service restart or reboot
   was required. This pass reclaimed approximately 33.2 GiB from root.
+
+## 11. Native power-policy optimization (2026-10-15)
+- **Policy owner:** `com.system76.PowerDaemon.service` remains enabled and
+  active with the Balanced profile. TLP and cpufrequtils are inactive, disabled
+  and masked; their packages were retained. The separate loadcpufreq driver
+  loader remains active and was not disabled.
+- Installed `docs/setup/99-system76-power.conf` in `/etc/tlp.d/` to set
+  `TLP_ENABLE=0`, preventing its udev, power-source and sleep hooks from
+  competing with System76. `/etc/tlp.conf` has no higher-priority active
+  TLP_ENABLE assignment. Installed `docs/setup/cpufrequtils-system76` as
+  `/etc/default/cpufrequtils` with `ENABLE="false"`.
+- **Measured result:** all 32 CPU policies consistently report intel_pstate
+  `powersave` with `balance_performance` EPP. CPU range remains 16–100%,
+  turbo enabled (`no_turbo=0`). This is System76's native Balanced behavior,
+  not a fixed low-frequency cap. No throughput improvement is claimed without
+  a representative workload benchmark.
+- System76 ignores selecting an already-active profile, so Performance then
+  Balanced was used to apply the native settings. Both commands returned a
+  nonzero SCSI power-policy error because `link_power_management_policy` is
+  absent on the exposed SCSI hosts; the CPU profile still applied and was
+  independently verified. Unsupported storage controls were not modified.
+- **Preserved and verified:** display brightness, zram/swap, four VM sysctls,
+  SSD scheduler rule, Ollama context/cache/model-store configuration, weekly
+  TRIM, graphics mode and intentional service masks. Zero failed system/user
+  units. Actual battery-source transitions and reboot persistence have not
+  been tested; no reboot, package upgrade or stress test was performed.
+- **Rollback backup:** `/var/backups/nexus-power-20261015-190711/` contains the
+  original tlp/cpufrequtils configuration plus `state.json` with service state,
+  SysV runlevel links, CPU policies, brightness and preserved-setting hashes.
+  To restore the original setup, remove the new TLP drop-in, restore the
+  backed-up defaults, unmask the two units and restore their original
+  enablement/profile from that record. Do not restore competing managers
+  routinely: System76 and TLP both document that they should not run together.

@@ -1,0 +1,4 @@
+# System76 applies the selected power profile; do not force a boot governor.
+ENABLE="false"
+# Retained for rollback; ignored while ENABLE is false.
+GOVERNOR="performance"
