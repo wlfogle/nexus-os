@@ -14,6 +14,11 @@ Do not record transient tool failures or unverified guesses.
 
 ---
 
+### [2026-10-15] Assuming a package-manager name identifies its executable
+**Mistake:** Invoked `nala install` without detecting that a pip mocking tool and local Python modules shadowed the distro frontend.
+**Root cause:** PATH and Python import precedence selected unrelated or incompatible packages; dpkg also recorded Python files that were missing.
+**Prevention:** Check executable resolution and distro package integrity first. Use the isolated launcher in `docs/setup/nala-system`, preserve the mocking tool as `nala-mock`, and respect the user's preference for interactive confirmations.
+**Verification:** Both user and sudo `nala --version` report 0.11.1 and `nala install --help` succeeds; check missing files with `dpkg --verify`.
 ### [2026-08-03] Reintroducing Docker on the laptop
 **Mistake:** Proposed or installed Docker/containerd on the Pop!_OS laptop to run a service.
 **Root cause:** Defaulted to the most common deployment pattern instead of reading the host policy. Most upstream project READMEs lead with a `docker run` one-liner, so the habit is strong.

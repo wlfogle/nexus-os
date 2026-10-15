@@ -154,3 +154,39 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
   (dry-run) → review `~/nexus-consolidate-report.md` → `--apply`.
 - Keep **this file** current when topology changes; it is the canonical reference
   to hand to anyone (or any AI) for accurate context.
+
+## 8. Laptop health repairs (2026-10-15)
+- **Validation:** system state `running`, zero failed system/user units,
+  AppArmor active, package dependency check clean, SSD SMART passed with zero
+  media errors. Current measured kernel/driver: `7.1.1-76070101-generic` /
+  NVIDIA `615.71.09`; do not downgrade to older versions mentioned in stale docs.
+- **Python/Nala:** audited 238 installed Python packages; restored 63 packages
+  with missing files (rich/typer plus 61 others). `nala` now uses an isolated
+  distro-Python launcher in both `~/.local/bin/` and `/usr/local/bin/`, tracked
+  as `docs/setup/nala-system`. The unrelated pip mocking CLI was preserved as
+  `nala-mock` in both locations. User and sudo Nala version/help checks pass.
+- **AppArmor:** `/etc/apparmor.d/browseros` is an explicitly unconfined
+  Chromium bootstrap profile requiring ABI 4.0, incompatible with parser 3.0.4.
+  A symlink in `/etc/apparmor.d/disable/browseros` skips only that profile.
+  AppArmor itself and the other profiles remain enabled.
+- **Boot rules/services:** deployed `scripts/hardware/60-io-scheduler.rules`
+  to `/etc/udev/rules.d/`; verified NVMe disks receive `none`, while partitions
+  are skipped. Restored policy masks for nvidia-powerd and acpid (including
+  its socket). Original system files are preserved in
+  `/var/backups/nexus-health-20261015-184211/`.
+- **Desktop:** installed checksum-verified official UniGetUI `2026.3.2` Debian
+  package, preserving dpkg management instead of its non-elevating `/opt`
+  tarball updater. The PurPurNight splash crash was reproduced: Qt 5 rejects
+  the versionless `import QtQuick`. Changed it to `import QtQuick 2.15`;
+  windowed splash test exits 0 without errors. Reproducible patch:
+  `docs/setup/purpur-night-qt5.patch`; original theme file is retained as
+  `Splash.qml.before-qt5-fix` beside the installed QML.
+- **Remaining, not repaired:** root is 99% used (~17 GiB available) after
+  reclaiming ~1.2 GB of package-download caches. Games, VM disks and personal
+  files were not deleted or relocated. SciPy and Tornado still have missing
+  distro files: their installed ESM versions are unavailable from configured
+  repositories. Ubuntu Pro is detached; the user has a subscription, but
+  Pop!_OS is unsupported. No downgrade or attachment was
+  performed; Livepatch stays off. Waydroid lacks binder support because the
+  running kernel has `CONFIG_ANDROID_BINDER_IPC` unset; no kernel replacement
+  or reboot was attempted.

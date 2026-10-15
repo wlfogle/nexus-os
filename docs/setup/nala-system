@@ -1,0 +1,9 @@
+#!/bin/sh
+# Keep distro Nala separate from the unrelated pip mocking tool named nala.
+exec /usr/bin/python3 -I -S -c '
+import sys
+sys.path.append("/usr/lib/python3/dist-packages")
+from nala.__main__ import main
+sys.argv[0] = "nala"
+sys.exit(main())
+' "$@"

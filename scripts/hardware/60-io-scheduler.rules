@@ -1,0 +1,12 @@
+# Apply only to disks exposing scheduler controls, never partitions/controllers.
+ACTION!="add|change", GOTO="nexus_scheduler_end"
+SUBSYSTEM!="block", GOTO="nexus_scheduler_end"
+ENV{DEVTYPE}!="disk", GOTO="nexus_scheduler_end"
+TEST!="queue/scheduler", GOTO="nexus_scheduler_end"
+
+# Use BFQ only when the running kernel advertises it for rotational disks.
+KERNEL=="sd[a-z]", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}=="*bfq*", ATTR{queue/scheduler}="bfq", ATTR{queue/read_ahead_kb}="2048"
+KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="none"
+KERNEL=="nvme*n*", ATTR{queue/scheduler}="none"
+
+LABEL="nexus_scheduler_end"
