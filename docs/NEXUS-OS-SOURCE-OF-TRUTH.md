@@ -361,3 +361,60 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
   was introduced.
 - AdGuard DNS, Vaultwarden, Caddy, VNC and Tailscale stayed active; no failed
   services. These operations did not alter Tiamat's in-progress migration.
+
+## 14. Vaultwarden HTTPS and Pulse endpoint repair (2026-10-17)
+- Vaultwarden remains on Bahamut, not Bitwarden Cloud:
+  `https://vaultwarden.lou-fogle-media-stack.duckdns.org` resolves locally to
+  `192.168.12.244`. `/alive` and `/api/config` returned 200 over verified HTTPS.
+- Caddy could not traverse root-owned mode-0700 nested certificate state.
+  Backed up its state, restored ownership of only
+  `/opt/appdata/caddy/data/caddy` and `/opt/appdata/caddy/config/caddy` to Caddy
+  without relaxing permissions, then reloaded and restarted only Caddy.
+  Renewed base/wildcard certificates expire January 15, 2027. Backup:
+  `/var/backups/nexus-caddy-tls-20261017-022622/` on Bahamut.
+  No DNS token, vault database, account or master password was reset.
+- Firefox Bitwarden has the documented managed `environment.base` set to
+  Bahamut's HTTPS URL in `/etc/firefox/policies/policies.json`, preserving
+  existing policy keys. The existing session still needed a browser restart
+  or configuration acceptance at validation; user-authenticated vault sync
+  was not verified. No live extension database was modified.
+  The requested all-browser installation/configuration remains unfinished.
+- Bahamut's Pulse agent URL was corrected from `192.168.12.251` to
+  `http://192.168.12.30:7655`, preserving its token, identity and collector flags.
+  Only that agent restarted. Backup:
+  `/var/backups/nexus-pulse-agent-endpoint-20261017-022022/`.
+  Fresh server-side reporting still needs verification.
+- Service-name credentials apply to supported application logins, not external
+  API tokens, encryption keys or an existing encrypted vault's master password.
+
+## 15. CT-300 recovery and actual storage state (2026-10-17)
+- **The root SSD migration did not complete.** Proxmox task
+  `UPID:tiamat:003EF488:0F6A9596:6AD274DD:move_volume:300:root@pam:`
+  ended with `TASK ERROR: broken pipe`. The running root remains
+  `local-lvm:vm-300-disk-0,size=64G`, mounted from
+  `/dev/mapper/pve-vm--300--disk--0` on HDD.
+  Partial destination `local-ssd:vm-300-disk-1` is not the active root.
+  Pulse's separate mp2 SSD move in section 12 did succeed.
+- Preserve the original root, partial destination and independently verified
+  20.43 GiB backup (1,212,041 archive members) under
+  `/media/loufogle/Data/Backups/Tiamat/ct300-20261015-q9l4s836/`.
+  The original has received subsequent writes: do not attach the stale SSD
+  copy or delete either volume without stopped-state reconciliation.
+  Future long maintenance needs host-side supervision and durable logs.
+- Caddy and journal-flush recovered after starting only those failed jobs;
+  Jellyfin completed its slow startup. Riven had accumulated 97 failed
+  watchdog checks with restarts every five minutes during disk-bound startup.
+  The watchdog also attempted CT starts during disk-locked maintenance.
+- Repaired and deployed the canonical watchdog with explicit maintenance and
+  Proxmox-lock guards, bounded fail-closed metadata checks, serialization,
+  15-minute startup grace, per-invocation failure counters, two consecutive
+  failures and a 30-minute restart cooldown. Auth/route/TLS check errors do
+  not trigger blind restarts. Existing timer resumed after validation.
+  Host backup: `/var/backups/nexus-watchdog-repair-20261017-031705/`.
+- Validation: 22 isolated regression tests passed; a normal live pass retained
+  Riven's PID. Authenticated `/api/v1/health`, Jellyfin `/health`, Cockpit HTTP
+  `/ping` and the CT reverse proxy returned 200. The download bridge recovered
+  on its existing timer; CT had zero failed units. No download was forced.
+  Code, installer, deploy hook and runbook are in `nexus-mediastack`.
+- Shared-HDD contention remains unresolved. This recovery did not repeat the
+  migration, reattach volumes, reboot hosts/guests or restart router/HA.

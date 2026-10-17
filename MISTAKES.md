@@ -14,6 +14,11 @@ Do not record transient tool failures or unverified guesses.
 
 ---
 
+### [2026-10-17] Treating a copied volume as a completed cutover
+**Mistake:** The client-attached CT-300 root move ended with broken pipe, while a later completion report conflicted with the live HDD root.
+**Root cause:** A destination volume's existence and an ended process do not establish successful Proxmox configuration cutover.
+**Prevention:** Supervise long maintenance on the host with durable logs, hold the watchdog throughout, and reconcile native task status, configured rootfs and live mount. Preserve both copies and account for post-copy writes before recovery.
+**Verification:** Require successful task status, matching SSD configuration/live mount and application health before claiming success or deleting the source.
 ### [2026-10-17] Misreading DietPi one-shot time synchronization
 **Mistake:** Flagged Bahamut's inactive time client and `NTP=no` as a synchronization failure before checking DietPi's scheduler.
 **Root cause:** DietPi intentionally runs daily one-shot NTP and stops the daemon after success to save resources.
