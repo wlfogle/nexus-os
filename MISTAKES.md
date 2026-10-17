@@ -14,6 +14,11 @@ Do not record transient tool failures or unverified guesses.
 
 ---
 
+### [2026-10-17] Mistaking Snap path visibility for policy access
+**Mistake:** Treated a successful `test -r` and a host-visible policy file as evidence that Brave Snap could consume managed settings.
+**Root cause:** DAC visibility did not establish AppArmor read permission; actual directory enumeration and file reads were denied, and Brave's policy log reported no file found.
+**Prevention:** Verify directory listing, file reads and the browser's loaded-policy page. If confinement blocks supported host policies, use the official extension store/settings UI instead of weakening AppArmor or editing extension databases.
+**Verification:** Confirm extension activation and the saved self-hosted URL after reloading its settings; do not claim Snap policy enforcement where none exists.
 ### [2026-10-17] Treating a copied volume as a completed cutover
 **Mistake:** The client-attached CT-300 root move ended with broken pipe, while a later completion report conflicted with the live HDD root.
 **Root cause:** A destination volume's existence and an ended process do not establish successful Proxmox configuration cutover.

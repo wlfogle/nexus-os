@@ -375,10 +375,11 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
   No DNS token, vault database, account or master password was reset.
 - Firefox Bitwarden has the documented managed `environment.base` set to
   Bahamut's HTTPS URL in `/etc/firefox/policies/policies.json`, preserving
-  existing policy keys. The existing session still needed a browser restart
-  or configuration acceptance at validation; user-authenticated vault sync
-  was not verified. No live extension database was modified.
-  The requested all-browser installation/configuration remains unfinished.
+  existing policy keys. The user-authorized session-restoring restart completed:
+  the new process loaded both the server URL and forced-install
+  policy in `about:policies`; Bitwarden remains active. Browser rollout details
+  and the Brave Snap exception are in section 16. No live extension database
+  was edited directly; user-authenticated vault sync was not attempted.
 - Bahamut's Pulse agent URL was corrected from `192.168.12.251` to
   `http://192.168.12.30:7655`, preserving its token, identity and collector flags.
   Only that agent restarted. Backup:
@@ -418,3 +419,72 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
   Code, installer, deploy hook and runbook are in `nexus-mediastack`.
 - Shared-HDD contention remains unresolved. This recovery did not repeat the
   migration, reattach volumes, reboot hosts/guests or restart router/HA.
+
+## 16. Laptop Bitwarden browser rollout (2026-10-17)
+- All six installed Linux browsers have Bitwarden 2026.10.0 installed and
+  configured for `https://vaultwarden.lou-fogle-media-stack.duckdns.org`:
+  Firefox native, Chrome Flatpak, Chromium Snap, Brave Snap, Opera Flatpak
+  and native Opera GX. Older Opera extension-version directories may remain
+  as browser-managed update artifacts; do not remove profile data manually.
+- **Firefox:** restarted through its session-restoring restart control with
+  user approval. `about:policies` shows the correct managed environment and
+  official forced-install URL; extension metadata confirms active, not
+  user-disabled or application-disabled. Existing DNS-over-HTTPS policy survived.
+- **Chrome, Chromium and both Operas:** actual profile managed-settings caches
+  contain Bahamut's public URL, not merely a policy file awaiting installation.
+  Opera GX also displayed self-hosted mode in the extension UI.
+  Chrome/Chromium/Brave store ID is `nngceckbapebfimnlniiiahkandclblb`;
+  Opera's official store ID is `ccnckbpmaceehanjmeomladnmlffdjgn`.
+- **Brave Snap exception:** its enforced AppArmor profile prevents directory
+  enumeration and reads under `/etc/brave/policies/managed`, despite host
+  visibility and mode 0644. `brave://policy/logs` confirms policies were skipped.
+  Installed from the official Chrome Web Store and configured through
+  Bitwarden's self-hosted environment UI. Reloaded the extension, reopened the
+  form and verified the exact saved Bahamut URL. This existing profile is
+  configured, but automatic installation/configuration of future Brave Snap
+  profiles is not policy-enforced. No AppArmor or sandbox restrictions changed.
+- **Reapply supported policies:** run
+  `sudo python3 scripts/setup-bitwarden-browsers.py`, then as the desktop user
+  run `python3 scripts/setup-bitwarden-browsers.py --opera-flatpak`.
+  The first command backs up and atomically merges public policy keys; it does
+  not install a browser, open a vault or configure Brave Snap's private settings.
+  For a fresh Brave Snap profile, install the official extension, choose
+  Accessing → self-hosted, enter the HTTPS URL above and Save.
+- **Policy roots:** `/etc/firefox/policies/policies.json`;
+  `/etc/opt/chrome/policies/managed`; `/etc/chromium/policies/managed`;
+  `/var/snap/chromium/current/policies/managed`;
+  `/etc/brave/policies/managed` (native Brave only);
+  `/etc/opt/opera/policies/managed`; `/etc/opt/opera-gx/policies/managed`.
+  Chromium's Snap owns revision-to-revision data migration; verify loaded
+  policies after refreshes rather than editing its read-only package files.
+- **Opera Flatpak:** added only user-level `host-etc:ro` to its existing
+  permissions. Its packaged launcher forwards JSON from host `/etc`; Flatpak
+  reserves `/etc` and cannot expose just this policy subtree. No host write
+  access or full-home permission was added. Chrome already had host-etc access.
+- **Rollback:** original policy files and created-file inventories are under
+  `/var/backups/nexus-bitwarden-20261017T044130433619Z/` and
+  `/var/backups/nexus-bitwarden-20261017T044737950828Z/`.
+  Restore prior files or remove only files marked newly created in `files.json`.
+  The previous Opera user override and its existence record are under
+  `~/.local/state/nexus-bitwarden/20261017T044738029753Z/`; restore it, or remove
+  only the newly added `host-etc:ro` permission if there was no prior override.
+  Never reset unrelated Flatpak permissions or delete extension/vault databases.
+- Test merge preservation, backups, invalid input, symlink rejection and
+  Flatpak override handling with
+  `python3 -m unittest discover -s tests -p test_bitwarden_browser_policies.py -v`.
+  All 10 tests and Flake8 checks on the installer/test files passed.
+  Reference: Bitwarden's official
+  [managed-device configuration](https://bitwarden.com/help/configure-clients-selfhost/)
+  and [extension deployment](https://bitwarden.com/help/browserext-deploy/).
+- Authentication remains user-controlled: installation/server selection is
+  verified, not vault login, unlock or encrypted synchronization.
+- **Final check, 05:31 UTC:** all 10 isolated policy/permission tests passed;
+  both Python files parse and `git diff --check` is clean. Opera's permission
+  step reports already configured without making another backup/change.
+  Laptop system/user failed-unit lists and `dpkg --audit` are empty.
+  CT-300 and Bahamut have no failed units; Bahamut Caddy, Vaultwarden and
+  Pulse agent are active. Vaultwarden `/alive` returns HTTPS 200 with TLS
+  verification result 0; Jellyfin `/health` returns 200. Riven remains active
+  on PID 6096 with `NRestarts=0`; host watchdog timer is active.
+  Root remains HDD-backed `local-lvm:vm-300-disk-0`; Pulse mp2 remains SSD-backed.
+  These checks did not retry the failed root migration or restart servers.
