@@ -14,6 +14,11 @@ Do not record transient tool failures or unverified guesses.
 
 ---
 
+### [2026-10-17] Misreading DietPi one-shot time synchronization
+**Mistake:** Flagged Bahamut's inactive time client and `NTP=no` as a synchronization failure before checking DietPi's scheduler.
+**Root cause:** DietPi intentionally runs daily one-shot NTP and stops the daemon after success to save resources.
+**Prevention:** Inspect recent sync logs, the installed DietPi helper and synchronization marker before changing time-service policy. For an immediate sync, use `dietpi-timesync 1` rather than adding an unnecessary persistent daemon.
+**Verification:** A fresh NTP exchange and marker timestamp confirm success; the daemon stopping afterward is expected and critical edge services stay active.
 ### [2026-10-15] Scanning SQLite on a saturated source disk during cutover
 **Mistake:** Paused Pulse and ran a full SQLite check on its HDD source; the operation exceeded the wrapper deadline and left a blocked read-only helper. The first rollback health check ran before startup was ready.
 **Root cause:** Source random-read validation competed with severe HDD I/O pressure, and terminating the wrapper did not cancel the attached helper.

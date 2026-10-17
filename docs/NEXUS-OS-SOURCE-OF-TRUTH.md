@@ -1,7 +1,7 @@
 # NexusOS — Source of Truth
 
 > The single **current** reference for NexusOS + the media stack. If anything
-> elsewhere disagrees with this file, **this file wins**. Last updated 2026-10-15.
+> elsewhere disagrees with this file, **this file wins**. Last updated 2026-10-17.
 > Legacy/forerunner material is labeled as such so it is never mistaken for live.
 >
 > **Measured facts live in [`INFRASTRUCTURE-STATE.md`](INFRASTRUCTURE-STATE.md),
@@ -343,3 +343,21 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
   SSD needs a separate migration plan. Bahamut reports historical
   undervoltage/throttling (`0x50000`), with no current flags; check physical
   power if it recurs. No clock/voltage/firmware or swap changes were made.
+
+## 13. Bahamut lightweight follow-up (2026-10-17 UTC)
+- Bahamut has 2 GB installed RAM (~1.8 GiB usable), not workstation resources.
+  Its VNC-session `warp-terminal` was measured using ~283% CPU. At the user's
+  request, terminated its application process gracefully and verified none
+  remained. Subsequent samples showed 99–100% CPU idle and ~1.1 GiB available.
+  This stopped the current application only; its autostart was not changed.
+- **Clock synchronized:** forced the installed DietPi workflow with
+  `/boot/dietpi/func/dietpi-timesync 1`. A fresh exchange with
+  `0.debian.pool.ntp.org` completed at 2026-10-16 22:12:24 EDT, with the
+  synchronized marker refreshed immediately afterward.
+- DietPi intentionally starts systemd-timesyncd for scheduled daily sync at
+  01:25 and stops it after success. An inactive daemon and `NTP=no` between
+  runs are not evidence of a failed clock service. Kept that low-resource
+  policy; no persistent daemon, additional package, timezone change or reboot
+  was introduced.
+- AdGuard DNS, Vaultwarden, Caddy, VNC and Tailscale stayed active; no failed
+  services. These operations did not alter Tiamat's in-progress migration.
