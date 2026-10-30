@@ -192,6 +192,33 @@ storage). **Fallbacks:** `riven-jd2-bridge` (RD → JDownloader2 → `/data/medi
   running kernel has `CONFIG_ANDROID_BINDER_IPC` unset; no kernel replacement
   or reboot was attempted.
 
+### Writer launch and inotify exhaustion (2026-10-30)
+- `libreoffice --writer` returned 1 because the existing LibreOffice process
+  was blocked on a document-recovery dialog with six entries. Brought that
+  dialog forward, privately backed up the profile, and selected **Start**,
+  never Discard. Recovery released queued Writer/Calc launches. No process
+  kill, profile reset, document deletion or forced save was used.
+- Independently confirmed inotify exhaustion: one disposable watch failed
+  with errno 28 (`ENOSPC`), despite ~154 GiB free on root. UniGetUI held
+  ~294,749 watches and FSearch ~227,712. The active limit was 524,288:
+  `/etc/sysctl.d/99-megasync-inotify-limit.conf` sorts after the existing
+  `99-inotify-watches.conf` and overrides its intended 1,048,576 value.
+- Installed `docs/setup/99-zz-nexus-inotify.conf` as
+  `/etc/sysctl.d/99-zz-nexus-inotify.conf` (0644), leaving the earlier files
+  untouched. Applied only `fs.inotify.max_user_watches=1048576`; instance
+  and event-queue limits were not changed. Live watch allocation now succeeds;
+  the installed file matches the tracked override. No reboot was performed.
+- Private rollback/profile backup:
+  `~/.local/state/nexus-writer-repair/20261030T195752Z/`.
+  To undo the watch-limit change, remove only the new override and restore
+  the prior live value from `before.json`. Do not overwrite a running Office
+  profile with the recovery backup.
+- Final normal Writer launch returned **0**, emitted no startup diagnostics,
+  and produced a visible `libreoffice-writer` window. The optional
+  `xapp-gtk3-module` package is absent and has no current repository candidate;
+  it was not installed or used to justify reinstalling LibreOffice.
+  Its warning was not the cause of the blocked document-recovery session.
+
 ## 9. Storage cleanup and review (2026-10-15)
 - Removed only regenerable Steam shader cache (13.32 GiB) and thumbnail cache
   (0.57 GiB), with Steam confirmed stopped. Games, prefixes, saves, trash,
