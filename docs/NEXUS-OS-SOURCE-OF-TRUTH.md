@@ -31,6 +31,15 @@ repositories. Clone new work into the vault, never into `~`.
 ## 1. Component hierarchy (what is current)
 - **nexus-os** — umbrella monorepo (THIS repo): AI-native Rust microkernel +
   `packages/` (apps/tools) + distro/installer. The home for your own code.
+- **epub-reference-studio** — standalone Rust/Tauri 2 EPUB **content** repair
+  app at `/media/loufogle/Data/Repos/epub-reference-studio`, not a metadata fixer.
+  Its application-menu launcher is **EPUB Reference Studio**. It scans library
+  XHTML, acquires available Gutenberg reference texts, reviews aligned changes,
+  and exports new EPUBs outside Calibre without replacing originals. Open Library
+  is a catalogue lead, not a full-text source. Local Ollama at `127.0.0.1:11434`
+  uses installed `qwen3.5:4b` for explicitly requested advisory assessments only;
+  model output cannot approve/apply repairs or substitute for an unavailable
+  reference. Source README documents build, limits, private caches and tests.
 - **nexus-mediastack** — **CURRENT** media stack: every service consolidated into
   a single LXC, **CT-300**.
 - **bulletproof-mediastack** — **FORERUNNER** (the original one-LXC-per-service
