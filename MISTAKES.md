@@ -14,6 +14,12 @@ Do not record transient tool failures or unverified guesses.
 
 ---
 
+### [2026-11-08] Treating completed Jellyfin scans as successful discovery
+**Mistake:** Tried targeted updates and a separate WWE library before extracting the exact scanner exception; neither bypassed the database failure.
+**Root cause:** Movies cleanup attempted to tombstone stale Tickle Me (1965) watch-history rows onto conflicting UserData keys. SQLite Error 19 aborted discovery even while the scheduled scan reported completion. The two WWE MP4s were readable and had valid H.264/AAC streams.
+**Prevention:** Inspect the library-operation exception first. Never clear UserData wholesale. Stop only Jellyfin, make a private SQLite backup, and scope any repair to confirmed missing items with conflicting keys. Preserve all history fields; archival keys retain the old records but are not automatic watch-state relinking.
+**Verification:** CT-300 backup and original-key manifest: `/var/backups/jellyfin-wwe-20261108T195653Z/`. Four conflicting stale rows received unique `:archived:<ItemId>` keys; all 2,716 UserData rows remained immediately after repair and SQLite quick checks passed. Restarted only Jellyfin and rescanned. Both titles now belong to Movies; the empty workaround library was removed without deleting media. Crown Jewel item `c9f18ff96b85c2dd9f5dc036a5b08b86` is 10,056.01 seconds; Countdown item `c0d45ca6d30db381d781130d53c6e3d0` is 5,841.800391 seconds. Both report direct-play/direct-stream support and served authenticated HTTP 206 video/mp4 ranges; health returned 200. No device playback was started. Restore only with Jellyfin stopped and reconcile subsequent viewing activity before using the backup.
+
 ### [2026-10-17] Mistaking Snap path visibility for policy access
 **Mistake:** Treated a successful `test -r` and a host-visible policy file as evidence that Brave Snap could consume managed settings.
 **Root cause:** DAC visibility did not establish AppArmor read permission; actual directory enumeration and file reads were denied, and Brave's policy log reported no file found.
