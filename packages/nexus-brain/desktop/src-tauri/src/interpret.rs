@@ -195,7 +195,10 @@ fn coerce(v: &serde_json::Value) -> Interpretation {
     };
     let conf = v
         .get("confidence")
-        .and_then(|x| x.as_f64().or_else(|| x.as_str().and_then(|s| s.parse().ok())))
+        .and_then(|x| {
+            x.as_f64()
+                .or_else(|| x.as_str().and_then(|s| s.parse().ok()))
+        })
         .unwrap_or(0.0) as f32;
 
     let mut it = Interpretation {
@@ -272,12 +275,7 @@ fn repo_names(conn: &Connection) -> Result<Vec<String>> {
     Ok(out)
 }
 
-async fn ask(
-    client: &Ollama,
-    model: &str,
-    job: &Job,
-    repos: &[String],
-) -> Result<Interpretation> {
+async fn ask(client: &Ollama, model: &str, job: &Job, repos: &[String]) -> Result<Interpretation> {
     let prompt = build_prompt(job, repos);
     let value = if job.class == "image" {
         let bytes = std::fs::read(&job.path)?;
@@ -286,7 +284,9 @@ async fn ask(
             .generate_json_image(model, Some(SYSTEM), &prompt, b64, 8192)
             .await?
     } else {
-        client.generate_json(model, Some(SYSTEM), &prompt, 8192).await?
+        client
+            .generate_json(model, Some(SYSTEM), &prompt, 8192)
+            .await?
     };
     Ok(coerce(&value))
 }
@@ -320,12 +320,7 @@ pub async fn run(
             // A file with no readable text cannot be judged on content.
             if job.body.trim().is_empty() && job.class != "image" {
                 let it = Interpretation {
-                    title: job
-                        .path
-                        .rsplit('/')
-                        .next()
-                        .unwrap_or_default()
-                        .to_string(),
+                    title: job.path.rsplit('/').next().unwrap_or_default().to_string(),
                     kind: "artifact".into(),
                     purpose: "No readable text could be extracted.".into(),
                     status: "reference".into(),
@@ -416,10 +411,7 @@ fn store(
             db::now(),
         ],
     )?;
-    conn.execute(
-        "UPDATE files SET stage = 3 WHERE id = ?1",
-        params![file_id],
-    )?;
+    conn.execute("UPDATE files SET stage = 3 WHERE id = ?1", params![file_id])?;
     Ok(())
 }
 
@@ -445,7 +437,14 @@ mod tests {
 
     #[test]
     fn escalation_climbs_and_terminates() {
-        let c = cfg();
+        let mut c = cfg();
+        // Exercise distinct configured tiers; installed defaults may intentionally
+        // reuse one model, in which case escalation must stop without a retry.
+        c.models.triage = "test-triage".into();
+        c.models.docs = "test-docs".into();
+        c.models.code = "test-code".into();
+        c.models.escalate = "test-escalation".into();
+        c.models.escalate_max = "test-final".into();
         assert_eq!(
             escalation_for(&c, "doc", &c.models.triage),
             Some(c.models.docs.clone())
@@ -516,8 +515,14 @@ mod tests {
 
     #[test]
     fn confidence_is_clamped_and_parses_strings() {
-        assert_eq!(coerce(&serde_json::json!({"confidence": 5.0})).confidence, 1.0);
-        assert_eq!(coerce(&serde_json::json!({"confidence": -1})).confidence, 0.0);
+        assert_eq!(
+            coerce(&serde_json::json!({"confidence": 5.0})).confidence,
+            1.0
+        );
+        assert_eq!(
+            coerce(&serde_json::json!({"confidence": -1})).confidence,
+            0.0
+        );
         assert!((coerce(&serde_json::json!({"confidence": "0.4"})).confidence - 0.4).abs() < 1e-6);
     }
 
@@ -533,5 +538,11 @@ mod tests {
     fn truncate_respects_char_boundaries() {
         let s = "aéé";
         assert!(s.starts_with(truncate(s, 2)));
+    }
+
+    #[test]
+    fn identical_escalation_target_is_not_retried() {
+        let c = cfg();
+        assert_eq!(escalation_for(&c, "code", &c.models.code), None);
     }
 }

@@ -107,7 +107,9 @@ pub fn discover(cfg: &Config) -> Vec<PathBuf> {
     let mut found: Vec<PathBuf> = Vec::new();
     let mut seen: HashSet<PathBuf> = HashSet::new();
 
-    for root in &cfg.roots {
+    let mut roots = cfg.roots.clone();
+    roots.push(cfg.vault.clone());
+    for root in &roots {
         let mut stack = vec![root.clone()];
         while let Some(dir) = stack.pop() {
             let entries = match std::fs::read_dir(&dir) {
@@ -179,18 +181,19 @@ pub fn inspect(path: &Path) -> RepoInfo {
         .unwrap_or(0);
 
     let dirty = git_lines(path, &["diff", "--name-only", "HEAD"]).len() as i64;
-    let untracked =
-        git_lines(path, &["ls-files", "--others", "--exclude-standard"]).len() as i64;
+    let untracked = git_lines(path, &["ls-files", "--others", "--exclude-standard"]).len() as i64;
     let stashes = git_lines(path, &["stash", "list"]).len() as i64;
 
     // Commits reachable from any local ref but present on no remote.
-    let unpushed = git(path, &["rev-list", "--count", "--all", "--not", "--remotes"])
-        .and_then(|s| s.parse::<i64>().ok())
-        .unwrap_or(0);
+    let unpushed = git(
+        path,
+        &["rev-list", "--count", "--all", "--not", "--remotes"],
+    )
+    .and_then(|s| s.parse::<i64>().ok())
+    .unwrap_or(0);
 
     let has_remote = remote.is_some();
-    let recoverable =
-        has_remote && unpushed == 0 && dirty == 0 && untracked == 0 && stashes == 0;
+    let recoverable = has_remote && unpushed == 0 && dirty == 0 && untracked == 0 && stashes == 0;
 
     RepoInfo {
         path: path.to_string_lossy().to_string(),
@@ -309,7 +312,9 @@ pub fn assign_files(conn: &mut Connection) -> Result<()> {
 
 /// Escape `%` and `_` so a literal path can be used in a LIKE pattern.
 fn escape_like(s: &str) -> String {
-    s.replace('\\', "\\\\").replace('%', "\\%").replace('_', "\\_")
+    s.replace('\\', "\\\\")
+        .replace('%', "\\%")
+        .replace('_', "\\_")
 }
 
 pub fn list(conn: &Connection) -> Result<Vec<RepoInfo>> {

@@ -18,7 +18,7 @@ pub type Db = Arc<Mutex<Connection>>;
 
 const SCHEMA: &str = r#"
 PRAGMA journal_mode = WAL;
-PRAGMA synchronous  = NORMAL;
+PRAGMA synchronous  = FULL;
 PRAGMA foreign_keys = ON;
 PRAGMA temp_store   = MEMORY;
 
@@ -227,11 +227,29 @@ CREATE TABLE IF NOT EXISTS meta (
 "#;
 
 pub fn open(path: &Path) -> Result<Db> {
+    crate::compare::checked_path(path, true)?;
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
+    use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
+    std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .mode(0o600)
+        .open(path)?;
+    std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))?;
     let conn = Connection::open(path)?;
     conn.execute_batch(SCHEMA)?;
+    crate::safety::schema(&conn)?;
+    if meta_get(&conn, "explicit_review_v1")?.is_none() {
+        // Old versions used the same state for human and model approvals.
+        // Their provenance cannot be distinguished, so re-review both.
+        conn.execute(
+            "UPDATE actions SET state='pending' WHERE state IN ('approved','auto')",
+            [],
+        )?;
+        meta_set(&conn, "explicit_review_v1", "1")?;
+    }
     Ok(Arc::new(Mutex::new(conn)))
 }
 
@@ -339,10 +357,8 @@ pub fn stats(conn: &Connection) -> Result<Stats> {
         files_total: one("SELECT COUNT(*) FROM files")?,
         files_present: one("SELECT COUNT(*) FROM files WHERE present = 1")?,
         scanned: one("SELECT COUNT(*) FROM files WHERE present = 1")?,
-        extracted: one(
-            "SELECT COUNT(*) FROM files
-              WHERE present = 1 AND sha256 IS NOT NULL",
-        )?,
+        extracted: one("SELECT COUNT(*) FROM files
+              WHERE present = 1 AND sha256 IS NOT NULL")?,
         with_text: one(
             "SELECT COUNT(*) FROM files f JOIN file_text t ON t.file_id = f.id
               WHERE f.present = 1",
@@ -355,18 +371,14 @@ pub fn stats(conn: &Connection) -> Result<Stats> {
             "SELECT COUNT(*) FROM interpretations i JOIN files f ON f.id = i.file_id
               WHERE f.present = 1",
         )?,
-        skipped: one(
-            "SELECT COUNT(*) FROM files
-              WHERE present = 1 AND extract_err LIKE 'skipped%'",
-        )?,
+        skipped: one("SELECT COUNT(*) FROM files
+              WHERE present = 1 AND extract_err LIKE 'skipped%'")?,
         repos: one("SELECT COUNT(*) FROM repos")?,
         notes: one("SELECT COUNT(*) FROM notes")?,
         pending_actions: one("SELECT COUNT(*) FROM actions WHERE state = 'pending'")?,
-        duplicate_groups: one(
-            "SELECT COUNT(*) FROM (SELECT sha256 FROM files
+        duplicate_groups: one("SELECT COUNT(*) FROM (SELECT sha256 FROM files
               WHERE present = 1 AND sha256 IS NOT NULL AND size > 0
-              GROUP BY sha256 HAVING COUNT(*) > 1)",
-        )?,
+              GROUP BY sha256 HAVING COUNT(*) > 1)")?,
         loose_files: one("SELECT COUNT(*) FROM files WHERE present = 1 AND repo_id IS NULL")?,
         bytes_loose: one(
             "SELECT COALESCE(SUM(size),0) FROM files WHERE present = 1 AND repo_id IS NULL",

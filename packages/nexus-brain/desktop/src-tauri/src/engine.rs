@@ -27,6 +27,7 @@ const EMBED_BATCH: i64 = 40;
 const INTERPRET_BATCH: i64 = 20;
 
 pub struct AppState {
+    pub comparison: std::sync::Mutex<crate::compare::Session>,
     pub db: Db,
     pub cfg: std::sync::Mutex<Config>,
     pub ollama: std::sync::Mutex<Ollama>,
@@ -42,6 +43,7 @@ impl AppState {
         let db = db::open(&config::state_dir().join("catalog.db"))?;
         let ollama = Ollama::new(&cfg.ollama_url);
         Ok(Self {
+            comparison: std::sync::Mutex::new(crate::compare::Session::default()),
             db,
             cfg: std::sync::Mutex::new(cfg),
             ollama: std::sync::Mutex::new(ollama),
@@ -140,7 +142,12 @@ pub async fn run_pipeline(sink: Arc<dyn ProgressSink>, state: Arc<AppState>) -> 
     //      commands from the window while a long pass is in flight.
 
     // --- repos first: file ownership feeds every later decision -------------
-    emit(&*sink, &state, "repos", "discovering git repositories".into());
+    emit(
+        &*sink,
+        &state,
+        "repos",
+        "discovering git repositories".into(),
+    );
     {
         let dbh = state.db.clone();
         let c = cfg.clone();
@@ -286,26 +293,10 @@ pub async fn run_pipeline(sink: Arc<dyn ProgressSink>, state: Arc<AppState>) -> 
             &state,
             "plan",
             format!(
-                "{} proposed ({} automatic, {} need review)",
-                p.proposed, p.auto, p.pending
+                "{} proposed ({} need explicit review)",
+                p.proposed, p.pending
             ),
         );
-
-        if p.auto > 0 {
-            let dbh = state.db.clone();
-            let plan_id = p.plan_id;
-            let a = tokio::task::spawn_blocking(move || {
-                let mut conn = dbh.lock().unwrap();
-                actions::apply(&mut conn, plan_id)
-            })
-            .await??;
-            emit(
-                &*sink,
-                &state,
-                "apply",
-                format!("{} applied, {} failed", a.applied, a.failed),
-            );
-        }
     }
 
     finish(&*sink, &state, "complete".into());

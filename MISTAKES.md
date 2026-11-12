@@ -14,6 +14,18 @@ Do not record transient tool failures or unverified guesses.
 
 ---
 
+### [2026-11-12] Designing a replacement before studying existing packages
+**Mistake:** Proposed a new reconciliation app before finding the existing Librarian, then treated stale scripts as archive-only and briefly introduced a date cutoff.
+**Root cause:** Inventoried filenames before reading the umbrella source of truth and package catalog; conflated outdated implementation with an obsolete idea.
+**Prevention:** Study home material alongside current repositories and their history first. Extend existing tools, recover useful behavior separately from reference preservation, and never classify by age alone.
+**Verification:** Librarian comparisons cite current repository files, keep ambiguous findings unresolved, and require human approval for all moves. Historical originals remain reference material.
+
+### [2026-11-12] Structured Ollama responses consumed by thinking
+**Mistake:** A real Librarian idea assessment received no final JSON with the existing 700-token request budget.
+**Root cause:** Installed `qwen3.5:9b` advertises thinking enabled by default; reasoning and the final response are separate fields.
+**Prevention:** Inspect `/api/show` thinking controls. Explicitly request `think:false` for bounded structured classification and allow enough final-response tokens; do not parse or expose reasoning as the answer.
+**Verification:** Request serialization includes `think:false`; exercise the real local assessment path, not only JSON parser fixtures.
+
 ### [2026-11-08] Treating completed Jellyfin scans as successful discovery
 **Mistake:** Tried targeted updates and a separate WWE library before extracting the exact scanner exception; neither bypassed the database failure.
 **Root cause:** Movies cleanup attempted to tombstone stale Tickle Me (1965) watch-history rows onto conflicting UserData keys. SQLite Error 19 aborted discovery even while the scheduled scan reported completion. The two WWE MP4s were readable and had valid H.264/AAC streams.

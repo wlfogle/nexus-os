@@ -141,8 +141,6 @@ export interface Config {
   ollama_url: string;
   models: ModelRouting;
   max_read_bytes: number;
-  auto_apply_above: number;
-  stale_days: number;
   interpret_concurrency: number;
 }
 
@@ -192,6 +190,7 @@ export const listHistory = (limit = 200) =>
 export const decideAction = (actionId: number, approve: boolean) =>
   invoke<void>("decide_action", { actionId, approve });
 export const applyApproved = () => invoke<ApplyReport>("apply_approved");
+export const exportActionBackup = (actionId: number) => invoke<string>("export_action_backup", { actionId });
 export const undoPlan = (planId: number) =>
   invoke<ApplyReport>("undo_plan", { planId });
 

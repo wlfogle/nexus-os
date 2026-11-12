@@ -71,7 +71,7 @@ impl Default for ModelRouting {
 /// Bump when the built-in prune lists or model routing change, so an existing
 /// `config.json` picks up the new entries instead of silently pinning the old
 /// ones.
-pub const CONFIG_VERSION: u32 = 3;
+pub const CONFIG_VERSION: u32 = 4;
 
 /// Models removed from the local Ollama library on 2026-10-13, mapped to the
 /// model that replaced them.
@@ -115,10 +115,6 @@ pub struct Config {
     pub models: ModelRouting,
     /// Files larger than this are catalogued but never read for content.
     pub max_read_bytes: u64,
-    /// Actions at or above this confidence are applied without asking.
-    pub auto_apply_above: f32,
-    /// Age in days past which unreferenced material is considered stale.
-    pub stale_days: i64,
     /// Parallel interpretation requests in flight against Ollama.
     pub interpret_concurrency: usize,
 }
@@ -131,32 +127,91 @@ impl Default for Config {
             roots: vec![h.clone()],
             prune_names: [
                 // dependency and tool caches
-                ".cache", ".npm", ".gradle", ".nvm", ".bun", ".yarn", ".m2",
-                ".ivy2", ".rustup", ".cargo", ".pub-cache", "node_modules",
-                "site-packages", "dist-packages", "__pycache__", ".venv",
-                "venv", ".tox", ".mypy_cache", ".pytest_cache", ".ruff_cache",
+                ".cache",
+                ".npm",
+                ".gradle",
+                ".nvm",
+                ".bun",
+                ".yarn",
+                ".m2",
+                ".ivy2",
+                ".rustup",
+                ".cargo",
+                ".pub-cache",
+                "node_modules",
+                "site-packages",
+                "dist-packages",
+                "__pycache__",
+                ".venv",
+                "venv",
+                ".tox",
+                ".mypy_cache",
+                ".pytest_cache",
+                ".ruff_cache",
                 // build output
-                "target", "build", "dist", "_internal", ".next",
-                ".parcel-cache", "vendor",
+                "target",
+                "build",
+                "dist",
+                "_internal",
+                ".next",
+                ".parcel-cache",
+                "vendor",
                 // large opaque application state
-                ".steam", ".var", ".wine", ".wineprefixes", ".PlayOnLinux",
-                ".Genymobile", ".android", "Android", "snap",
-                "VirtualBox VMs", "redroid-data", ".redroid-data", ".skiko",
-                ".qt", ".vnc", ".rpmdb", ".visicut", ".insomniac", "Faugus",
+                ".steam",
+                ".var",
+                ".wine",
+                ".wineprefixes",
+                ".PlayOnLinux",
+                ".Genymobile",
+                ".android",
+                "Android",
+                "snap",
+                "VirtualBox VMs",
+                "redroid-data",
+                ".redroid-data",
+                ".skiko",
+                ".qt",
+                ".vnc",
+                ".rpmdb",
+                ".visicut",
+                ".insomniac",
+                "Faugus",
                 // browser and editor profiles
-                ".mozilla", ".waterfox", ".thunderbird", ".tor-browser",
-                ".vscode", ".vscode-shared", ".vscode-react-native",
+                ".mozilla",
+                ".waterfox",
+                ".thunderbird",
+                ".tor-browser",
+                ".vscode",
+                ".vscode-shared",
+                ".vscode-react-native",
                 // Per-user application state. `.local/share` alone contributes
                 // six figures of icon themes, shell completions, flatpak
                 // appstream data and shader caches -- none of it authored by
                 // the user, all of it noise in a catalogue of ideas.
-                ".local", ".config", ".icons", ".themes", ".fonts",
-                ".thumbnails", ".pulse", ".dbus", ".gvfs", ".java",
+                ".local",
+                ".config",
+                ".icons",
+                ".themes",
+                ".fonts",
+                ".thumbnails",
+                ".pulse",
+                ".dbus",
+                ".gvfs",
+                ".java",
                 // Credentials. Never walked, never read, never sent anywhere.
-                ".ssh", ".gnupg", ".pki", ".aws", ".kube", ".docker",
-                ".password-store", ".secrets", ".netrc",
+                ".ssh",
+                ".gnupg",
+                ".pki",
+                ".aws",
+                ".kube",
+                ".docker",
+                ".password-store",
+                ".secrets",
+                ".netrc",
                 // our own state, and git internals
-                ".warp", ".xmltv", ".git",
+                ".warp",
+                ".xmltv",
+                ".git",
             ]
             .iter()
             .map(|s| s.to_string())
@@ -166,36 +221,72 @@ impl Default for Config {
                 .map(|s| s.to_string())
                 .collect(),
             vault: PathBuf::from("/media/loufogle/Data/Repos"),
-            monorepo: h.join("nexus-os"),
+            monorepo: PathBuf::from("/media/loufogle/Data/Repos/nexus-os"),
             library: h.join("Library/Librarian"),
             ollama_url: "http://127.0.0.1:11434".into(),
             models: ModelRouting::default(),
             max_read_bytes: 8 << 20,
-            auto_apply_above: 0.85,
-            stale_days: 180,
             interpret_concurrency: 4,
         }
     }
 }
 
 impl Config {
+    pub fn validate(&self) -> Result<()> {
+        use anyhow::bail;
+        if self.roots.is_empty()
+            || self.max_read_bytes == 0
+            || self.max_read_bytes > 64 * 1024 * 1024
+            || self.interpret_concurrency == 0
+            || self.interpret_concurrency > 16
+        {
+            bail!("Invalid scan roots or resource limits");
+        }
+        for root in &self.roots {
+            if root == Path::new("/") {
+                bail!("Filesystem root is not a home/project scan root");
+            }
+            crate::compare::checked_path(root, false)?;
+        }
+        crate::compare::checked_path(&self.vault, false)?;
+        crate::compare::checked_path(&self.library, true)?;
+        if self.library == Path::new("/")
+            || self.roots.contains(&self.library)
+            || self.library == self.vault
+        {
+            bail!("Managed library must be separate from source roots and repository vault");
+        }
+        let url = reqwest::Url::parse(&self.ollama_url)?;
+        if url.scheme() != "http"
+            || !matches!(url.host_str(), Some("localhost" | "127.0.0.1" | "[::1]"))
+            || !url.username().is_empty()
+            || url.password().is_some()
+        {
+            bail!("Ollama must use a loopback HTTP endpoint; remote file uploads are disabled");
+        }
+        Ok(())
+    }
+
     pub fn path() -> PathBuf {
         state_dir().join("config.json")
     }
 
     pub fn load() -> Result<Self> {
         let p = Self::path();
+        crate::compare::checked_path(&p, true)?;
         if !p.exists() {
             let c = Self::default();
             c.save()?;
             return Ok(c);
         }
-        let raw = std::fs::read_to_string(&p)
-            .with_context(|| format!("reading {}", p.display()))?;
-        let mut cfg: Self = serde_json::from_str(&raw).unwrap_or_default();
+        let raw =
+            std::fs::read_to_string(&p).with_context(|| format!("reading {}", p.display()))?;
+        let mut cfg: Self = serde_json::from_str(&raw)
+            .context("Invalid Librarian configuration; refusing to silently replace it")?;
         if cfg.migrate() {
             cfg.save()?;
         }
+        cfg.validate()?;
         Ok(cfg)
     }
 
@@ -213,6 +304,9 @@ impl Config {
             return false;
         }
         let defaults = Self::default();
+        if self.monorepo == home().join("nexus-os") {
+            self.monorepo = self.vault.join("nexus-os");
+        }
 
         let merge = |current: &mut Vec<String>, incoming: &[String]| {
             for item in incoming {
@@ -251,11 +345,22 @@ impl Config {
     }
 
     pub fn save(&self) -> Result<()> {
+        self.validate()?;
         let p = Self::path();
         if let Some(parent) = p.parent() {
             std::fs::create_dir_all(parent)?;
         }
-        std::fs::write(&p, serde_json::to_vec_pretty(self)?)?;
+        use std::io::Write;
+        use std::os::unix::fs::OpenOptionsExt;
+        let temp = p.with_extension("json.new");
+        let mut file = std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .mode(0o600)
+            .open(&temp)?;
+        file.write_all(&serde_json::to_vec_pretty(self)?)?;
+        file.sync_all()?;
+        std::fs::rename(temp, p)?;
         Ok(())
     }
 
@@ -283,7 +388,11 @@ impl Config {
     }
 
     pub fn ensure_dirs(&self) -> Result<()> {
+        crate::compare::checked_path(&state_dir(), true)?;
+        crate::compare::checked_path(&self.library, true)?;
+        use std::os::unix::fs::PermissionsExt;
         std::fs::create_dir_all(state_dir())?;
+        std::fs::set_permissions(state_dir(), std::fs::Permissions::from_mode(0o700))?;
         for (_, p) in self.library_buckets() {
             std::fs::create_dir_all(&p)?;
         }
@@ -348,9 +457,13 @@ mod tests {
 
         for (retired, _) in super::RETIRED_MODELS {
             for slot in [
-                &old.models.triage, &old.models.code, &old.models.docs,
-                &old.models.vision, &old.models.vision_escalate,
-                &old.models.escalate, &old.models.escalate_max,
+                &old.models.triage,
+                &old.models.code,
+                &old.models.docs,
+                &old.models.vision,
+                &old.models.vision_escalate,
+                &old.models.escalate,
+                &old.models.escalate_max,
             ] {
                 assert_ne!(
                     slot, retired,

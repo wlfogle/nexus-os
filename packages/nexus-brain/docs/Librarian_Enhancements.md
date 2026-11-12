@@ -1,5 +1,10 @@
 # Ecosystem Librarian: Advanced Enhancements & Optimization Blueprint
 
+> Historical proposals, not an implementation checklist or current policy.
+> `../README.md` describes the actual implementation. There is no timed purge,
+> date-based staleness rule, automatic reference rewriting or whole-plan atomicity
+> guarantee. Historical originals are preserved; approvals are explicit.
+
 This document aggregates the architectural, operational, and safety enhancements designed to transform your self-hosted "Librarian Janitor" into a professional-grade, repo-aware ecosystem organizer for your Pop!_OS workstation.
 
 ---

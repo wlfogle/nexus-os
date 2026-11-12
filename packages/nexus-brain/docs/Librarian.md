@@ -1,5 +1,11 @@
 # Librarian — architecture and defect history
 
+> Current reconciliation behavior is documented in `../README.md`, including
+> `compare.rs`, `recovery.rs`, `safety.rs` and the **Compare & recover ideas** view.
+> There is no age cutoff or confidence-based automatic approval. The historical
+> pipeline description below predates the 2026-11-12 review-only safety changes;
+> its auto-apply/rename behavior is no longer current.
+
 > Phase 2 of `nexus-brain`. Where Phase 1 (`nexus-brain.py`) captures *new*
 > thoughts, Librarian recovers the ones already scattered across the disk: it
 > reads every file, has a local model decide what it actually is, and files it.

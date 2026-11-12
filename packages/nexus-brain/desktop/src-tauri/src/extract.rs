@@ -56,7 +56,9 @@ fn looks_textual(bytes: &[u8]) -> bool {
     }
     let printable = sample
         .iter()
-        .filter(|&&b| b == b'\n' || b == b'\r' || b == b'\t' || (0x20..0x7f).contains(&b) || b >= 0x80)
+        .filter(|&&b| {
+            b == b'\n' || b == b'\r' || b == b'\t' || (0x20..0x7f).contains(&b) || b >= 0x80
+        })
         .count();
     printable * 100 / sample.len() >= 85
 }
@@ -85,7 +87,10 @@ fn run_capture(cmd: &str, args: &[&str]) -> Option<String> {
 
 fn pdf_text(path: &Path) -> Option<String> {
     if have("pdftotext") {
-        if let Some(t) = run_capture("pdftotext", &["-q", "-layout", &path.to_string_lossy(), "-"]) {
+        if let Some(t) = run_capture(
+            "pdftotext",
+            &["-q", "-layout", &path.to_string_lossy(), "-"],
+        ) {
             return Some(t);
         }
     }
@@ -112,8 +117,7 @@ fn image_text(path: &Path) -> Option<String> {
 
 /// Case-insensitive ASCII prefix test on a byte slice.
 fn starts_with_ci(hay: &[u8], needle: &[u8]) -> bool {
-    hay.len() >= needle.len()
-        && hay[..needle.len()].eq_ignore_ascii_case(needle)
+    hay.len() >= needle.len() && hay[..needle.len()].eq_ignore_ascii_case(needle)
 }
 
 /// Find the next case-insensitive occurrence of `needle` in `hay`.
@@ -194,7 +198,11 @@ pub fn text_of(path: &Path, class: &str) -> Result<Option<String>, String> {
                 return Ok(None);
             }
             let raw = String::from_utf8_lossy(&bytes).to_string();
-            let text = if class == "web" { html_to_text(&raw) } else { raw };
+            let text = if class == "web" {
+                html_to_text(&raw)
+            } else {
+                raw
+            };
             Ok(Some(text))
         }
     }
@@ -230,7 +238,10 @@ pub fn run(conn: &mut Connection, batch: &[(i64, String, String, i64)]) -> Resul
 
     for (id, path_s, class, _size) in batch {
         let p = Path::new(path_s);
-        if !p.is_file() {
+        if !p.is_file()
+            || crate::compare::checked_path(p, false).is_err()
+            || crate::compare::secret_path(p)
+        {
             results.push(Done {
                 id: *id,
                 sha: None,
@@ -242,10 +253,17 @@ pub fn run(conn: &mut Connection, batch: &[(i64, String, String, i64)]) -> Resul
             continue;
         }
         let sha = sha256_file(p);
-        let (text, err) = match text_of(p, class) {
+        let (mut text, mut err) = match text_of(p, class) {
             Ok(t) => (t, None),
             Err(e) => (None, Some(e)),
         };
+        if text
+            .as_ref()
+            .is_some_and(|body| crate::compare::secret_text(body))
+        {
+            text = None;
+            err = Some("skipped: sensitive content".into());
+        }
         let name = p
             .file_name()
             .map(|s| s.to_string_lossy().to_string())
@@ -263,20 +281,18 @@ pub fn run(conn: &mut Connection, batch: &[(i64, String, String, i64)]) -> Resul
     let tx = conn.transaction()?;
     {
         let mut upd = tx.prepare(
-            "UPDATE files SET sha256 = ?2, text_len = ?3, extract_err = ?4, stage = 1
+            "UPDATE files SET sha256 = ?2, text_len = ?3, extract_err = ?4,
+             stage = CASE WHEN ?4 = 'skipped: sensitive content' THEN 3 ELSE 1 END
              WHERE id = ?1",
         )?;
         let mut put_text = tx.prepare(
             "INSERT INTO file_text(file_id, body) VALUES (?1, ?2)
              ON CONFLICT(file_id) DO UPDATE SET body = excluded.body",
         )?;
-        let mut clear_fts_map =
-            tx.prepare("DELETE FROM fts_map WHERE file_id = ?1")?;
-        let mut put_fts = tx.prepare(
-            "INSERT INTO files_fts(rowid, path, name, body) VALUES (?1, ?2, ?3, ?4)",
-        )?;
-        let mut map_fts =
-            tx.prepare("INSERT INTO fts_map(rowid, file_id) VALUES (?1, ?2)")?;
+        let mut clear_fts_map = tx.prepare("DELETE FROM fts_map WHERE file_id = ?1")?;
+        let mut put_fts =
+            tx.prepare("INSERT INTO files_fts(rowid, path, name, body) VALUES (?1, ?2, ?3, ?4)")?;
+        let mut map_fts = tx.prepare("INSERT INTO fts_map(rowid, file_id) VALUES (?1, ?2)")?;
 
         for d in &results {
             let body = d.text.as_ref().map(|t| truncate_chars(t, MAX_TEXT));
@@ -315,7 +331,9 @@ pub fn skip_unreadable(conn: &Connection, max_bytes: i64) -> Result<usize> {
 }
 
 /// Groups of files whose bytes are identical.
-pub fn duplicate_groups(conn: &Connection, limit: i64) -> Result<Vec<(String, i64, i64, Vec<String>)>> {
+pub type DuplicateGroup = (String, i64, i64, Vec<String>);
+
+pub fn duplicate_groups(conn: &Connection, limit: i64) -> Result<Vec<DuplicateGroup>> {
     let mut q = conn.prepare(
         "SELECT sha256, COUNT(*) n, MAX(size) sz
            FROM files
@@ -329,9 +347,8 @@ pub fn duplicate_groups(conn: &Connection, limit: i64) -> Result<Vec<(String, i6
         .collect::<std::result::Result<_, _>>()?;
 
     let mut out = Vec::new();
-    let mut members = conn.prepare(
-        "SELECT path FROM files WHERE present = 1 AND sha256 = ?1 ORDER BY path",
-    )?;
+    let mut members =
+        conn.prepare("SELECT path FROM files WHERE present = 1 AND sha256 = ?1 ORDER BY path")?;
     for (sha, n, sz) in heads {
         let paths: Vec<String> = members
             .query_map(params![sha], |r| r.get(0))?

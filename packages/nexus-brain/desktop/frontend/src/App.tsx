@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as api from "./api";
+import Comparison from "./Comparison";
 import type {
   ActionRow,
   CatalogRow,
@@ -14,6 +15,7 @@ import type {
 } from "./api";
 
 type View =
+  | "comparison"
   | "dashboard"
   | "catalog"
   | "review"
@@ -25,6 +27,7 @@ type View =
   | "settings";
 
 const VIEWS: { id: View; label: string }[] = [
+  { id: "comparison", label: "Compare & recover ideas" },
   { id: "dashboard", label: "Dashboard" },
   { id: "search", label: "Search" },
   { id: "catalog", label: "Catalog" },
@@ -39,7 +42,7 @@ const VIEWS: { id: View; label: string }[] = [
 /* ------------------------------------------------------------------ shell */
 
 export default function App() {
-  const [view, setView] = useState<View>("dashboard");
+  const [view, setView] = useState<View>("comparison");
   const [stats, setStats] = useState<Stats | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [healthInfo, setHealthInfo] = useState<Health | null>(null);
@@ -137,7 +140,7 @@ export default function App() {
             </span>
           )}
           <span className="spacer" />
-          {running ? (
+          {view !== "comparison" && (running ? (
             <button className="btn danger" onClick={stop}>
               Pause
             </button>
@@ -145,12 +148,13 @@ export default function App() {
             <button className="btn primary" onClick={start}>
               Run pipeline
             </button>
-          )}
+          ))}
         </header>
 
         <div className="content">
           {error && <div className="err">{error}</div>}
           {view === "dashboard" && <Dashboard stats={stats} health={healthInfo} />}
+          {view === "comparison" && <Comparison />}
           {view === "search" && <Search />}
           {view === "catalog" && <Catalog />}
           {view === "review" && <Review onChange={refreshStats} />}
@@ -483,6 +487,7 @@ function Review({ onChange }: { onChange: () => void }) {
   };
 
   const applyAll = async () => {
+    if (!window.confirm("Apply only the actions you explicitly approved? Originals will move to the displayed destinations.")) return;
     setBusy(true);
     try {
       const r = await api.applyApproved();
@@ -501,8 +506,8 @@ function Review({ onChange }: { onChange: () => void }) {
     <>
       <div className="filters">
         <span className="muted small">
-          {rows.length} action{rows.length === 1 ? "" : "s"} the model was not
-          confident enough to apply on its own
+          {rows.length} action{rows.length === 1 ? "" : "s"} awaiting your explicit review.
+          Model confidence never authorizes a move.
         </span>
         <span className="spacer" />
         <button className="btn primary" onClick={applyAll} disabled={busy}>
@@ -779,6 +784,12 @@ function History() {
                       </td>
                       <td style={{ width: 120 }}>
                         <span className="tag">{a.category}</span>
+                        <div className="small">{a.state}</div>
+                        {a.error && <div className="err">{a.error}</div>}
+                        <button className="btn tiny" onClick={async () => {
+                          try { alert(`Private safety backup: ${await api.exportActionBackup(a.id)}`); }
+                          catch (e) { setErr(String(e)); }
+                        }}>Export backup</button>
                       </td>
                     </tr>
                   ))}
@@ -899,23 +910,7 @@ function Settings() {
 
       <div className="section">
         <h2>Behaviour</h2>
-        <div className="field">
-          <label>
-            Apply automatically at or above confidence{" "}
-            <strong>{cfg.auto_apply_above.toFixed(2)}</strong> — anything lower
-            waits in Review
-          </label>
-          <input
-            type="range"
-            min={0.5}
-            max={1}
-            step={0.05}
-            value={cfg.auto_apply_above}
-            onChange={(e) =>
-              setCfg({ ...cfg, auto_apply_above: Number(e.target.value) })
-            }
-          />
-        </div>
+        <p className="muted">No date cutoff. All filesystem changes require explicit review.</p>
         <div className="field">
           <label>Scan roots</label>
           <input

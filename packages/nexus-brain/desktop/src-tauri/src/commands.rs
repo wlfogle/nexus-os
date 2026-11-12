@@ -21,6 +21,242 @@ fn err<E: std::fmt::Display>(e: E) -> String {
     e.to_string()
 }
 
+#[tauri::command]
+pub fn export_action_backup(state: State<'_, Arc<AppState>>, action_id: i64) -> R<String> {
+    let conn = state.db.lock().map_err(err)?;
+    let snapshot = crate::safety::load(&conn, action_id).map_err(err)?;
+    let bytes: Vec<u8> = conn
+        .query_row(
+            "SELECT backup FROM action_snapshots WHERE action_id=?1",
+            rusqlite::params![action_id],
+            |r| r.get(0),
+        )
+        .map_err(err)?;
+    if crate::compare::hash(&bytes) != snapshot.sha256 {
+        return Err("Backup checksum mismatch".into());
+    }
+    let path = crate::config::state_dir().join(format!(
+        "safety-backup-{action_id}-{}.bin",
+        chrono::Utc::now().format("%Y%m%dT%H%M%S%.fZ")
+    ));
+    crate::compare::checked_path(&path, true).map_err(err)?;
+    use std::io::Write;
+    use std::os::unix::fs::OpenOptionsExt;
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(&path)
+        .map_err(err)?;
+    file.write_all(&bytes).map_err(err)?;
+    file.sync_all().map_err(err)?;
+    Ok(path.display().to_string())
+}
+
+#[tauri::command]
+pub fn saved_comparison_reports() -> R<Vec<String>> {
+    let root = crate::config::state_dir();
+    let mut paths: Vec<_> = std::fs::read_dir(&root)
+        .map_err(err)?
+        .filter_map(Result::ok)
+        .filter(|e| {
+            e.file_name()
+                .to_str()
+                .is_some_and(|n| n.starts_with("comparison-") && n.ends_with(".json"))
+                && e.file_type().is_ok_and(|t| t.is_file())
+        })
+        .collect();
+    paths.sort_by_key(|e| std::cmp::Reverse(e.metadata().and_then(|m| m.modified()).ok()));
+    Ok(paths
+        .into_iter()
+        .take(100)
+        .map(|e| e.path().display().to_string())
+        .collect())
+}
+
+#[tauri::command]
+pub fn save_comparison_report(state: State<'_, Arc<AppState>>) -> R<String> {
+    let session = state.comparison.lock().map_err(err)?;
+    if session.running {
+        return Err("Wait for comparison completion".into());
+    }
+    let report = session.report.as_ref().ok_or("No report to save")?;
+    let path = crate::config::state_dir().join(format!(
+        "comparison-{}.json",
+        chrono::Utc::now().format("%Y%m%dT%H%M%S%.fZ")
+    ));
+    crate::compare::checked_path(&path, true).map_err(err)?;
+    use std::os::unix::fs::OpenOptionsExt;
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(&path)
+        .map_err(err)?;
+    serde_json::to_writer_pretty(&mut file, report).map_err(err)?;
+    file.sync_all().map_err(err)?;
+    Ok(path.display().to_string())
+}
+
+#[tauri::command]
+pub fn start_comparison(
+    state: State<'_, Arc<AppState>>,
+    options: crate::compare::Options,
+) -> R<()> {
+    let st = state.inner().clone();
+    let cancel = {
+        let mut session = st.comparison.lock().map_err(err)?;
+        if session.running {
+            return Err("A comparison is already running".into());
+        }
+        *session = crate::compare::Session::default();
+        session.running = true;
+        session.cancel.clone()
+    };
+    let cfg = st.config();
+    tauri::async_runtime::spawn_blocking(move || {
+        let result = crate::compare::run(&cfg, &options, &cancel, |progress| {
+            if let Ok(mut session) = st.comparison.lock() {
+                session.progress = progress;
+            }
+        });
+        if let Ok(mut session) = st.comparison.lock() {
+            session.running = false;
+            match result {
+                Ok(report) => session.report = Some(report),
+                Err(e) => session.error = Some(e.to_string()),
+            }
+        }
+    });
+    Ok(())
+}
+
+#[tauri::command]
+pub fn load_comparison_report(state: State<'_, Arc<AppState>>, path: String) -> R<()> {
+    let path = std::path::PathBuf::from(path);
+    let parent = crate::config::state_dir();
+    if path.parent() != Some(parent.as_path()) {
+        return Err("Choose a report directly in Librarian's private state directory".into());
+    }
+    crate::compare::checked_path(&path, false).map_err(err)?;
+    if std::fs::metadata(&path).map_err(err)?.len() > 64 * 1024 * 1024 {
+        return Err("Report exceeds 64 MiB limit".into());
+    }
+    let mut report: crate::compare::Report =
+        serde_json::from_slice(&std::fs::read(&path).map_err(err)?).map_err(err)?;
+    for assessment in report.assessments.values_mut() {
+        *assessment = crate::recovery::validate(assessment.clone(), assessment.evidence.clone());
+    }
+    if report
+        .findings
+        .iter()
+        .any(|f| !report.roots.contains(&f.root) || !f.path.starts_with(&f.root))
+    {
+        return Err("Invalid report source boundaries".into());
+    }
+    let mut session = state.comparison.lock().map_err(err)?;
+    if session.running {
+        return Err("Wait for the current comparison".into());
+    }
+    session.report = Some(report);
+    session.error = None;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn comparison_status(state: State<'_, Arc<AppState>>) -> R<crate::compare::Status> {
+    let session = state.comparison.lock().map_err(err)?;
+    Ok(crate::compare::Status {
+        running: session.running,
+        progress: session.progress.clone(),
+        report: session.report.clone(),
+        error: session.error.clone(),
+    })
+}
+
+#[tauri::command]
+pub fn stop_comparison(state: State<'_, Arc<AppState>>) -> R<()> {
+    state
+        .comparison
+        .lock()
+        .map_err(err)?
+        .cancel
+        .store(true, std::sync::atomic::Ordering::Relaxed);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn comparison_preview(
+    state: State<'_, Arc<AppState>>,
+    index: usize,
+    counterpart: Option<usize>,
+) -> R<crate::compare::Preview> {
+    let finding = state
+        .comparison
+        .lock()
+        .map_err(err)?
+        .finding(index)
+        .map_err(err)?;
+    tauri::async_runtime::spawn_blocking(move || crate::compare::preview(&finding, counterpart))
+        .await
+        .map_err(err)?
+        .map_err(err)
+}
+
+#[tauri::command]
+pub async fn assess_ideas(
+    state: State<'_, Arc<AppState>>,
+    index: usize,
+) -> R<crate::recovery::Assessment> {
+    let finding = state
+        .comparison
+        .lock()
+        .map_err(err)?
+        .finding(index)
+        .map_err(err)?;
+    let path = finding.path.clone();
+    let sha = finding.sha256.clone();
+    let assessment = crate::recovery::assess(finding, state.config())
+        .await
+        .map_err(err)?;
+    let mut session = state.comparison.lock().map_err(err)?;
+    if let Some(report) = &mut session.report {
+        if report
+            .findings
+            .iter()
+            .any(|f| f.path == path && f.sha256 == sha)
+        {
+            report
+                .assessments
+                .insert(path.display().to_string(), assessment.clone());
+        }
+    }
+    Ok(assessment)
+}
+
+#[tauri::command]
+pub fn queue_reference(
+    state: State<'_, Arc<AppState>>,
+    index: usize,
+    repo: String,
+    relative: String,
+    reason: String,
+) -> R<i64> {
+    let session = state.comparison.lock().map_err(err)?;
+    let finding = session.finding(index).map_err(err)?;
+    let report = session.report.as_ref().ok_or("No comparison report")?;
+    let repo = std::path::PathBuf::from(repo);
+    if !report.repositories.contains(&repo) {
+        return Err("Choose a repository from this comparison".into());
+    }
+    let dest =
+        crate::recovery::archive_destination(&finding, &repo, std::path::Path::new(&relative))
+            .map_err(err)?;
+    crate::compare::preview(&finding, None).map_err(err)?;
+    let mut conn = state.db.lock().map_err(err)?;
+    actions::queue_reference(&mut conn, &finding, &repo, &dest, &reason).map_err(err)
+}
+
 #[derive(Debug, Serialize)]
 pub struct CatalogRow {
     pub id: i64,
@@ -74,9 +310,11 @@ pub fn get_config(state: State<'_, Arc<AppState>>) -> R<Config> {
 
 #[tauri::command]
 pub fn save_config(state: State<'_, Arc<AppState>>, cfg: Config) -> R<()> {
+    cfg.validate().map_err(err)?;
     cfg.ensure_dirs().map_err(err)?;
     cfg.save().map_err(err)?;
     *state.cfg.lock().map_err(err)? = cfg;
+    *state.ollama.lock().map_err(err)? = crate::ollama::Ollama::new(&state.config().ollama_url);
     Ok(())
 }
 
@@ -252,15 +490,11 @@ pub fn list_review(state: State<'_, Arc<AppState>>, limit: i64) -> R<Vec<Action>
 #[tauri::command]
 pub fn list_history(state: State<'_, Arc<AppState>>, limit: i64) -> R<Vec<Action>> {
     let conn = state.db.lock().map_err(err)?;
-    actions::list_actions(&conn, Some("applied"), limit).map_err(err)
+    actions::list_actions(&conn, None, limit).map_err(err)
 }
 
 #[tauri::command]
-pub fn decide_action(
-    state: State<'_, Arc<AppState>>,
-    action_id: i64,
-    approve: bool,
-) -> R<()> {
+pub fn decide_action(state: State<'_, Arc<AppState>>, action_id: i64, approve: bool) -> R<()> {
     let conn = state.db.lock().map_err(err)?;
     actions::decide(&conn, action_id, approve).map_err(err)
 }

@@ -24,12 +24,12 @@ use crate::db;
 /// really is by reading it.
 pub fn classify_ext(ext: &str) -> &'static str {
     match ext {
-        "sh" | "bash" | "zsh" | "fish" | "py" | "pl" | "rb" | "ps1" | "bat" | "cmd"
-        | "expect" | "awk" | "tcl" => "script",
+        "sh" | "bash" | "zsh" | "fish" | "py" | "pl" | "rb" | "ps1" | "bat" | "cmd" | "expect"
+        | "awk" | "tcl" => "script",
 
-        "rs" | "go" | "c" | "h" | "cpp" | "hpp" | "cc" | "java" | "kt" | "swift" | "js"
-        | "jsx" | "ts" | "tsx" | "vue" | "svelte" | "php" | "cs" | "scala" | "clj" | "ex"
-        | "exs" | "lua" | "r" | "m" | "mm" | "s" | "asm" | "zig" | "dart" | "qml" => "code",
+        "rs" | "go" | "c" | "h" | "cpp" | "hpp" | "cc" | "java" | "kt" | "swift" | "js" | "jsx"
+        | "ts" | "tsx" | "vue" | "svelte" | "php" | "cs" | "scala" | "clj" | "ex" | "exs"
+        | "lua" | "r" | "m" | "mm" | "s" | "asm" | "zig" | "dart" | "qml" => "code",
 
         "md" | "txt" | "rst" | "org" | "adoc" | "tex" => "doc",
         "pdf" | "docx" | "odt" | "rtf" | "epub" => "document",
@@ -41,8 +41,8 @@ pub fn classify_ext(ext: &str) -> &'static str {
         "html" | "htm" | "css" | "scss" => "web",
         "png" | "jpg" | "jpeg" | "gif" | "webp" | "bmp" | "svg" | "tiff" => "image",
 
-        "zip" | "tar" | "gz" | "xz" | "bz2" | "zst" | "7z" | "rar" | "deb" | "rpm"
-        | "appimage" | "iso" | "img" | "qcow2" | "vdi" | "vmdk" => "archive",
+        "zip" | "tar" | "gz" | "xz" | "bz2" | "zst" | "7z" | "rar" | "deb" | "rpm" | "appimage"
+        | "iso" | "img" | "qcow2" | "vdi" | "vmdk" => "archive",
 
         "mp4" | "mkv" | "avi" | "mov" | "mp3" | "flac" | "wav" | "m4a" => "media",
 
@@ -116,6 +116,9 @@ fn collect(cfg: &Config, report: &mut ScanReport) -> Vec<Entry> {
                 if !ft.is_file() {
                     continue;
                 }
+                if crate::compare::secret_path(&path) {
+                    continue;
+                }
 
                 let md = match entry.metadata() {
                     Ok(m) => m,
@@ -165,17 +168,14 @@ pub fn run(conn: &mut Connection, cfg: &Config) -> Result<ScanReport> {
     tx.execute("UPDATE files SET present = 0 WHERE present = 1", [])?;
 
     {
-        let mut existing = tx.prepare(
-            "SELECT id, size, mtime, stage FROM files WHERE path = ?1",
-        )?;
+        let mut existing =
+            tx.prepare("SELECT id, size, mtime, stage FROM files WHERE path = ?1")?;
         let mut insert = tx.prepare(
             "INSERT INTO files
                (path,parent,name,ext,class,size,mtime,stage,present,first_seen,last_seen)
              VALUES (?1,?2,?3,?4,?5,?6,?7,0,1,?8,?8)",
         )?;
-        let mut touch = tx.prepare(
-            "UPDATE files SET present = 1, last_seen = ?2 WHERE id = ?1",
-        )?;
+        let mut touch = tx.prepare("UPDATE files SET present = 1, last_seen = ?2 WHERE id = ?1")?;
         // Content changed: reset the pipeline so it is re-read and re-judged.
         let mut changed = tx.prepare(
             "UPDATE files
@@ -215,18 +215,20 @@ pub fn run(conn: &mut Connection, cfg: &Config) -> Result<ScanReport> {
         }
     }
 
-    report.vanished = tx.query_row(
-        "SELECT COUNT(*) FROM files WHERE present = 0",
-        [],
-        |r| r.get::<_, i64>(0),
-    )? as usize;
+    report.vanished = tx.query_row("SELECT COUNT(*) FROM files WHERE present = 0", [], |r| {
+        r.get::<_, i64>(0)
+    })? as usize;
 
     tx.commit()?;
     Ok(report)
 }
 
 /// Files that still need their contents read.
-pub fn pending_extract(conn: &Connection, cfg: &Config, limit: i64) -> Result<Vec<(i64, String, String, i64)>> {
+pub fn pending_extract(
+    conn: &Connection,
+    cfg: &Config,
+    limit: i64,
+) -> Result<Vec<(i64, String, String, i64)>> {
     let mut q = conn.prepare(
         "SELECT id, path, class, size FROM files
          WHERE present = 1 AND stage = 0 AND size > 0 AND size <= ?1

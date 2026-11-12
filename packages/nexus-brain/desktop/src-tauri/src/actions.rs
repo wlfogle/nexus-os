@@ -4,19 +4,17 @@
 //! every filesystem operation is written to a journal first so it can be
 //! reversed exactly.
 //!
-//! Moves are done with rename when source and destination share a filesystem
-//! (atomic, instant), and copy-verify-remove otherwise. The copy path verifies
-//! the destination hash against the source before unlinking the original, so an
-//! interrupted or corrupted transfer never loses data.
+//! Reviewed moves use durable backups, verified no-clobber publication and a
+//! journal written before publication. Failures retain copies for recovery.
 
 use anyhow::{anyhow, Result};
 use rusqlite::{params, Connection};
 use serde::Serialize;
-use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 
 use crate::config::Config;
 use crate::db;
+#[cfg(test)]
 use crate::extract::sha256_file;
 
 #[derive(Debug, Clone, Serialize)]
@@ -38,7 +36,6 @@ pub struct Action {
 pub struct PlanReport {
     pub plan_id: i64,
     pub proposed: usize,
-    pub auto: usize,
     pub pending: usize,
 }
 
@@ -154,17 +151,32 @@ pub fn plan(conn: &mut Connection, cfg: &Config) -> Result<PlanReport> {
                 None => continue,
             };
             let dest = unique_dest(&dir, &c.name);
-            let state = if c.confidence >= cfg.auto_apply_above {
-                report.auto += 1;
-                "approved"
-            } else {
-                report.pending += 1;
-                "pending"
+            let state = "pending";
+            let source = Path::new(&c.path);
+            if crate::compare::protected_tree(source).is_some()
+                || crate::compare::secret_path(source)
+            {
+                continue;
+            }
+            let Some(root) = cfg
+                .roots
+                .iter()
+                .filter(|r| source.starts_with(r))
+                .max_by_key(|r| r.components().count())
+            else {
+                continue;
             };
+            if crate::compare::readable(source, 1024 * 1024).is_err() {
+                continue;
+            }
             ins.execute(params![
                 plan_id,
                 c.file_id,
-                if c.action == "quarantine" { "quarantine" } else { "move" },
+                if c.action == "quarantine" {
+                    "quarantine"
+                } else {
+                    "move"
+                },
                 c.path,
                 dest.to_string_lossy(),
                 c.action,
@@ -172,6 +184,16 @@ pub fn plan(conn: &mut Connection, cfg: &Config) -> Result<PlanReport> {
                 c.confidence,
                 state,
             ])?;
+            crate::safety::capture(
+                &tx,
+                tx.last_insert_rowid(),
+                source,
+                root,
+                &cfg.library,
+                false,
+                &c.reason,
+            )?;
+            report.pending += 1;
             report.proposed += 1;
         }
     }
@@ -180,45 +202,11 @@ pub fn plan(conn: &mut Connection, cfg: &Config) -> Result<PlanReport> {
     Ok(report)
 }
 
-fn same_filesystem(a: &Path, b: &Path) -> bool {
-    let dev = |p: &Path| -> Option<u64> {
-        let mut cur = Some(p);
-        while let Some(c) = cur {
-            if let Ok(md) = std::fs::metadata(c) {
-                return Some(md.dev());
-            }
-            cur = c.parent();
-        }
-        None
-    };
-    match (dev(a), dev(b)) {
-        (Some(x), Some(y)) => x == y,
-        _ => false,
-    }
-}
-
 /// Move a file, verifying the copy before removing the original.
+#[cfg(test)]
 fn move_file(src: &Path, dest: &Path) -> Result<&'static str> {
-    if let Some(parent) = dest.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    if dest.exists() {
-        return Err(anyhow!("destination already exists: {}", dest.display()));
-    }
-
-    if same_filesystem(src, dest) {
-        std::fs::rename(src, dest)?;
-        return Ok("renamed");
-    }
-
     let before = sha256_file(src).ok_or_else(|| anyhow!("cannot hash source"))?;
-    std::fs::copy(src, dest)?;
-    let after = sha256_file(dest).ok_or_else(|| anyhow!("cannot hash destination"))?;
-    if before != after {
-        // Leave the source untouched; remove the bad copy.
-        let _ = std::fs::remove_file(dest);
-        return Err(anyhow!("checksum mismatch after copy"));
-    }
+    crate::safety::copy_new(src, dest, &before, 0o600)?;
     std::fs::remove_file(src)?;
     Ok("copied")
 }
@@ -233,9 +221,7 @@ pub fn apply(conn: &mut Connection, plan_id: i64) -> Result<ApplyReport> {
               WHERE plan_id = ?1 AND state = 'approved'
               ORDER BY id",
         )?;
-        let rows = q.query_map(params![plan_id], |r| {
-            Ok((r.get(0)?, r.get(1)?, r.get(2)?))
-        })?;
+        let rows = q.query_map(params![plan_id], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?;
         let mut v = Vec::new();
         for row in rows {
             v.push(row?);
@@ -256,20 +242,8 @@ pub fn apply(conn: &mut Connection, plan_id: i64) -> Result<ApplyReport> {
             continue;
         }
 
-        match move_file(s, d) {
-            Ok(how) => {
-                // Journal first, then mark applied: a crash between the two
-                // leaves a recoverable record rather than an orphan move.
-                conn.execute(
-                    "INSERT INTO journal(action_id, op, payload, ts)
-                     VALUES (?1, ?2, ?3, ?4)",
-                    params![
-                        action_id,
-                        how,
-                        serde_json::json!({ "from": src, "to": dest }).to_string(),
-                        db::now(),
-                    ],
-                )?;
+        match crate::safety::apply(conn, action_id, s, d) {
+            Ok(()) => {
                 conn.execute(
                     "UPDATE actions SET state='applied', applied_at=?2, error=NULL
                       WHERE id=?1",
@@ -293,7 +267,9 @@ pub fn apply(conn: &mut Connection, plan_id: i64) -> Result<ApplyReport> {
     }
 
     conn.execute(
-        "UPDATE plans SET status='applied' WHERE id=?1",
+        "UPDATE plans SET status=CASE WHEN EXISTS (
+            SELECT 1 FROM actions WHERE plan_id=?1 AND state IN ('failed','approved','pending')
+         ) THEN 'partial' ELSE 'applied' END WHERE id=?1",
         params![plan_id],
     )?;
     Ok(report)
@@ -310,9 +286,7 @@ pub fn undo(conn: &mut Connection, plan_id: i64) -> Result<ApplyReport> {
               WHERE a.plan_id = ?1 AND j.undone = 0
               ORDER BY j.id DESC",
         )?;
-        let rows = q.query_map(params![plan_id], |r| {
-            Ok((r.get(0)?, r.get(1)?, r.get(2)?))
-        })?;
+        let rows = q.query_map(params![plan_id], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?;
         let mut v = Vec::new();
         for row in rows {
             v.push(row?);
@@ -329,14 +303,14 @@ pub fn undo(conn: &mut Connection, plan_id: i64) -> Result<ApplyReport> {
             continue;
         }
 
-        match move_file(Path::new(&to), Path::new(&from)) {
+        match crate::safety::undo(conn, action_id, Path::new(&from), Path::new(&to)) {
             Ok(_) => {
                 conn.execute(
                     "UPDATE journal SET undone = 1 WHERE id = ?1",
                     params![journal_id],
                 )?;
                 conn.execute(
-                    "UPDATE actions SET state='pending', applied_at=NULL WHERE id=?1",
+                    "UPDATE actions SET state='undone', applied_at=NULL, error=NULL WHERE id=?1",
                     params![action_id],
                 )?;
                 conn.execute(
@@ -357,7 +331,10 @@ pub fn undo(conn: &mut Connection, plan_id: i64) -> Result<ApplyReport> {
     }
 
     conn.execute(
-        "UPDATE plans SET status='rolled_back' WHERE id=?1",
+        "UPDATE plans SET status=CASE WHEN EXISTS (
+           SELECT 1 FROM journal j JOIN actions a ON a.id=j.action_id
+           WHERE a.plan_id=?1 AND j.undone=0
+         ) THEN 'partial' ELSE 'rolled_back' END WHERE id=?1",
         params![plan_id],
     )?;
     Ok(report)
@@ -399,11 +376,17 @@ pub fn list_actions(conn: &Connection, state: Option<&str>, limit: i64) -> Resul
 
 /// Record a review decision and remember it for future confidence tuning.
 pub fn decide(conn: &Connection, action_id: i64, approve: bool) -> Result<()> {
+    if approve {
+        crate::safety::load(conn, action_id)?;
+    }
     let state = if approve { "approved" } else { "rejected" };
-    conn.execute(
+    let changed = conn.execute(
         "UPDATE actions SET state = ?2 WHERE id = ?1 AND state = 'pending'",
         params![action_id, state],
     )?;
+    if changed != 1 {
+        return Err(anyhow!("Action is no longer awaiting review"));
+    }
     let row: Option<(Option<i64>, String)> = conn
         .query_row(
             "SELECT file_id, category FROM actions WHERE id = ?1",
@@ -420,6 +403,57 @@ pub fn decide(conn: &Connection, action_id: i64, approve: bool) -> Result<()> {
     Ok(())
 }
 
+/// Queue only: creating this proposal never approves or moves the source.
+pub fn queue_reference(
+    conn: &mut Connection,
+    finding: &crate::compare::Finding,
+    repo: &Path,
+    dest: &Path,
+    reason: &str,
+) -> Result<i64> {
+    if reason.trim().is_empty() {
+        return Err(anyhow!("Record why this original should be archived"));
+    }
+    if finding.protected_tree.is_some() {
+        return Err(anyhow!("Protected source tree"));
+    }
+    crate::compare::preview(finding, None)?;
+    let duplicate: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM actions WHERE src=?1 AND state IN ('pending','approved','applied')",
+        params![finding.path.to_string_lossy()],
+        |r| r.get(0),
+    )?;
+    if duplicate > 0 {
+        return Err(anyhow!("Source already has a pending or applied action"));
+    }
+    let tx = conn.transaction()?;
+    tx.execute("INSERT INTO plans(created_at,note,status) VALUES (?1,'reviewed reference proposal','open')",
+        params![db::now()])?;
+    let plan = tx.last_insert_rowid();
+    tx.execute(
+        "INSERT INTO actions(plan_id,kind,src,dest,category,reason,confidence,state)
+         VALUES (?1,'move',?2,?3,'reference',?4,0,'pending')",
+        params![
+            plan,
+            finding.path.to_string_lossy(),
+            dest.to_string_lossy(),
+            reason
+        ],
+    )?;
+    let id = tx.last_insert_rowid();
+    crate::safety::capture(
+        &tx,
+        id,
+        &finding.path,
+        &finding.root,
+        &repo.join("archive/reference"),
+        true,
+        reason,
+    )?;
+    tx.commit()?;
+    Ok(id)
+}
+
 #[cfg(test)]
 mod tests {
     use super::{bucket_for, move_file, unique_dest};
@@ -427,10 +461,7 @@ mod tests {
     use std::path::PathBuf;
 
     fn tmpdir(tag: &str) -> PathBuf {
-        let p = std::env::temp_dir().join(format!(
-            "librarian-test-{tag}-{}",
-            std::process::id()
-        ));
+        let p = std::env::temp_dir().join(format!("librarian-test-{tag}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&p);
         std::fs::create_dir_all(&p).unwrap();
         p

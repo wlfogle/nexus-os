@@ -11,6 +11,7 @@
 
 pub mod actions;
 pub mod commands;
+pub mod compare;
 pub mod config;
 pub mod db;
 pub mod embed;
@@ -18,7 +19,9 @@ pub mod engine;
 pub mod extract;
 pub mod interpret;
 pub mod ollama;
+pub mod recovery;
 pub mod repos;
+pub mod safety;
 pub mod scan;
 pub mod search;
 
@@ -90,6 +93,16 @@ pub fn run() {
             commands::undo_plan,
             commands::similar_files,
             commands::read_file_text,
+            commands::start_comparison,
+            commands::comparison_status,
+            commands::stop_comparison,
+            commands::comparison_preview,
+            commands::assess_ideas,
+            commands::queue_reference,
+            commands::load_comparison_report,
+            commands::saved_comparison_reports,
+            commands::save_comparison_report,
+            commands::export_action_backup,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Librarian");

@@ -45,6 +45,8 @@ struct GenerateRequest<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     format: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    think: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     images: Option<Vec<String>>,
     options: GenOptions,
 }
@@ -81,6 +83,8 @@ impl Ollama {
             base: base.trim_end_matches('/').to_string(),
             // Large models on first load can take minutes; embeddings are fast.
             http: reqwest::Client::builder()
+                .no_proxy()
+                .redirect(reqwest::redirect::Policy::none())
                 .timeout(Duration::from_secs(600))
                 .connect_timeout(Duration::from_secs(5))
                 .build()
@@ -169,7 +173,7 @@ impl Ollama {
         num_ctx: i32,
     ) -> Result<serde_json::Value> {
         let raw = self
-            .generate_inner(model, system, prompt, None, true, num_ctx, 700)
+            .generate_inner(model, system, prompt, None, true, num_ctx, 1800)
             .await?;
         parse_json_loose(&raw)
     }
@@ -191,7 +195,7 @@ impl Ollama {
                 Some(vec![image_b64]),
                 true,
                 num_ctx,
-                700,
+                1800,
             )
             .await?;
         parse_json_loose(&raw)
@@ -215,6 +219,7 @@ impl Ollama {
             keep_alive: "24h",
             system,
             format: if json { Some("json") } else { None },
+            think: if json { Some(false) } else { None },
             images,
             options: GenOptions {
                 // Deterministic: this is classification, not creative writing.
@@ -254,7 +259,11 @@ pub fn parse_json_loose(raw: &str) -> Result<serde_json::Value> {
     let bytes = trimmed.as_bytes();
     let start = match bytes.iter().position(|&b| b == b'{') {
         Some(i) => i,
-        None => return Err(anyhow!("no JSON object in model reply: {trimmed:.200}")),
+        None => {
+            return Err(anyhow!(
+                "Model returned no final JSON object; no changes were made"
+            ))
+        }
     };
 
     let mut depth = 0usize;
@@ -279,18 +288,40 @@ pub fn parse_json_loose(raw: &str) -> Result<serde_json::Value> {
                 if depth == 0 {
                     let slice = &trimmed[start..=i];
                     return serde_json::from_str(slice)
-                        .with_context(|| format!("parsing recovered JSON: {slice:.200}"));
+                        .context("Invalid final JSON object; no changes were made");
                 }
             }
             _ => {}
         }
     }
-    Err(anyhow!("unbalanced JSON in model reply: {trimmed:.200}"))
+    Err(anyhow!(
+        "Incomplete final JSON object; no changes were made"
+    ))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::parse_json_loose;
+    use super::{parse_json_loose, GenOptions, GenerateRequest};
+
+    #[test]
+    fn structured_requests_disable_thinking() {
+        let request = GenerateRequest {
+            model: "test",
+            prompt: "test",
+            stream: false,
+            keep_alive: "24h",
+            system: None,
+            format: Some("json"),
+            think: Some(false),
+            images: None,
+            options: GenOptions {
+                temperature: 0.0,
+                num_predict: 1800,
+                num_ctx: 8192,
+            },
+        };
+        assert_eq!(serde_json::to_value(request).unwrap()["think"], false);
+    }
 
     #[test]
     fn plain_object() {

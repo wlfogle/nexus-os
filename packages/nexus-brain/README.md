@@ -39,8 +39,68 @@ Config: `--host/--port/--db` or `NEXUS_BRAIN_{HOST,PORT,DB}`.
 ## Phase 2 — Librarian (`desktop/`) — implemented
 
 A Tauri 2 desktop app that reads the ecosystem you already have, **interprets
-every file with a local model**, decides what is current versus stale, and files
-it — automatically when confident, asking when not.
+candidate files with an optional local model**, compares loose material with
+current repositories, and preserves useful ideas separately from their old
+implementations. **No date cutoff and no automatic filesystem approval.**
+
+### Compare & recover ideas
+The default desktop view runs an independent, read-only comparison. It indexes
+tracked files in the configured repository vault and compares allowed source
+files by SHA-256, filenames and rarity-weighted lexical evidence. Results retain
+multiple candidate repositories, file/line excerpts, scope limits, exclusions
+and protected source trees. Similarity is a retrieval lead, never proof that a
+feature is implemented or a script is obsolete.
+
+Select **Study** for side-by-side text and a unified difference. Previews recheck
+content hashes; changed files require a new comparison. **Assess useful ideas
+with local Ollama** is an explicit optional request, not part of every scan.
+It retrieves relevant current-file excerpts, canonical project guidance and
+local Git history; separates purpose, useful behaviors, outdated assumptions,
+adaptation proposals, verification requirements and unknowns. Quotes are checked
+against supplied evidence. Documentation alone cannot establish an implementation,
+and unclassified/historical code cannot establish a current implementation.
+All model conclusions remain advisory, including those with valid quotes.
+Adapting an idea is a separate, reviewed and tested coding task; the app does not
+silently rewrite production code or execute historical scripts.
+
+Sources with any `.git` marker are protected from individual file moves even
+when Git metadata is broken. The home NexusOS tree is one such case: compare
+and preserve it as a tree instead of assuming every home file is loose.
+Current-module/forerunner/third-party labels come from configured or explicitly
+named canonical guidance, not repository age. Missing guidance stays unclassified.
+
+Choose the owning repository and an editable relative destination to queue an
+original under `archive/reference/`. Queueing does not approve or move anything.
+Review shows the exact source, destination and reason; approve each proposal,
+then explicitly **Apply approved**. A `.reference.json` sidecar records the
+original path, checksum, permissions, date and reason. Originals are preserved
+byte-for-byte as reference, not promoted unchanged into active scripts.
+The same UI can save/reopen private JSON comparisons and assessments.
+
+### Read-only CLI
+From this package directory (fish-compatible commands):
+```fish
+./desktop/src-tauri/target/release/librarian --compare --root /home/loufogle --vault /media/loufogle/Data/Repos --output /home/loufogle/.local/state/librarian/comparison-home.json
+```
+The output parent must already exist. Reports are created mode 0600 and never
+overwrite an existing path. Without `--output`, the CLI prints counts, not file
+contents. Unlike `--headless`, `--compare` does not initialise/migrate the app
+catalog, call models or create cleanup actions. Explicit `--assess-index N`
+adds a local advisory assessment for one zero-based result to the report.
+`--root` can repeat; `--max-files` and `--max-repo-files` adjust file caps.
+
+Default comparison limits: 10,000 source findings, 30,000 repository files,
+128 KiB per text file, 64 MiB repository text, 250,000 visited entries, depth 32.
+Only immediate Git repositories in the vault are indexed, using their current
+tracked working-tree files (including current edits); untracked repo work is
+not assumed absent. Retrieval evaluates up to 100 candidates and presents five
+ranked leads. Source trees are not repositories' deletion candidates.
+Hidden directories, secrets, browser/application state, dependencies/builds,
+media and reference archives are excluded. Binary/non-UTF8/oversized files are
+not interpreted. Credential screening is conservative and heuristic, not a
+complete DLP guarantee. Reports contain local paths and excerpts: keep them private.
+Unreadable paths, cancellation and limits are explicit partial coverage.
+No result proves whole-repository absence, runtime compatibility or non-use.
 
 ### Pipeline
 
@@ -56,8 +116,8 @@ Tier 3 returns, per file: `title`, `kind`, `purpose`, `summary`, `topics`,
 
 ### Leveraging the local model library
 
-Ollama here serves 42 models from an external drive with `OLLAMA_KEEP_ALIVE=24h`,
-against a 12 GB GPU. Two consequences shaped the design:
+Available models are queried from the local Ollama server rather than assumed
+from this historical inventory. Two consequences shaped the design:
 
 - **The work queue is grouped by model, not by file.** Each model drains its
   whole bucket before the next loads, so multi-gigabyte weights are not evicted
@@ -65,7 +125,7 @@ against a 12 GB GPU. Two consequences shaped the design:
 - **Escalation instead of brute force.** Cheap models take the bulk
   (`qwen3.5:4b` triage, `qwen3.5:9b` for code, `qwen3.5:9b` for prose,
   `moondream` for images). Only files scoring below the confidence threshold are
-  retried on `qwen3.5:9b`, then `phi4`. Vision escalates to
+  retried on the configured escalation model. Vision escalates to
   `qwen3.5:9b`. All configurable in Settings.
 
 ### Safety
@@ -73,11 +133,32 @@ against a 12 GB GPU. Two consequences shaped the design:
 - Nothing is deleted. "Remove" means a move into `Quarantine/`.
 - Files a git repo owns are never touched — git is the authority there.
 - Anything classified as `secret` is forced to `review`, never auto-filed.
-- Same-filesystem moves use `rename`; cross-filesystem copies verify the
-  destination hash **before** unlinking the source.
-- Every operation is journalled, so any plan can be reversed from History.
-- Auto-apply only above the confidence threshold (default 0.85); everything
-  else waits in Review.
+- Every proposed move stores a full source backup and review fingerprint in the
+  private catalog. Apply rechecks boundaries, symlinks, source content and permissions.
+- Same- and cross-filesystem moves use staged, checksum-verified copies, fsync and
+  no-clobber publication. Filesystems without hard-link support fail safely;
+  originals are not removed to work around unsupported publication.
+- The journal is written **before** publication. Intermediate phases remain
+  inspectable. Reference provenance is written before source removal.
+- **All actions require human approval.** Old auto-approved rows migrate back to
+  review because old versions did not distinguish model from human approvals.
+- Undo refuses later source/archive edits or collisions. Published copies can be
+  recovered from History; unknown pre-publication states require manual inspection.
+  Backups are retained in `action_snapshots.backup`, even after undo; there is no
+  automatic expiry, purge timer or permanent-delete command.
+- History's **Export backup** verifies the stored checksum and creates a new
+  private mode-0600 `.bin` file in the state directory for manual recovery,
+  including when an edited/missing archive prevents automatic undo. It never
+  restores over an existing source or archive.
+- The tool is not a security sandbox against another process running as the same
+  user; avoid concurrent edits/restructuring while applying or undoing moves.
+  Reference archives are durable project history, separate from these safety backups.
+- Legacy queued actions without review snapshots cannot be approved: reject and
+  recreate them from a fresh comparison. History includes pending/failed/undone
+  states rather than hiding partial operations.
+- Model endpoints must be loopback HTTP; redirects and proxies are disabled.
+  Structured JSON requests use `think:false` so thinking does not exhaust the
+  final-answer budget. No cloud model or paid API is used.
 
 ### Build and run
 
@@ -96,12 +177,39 @@ State lives outside the repo in `~/.local/state/librarian/` (`catalog.db`,
 ### Tests
 
 ```bash
-cd desktop/src-tauri && cargo test    # 50 tests
+cd desktop/src-tauri && cargo test    # 71 tests
 ```
 
-They cover JSON recovery from imperfect model output, model routing and the
-escalation ladder, remote-URL owner parsing, chunking, vector round-trips, FTS5
-query escaping, RRF fusion, and move/undo including refusal to overwrite.
+They cover parser/model routing, retrieval, exclusions, no date policy, broken-Git
+source protection, changed-file previews, explicit approvals, safe copies,
+reference provenance, executable bits, interruptions, undo conflicts and migration.
+Run `cargo clippy --all-targets -- -D warnings` and the frontend build as well.
+Native UI smoke checks should use an isolated HOME and disposable source/repo
+fixtures, never the real catalog or home files as mutation fixtures.
+
+### Verification — 2026-11-12
+- Frontend TypeScript/production build, all 71 Rust tests, strict Clippy and the
+  optimized release build passed. The existing application-menu launcher points
+  to the rebuilt canonical release executable.
+- Native release startup and the bundled comparison view were observed with
+  an isolated HOME and disposable fixtures. Post-click X11 capture returned
+  `BadMatch`; a complete automated desktop click-through is not claimed.
+- The release read-only home scan produced 8,126 candidates across 54 repos.
+  It is explicitly partial because paths under `~/data11` were unreadable;
+  no permission changes or privileged scan was attempted.
+- Three source trees are protected, including the home NexusOS tree. That tree
+  has 640 identical counterparts, 53 divergent-copy candidates and 388 ambiguous
+  matches within this scan's coverage. These are comparison leads, not proof
+  that differing files are unique features or obsolete.
+- Private mode-0600 reports:
+  `~/.local/state/librarian/comparison-home-reviewed.json` and
+  `~/.local/state/librarian/comparison-openwrt-quoted-evidence.json`.
+  Open them from **Compare & recover ideas → Open a saved private comparison report**.
+  A real local Qwen assessment completed; its suggestions without verified
+  quotes remain `investigate`, not established implementation facts.
+- No actual home scripts were executed, moved, archived or rewritten. The real
+  catalog was not used as a mutation test fixture. Idea adaptations and home
+  cleanup actions still require separate review and approval.
 
 ## `tools/`
 
